@@ -1,0 +1,20 @@
+<Project Sdk="Godot.NET.Sdk/4.7.0">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Domina.Game</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Godot katmanı çekirdeği TÜKETİR, çekirdek Godot'u bilmez.
+    Bu ok tek yönlüdür — Domina.Core veya Domina.Chat içine Godot referansı
+    eklenmemeli (bkz. CLAUDE.md → "Mimari kuralı").
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Domina.Core\Domina.Core.csproj" />
+    <ProjectReference Include="..\Domina.Chat\Domina.Chat.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+; Godot proje dosyası.
+; Bu dosya Godot editörü tarafından yönetilir — elle düzenlerken dikkatli ol.
+
+config_version=5
+
+[application]
+
+config/name="Domina"
+config/description="Yokai/samuray temalı dojo yönetimi + otomatik dövüş oyunu."
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+
+[dotnet]
+
+project/assembly_name="Domina.Game"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"

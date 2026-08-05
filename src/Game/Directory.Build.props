@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    Kasıtlı olarak BOŞ ve kasıtlı olarak kökteki Directory.Build.props'u
+    içe aktarmıyor.
+
+    MSBuild yukarı doğru arayıp bulduğu İLK Directory.Build.props'ta durur.
+    Bu dosya sayesinde Godot projesi kökteki ayarları (TargetFramework,
+    TreatWarningsAsErrors, analyzer seviyesi) devralmaz — TargetFramework'ü
+    Godot.NET.Sdk kendi belirler ve üretilen kodda analyzer uyarıları hataya
+    dönüşmez.
+  -->
+
+</Project>
