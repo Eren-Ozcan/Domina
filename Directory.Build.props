@@ -1,0 +1,21 @@
+<Project>
+
+  <!--
+    Tüm C# projeleri için ortak ayarlar.
+
+    TargetFramework net8.0: Godot 4.7 .NET ".NET 8 veya üzeri" istiyor. Çekirdek
+    kütüphaneleri en düşük ortak paydada tutmak, Godot sürümü yükseldiğinde
+    (net9/net10) bile referans alınabilmelerini garanti eder.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Domina.Chat/Domina.Chat.csproj" />
+    <Project Path="src/Domina.Core/Domina.Core.csproj" />
+    <Project Path="src/Domina.Sim/Domina.Sim.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Domina.Chat.Tests/Domina.Chat.Tests.csproj" />
+    <Project Path="tests/Domina.Core.Tests/Domina.Core.Tests.csproj" />
+  </Folder>
+</Solution>
