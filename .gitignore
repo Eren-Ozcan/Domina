@@ -1,0 +1,22 @@
+# Godot
+.godot/
+*.translation
+
+# Motor ikili dosyaları (repo'ya girmez, tools/ altına indirilir)
+tools/
+
+# Yerel dışa aktarım çıktıları
+/build/
+export_presets.cfg.local
+
+# .NET
+bin/
+obj/
+*.user
+*.swp
+TestResults/
+.vs/
+.idea/
+
+# Private/local-only store & marketing assets (mirrored to private Eren-Ozcan/pictures repo)
+docs/store-assets-originals/
