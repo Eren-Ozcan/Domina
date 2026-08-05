@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core:
+    # Çekirdek ve chat katmanı Godot'a bağımlı değildir; CI motor kurmadan koşar.
+    # Bu iş akışının motorsuz koşabiliyor olması, mimari kuralın canlı testidir
+    # (bkz. CLAUDE.md → "Mimari kuralı"). Godot referansı sızarsa burası kırılır.
+    name: Çekirdek derleme + test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Domina.slnx
+
+      - name: Build
+        run: dotnet build Domina.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Domina.slnx --no-build --configuration Release --verbosity normal
+
+      - name: Format kontrolü
+        run: dotnet format Domina.slnx --verify-no-changes --severity warn
