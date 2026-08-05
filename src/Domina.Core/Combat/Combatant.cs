@@ -1,0 +1,85 @@
+using Domina.Core.Model;
+
+namespace Domina.Core.Combat;
+
+/// <summary>Bir savaşçının dövüş sırasındaki geçici durumu.</summary>
+public enum CombatState
+{
+    /// <summary>Mesafe alıyor / bir sonraki saldırıyı bekliyor. Kesilebilir.</summary>
+    Idle,
+
+    /// <summary>Saldırıya kilitli. <b>Kesilemez</b> — kaçış komutu buffer'lanır.</summary>
+    AttackWindup,
+
+    /// <summary>Saldırı sonrası toparlanma. Kesilebilir.</summary>
+    AttackRecovery,
+
+    /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
+    Retreating,
+
+    /// <summary>Sağ olarak arenadan çıktı.</summary>
+    Escaped,
+
+    /// <summary>Öldü.</summary>
+    Dead,
+}
+
+/// <summary>
+/// Dövüşe katılan bir savaşçının çalışma zamanı hali.
+/// </summary>
+/// <remarks>
+/// <see cref="Warrior"/> kalıcı hali tutar; burası yalnızca <b>bu dövüşe</b> ait
+/// geçici durumdur. Dövüş bitince kalıcı sonuçlar (ölüm, sakatlık) savaşçıya işlenir.
+/// </remarks>
+internal sealed class Combatant(Warrior warrior, int team)
+{
+    public Warrior Warrior { get; } = warrior;
+
+    public int Team { get; } = team;
+
+    public WarriorId Id => Warrior.Id;
+
+    public double Health { get; set; } = warrior.EffectiveStats.MaxHealth;
+
+    public double Stamina { get; set; } = warrior.EffectiveStats.MaxStamina;
+
+    public CombatState State { get; set; } = CombatState.Idle;
+
+    /// <summary>Mevcut durumun bitmesine kalan süre.</summary>
+    public double StateTimer { get; set; }
+
+    /// <summary>Oyuncu "çek" dedi mi? Buffer'lanmış olabilir.</summary>
+    public bool RetreatRequested { get; set; }
+
+    /// <summary>
+    /// Ağır darbede hayatta kalmayı sağlayan koşul: oyuncu müdahale etmiş mi?
+    /// Komut verilmişse (henüz kaçış başlamamış olsa bile) sayılır — tuşa basmak
+    /// "zamanında müdahale" demektir (bkz. docs/GDD.md §7).
+    /// </summary>
+    public bool PlayerIntervened => RetreatRequested || State == CombatState.Retreating;
+
+    /// <summary>Hâlâ dövüşe katılıyor mu?</summary>
+    public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
+
+    /// <summary>Kaçınma ve blok yalnızca çekilmiyorken mümkündür.</summary>
+    public bool CanDefend => State != CombatState.Retreating;
+
+    /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
+    public bool IsCancellable => State is CombatState.Idle or CombatState.AttackRecovery;
+
+    // ---- Performans sayaçları (onur hesabını ve toplu simülasyonu besler) ----
+
+    public int AttacksMade { get; set; }
+
+    public int HitsLanded { get; set; }
+
+    public int TimesHit { get; set; }
+
+    public int DodgesPerformed { get; set; }
+
+    public double DamageDealt { get; set; }
+
+    public double DamageTaken { get; set; }
+
+    public bool LostLimb { get; set; }
+}
