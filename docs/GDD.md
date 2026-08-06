@@ -99,7 +99,17 @@ Temel sürümde **tek karakter sınıfı: samuray**. Büyücü vb. varyasyonlar 
 
 - **Tek tuş**, anlık karar. Mash/QTE **yok**. Otomatik eşik **yok** —
   oyuncu basmazsa savaşçı gerçekten ölür.
-- Aynı anda 1-3 savaşçı dövüşebildiği için her savaşçı ayrı ayrı çekilebilir.
+- Komut **tüm ekibi** kapsar: bir kez "kaç" denince sahadaki 1-3 savaşçının
+  hepsi çekilir ve hepsi onur kaybeder. Tek bir savaşçı ayrıca çekilemez.
+
+- Komut **seferi de bitirir**: o odadan sonrası iptal olur, ekip dojo'ya döner ve
+  **o sefer ödülü alınmaz** (bkz. §10).
+
+> **Neden ekip bazlı:** savaşçı bazlı olsaydı doğru oynanış "yara alanı hemen çek,
+> kalanla devam et" olurdu — kayıpsız, sürekli tekrarlanan küçük bir optimizasyon.
+> Ekip bazlı komut kararı **nadir ve ağır** yapar: bir savaşçıyı kurtarmak, seferi
+> ve tüm ekibin onurunu bırakmak demektir. Uzuv kaybı mekaniğinin bedeli de böylece
+> gerçek bir bedele bağlanır.
 
 ### Animasyon kesme (cancel window)
 | Durum | Davranış |
@@ -254,6 +264,9 @@ Sonuç: single-player, yayın moduyla **mekanik olarak eşdeğer**. Hiçbir sist
 - Üs: dojo — antrenman alanları, revir, eğitmen (sensei) skill tree'si
 - Sefere **1, 2 veya 3 savaşçı** gönderilir
 - Sefer = art arda **fazlar** (oda-oda ilerleme), sonunda boss/büyük ödül
+- **Pes etme seferi bitirir:** "kaç" denen odadan sonrası iptal, ekip dojo'ya döner,
+  o seferin ödülü alınmaz (§5). Kaçmak savaşçıyı kurtarır ama seferi harcar —
+  kararın ağırlığı buradan gelir.
 - Üste kalan savaşçılar güvende; **sadece sefere giden ekip** permadeath riskinde
 - Permadeath: ölen savaşçı kalıcı olarak gider
 
@@ -290,3 +303,4 @@ Domina'nın modeli referans alınır:
 | 6 | Görsel **stil** | Teknik karar verildi (2D cutout/skeletal — §2). Açık kalan: **stil** — piksel mi, sumi-e/ukiyo-e mürekkep mi, başka mı. Sanat yönü ilhamı: Trek to Yomi, Okami |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
 | 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile |
+| 9 | Kaçışta kısmi ödül | Sefer iptal olduğunda **önceki odalarda** toplanan ganimet elde kalıyor mu, o da mı gidiyor? "Hepsi gider" kaçmayı çok cezalandırıp asla kullanılmaz yapabilir; "hepsi kalır" ise geç kaçmayı bedava yapar (§5, §10) |
