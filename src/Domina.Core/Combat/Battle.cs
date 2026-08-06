@@ -53,7 +53,7 @@ public sealed class Battle
 
         foreach (Combatant c in _combatants)
         {
-            c.StateTimer = SpacingSeconds(c);
+            c.BeginState(CombatState.Idle, SpacingSeconds(c));
         }
 
         Emit(new BattleStarted(0));
@@ -78,16 +78,7 @@ public sealed class Battle
     /// Savaşçıların anlık hali. Godot katmanı bunu HUD'a basar (can/stamina barı,
     /// "çek" tuşunun hangi savaşçı için aktif olduğu).
     /// </summary>
-    public IReadOnlyList<CombatantSnapshot> Snapshots() =>
-        _combatants.ConvertAll(c => new CombatantSnapshot(
-            c.Id,
-            c.Team,
-            c.State,
-            Math.Max(0, c.Health),
-            c.Stamina,
-            c.Warrior.EffectiveStats.MaxHealth,
-            c.Warrior.EffectiveStats.MaxStamina,
-            c.RetreatRequested));
+    public IReadOnlyList<CombatantSnapshot> Snapshots() => _combatants.ConvertAll(Snapshot);
 
     /// <summary>Tek bir savaşçının anlık hali.</summary>
     public CombatantSnapshot SnapshotOf(WarriorId id)
@@ -95,32 +86,61 @@ public sealed class Battle
         Combatant c = _combatants.Find(x => x.Id == id)
                       ?? throw new ArgumentException($"Dövüşte böyle bir savaşçı yok: {id}", nameof(id));
 
-        return new CombatantSnapshot(
-            c.Id,
-            c.Team,
-            c.State,
-            Math.Max(0, c.Health),
-            c.Stamina,
-            c.Warrior.EffectiveStats.MaxHealth,
-            c.Warrior.EffectiveStats.MaxStamina,
-            c.RetreatRequested);
+        return Snapshot(c);
     }
 
+    private static CombatantSnapshot Snapshot(Combatant c) => new(
+        c.Id,
+        c.Team,
+        c.State,
+        Math.Max(0, c.Health),
+        c.Stamina,
+        c.Warrior.EffectiveStats.MaxHealth,
+        c.Warrior.EffectiveStats.MaxStamina,
+        c.RetreatRequested,
+        c.StateProgress,
+        c.IsCancellable);
+
     /// <summary>
-    /// Oyuncunun "çek" tuşu. Savaşçı saldırıya kilitliyse komut buffer'lanır ve
-    /// mevcut hareket bitince kaçış başlar (bkz. docs/GDD.md §5).
+    /// Oyuncunun "çek" tuşu — <b>tüm ekibi</b> çeker.
     /// </summary>
-    /// <returns>Komut kabul edildiyse true; savaşçı zaten çekiliyor/ölmüşse false.</returns>
-    public bool CommandRetreat(WarriorId id)
+    /// <remarks>
+    /// <para>
+    /// Tek bir savaşçı ayrıca çekilemez (bkz. docs/GDD.md §5). Savaşçı bazlı olsaydı
+    /// doğru oynanış "yara alanı hemen çek, kalanla devam et" olurdu — kayıpsız,
+    /// sürekli tekrarlanan küçük bir optimizasyon. Ekip bazlı komut kararı nadir ve
+    /// ağır yapar.
+    /// </para>
+    /// <para>
+    /// Komut her savaşçı için <b>ayrı ayrı</b> çözülür: kılıcı havada olan buffer'lanır,
+    /// boşta olan hemen kaçmaya başlar. Yani tek tuş, üç farklı anda devreye girebilir.
+    /// </para>
+    /// </remarks>
+    /// <returns>En az bir savaşçı komutu kabul ettiyse true.</returns>
+    public bool CommandRetreat()
     {
-        Combatant? c = _combatants.Find(x => x.Id == id);
-        if (c is null || !c.IsActive || c.State == CombatState.Retreating || c.RetreatRequested)
+        bool accepted = false;
+
+        foreach (Combatant c in _combatants)
+        {
+            if (c.Team == PlayerTeam)
+            {
+                accepted |= CommandRetreat(c);
+            }
+        }
+
+        return accepted;
+    }
+
+    private bool CommandRetreat(Combatant c)
+    {
+        if (!c.IsActive || c.State == CombatState.Retreating || c.RetreatRequested)
         {
             return false;
         }
 
         c.RetreatRequested = true;
-        Emit(new RetreatCommanded(ElapsedSeconds, id));
+        Emit(new RetreatCommanded(ElapsedSeconds, c.Id));
 
         if (c.IsCancellable)
         {
@@ -129,7 +149,7 @@ public sealed class Battle
         else
         {
             // Kılıç havada — mevcut vuruş tamamlanmadan kaçamaz.
-            Emit(new RetreatBuffered(ElapsedSeconds, id));
+            Emit(new RetreatBuffered(ElapsedSeconds, c.Id));
         }
 
         return true;
@@ -217,12 +237,11 @@ public sealed class Battle
                     return;
                 }
 
-                c.State = CombatState.Idle;
-                c.StateTimer = SpacingSeconds(c);
+                c.BeginState(CombatState.Idle, SpacingSeconds(c));
                 break;
 
             case CombatState.Retreating:
-                c.State = CombatState.Escaped;
+                c.BeginState(CombatState.Escaped, 0);
                 Emit(new WarriorEscaped(ElapsedSeconds, c.Id));
                 break;
 
@@ -238,12 +257,14 @@ public sealed class Battle
         Combatant? target = FindTarget(attacker);
         if (target is null)
         {
-            c_Wait(attacker);
+            Wait(attacker);
             return;
         }
 
-        attacker.State = CombatState.AttackWindup;
-        attacker.StateTimer = attacker.Warrior.UsableWeapon.AttackSeconds * _tuning.WindupFraction;
+        attacker.BeginState(
+            CombatState.AttackWindup,
+            attacker.Warrior.UsableWeapon.AttackSeconds * _tuning.WindupFraction);
+
         Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
     }
 
@@ -259,16 +280,15 @@ public sealed class Battle
 
         if (attacker.State != CombatState.Dead)
         {
-            attacker.State = CombatState.AttackRecovery;
-            attacker.StateTimer =
-                attacker.Warrior.UsableWeapon.AttackSeconds * (1 - _tuning.WindupFraction);
+            attacker.BeginState(
+                CombatState.AttackRecovery,
+                attacker.Warrior.UsableWeapon.AttackSeconds * (1 - _tuning.WindupFraction));
         }
     }
 
     private void BeginRetreat(Combatant c)
     {
-        c.State = CombatState.Retreating;
-        c.StateTimer = _tuning.RetreatSeconds;
+        c.BeginState(CombatState.Retreating, _tuning.RetreatSeconds);
         Emit(new RetreatStarted(ElapsedSeconds, c.Id));
 
         // Kaçan avın arkasından bedava vuruş: "tuşa bastım = güvendeyim" olmasın.
@@ -281,11 +301,8 @@ public sealed class Battle
         }
     }
 
-    private static void c_Wait(Combatant c)
-    {
-        c.State = CombatState.Idle;
-        c.StateTimer = 0.2;
-    }
+    /// <summary>Vuracak kimse yok — kısa bir süre bekleyip yeniden bakar.</summary>
+    private static void Wait(Combatant c) => c.BeginState(CombatState.Idle, 0.2);
 
     // -------------------------------------------------------------- çözümleme
 
@@ -418,7 +435,7 @@ public sealed class Battle
 
     private void Die(Combatant c, DeathCause cause)
     {
-        c.State = CombatState.Dead;
+        c.BeginState(CombatState.Dead, 0);
         c.Health = 0;
         Emit(new WarriorDied(ElapsedSeconds, c.Id, cause));
     }
@@ -449,7 +466,9 @@ public sealed class Battle
 
         if (_setup.RetreatPolicy.ShouldRetreat(in context))
         {
-            CommandRetreat(c.Id);
+            // Politika tek bir savaşçıya bakar ama komut ekibin tamamını kapsar —
+            // oyuncunun tuşuyla aynı kural (bkz. docs/GDD.md §5).
+            CommandRetreat();
         }
     }
 
@@ -466,10 +485,39 @@ public sealed class Battle
                + ((_tuning.SpacingSecondsAtMaxAggression - _tuning.SpacingSecondsAtZeroAggression) * t);
     }
 
-    private Combatant? FindTarget(Combatant attacker) =>
-        _combatants.Find(c => c.Team != attacker.Team && c.IsActive);
+    /// <remarks>
+    /// LINQ yerine düz döngü: bu iki yardımcı her tick'te her savaşçı için çağrılıyor
+    /// ve lambda'ların yakaladığı değişkenler dövüş başına yüz binlerce bayt ayırıyordu.
+    /// Toplu simülasyon on binlerce dövüş koşturuyor; sıcak döngü ayırma yapmamalı
+    /// (bkz. <c>ThroughputTests</c>).
+    /// </remarks>
+    private Combatant? FindTarget(Combatant attacker)
+    {
+        foreach (Combatant c in _combatants)
+        {
+            if (c.Team != attacker.Team && c.IsActive)
+            {
+                return c;
+            }
+        }
 
-    private int CountActive(int team) => _combatants.Count(c => c.Team == team && c.IsActive);
+        return null;
+    }
+
+    /// <inheritdoc cref="FindTarget"/>
+    private int CountActive(int team)
+    {
+        int count = 0;
+        foreach (Combatant c in _combatants)
+        {
+            if (c.Team == team && c.IsActive)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     private void Emit(BattleEvent e)
     {

@@ -48,6 +48,26 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <summary>Mevcut durumun bitmesine kalan süre.</summary>
     public double StateTimer { get; set; }
 
+    /// <summary>Mevcut duruma girildiğindeki toplam süre.</summary>
+    /// <remarks>
+    /// Görselleştirme, animasyonu durumun neresinde olunduğuna göre sürer; bunun için
+    /// kalan süre tek başına yetmez, toplam süre de gerekir
+    /// (bkz. <see cref="CombatantSnapshot.StateProgress"/>).
+    /// </remarks>
+    public double StateDuration { get; private set; }
+
+    /// <summary>Yeni bir duruma geçer ve sayaçları birlikte kurar.</summary>
+    public void BeginState(CombatState state, double duration)
+    {
+        State = state;
+        StateTimer = duration;
+        StateDuration = duration;
+    }
+
+    /// <summary>Durumun tamamlanma oranı (0-1).</summary>
+    public double StateProgress =>
+        StateDuration <= 0 ? 1 : Math.Clamp(1 - (StateTimer / StateDuration), 0, 1);
+
     /// <summary>Oyuncu "çek" dedi mi? Buffer'lanmış olabilir.</summary>
     public bool RetreatRequested { get; set; }
 
