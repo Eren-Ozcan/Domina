@@ -31,3 +31,30 @@ jobs:
 
       - name: Format kontrolü
         run: dotnet format Domina.slnx --verify-no-changes --severity warn
+
+  game:
+    # Godot katmanı AYRI bir job. Aynı job'a eklenseydi çekirdeğin motorsuz
+    # derlendiğini kanıtlayan test kirlenirdi; böyle kalınca "core" job'ı hâlâ
+    # Godot'a hiç dokunmadan koşuyor (bkz. CLAUDE.md → "Mimari kuralı").
+    #
+    # Neden gerekli: src/Game çözüme (Domina.slnx) dahil değil, yani çekirdekteki
+    # bir imza değişikliği bu katmanı kırdığında "core" job'ı yemyeşil kalıyor ve
+    # hata Godot bir dahaki açılana kadar görünmüyor.
+    #
+    # Motor ikilisi indirilmez: Godot.NET.Sdk bir NuGet paketidir, derlemek için
+    # editör gerekmez. Bu yüzden job ~1 dakika sürer.
+    name: Godot katmanı derleme
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/Game/Domina.Game.csproj
+
+      - name: Build
+        run: dotnet build src/Game/Domina.Game.csproj --no-restore --configuration Release
