@@ -1,0 +1,23 @@
+# Satır sonları — CI ile yerel geliştirmenin aynı şeyi görmesi için.
+#
+# .editorconfig `end_of_line = crlf` istiyor ve `dotnet format --verify-no-changes`
+# bunu ÇALIŞMA KOPYASI üzerinde denetliyor. Bu dosya olmadan:
+#   - Windows'ta autocrlf çalışma kopyasını CRLF yapıyor  → kontrol geçiyor
+#   - ubuntu-latest CI'da checkout LF veriyor              → kontrol kırılıyor
+# yani hata yalnızca CI'da görünüyor ve yerelde tekrar üretilemiyor.
+#
+# `eol=crlf` her platformda checkout'u CRLF'e sabitler. Depodaki blob'lar LF
+# kalmaya devam eder (text=auto), yani geçmiş ve diff'ler bozulmaz.
+* text=auto eol=crlf
+
+# İkili dosyalar dönüşümden muaf — bozulurlar.
+*.png binary
+*.jpg binary
+*.ico binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.pdf binary
