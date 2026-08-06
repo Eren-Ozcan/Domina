@@ -89,14 +89,16 @@ ile başlar. Aynı seed + aynı girdiler = aynı sonuç. Bu üç şeyi sağlar:
 - [x] 15 dakikalık af cooldown'ı
 
 ### 1.6 Toplu simülasyon aracı
-- [ ] CLI: N dövüşü seed aralığında koştur, ölüm/sakatlık/kazanma oranlarını CSV'ye yaz
-- [ ] Bu araç tüm denge çalışmasının temeli — **Faz 1'de yapılmazsa Faz 9'da acı çekilir**
+- [x] CLI: N dövüşü seed aralığında koştur, ölüm/sakatlık/kazanma oranlarını CSV'ye yaz
+- [x] Bu araç tüm denge çalışmasının temeli — **Faz 1'de yapılmazsa Faz 9'da acı çekilir**
+- [x] `--policy` ile oyuncunun "çek" tuşunun yerine geçen kaçış politikası
+      (uzuv kaybı yalnızca müdahale edilen dövüşlerde oluştuğu için şart)
 
-**Kabul:**
-- `dotnet test` ile 3v3 dövüş baştan sona simüle ediliyor
-- Aynı seed 100 kez aynı sonucu veriyor (determinizm testi)
-- 10.000 dövüş < 10 saniyede koşuyor
-- Uzuv kaybı, pes etme, onur, seppuku kuyruğu için birim testler yeşil
+**Kabul:** ✅ *(2026-08-06)*
+- [x] `dotnet test` ile 3v3 dövüş baştan sona simüle ediliyor
+- [x] Aynı seed 100 kez aynı sonucu veriyor (determinizm testi)
+- [x] 10.000 dövüş < 10 saniyede koşuyor — ölçüldü: **~1 sn** (Release), ~2 sn (Debug)
+- [x] Uzuv kaybı, pes etme, onur, seppuku kuyruğu için birim testler yeşil (112 test)
 
 **Risk:** Denge sayıları bu fazda tutmayacak — normal. Amaç **çalışan ve ölçülebilir**
 bir sistem, dengeli bir sistem değil.
@@ -107,19 +109,36 @@ bir sistem, dengeli bir sistem değil.
 
 **Hedef:** Faz 1'in olay akışı ekranda izlenebilir bir dövüşe dönüşüyor.
 
-- [ ] Savaşçı sahne yapısı, **modüler uzuvlar** — Godot **Skeleton2D + Bone2D**,
-      cutout rig (GDD §2, §7)
-- [ ] Animasyon durum makinesi: bekle → yaklaş → saldır → tepki → tekrar
-- [ ] Faz 1 olaylarını animasyona bağlama (event → animation player)
-- [ ] Kesme pencereleri (cancel window) animasyon zamanlamasıyla eşleştirme
-- [ ] **Uzuv kopma:** dismemberment animasyonu, kan VFX, kalıcı model değişimi
-- [ ] Sakat animasyon setleri: topallama, tek elli saldırı
-- [ ] Ölüm/bitiriş (gore) animasyonları
+### 2.1 Stil-bağımsız omurga — ✅ *(2026-08-06)*
+- [x] Savaşçı sahne yapısı, **modüler uzuvlar** — 15 parçalı cutout rig, kopma
+      noktaları omuz ve kalça (GDD §2, §7)
+- [x] Animasyon durum makinesi: bekle → yaklaş → saldır → tepki → tekrar
+- [x] Faz 1 olaylarını animasyona bağlama (event → görsel tepki)
+- [x] Kesme pencereleri (cancel window) animasyon zamanlamasıyla eşleştirme
+- [x] **Uzuv kopma:** uzvun rig'den ayrılması, kan VFX, kalıcı model değişimi
+- [x] Sakat animasyon setleri: topallama, tek elli duruş
+- [x] Ölüm animasyonu (yığılma — gore geçici sanatla anlamsız, sanatla gelecek)
+- [x] **Pes etme tuşu** UI'ı — **tek tuş, ekibin tamamını çeker** (GDD §5); tuş kaç
+      savaşçının etkileneceğini ve kaçının vuruşa kilitli olduğunu önceden gösterir
+- [x] `-- --seed N` ile toplu simülasyonun bildirdiği dövüşü birebir izleme
+
+> **Rig'de Skeleton2D + Bone2D kullanılmadı.** Bone2D iskeleti mesh *deformasyonu*
+> içindir; bizim ihtiyacımız uzvu deforme etmek değil **koparmak**. Düz `Node2D`
+> hiyerarşisinde kopma, düğümü zincirinden ayırmaktır — GDD §2'nin tarif ettiği şeyin
+> tam karşılığı, üstelik daha az parça. Skeleton2D ileride IK gerekirse eklenebilir.
+
+### 2.2 Sanat ve cila — ⬜ stil kararına bağlı
+- [ ] Görsel stil kararı (GDD Açık Karar #6) — **bu verilmeden ilerlenmez**
+- [ ] Kemiklere gerçek sanat varlıklarının asılması
 - [ ] Kamera, arena sahnesi, vuruş efektleri, ses
-- [ ] **Pes etme tuşu** UI'ı — 3 savaşçı varken her biri için ayrı, net hedefleme
+- [ ] Ölüm/bitiriş (gore) animasyonları
+- [ ] Zırh kademelerinin görsel karşılığı (4 kademe × ~10 parça)
 
 **Kabul:** Bir seed verildiğinde dövüş baştan sona izlenebiliyor; olaylar ile ekranda
 görünen birebir tutuyor (uzuv kopan savaşçı ekranda da kopuk).
+✅ *Omurga için doğrulandı: seed 52/81 — toplu simülasyonun bildirdiği uzuv kaybı
+ekranda da gerçekleşiyor, kopan kol silahıyla birlikte düşüyor. Aynı seed (20260806)
+hem arenada hem `Domina.Sim`'de 15,2 sn ve aynı sonucu veriyor.*
 
 **Risk:** Hâlâ projenin en maliyetli görsel parçası, ama **2D cutout kararıyla
 XL'den M'e indi** — 3D modüler dismemberment riski ortadan kalktı.
@@ -156,6 +175,9 @@ kapatılıp açıldığında her şey yerinde.
 **Hedef:** Faz-faz ilerleyen seferler ve yokai düşmanlar.
 
 - [ ] Sefer yapısı: faz zinciri, zorluk eğrisi, ödül dağılımı
+- [ ] **Pes etme seferi bitirir** (GDD §5, §10): "kaç" denen odadan sonrası iptal,
+      ekip dojo'ya döner, o seferin ödülü alınmaz. Önceki odalarda toplanan
+      ganimetin akıbeti hâlâ açık (GDD Açık Karar #9)
 - [ ] Harita/ilerleme ekranı (Açık Karar #2: düz mü node-map mi)
 - [ ] Parti seçimi: 1-3 savaşçı (Açık Karar #1)
 - [ ] Yokai davranış/AI profilleri — her yokai farklı dövüş kalıbı
