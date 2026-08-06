@@ -8,4 +8,9 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Araç bir uygulama, kütüphane değil: tipler internal kalır, testler görür. -->
+    <InternalsVisibleTo Include="Domina.Sim.Tests" />
+  </ItemGroup>
+
 </Project>
