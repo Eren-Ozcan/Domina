@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Domina.Core\Domina.Core.csproj" />
     <ProjectReference Include="..\Domina.Chat\Domina.Chat.csproj" />
+    <ProjectReference Include="..\Domina.Presentation\Domina.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

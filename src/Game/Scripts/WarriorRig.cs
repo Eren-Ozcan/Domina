@@ -1,5 +1,6 @@
 using Domina.Core.Combat;
 using Domina.Core.Model;
+using Domina.Presentation;
 using Godot;
 
 namespace Domina.Game;
@@ -22,9 +23,8 @@ namespace Domina.Game;
 /// bir node'u ayırmak" cümlesinin karşılığı budur; yeni sanat varlığı gerekmez.
 /// </para>
 /// <para>
-/// Duruşlar burada <b>yordamsal</b> üretiliyor (durum + faz → kemik açısı). Gerçek
-/// sanat geldiğinde bunun yerini AnimationPlayer alacak; çağıran taraf
-/// (<see cref="BattleArena"/>) değişmez, çünkü tek arayüz <see cref="ApplyState"/>.
+/// <b>Bu sınıf duruş hesaplamaz.</b> Açıları <see cref="RigAnimator"/> üretir (motorsuz,
+/// testli); burada kalan iş düğümleri kurmak ve gelen açıları uygulamaktır.
 /// </para>
 /// </remarks>
 public sealed partial class WarriorRig : Node2D
@@ -42,26 +42,26 @@ public sealed partial class WarriorRig : Node2D
     private const float Foot = 14f;
     private const float WeaponLength = 70f;
 
+    private static readonly Color HurtColor = new(1f, 0.55f, 0.55f);
+    private static readonly Color BloodColor = new(0.65f, 0.06f, 0.06f);
+
+    private readonly RigAnimator _animator = new();
+
     private Node2D _hip = null!;
     private Node2D _torso = null!;
     private Node2D _head = null!;
     private Node2D _armFar = null!;
-    private Node2D _armNear = null!;
     private Node2D _legFar = null!;
-    private Node2D _legNear = null!;
-    private Node2D _weapon = null!;
     private Polygon2D _headShape = null!;
 
-    private float _facing = 1f;
-    private double _clock;
-    private double _flinch;
+    // Kopabilen zincirler: uzuv ayrıldıktan sonra bu düğümler artık rig'in değildir.
+    // Referansın boşaltılması şart — aksi hâlde duruş her karede yerdeki uzva da
+    // uygulanır ve kopan kol, sahnenin dibinde yatarken savaşmaya devam eder.
+    private Node2D? _armNear;
+    private Node2D? _legNear;
+    private Node2D? _weapon;
+
     private Color _tint = Colors.White;
-
-    /// <summary>Kaybedilen uzuvlar — kalıcıdır, geri takılmaz.</summary>
-    private readonly HashSet<BodyPart> _lost = [];
-
-    /// <summary>Dövüş bittiğinde savaşçının son hali (yere düşme açısı için).</summary>
-    private float _deathLean;
 
     public WarriorId WarriorId { get; private set; }
 
@@ -75,7 +75,6 @@ public sealed partial class WarriorRig : Node2D
         WarriorId = warrior.Id;
         WarriorName = warrior.Name;
         _tint = tint;
-        _facing = facing;
 
         // Yön: kökü aynalıyoruz. Duruş kodu daima "sağa bakıyor" varsayar; bu sayede
         // her poz iki taraf için de tek yerde yazılır.
@@ -99,49 +98,53 @@ public sealed partial class WarriorRig : Node2D
         _weapon = Joint(hand, new Vector2(0, Hand));
         Limb(_weapon, WeaponLength, 6f, new Color(0.85f, 0.85f, 0.90f));
 
-        ApplyIdlePose(0);
+        Apply(_animator.Advance(CombatState.Idle, 0, 0));
     }
 
-    /// <summary>
-    /// Dövüşün o anki halini duruşa çevirir.
-    /// </summary>
+    /// <summary>Tek seferlik görsel tepkiyi işler (vuruş, kaçınma, uzuv kaybı, ölüm).</summary>
+    public void React(in RigReaction reaction)
+    {
+        if (_animator.React(reaction) is BodyPart severed)
+        {
+            Sever(severed);
+        }
+    }
+
+    /// <summary>Dövüşün o anki halini duruşa çevirip düğümlere uygular.</summary>
     /// <param name="state">Çekirdeğin bildirdiği durum.</param>
     /// <param name="phase">Durumun tamamlanma oranı (0-1).</param>
     /// <param name="delta">Geçen süre.</param>
-    public void ApplyState(CombatState state, double phase, double delta)
-    {
-        _clock += delta;
-        _flinch = Math.Max(0, _flinch - (delta * 4));
+    public void Advance(CombatState state, double phase, double delta) =>
+        Apply(_animator.Advance(state, phase, delta));
 
-        switch (state)
+    private void Apply(in RigPose pose)
+    {
+        Visible = pose.Visible;
+
+        if (!pose.Visible)
         {
-            case CombatState.AttackWindup:
-                ApplyWindupPose(phase);
-                break;
-            case CombatState.AttackRecovery:
-                ApplySwingPose(phase);
-                break;
-            case CombatState.Retreating:
-                ApplyRetreatPose(phase);
-                break;
-            case CombatState.Dead:
-                ApplyDeathPose(delta);
-                return;
-            case CombatState.Escaped:
-                Visible = false;
-                return;
-            case CombatState.Idle:
-            default:
-                ApplyIdlePose(phase);
-                break;
+            return;
         }
 
-        ApplyInjuryOverlay();
-        ApplyFlinch();
-    }
+        Rotation = pose.RootRotation;
+        _hip.Position = new Vector2(pose.HipOffsetX, -HipHeight + pose.HipOffsetY);
+        _torso.Rotation = pose.Torso;
+        _head.Rotation = pose.Head;
 
-    /// <summary>Vuruş yeme tepkisi — tek seferlik, duruşun üstüne biner.</summary>
-    public void Flinch() => _flinch = 1;
+        Bend(_armNear, pose.NearShoulder, pose.NearElbow);
+        Bend(_armFar, pose.FarShoulder, pose.FarElbow);
+        Bend(_legNear, pose.NearHip, pose.NearKnee);
+        Bend(_legFar, pose.FarHip, pose.FarKnee);
+
+        if (_weapon is not null)
+        {
+            _weapon.Rotation = pose.Weapon;
+        }
+
+        // Renk zaten her uzva tek tek verilmiş durumda; buradaki modulate yalnızca acı
+        // parlamasıdır. Takım rengiyle çarpmak uzuvları ikinci kez karartırdı.
+        Modulate = pose.HurtBlend > 0 ? Colors.White.Lerp(HurtColor, pose.HurtBlend) : Colors.White;
+    }
 
     /// <summary>
     /// Uzvu kalıcı olarak ayırır ve düşen parçayı sahneye bırakır.
@@ -152,175 +155,33 @@ public sealed partial class WarriorRig : Node2D
     /// kaybetmesi böylece görselde bedava geliyor — çekirdekteki
     /// <see cref="Warrior.UsableWeapon"/> kuralıyla aynı sonuç.
     /// </remarks>
-    public void Dismember(BodyPart part)
+    private void Sever(BodyPart part)
     {
-        if (!_lost.Add(part))
+        switch (part)
         {
-            return;
-        }
+            case BodyPart.Arm:
+                DropLimb(_armNear);
+                _armNear = null;
+                _weapon = null;
+                break;
 
-        Node2D? limb = part switch
-        {
-            BodyPart.Arm => _armNear,
-            BodyPart.Leg => _legNear,
-            _ => null,
-        };
+            case BodyPart.Leg:
+                DropLimb(_legNear);
+                _legNear = null;
+                break;
 
-        if (limb is not null)
-        {
-            DropLimb(limb);
+            case BodyPart.Eye:
+            default:
+                _headShape.Color = new Color(0.75f, 0.15f, 0.15f);
+                break;
         }
 
         Splatter(part == BodyPart.Leg ? _hip : _torso);
-
-        if (part == BodyPart.Eye)
-        {
-            _headShape.Color = new Color(0.75f, 0.15f, 0.15f);
-        }
-    }
-
-    /// <summary>Ölüm anı — savaşçı yığılır.</summary>
-    public void Die() => _deathLean = 0;
-
-    // ------------------------------------------------------------------ duruşlar
-
-    private void ApplyIdlePose(double phase)
-    {
-        float bob = Mathf.Sin((float)_clock * 3f) * 0.04f;
-
-        _torso.Rotation = -0.06f + bob;
-        _head.Rotation = 0.04f - bob;
-
-        // Silah kolu hazır, boşta olan kol denge için hafif açık.
-        Pose(_armNear, 2.15f + bob, -0.75f);
-        Pose(_armFar, 2.55f - bob, -0.45f);
-
-        Stand(bob);
-        _weapon.Rotation = -0.35f;
-    }
-
-    private void ApplyWindupPose(double phase)
-    {
-        // Kesilemez pencere: kılıç geriye ve yukarı toplanır. Oyuncunun "artık
-        // çekemem" anını görsel olarak okuyabilmesi için duruş belirgin olmalı.
-        float t = Ease((float)phase);
-
-        _torso.Rotation = -0.06f - (0.30f * t);
-        _head.Rotation = 0.10f * t;
-
-        Pose(_armNear, 2.15f + (1.35f * t), -0.75f - (0.55f * t));
-        Pose(_armFar, 2.55f - (0.65f * t), -0.45f);
-
-        Stand(0);
-        _legNear.Rotation = -0.18f * t;
-        _weapon.Rotation = -0.35f - (0.55f * t);
-    }
-
-    private void ApplySwingPose(double phase)
-    {
-        // Vuruş ilk anda iner, kalanı toparlanmadır (yeniden kesilebilir).
-        float t = Ease(Math.Min(1f, (float)phase * 2.6f));
-
-        _torso.Rotation = -0.36f + (0.62f * t);
-        _head.Rotation = 0.10f - (0.22f * t);
-
-        Pose(_armNear, 3.50f - (1.95f * t), -1.30f + (1.15f * t));
-        Pose(_armFar, 1.90f + (0.75f * t), -0.45f);
-
-        Stand(0);
-        _legNear.Rotation = -0.18f + (0.34f * t);
-        _weapon.Rotation = -0.90f + (0.80f * t);
-    }
-
-    private void ApplyRetreatPose(double phase)
-    {
-        // Savunmasızlık penceresi: sırtını dönmüş, koşuyor. Kaçınma/blok yok —
-        // duruşun bunu ele vermesi lazım ki bedeli görsel olarak da anlaşılsın.
-        float run = Mathf.Sin((float)_clock * 14f);
-
-        _torso.Rotation = 0.28f;
-        _head.Rotation = -0.35f;
-
-        Pose(_armNear, 2.4f + (run * 0.7f), -0.9f);
-        Pose(_armFar, 2.4f - (run * 0.7f), -0.9f);
-
-        _legNear.Rotation = run * 0.75f;
-        _legFar.Rotation = -run * 0.75f;
-        Bend(_legNear, Math.Max(0, -run) * 0.9f);
-        Bend(_legFar, Math.Max(0, run) * 0.9f);
-
-        _weapon.Rotation = -0.1f;
-    }
-
-    private void ApplyDeathPose(double delta)
-    {
-        _deathLean = Mathf.Min(1f, _deathLean + ((float)delta * 3.2f));
-        float t = Ease(_deathLean);
-
-        Rotation = t * 1.45f;
-        Position = new Vector2(Position.X, Position.Y);
-
-        _torso.Rotation = 0.35f * t;
-        _head.Rotation = 0.5f * t;
-        Pose(_armNear, 2.2f, -0.2f);
-        Pose(_armFar, 2.6f, -0.2f);
-        _legNear.Rotation = 0.4f * t;
-        _legFar.Rotation = -0.25f * t;
-    }
-
-    /// <summary>Ayakta durma — bacak kaybı varsa topallamaya döner.</summary>
-    private void Stand(float bob)
-    {
-        if (_lost.Contains(BodyPart.Leg))
-        {
-            // Tek bacak: sağlam bacağa yaslanmış, gövde o tarafa yatık.
-            float hop = Mathf.Abs(Mathf.Sin((float)_clock * 2.2f)) * 0.10f;
-            _legFar.Rotation = -0.12f - hop;
-            Bend(_legFar, 0.05f);
-            _hip.Position = new Vector2(6, -HipHeight + 16 + (hop * 40));
-            return;
-        }
-
-        _hip.Position = new Vector2(0, -HipHeight);
-        _legNear.Rotation = 0.10f + bob;
-        _legFar.Rotation = -0.10f - bob;
-        Bend(_legNear, 0.06f);
-        Bend(_legFar, 0.06f);
-    }
-
-    /// <summary>Sakatlıkların duruşa kalıcı etkisi.</summary>
-    private void ApplyInjuryOverlay()
-    {
-        if (_lost.Contains(BodyPart.Arm))
-        {
-            // Kolunu kaybeden savaşçı kalan koluyla tek elli dövüşür: gövde
-            // sağlam tarafa döner, kalan kol daha öne çıkar.
-            _torso.Rotation += 0.12f;
-            Pose(_armFar, _armFar.Rotation - 0.35f, -0.55f);
-        }
-
-        if (_lost.Contains(BodyPart.Leg))
-        {
-            _torso.Rotation += 0.16f;
-        }
-    }
-
-    private void ApplyFlinch()
-    {
-        if (_flinch <= 0)
-        {
-            return;
-        }
-
-        float t = (float)_flinch;
-        _torso.Rotation += 0.22f * t;
-        _head.Rotation += 0.30f * t;
-        Modulate = _tint.Lerp(new Color(1f, 0.55f, 0.55f), t * 0.7f);
     }
 
     // ------------------------------------------------------------- rig kurulumu
 
-    private Node2D BuildArm(Node2D parent, Color color, int z)
+    private static Node2D BuildArm(Node2D parent, Color color, int z)
     {
         Node2D upper = Joint(parent, new Vector2(0, -ShoulderDrop));
         upper.ZIndex = z;
@@ -335,7 +196,7 @@ public sealed partial class WarriorRig : Node2D
         return upper;
     }
 
-    private Node2D BuildLeg(Node2D parent, Color color, int z)
+    private static Node2D BuildLeg(Node2D parent, Color color, int z)
     {
         Node2D thigh = Joint(parent, Vector2.Zero);
         thigh.ZIndex = z;
@@ -387,25 +248,31 @@ public sealed partial class WarriorRig : Node2D
     }
 
     /// <summary>Üst ve alt eklemi birlikte kurar (omuz + dirsek, kalça + diz).</summary>
-    private static void Pose(Node2D limb, float upper, float lower)
+    /// <remarks>Zincir koptuysa düğüm artık rig'in değildir; sessizce atlanır.</remarks>
+    private static void Bend(Node2D? limb, float upper, float lower)
     {
-        limb.Rotation = upper;
-        Bend(limb, lower);
-    }
+        if (limb is null)
+        {
+            return;
+        }
 
-    private static void Bend(Node2D limb, float angle) =>
-        limb.GetChild<Node2D>(1).Rotation = angle;
+        limb.Rotation = upper;
+        limb.GetChild<Node2D>(1).Rotation = lower;
+    }
 
     private Color Shade(float amount) =>
         amount >= 0 ? _tint.Lerp(Colors.White, amount) : _tint.Lerp(Colors.Black, -amount);
 
-    private static float Ease(float t) => t * t * (3f - (2f * t));
-
     // ------------------------------------------------------------- uzuv kopması
 
     /// <summary>Kopan uzvu rig'den ayırıp sahneye düşürür.</summary>
-    private void DropLimb(Node2D limb)
+    private void DropLimb(Node2D? limb)
     {
+        if (limb is null)
+        {
+            return;
+        }
+
         Vector2 worldPosition = limb.GlobalPosition;
         float worldRotation = limb.GlobalRotation;
 
@@ -429,7 +296,7 @@ public sealed partial class WarriorRig : Node2D
             {
                 Points = [Vector2.Zero, new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 22f],
                 Width = 5f,
-                DefaultColor = new Color(0.65f, 0.06f, 0.06f),
+                DefaultColor = BloodColor,
                 BeginCapMode = Line2D.LineCapMode.Round,
                 EndCapMode = Line2D.LineCapMode.Round,
             };

@@ -1,23 +1,17 @@
 using Domina.Core.Combat;
 using Domina.Core.Model;
+using Domina.Presentation;
 using Godot;
 
 namespace Domina.Game;
 
 /// <summary>
-/// Dövüş arayüzü: can/stamina barları ve <b>pes etme tuşları</b>.
+/// Dövüş arayüzü: can/stamina barları ve <b>pes etme tuşu</b>.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Pes etme, dövüşteki tek müdahale noktası (GDD §5) ve <b>tek tuştur</b>: komut
-/// ekibin tamamını çeker, savaşçı seçilmez. Savaşçı bazlı olsaydı doğru oynanış
-/// "yara alanı çek, kalanla devam et" olurdu; tek tuş kararı nadir ve ağır yapar.
-/// </para>
-/// <para>
-/// Tuş, komutun <b>kaç savaşçıda anında işleyeceğini</b> gösterir: vuruşa kilitli
-/// savaşçıların komutu buffer'lanır ve kaçış ancak vuruş bitince başlar. Oyuncu bunu
-/// basmadan önce görebilmeli, yoksa gecikme hata gibi hissedilir.
-/// </para>
+/// Ne yazacağına <see cref="HudModel"/> karar verir (motorsuz, testli); buradaki iş
+/// düğümleri kurup metni basmak. Pes etmenin neden tek tuş olduğu ve tuşun neden
+/// kilitli savaşçı sayısını gösterdiği oraya yazılı.
 /// </remarks>
 public sealed partial class BattleHud : CanvasLayer
 {
@@ -78,63 +72,21 @@ public sealed partial class BattleHud : CanvasLayer
     {
         ArgumentNullException.ThrowIfNull(battle);
 
-        int standing = 0;
-        int locked = 0;
-        int leaving = 0;
+        IReadOnlyList<CombatantSnapshot> snapshots = battle.Snapshots();
 
-        foreach (CombatantSnapshot snapshot in battle.Snapshots())
+        foreach (CombatantSnapshot snapshot in snapshots)
         {
             if (_panels.TryGetValue(snapshot.Id, out WarriorPanel? panel))
             {
                 panel.Refresh(snapshot);
             }
-
-            if (snapshot.Team != Battle.PlayerTeam || !snapshot.IsActive)
-            {
-                continue;
-            }
-
-            if (snapshot.RetreatRequested || snapshot.State == CombatState.Retreating)
-            {
-                leaving++;
-                continue;
-            }
-
-            standing++;
-            if (!snapshot.CanCancel)
-            {
-                locked++;
-            }
         }
 
-        RefreshRetreatButton(standing, locked, leaving);
+        RetreatPrompt prompt = HudModel.DescribeRetreat(snapshots);
+        _retreat.Text = prompt.Text;
+        _retreat.Disabled = !prompt.Enabled;
 
-        _status.Text = battle.IsFinished
-            ? $"seed {_seed}  ·  {battle.ElapsedSeconds:F1} sn  ·  {Describe(battle.Result!.Outcome)}"
-            : $"seed {_seed}  ·  {battle.ElapsedSeconds:F1} sn";
-    }
-
-    /// <summary>
-    /// Tek tuşun hali. Komut ekibi kapsadığı için tuş <b>kaç savaşçının</b> etkileneceğini
-    /// ve kaçının vuruşa kilitli olduğunu söyler — kilitli olanların kaçışı vuruş bitince
-    /// başlar, bu gecikme sürpriz olmamalı.
-    /// </summary>
-    private void RefreshRetreatButton(int standing, int locked, int leaving)
-    {
-        _retreat.Disabled = standing == 0;
-
-        if (standing == 0)
-        {
-            _retreat.Text = leaving > 0 ? "EKİP ÇEKİLİYOR" : "—";
-            _retreat.RemoveThemeColorOverride("font_color");
-            return;
-        }
-
-        _retreat.Text = locked == 0
-            ? $"EKİBİ ÇEK ({standing})"
-            : $"EKİBİ ÇEK ({standing}) · {locked} kilitli";
-
-        if (locked > 0)
+        if (prompt.Locked)
         {
             _retreat.AddThemeColorOverride("font_color", LockedColor);
         }
@@ -142,14 +94,9 @@ public sealed partial class BattleHud : CanvasLayer
         {
             _retreat.RemoveThemeColorOverride("font_color");
         }
-    }
 
-    private static string Describe(BattleOutcome outcome) => outcome switch
-    {
-        BattleOutcome.PlayerVictory => "ZAFER",
-        BattleOutcome.PlayerDefeat => "YENİLGİ",
-        _ => "SÜRE DOLDU",
-    };
+        _status.Text = HudModel.DescribeStatus(_seed, battle.ElapsedSeconds, battle.Result?.Outcome);
+    }
 
     private VBoxContainer Column(Vector2 position)
     {
@@ -186,23 +133,12 @@ public sealed partial class BattleHud : CanvasLayer
 
         public VBoxContainer Root { get; }
 
-        public void Refresh(CombatantSnapshot snapshot)
+        public void Refresh(in CombatantSnapshot snapshot)
         {
             _health.Value = snapshot.HealthFraction * 100;
             _stamina.Value = snapshot.StaminaFraction * 100;
-            _name.Text = $"{_warriorName}  ·  {StateLabel(snapshot.State)}";
+            _name.Text = $"{_warriorName}  ·  {HudModel.DescribeState(snapshot)}";
         }
-
-        private static string StateLabel(CombatState state) => state switch
-        {
-            CombatState.Idle => "bekliyor",
-            CombatState.AttackWindup => "saldırıyor",
-            CombatState.AttackRecovery => "toparlanıyor",
-            CombatState.Retreating => "çekiliyor",
-            CombatState.Escaped => "kurtuldu",
-            CombatState.Dead => "öldü",
-            _ => string.Empty,
-        };
 
         private static ProgressBar Bar(Color color, int height)
         {
