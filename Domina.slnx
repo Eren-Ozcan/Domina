@@ -8,6 +8,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Domina.Chat.Tests/Domina.Chat.Tests.csproj" />
     <Project Path="tests/Domina.Core.Tests/Domina.Core.Tests.csproj" />
+    <Project Path="tests/Domina.Presentation.Tests/Domina.Presentation.Tests.csproj" />
     <Project Path="tests/Domina.Sim.Tests/Domina.Sim.Tests.csproj" />
   </Folder>
 </Solution>
