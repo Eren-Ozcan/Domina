@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Domina.Chat/Domina.Chat.csproj" />
     <Project Path="src/Domina.Core/Domina.Core.csproj" />
+    <Project Path="src/Domina.Presentation/Domina.Presentation.csproj" />
     <Project Path="src/Domina.Sim/Domina.Sim.csproj" />
   </Folder>
   <Folder Name="/tests/">

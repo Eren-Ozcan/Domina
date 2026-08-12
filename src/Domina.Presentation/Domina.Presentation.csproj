@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Sunum katmanının MOTORSUZ yarısı.
+
+    Dövüşün ekranda nasıl göründüğüne dair kararlar (kim nerede durur, hangi olay
+    hangi tepkiyi doğurur, kemikler hangi açıyı alır, tuşta ne yazar) burada
+    yaşar ve Godot'u BİLMEZ. Godot katmanı yalnızca sonucu düğümlere uygular.
+
+    Neden: bu kararlar motor açmadan test edilemezse hiç test edilmez. Çekirdek
+    için geçerli olan kural (bkz. CLAUDE.md → "Mimari kuralı") sunum mantığının
+    saf kısmı için de geçerli — buraya Godot referansı eklenmemeli.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domina.Core\Domina.Core.csproj" />
+  </ItemGroup>
+
+</Project>
