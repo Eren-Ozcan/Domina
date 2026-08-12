@@ -1,6 +1,6 @@
 # Durum Kaydı
 
-Son güncelleme: 2026-08-06 (Faz 2 omurgası)
+Son güncelleme: 2026-08-12 (Faz 2.1 kapandı)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -13,10 +13,12 @@ kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık 
 | --- | --- |
 | Faz 0 — İskele | ✅ Tamam |
 | Faz 1 — Simülasyon çekirdeği | ✅ Tamam (kabul kriterleri ölçüldü) |
-| Faz 2 — Dövüş görselleştirme | 🟡 Omurga tamam, sanat stil kararına bağlı |
+| Faz 2.1 — Görselleştirme omurgası | ✅ Tamam (kabul kriteri testle bağlandı) |
+| Faz 2.2 — Sanat ve cila | ⬜ Görsel stil kararına bağlı |
 | Faz 3+ | ⬜ Başlanmadı |
 
-Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test` → 114/114 yeşil.
+Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test` → 173/173 yeşil,
+`dotnet format --verify-no-changes` temiz.
 Godot projesi ayrı derleniyor: `dotnet build src/Game/Domina.Game.csproj`.
 
 ---
@@ -188,6 +190,72 @@ determinizm testleri dahil hepsi yeşil kaldı.
 
 ---
 
+## Faz 2.1 — kapanış (2026-08-12)
+
+Omurga "çalışıyor"dan "bitti"ye çekildi. İki iş yapıldı: **sunum mantığı motordan
+ayrıldı ve testle bağlandı**, ardından ortaya çıkan boşluklar kapatıldı.
+
+### Yeni katman: `Domina.Presentation`
+
+Godot'a bağımlı olmayan bir kütüphane. İçinde dövüşün ekranda nasıl göründüğüne dair
+kararlar var; Godot'un `Vector2`'si yerine kendi `ScenePoint`'i kullanılıyor.
+
+| Tip | İşi |
+| --- | --- |
+| `ArenaLayout` / `ArenaChoreography` | kim nerede durur, hamle nereye gider, ceset nerede kalır |
+| `ReactionReader` | olay akışı → tek seferlik görsel tepkiler |
+| `RigAnimator` / `RigPose` | durum + tepki → 14 kemik açısı |
+| `HudModel` | tuşta ve panelde ne yazar |
+| `DemoRoster` / `ArenaArguments` | geçici kadro, `--seed` / `--speed` |
+
+`src/Game` artık ince: düğümleri kurar, gelen açıyı uygular, kopan zinciri ayırır.
+
+> **Neden ayrı proje:** motor açmadan test edilemeyen karar hiç test edilmez. Faz 2
+> tek testsiz fazdı; şimdi `ArenaPlaybackTests` dövüşü `BattleArena._Process` ile aynı
+> sırayla oynatıp bilançodaki uzuv kaybının ekrandaki kopmayla **aynı uzuv** üzerinden
+> tuttuğunu sınıyor — yani Faz 2'nin kabul kriteri artık bir cümle değil bir test.
+> Motorsuz koşabiliyor olması ayrımın da canlı kanıtı: `src/Game`'e bir sızıntı olursa
+> bu testler derlenmez.
+
+### Kapatılan boşluklar
+
+Ayrım netleşince görülen eksikler:
+
+- **Saldırının üç sonucu ekranda aynı görünüyordu.** 13 olay türünden yalnızca 3'ü
+  görsele bağlıydı; ıska ve kaçınmanın karşılığı yoktu. Artık ıska savurma
+  (`Overswing`), kaçınma yana kaçış üretiyor. Kaçınma stamina harcayan bir çekirdek
+  mekaniği — ekranda karşılığı yoksa oyuncu staminanın nereye gittiğini göremez.
+- **Fırsat saldırısının işareti yoktu.** Kaçışın bedeli normal vuruştan ayırt
+  edilemiyordu ("tuşa bastım, sonra canım gitti"). Çekirdekte bir duruma karşılık
+  gelmediği için — kaçan avın arkasından anında çözülür — boşta bekleyen savaşçının
+  duruşunu geçici olarak devralan ayrı bir vuruş eklendi.
+- **Ölen savaşçı hattına ışınlanıyordu.** Konum yalnızca duruma bakılarak
+  hesaplanıyordu; hamlenin ortasında ölen geri sıçrıyordu. Koreografi artık ölüm
+  öncesi kareyi hatırlıyor.
+- **Kaçan savaşçı arenanın ortasında yok oluyordu.** Kaçış mesafesi sabit 460 px'ti,
+  kadraj 1920 px. Mesafe artık kadrajdan hesaplanıyor.
+- **Bacağını kaybeden savaşçı kaçarken topallamıyordu.** Kaçış duruşu sakatlık
+  katmanından geçmiyordu: kalça son topallama değerinde asılı kalıyor, sağlam bacak
+  normal koşu döngüsünü oynatıyordu.
+- **Buffer'lanmış komut panelde görünmüyordu.** Tuş basmadan önce "3 kilitli" diyordu
+  ama bastıktan sonra panel hâlâ "saldırıyor" yazıyordu — komut yutulmuş gibi.
+- **Kopan uzuv yerde yatarken hâlâ animasyon alıyordu.** Zincir ayrıldıktan sonra da
+  referans duruyordu, duruş her karede yerdeki kola da uygulanıyordu; düşme dönüşü
+  bu yüzden hiç görünmüyordu.
+- **Acı parlaması takım rengini ikinci kez çarpıyordu.** Uzuvlar zaten renkliydi;
+  `Modulate`'e takım rengi basmak savaşçıyı kızartmak yerine karartıyordu.
+
+### Doğrulama
+
+- 57 yeni test (toplam 173), `dotnet format` temiz, Godot katmanı ayrı derleniyor
+- Motorlu/motorsuz karşılaştırma birebir: seed 20260806 → **PlayerVictory / 15,2 sn**,
+  seed 81 → **PlayerDefeat / 32,0 sn** — ikisi de hem arenada hem motorsuz oynatmada
+- Testler seed sabitlemiyor, aradıkları durumu (ölüm, kaçış, uzuv kaybı) üreten ilk
+  seed'i tarayarak buluyor. Faz 9'da denge sayıları değiştiğinde sabit bir seed sessizce
+  anlamını yitirirdi: test yeşil kalır ama artık bir şey sınamazdı.
+
+---
+
 ## Sıradaki iş
 
 **Görsel stil kararı** (GDD Açık Karar #6). Faz 2.2'nin tamamı buna bağlı ve
@@ -201,6 +269,56 @@ kademesi birbirinden ayırt ediliyor mu.
 > piksel ızgarası kemik döndürmede bozulur, kalıcı uzuv kaybı kombinatoryal
 > sprite üretimine geri döner (GDD §2 bunu zaten elemişti).
 
+### Bekleyen kararlar — silah yeterliliği (2026-08-12 oturumu)
+
+Konuşuldu, **karara bağlanmadı**. Karar verilene kadar GDD'ye girmez; burada duruyor.
+
+Kilitlenen yön: **sınıf yok, savaşçılar silah üzerinden uzmanlaşır.** Yeterlilik silah
+adı başına değil **kavrayış (grip) başına** tutulur — tek el / çift el. Sebep mekanik:
+`Disability.BlocksTwoHandedWeapons` zaten var, yani **çift el ustası kolunu kaybederse
+ömrünün emeğini kaybeder.** Riskli olması kasıtlı. Yeterlilik isabeti ve saldırı hızını
+etkiler, **ham hasarı etkilemez** (Strength ile çarpışıp dengeyi patlatır).
+
+İki koruma bandı üzerinde anlaşıldı:
+- Tek el hattı sıfırdan eğitilebilir kalmalı, yoksa doğru oynanış "sakat kalacaksa
+  bırak ölsün" olur ve GDD §7'nin sorusu sahteleşir
+- Çift el, kırılganlığının bedelini tavanla ödemeli (Nodachi 34 / Katana 22 farkı korunmalı)
+
+Cevap bekleyen üç soru (parantez içi: riskli yön paketi olarak önerilen):
+
+1. **Hat sayısı** — iki mi (tek el / çift el), üç mü (+ fırlatma)? *(iki; fırlatma hattı
+   ancak shuriken/kunai çekirdeğe girerse açılır)*
+2. **Büyüme kaynağı** — sadece dövüşte kullanım mı, dojo antrenmanı da mı? *(ikisi;
+   antrenman şart, sakat ustanın yeniden eğitileceği yer orası)*
+3. **Acemi cezası** — yeterlilik 0'da silah kuşanılabilsin mi? *(evet ama isabet
+   belirgin düşük; "hiç kuşanamaz" roster'ı kilitler)*
+
+Karar verilince tek geçişte GDD'ye işlenecek: §4'e yeterlilik, Açık Karar #4'ün
+bölünmesi (aşağıdaki A grubu kilitli, B/C açık), ve aynı geçişte iki mevcut tutarsızlık.
+
+#### Silah listesi — çekirdeğe maliyetine göre
+
+- **A · bedava** (mevcut `Weapon` modeline sığar, sadece fabrika + denge sayısı):
+  wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi
+- **B · yeni kural, uzam yok**: sersemletme, zehir, jitte/sai ile kılıç yakalama,
+  silah kırılması
+- **C · uzam/mermi gerekir**: shuriken, kunai, yumi, fukiya, makibishi (çivi tuzağı)
+
+> Kalkan yerine **jitte/sai ile kılıç yakalama**: elde taşınan kalkan Japon savaşında
+> yaygın değil (*tate* yere dayanan sabit siperdir), üstelik aynı mekanik ihtiyacı
+> (hasarı sıfırlayan ayrı savunma dalı) uzam gerektirmeden karşılıyor.
+
+> Shuriken ve makibishi'nin **ucuz versiyonu** var: shuriken = hızlı + düşük hasarlı
+> normal silah; makibishi = düşmanın `SpacingSeconds`'ını uzatan sarf malzemesi.
+> İkisi de konum bilgisi istemez, determinizmi ve sıcak döngüyü bozmaz.
+
+#### GDD ile kodun uyuşmadığı iki yer (karar değil, düzeltme)
+
+- **§2** hâlâ "Godot Skeleton2D + Bone2D" diyor; kod düz `Node2D` hiyerarşisi kullanıyor
+  (gerekçe ROADMAP Faz 2.1'de: Bone2D mesh deformasyonu içindir, bize koparma lazım)
+- **§7** künt silah için "kırık/sersemleme" vaat ediyor, **§5** blok'u ayrı bir durum
+  sayıyor — ikisi de çekirdekte yok. Blok şu an `Defense` statının içinde eriyor.
+
 ### Akılda tutulacaklar
 - Denge sayıları **kasıtlı olarak ham**. İlk ölçüm 3v3'te oyuncu ölüm oranını
   %45-57 gösteriyor; bu Faz 9'un işi, şimdi ayarlanmayacak (bkz. ROADMAP riski).
@@ -208,4 +326,7 @@ kademesi birbirinden ayırt ediliyor mu.
   "no test is available" uyarısı buradan geliyor, hata değil.
 - Dövüş savaşçıların kalıcı halini değiştirmiyor; ölüm/sakatlığı kalıcı hale
   işlemek **meta katmanın** işi ve henüz yazılmadı (Faz 3). Arenadaki kadro da
-  geçici — gerçek roster Faz 3'te gelecek.
+  geçici — `DemoRoster` Faz 3'te gerçek roster'a bırakacak.
+- Sanat geldiğinde değişecek yer bellidir: `WarriorRig.Limb` (kemiğe asılı çizim) ve
+  `RigAnimator`'daki duruş sayıları. `RigPose`'un alanları ve `BattleArena` değişmez —
+  yordamsal duruşun yerini AnimationPlayer alsa bile arayüz aynı kalır.

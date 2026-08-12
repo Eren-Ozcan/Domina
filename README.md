@@ -35,11 +35,16 @@ Godot çalıştırılabilir dosyası repoda tutulmaz; `tools/` altına indirilir
 (`tools/` gitignore'ludur).
 
 ```
-src/     simülasyon çekirdeği, chat adapter'ları, toplu simülasyon, Godot projesi
-tests/   çekirdek testleri (motor açmadan koşar)
+src/     simülasyon çekirdeği, sunum mantığı, chat adapter'ları, toplu simülasyon, Godot projesi
+tests/   testler (motor açmadan koşar)
 docs/    tasarım ve plan
 tools/   Godot ikilisi (gitignore'lu)
 ```
+
+Godot'a bağımlı olan tek proje `src/Game`. Dövüşün ekranda nasıl göründüğüne dair
+kararlar (kim nerede durur, hangi olay hangi tepkiyi doğurur, tuşta ne yazar)
+`src/Domina.Presentation` içinde motorsuz duruyor ve testleri motor açmadan koşuyor;
+`src/Game` yalnızca sonucu düğümlere uyguluyor.
 
 ### Toplu simülasyon
 
@@ -62,6 +67,7 @@ dotnet build src/Game/Domina.Game.csproj
 tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64.exe --path src/Game -- --seed 81
 ```
 
-`--seed` verilmezse varsayılan dövüş açılır. Toplu simülasyon ilginç bir dövüş
+`--speed 4` dövüşü hızlandırır (denge bakarken), `--headless --quit-after 900` ile
+sonuç tek satırda alınır. `--seed` verilmezse varsayılan dövüş açılır. Toplu simülasyon ilginç bir dövüş
 bildirdiğinde ("52 numaralı seed'de savaşçı kolunu kaybediyor") o dövüş burada
 birebir izlenebilir — determinizmin pratik karşılığı budur.

@@ -109,23 +109,35 @@ bir sistem, dengeli bir sistem değil.
 
 **Hedef:** Faz 1'in olay akışı ekranda izlenebilir bir dövüşe dönüşüyor.
 
-### 2.1 Stil-bağımsız omurga — ✅ *(2026-08-06)*
+### 2.1 Stil-bağımsız omurga — ✅ *(2026-08-12)*
 - [x] Savaşçı sahne yapısı, **modüler uzuvlar** — 15 parçalı cutout rig, kopma
       noktaları omuz ve kalça (GDD §2, §7)
 - [x] Animasyon durum makinesi: bekle → yaklaş → saldır → tepki → tekrar
-- [x] Faz 1 olaylarını animasyona bağlama (event → görsel tepki)
+- [x] Faz 1 olaylarını animasyona bağlama (event → görsel tepki) — **saldırının üç
+      sonucu ayırt edilebiliyor**: isabet sarsar, ıska savurur, kaçınma yana kaçar;
+      fırsat saldırısının ayrı bir vuruşu var
 - [x] Kesme pencereleri (cancel window) animasyon zamanlamasıyla eşleştirme
 - [x] **Uzuv kopma:** uzvun rig'den ayrılması, kan VFX, kalıcı model değişimi
-- [x] Sakat animasyon setleri: topallama, tek elli duruş
-- [x] Ölüm animasyonu (yığılma — gore geçici sanatla anlamsız, sanatla gelecek)
+- [x] Sakat animasyon setleri: topallama (kaçarken de), tek elli duruş
+- [x] Ölüm animasyonu (yığılma — gore geçici sanatla anlamsız, sanatla gelecek);
+      ceset düştüğü yerde kalıyor
 - [x] **Pes etme tuşu** UI'ı — **tek tuş, ekibin tamamını çeker** (GDD §5); tuş kaç
-      savaşçının etkileneceğini ve kaçının vuruşa kilitli olduğunu önceden gösterir
+      savaşçının etkileneceğini ve kaçının vuruşa kilitli olduğunu önceden gösterir,
+      basıldıktan sonra da hangisinin beklediği panelde okunuyor
 - [x] `-- --seed N` ile toplu simülasyonun bildirdiği dövüşü birebir izleme
+      (`--speed N` ile hızlandırılabiliyor)
+- [x] Sunum mantığı motordan ayrıldı (`Domina.Presentation`) ve **57 testle**
+      kapsandı — Faz 2 artık repodaki diğer fazlar gibi doğrulanıyor
 
 > **Rig'de Skeleton2D + Bone2D kullanılmadı.** Bone2D iskeleti mesh *deformasyonu*
 > içindir; bizim ihtiyacımız uzvu deforme etmek değil **koparmak**. Düz `Node2D`
 > hiyerarşisinde kopma, düğümü zincirinden ayırmaktır — GDD §2'nin tarif ettiği şeyin
 > tam karşılığı, üstelik daha az parça. Skeleton2D ileride IK gerekirse eklenebilir.
+
+> **Sunum mantığı Godot'un içinde değil.** Kim nerede durur, hangi olay hangi tepkiyi
+> doğurur, kemikler hangi açıyı alır, tuşta ne yazar — hepsi `Domina.Presentation`
+> içinde, motora bağımsız. Gerekçe çekirdektekiyle aynı: motor açmadan test edilemeyen
+> karar hiç test edilmez. `src/Game` artık yalnızca düğüm kurup gelen açıyı uyguluyor.
 
 ### 2.2 Sanat ve cila — ⬜ stil kararına bağlı
 - [ ] Görsel stil kararı (GDD Açık Karar #6) — **bu verilmeden ilerlenmez**
@@ -136,13 +148,15 @@ bir sistem, dengeli bir sistem değil.
 
 **Kabul:** Bir seed verildiğinde dövüş baştan sona izlenebiliyor; olaylar ile ekranda
 görünen birebir tutuyor (uzuv kopan savaşçı ekranda da kopuk).
-✅ *Omurga için doğrulandı: seed 52/81 — toplu simülasyonun bildirdiği uzuv kaybı
-ekranda da gerçekleşiyor, kopan kol silahıyla birlikte düşüyor. Aynı seed (20260806)
-hem arenada hem `Domina.Sim`'de 15,2 sn ve aynı sonucu veriyor.*
+✅ *Omurga için doğrulandı ve artık **testle bağlandı**: `ArenaPlaybackTests` dövüşü
+arenayla aynı sırayla oynatıp bilançodaki uzuv kaybının ekrandaki kopmayla — üstelik
+aynı uzuvla — eşleştiğini sınıyor. Motorla karşılaştırma da tutuyor: seed 20260806
+arenada da motorsuz oynatmada da PlayerVictory / 15,2 sn, seed 81 ikisinde de
+PlayerDefeat / 32,0 sn.*
 
 **Risk:** Hâlâ projenin en maliyetli görsel parçası, ama **2D cutout kararıyla
-XL'den M'e indi** — 3D modüler dismemberment riski ortadan kalktı.
-Kalan iş: rig kalitesi ve tek-kollu/topal animasyon setleri.
+XL'den M'e indi** — 3D modüler dismemberment riski ortadan kalktı. Omurga bittiğine
+göre kalan riskin tamamı 2.2'de: sanat üretimi ve stil kararı.
 
 **Ön koşul:** Görsel **stil** kararı (GDD Açık Karar #6 — piksel mi mürekkep mi)
 bu faza başlamadan verilmeli. Teknik yol belli, stil değil.
