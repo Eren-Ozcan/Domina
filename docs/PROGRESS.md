@@ -256,6 +256,27 @@ Ayrım netleşince görülen eksikler:
 
 ---
 
+## Motor doğrulaması (2026-08-13)
+
+Uzam değişikliğinden sonra Godot katmanı çalıştırıldı:
+
+```bash
+dotnet build src/Game/Domina.Game.csproj                       # 0 hata / 0 uyarı
+tools/Godot_v4.7-stable_mono_win64/..._console.exe --headless --path src/Game -- --seed 81
+```
+
+Headless koşu sorunsuz tamamlandı ve **motorlu/motorsuz karşılaştırma tuttu**:
+seed 81 → hem arenada hem `Domina.Sim`'de **PlayerWipe / 18,8 sn**. Yani uzam
+çekirdeğe girerken mimari kural (görselleştirme simülasyonu etkilemez) korundu.
+
+> **Yapılmayan iş — gözle kontrol.** Pencere açıldı ama dövüş izlenmedi. İlk kez
+> ekranda olacak beş şey doğrulanmayı bekliyor: gerçek yürüme, derinliğin dikey
+> kayma + ölçek + çizim sırasıyla okunması, menzil dışından kılıç sallanmaması,
+> hedef değişince yön dönmesi, ve hedef uzaklaşınca ıska. Sonraki oturumda
+> `--seed 81 --speed 1` ile bakılacak.
+
+---
+
 ## Bekleyen karar — uzuv kaybı oranı nasıl yükselecek
 
 **Sonraki oturum bu soruyla açılacak.** Hedef: makul oynayan oyuncunun savaşçılarının
