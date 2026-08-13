@@ -10,7 +10,8 @@ internal sealed record SimOptions(
     ulong FirstSeed,
     IRetreatPolicy? RetreatPolicy,
     string PolicyLabel,
-    string? CsvPath);
+    string? CsvPath,
+    CombatTuning Tuning);
 
 /// <summary>Ayrıştırma sonucu: ayarlar, yardım isteği veya hata.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
@@ -37,6 +38,7 @@ internal static class SimArgs
         ulong firstSeed = DefaultSeed;
         string policySpec = "never";
         string? csvPath = null;
+        CombatTuning tuning = CombatTuning.Default;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -90,6 +92,24 @@ internal static class SimArgs
                     csvPath = value;
                     break;
 
+                case "--grievous":
+                    if (!TryFraction(value, out double grievous))
+                    {
+                        return ParsedArgs.Fail($"--grievous 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { GrievousSeverityThreshold = grievous };
+                    break;
+
+                case "--sever":
+                    if (!TryFraction(value, out double sever))
+                    {
+                        return ParsedArgs.Fail($"--sever 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BaseDismembermentChance = sever };
+                    break;
+
                 default:
                     return ParsedArgs.Fail($"Bilinmeyen seçenek: {arg}");
             }
@@ -104,11 +124,16 @@ internal static class SimArgs
 
         if (!TryParsePolicy(policySpec, out IRetreatPolicy? policy, out string label))
         {
-            return ParsedArgs.Fail($"Bilinmeyen kaçış politikası: {policySpec} (never | below:<0-1>)");
+            return ParsedArgs.Fail(
+                $"Bilinmeyen kaçış politikası: {policySpec} (never | below:<0-1> | losing:<0-1>)");
         }
 
-        return ParsedArgs.Ok(new SimOptions(scenario, battles, firstSeed, policy, label, csvPath));
+        return ParsedArgs.Ok(new SimOptions(scenario, battles, firstSeed, policy, label, csvPath, tuning));
     }
+
+    private static bool TryFraction(string text, out double value) =>
+        double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
+        && value is >= 0 and <= 1;
 
     /// <summary>
     /// Kaçış politikasını çözer.
@@ -125,6 +150,16 @@ internal static class SimArgs
         {
             policy = NeverRetreat.Instance;
             label = "hiç çekilme";
+            return true;
+        }
+
+        if (spec.StartsWith("losing:", StringComparison.OrdinalIgnoreCase)
+            && TryFraction(spec["losing:".Length..], out double losingAt))
+        {
+            policy = new RetreatWhenLosing(losingAt);
+            label = string.Create(
+                CultureInfo.InvariantCulture,
+                $"sayıca gerideyken canı %{losingAt * 100:0.#} altına düşünce çek");
             return true;
         }
 
@@ -156,13 +191,18 @@ internal static class SimArgs
         writer.WriteLine("Kullanım:");
         writer.WriteLine("  Domina.Sim [--scenario <ad>] [--battles <N>] [--seed <S>]");
         writer.WriteLine("             [--policy never|below:<oran>] [--out <dosya.csv>]");
+        writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
         writer.WriteLine($"  --battles   Dövüş sayısı (varsayılan: {DefaultBattles})");
         writer.WriteLine($"  --seed      İlk seed; sonrakiler birer artar (varsayılan: {DefaultSeed})");
-        writer.WriteLine("  --policy    Kaçış politikası: never | below:0.3 (varsayılan: never)");
+        writer.WriteLine("  --policy    never | below:<oran> | losing:<oran> (varsayılan: never)");
+        writer.WriteLine("              below   = canı düşen olunca çek (kaba taban)");
+        writer.WriteLine("              losing  = sayıca gerideyken canı düşünce çek (oyuncu modeli)");
         writer.WriteLine("  --out       Dövüş başına satır yazılacak CSV dosyası");
+        writer.WriteLine("  --grievous  Ağır darbe eşiği (darbe/azami can oranı)");
+        writer.WriteLine("  --sever     Ağır darbede taban uzuv kopma şansı");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

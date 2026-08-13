@@ -31,7 +31,7 @@ internal static class SimCli
         }
 
         SimOptions options = parsed.Options;
-        var runner = new BatchRunner(options.Scenario, options.RetreatPolicy);
+        var runner = new BatchRunner(options.Scenario, options.RetreatPolicy, options.Tuning);
 
         try
         {

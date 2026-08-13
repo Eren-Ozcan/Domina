@@ -40,10 +40,35 @@ public sealed class NeverRetreat : IRetreatPolicy
 }
 
 /// <summary>Can belirli bir orana düşünce çeken oyuncu.</summary>
+/// <remarks>
+/// Kaba bir model: komut <b>ekip bazlı</b> olduğu için tek bir savaşçının canı düşünce
+/// tüm ekip sahayı terk eder. 3v3'te bu, dövüşlerin ezici çoğunluğunun terk edilmesi
+/// demek — gerçek bir oyuncunun oynayışı değil. Ölçüm tabanı olarak kullanılır, oyuncu
+/// modeli olarak <see cref="RetreatWhenLosing"/> daha gerçekçidir.
+/// </remarks>
 public sealed class RetreatBelowHealth(double healthFraction) : IRetreatPolicy
 {
     public double HealthFraction { get; } = healthFraction;
 
     public bool ShouldRetreat(in RetreatContext context) =>
         context.HealthFraction <= HealthFraction;
+}
+
+/// <summary>
+/// Dövüş <b>döndüğünde</b> çeken oyuncu: sayıca geride kalmış ve canı da eşiğin
+/// altındaysa çekilir.
+/// </summary>
+/// <remarks>
+/// Gerçek oyuncu tek bir yaraya bakıp seferi iptal etmez; dövüşün gidişatına bakar.
+/// Yalnızca cana bakan politika 3v3'te dövüşlerin %80'inden fazlasını terk ettiriyor
+/// ve ölçümü anlamsızlaştırıyor — zafer oranı düşük çıkıyor ama sebebi denge değil,
+/// politikanın kendisi.
+/// </remarks>
+public sealed class RetreatWhenLosing(double healthFraction) : IRetreatPolicy
+{
+    public double HealthFraction { get; } = healthFraction;
+
+    public bool ShouldRetreat(in RetreatContext context) =>
+        context.AlliesStanding < context.EnemiesStanding
+        && context.HealthFraction <= HealthFraction;
 }

@@ -36,13 +36,16 @@ internal sealed class BatchRunner
 {
     private readonly BattleSetup _setup;
 
-    public BatchRunner(Scenario scenario, IRetreatPolicy? retreatPolicy)
+    public BatchRunner(Scenario scenario, IRetreatPolicy? retreatPolicy, CombatTuning? tuning = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
 
-        _setup = scenario.Build() with
+        BattleSetup built = scenario.Build();
+
+        _setup = built with
         {
             RetreatPolicy = retreatPolicy,
+            Tuning = tuning ?? built.Tuning,
 
             // Olay akışı yalnızca görselleştirme içindir; burada biriktirmek
             // dövüş başına yüzlerce gereksiz ayırma demek olurdu.
@@ -147,7 +150,11 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public int Victories { get; private set; }
 
-    public int Defeats { get; private set; }
+    /// <summary>Ekip sağ çekildi — sefer harcandı, savaşçılar duruyor.</summary>
+    public int Withdrawals { get; private set; }
+
+    /// <summary>Ekip kırıldı — kimse kaçamadı.</summary>
+    public int Wipes { get; private set; }
 
     public int TimeLimits { get; private set; }
 
@@ -176,7 +183,9 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double VictoryRate => Rate(Victories, Battles);
 
-    public double DefeatRate => Rate(Defeats, Battles);
+    public double WithdrawalRate => Rate(Withdrawals, Battles);
+
+    public double WipeRate => Rate(Wipes, Battles);
 
     public double TimeLimitRate => Rate(TimeLimits, Battles);
 
@@ -206,8 +215,11 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
             case BattleOutcome.PlayerVictory:
                 Victories++;
                 break;
-            case BattleOutcome.PlayerDefeat:
-                Defeats++;
+            case BattleOutcome.PlayerWithdrawal:
+                Withdrawals++;
+                break;
+            case BattleOutcome.PlayerWipe:
+                Wipes++;
                 break;
             case BattleOutcome.TimeLimit:
             default:

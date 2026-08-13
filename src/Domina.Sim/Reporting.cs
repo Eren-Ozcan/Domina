@@ -64,7 +64,8 @@ internal static class SummaryReport
 
         writer.WriteLine("Sonuç");
         WriteCount(writer, "  Zafer", report.Victories, report.VictoryRate);
-        WriteCount(writer, "  Yenilgi", report.Defeats, report.DefeatRate);
+        WriteCount(writer, "  Çekilme", report.Withdrawals, report.WithdrawalRate);
+        WriteCount(writer, "  Bozgun", report.Wipes, report.WipeRate);
         WriteCount(writer, "  Süre doldu", report.TimeLimits, report.TimeLimitRate);
         writer.WriteLine();
 
