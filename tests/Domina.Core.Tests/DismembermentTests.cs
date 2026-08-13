@@ -10,10 +10,29 @@ namespace Domina.Core.Tests;
 /// </summary>
 public class DismembermentTests
 {
+    /// <summary>
+    /// Her darbeyi bacağa indiren ayar.
+    /// </summary>
+    /// <remarks>
+    /// Sonuç ağacını sınayan testler darbenin <b>koparılabilir</b> bir bölgeye inmesini
+    /// ister; gövdeye inen darbenin koparacak bir şeyi yoktur. Bölge dağılımı ayrı
+    /// testlerin konusu.
+    /// </remarks>
+    private static CombatTuning AlwaysLimb { get; } = TestBuilders.PointBlank with
+    {
+        TorsoHitWeight = 0,
+        HeadHitWeight = 0,
+        ArmHitWeight = 0,
+        LegHitWeight = 100,
+    };
+
     /// <summary>Tek vuruşta ağır darbe eşiğini aşan ama öldürmeyen kurulum.</summary>
     private static BattleSetup Executioner(double defenderHealth = 300, Armor? armor = null) => new(
         [TestBuilders.Warrior(1, "Kurban", health: defenderHealth, aggression: 0, armor: armor)],
-        [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())]);
+        [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
+    {
+        Tuning = AlwaysLimb,
+    };
 
     [Fact]
     public void GrievousBlowWithoutInterventionKills()
@@ -72,7 +91,10 @@ public class DismembermentTests
         // Yumruk: hasar/azami can oranı eşiğin (0.28) çok altında kalır.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 300, aggression: 0)],
-            [TestBuilders.Warrior(101, aggression: 100, weapon: Weapon.Fists())]);
+            [TestBuilders.Warrior(101, aggression: 100, weapon: Weapon.Fists())])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
         battle.CommandRetreat();
@@ -91,7 +113,10 @@ public class DismembermentTests
 
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 300, aggression: 0)],
-            [TestBuilders.Warrior(101, aggression: 100, weapon: blunt)]);
+            [TestBuilders.Warrior(101, aggression: 100, weapon: blunt)])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new FixedRandom(0.20));
         battle.CommandRetreat();
@@ -125,7 +150,10 @@ public class DismembermentTests
 
         var setup = new BattleSetup(
             [victim],
-            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())]);
+            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
         battle.CommandRetreat();
@@ -133,6 +161,33 @@ public class DismembermentTests
 
         WarriorDismembered lost = battle.Events.OfType<WarriorDismembered>().First();
         Assert.NotEqual(BodyPart.Arm, lost.Part);
+    }
+
+    /// <summary>
+    /// Gövdeye inen ağır darbe de bir uzva mal olur — müdahale asla bedava değildir.
+    /// </summary>
+    /// <remarks>
+    /// Gövde vuruşları koparmasın denince müdahale risksizleşiyor ve oyuncu zaferi
+    /// %36'dan %53'e çıkıyordu (10.000 dövüş, 3v3). Bölge hasarı ve zırhı ilgilendirir,
+    /// sonuç ağacını değil.
+    /// </remarks>
+    [Fact]
+    public void BlowsToTheTorsoStillCostALimb()
+    {
+        var setup = new BattleSetup(
+            [TestBuilders.Warrior(1, "Kurban", health: 300, aggression: 0)],
+            [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
+        {
+            // Her darbe gövdeye iniyor; kalan uzuvların ağırlıkları varsayılan kalır,
+            // çünkü kopacak uzuv onların arasından seçilecek.
+            Tuning = TestBuilders.PointBlank with { TorsoHitWeight = 1000 },
+        };
+
+        var battle = new Battle(setup, new FixedRandom(0.0));
+        battle.CommandRetreat();
+        battle.Run();
+
+        Assert.Contains(battle.Events, e => e is WarriorDismembered);
     }
 
     [Fact]
@@ -144,7 +199,10 @@ public class DismembermentTests
 
         var setup = new BattleSetup(
             [victim],
-            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())]);
+            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
         battle.CommandRetreat();

@@ -17,7 +17,10 @@ public class RetreatTests
 
     private static BattleSetup Duel(double playerHealth = 400, double playerEvasion = 0) => new(
         [TestBuilders.Warrior(1, health: playerHealth, evasion: playerEvasion)],
-        [TestBuilders.Warrior(101, health: 400)]);
+        [TestBuilders.Warrior(101, health: 400)])
+    {
+        Tuning = TestBuilders.PointBlank,
+    };
 
     /// <summary>Belirli bir duruma girene kadar adımlar.</summary>
     private static bool StepUntil(Battle battle, Func<Battle, bool> predicate, int maxSteps = 400)
@@ -123,8 +126,9 @@ public class RetreatTests
         Assert.False(summary.Died);
         Assert.True(summary.HealthRemaining > 0);
 
-        // Sağ kalmak zafer değildir: arenada dojo adına dövüşen kimse kalmadı.
-        Assert.Equal(BattleOutcome.PlayerDefeat, result.Outcome);
+        // Sağ kalmak zafer değildir ama bozgun da değildir: dövüş kazanılmadı,
+        // savaşçı hayatta. İkisi ayrı sonuçlar.
+        Assert.Equal(BattleOutcome.PlayerWithdrawal, result.Outcome);
         Assert.Contains(battle.Events, e => e is WarriorEscaped);
     }
 
@@ -166,7 +170,10 @@ public class RetreatTests
                 TestBuilders.Warrior(2, health: 400),
                 TestBuilders.Warrior(3, health: 400),
             ],
-            [TestBuilders.Warrior(101, health: 400)]);
+            [TestBuilders.Warrior(101, health: 400)])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new SeededRandom(9));
         Assert.True(battle.CommandRetreat());
@@ -178,9 +185,9 @@ public class RetreatTests
 
         BattleResult result = battle.Run();
 
-        // Kimse geride bırakılmaz; sahada dojo adına kimse kalmadığı için yenilgi.
+        // Kimse geride bırakılmaz; sahada dojo adına kimse kalmadı ama kimse de ölmedi.
         Assert.Equal(3, result.Summaries.Count(s => s.Team == Battle.PlayerTeam && s.Escaped));
-        Assert.Equal(BattleOutcome.PlayerDefeat, result.Outcome);
+        Assert.Equal(BattleOutcome.PlayerWithdrawal, result.Outcome);
     }
 
     /// <summary>
@@ -196,7 +203,10 @@ public class RetreatTests
                 TestBuilders.Warrior(1, health: 400, aggression: 100),
                 TestBuilders.Warrior(2, health: 400, aggression: 0),
             ],
-            [TestBuilders.Warrior(101, health: 400)]);
+            [TestBuilders.Warrior(101, health: 400)])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new SeededRandom(21));
 
@@ -225,7 +235,10 @@ public class RetreatTests
                 TestBuilders.Warrior(1, health: 300, aggression: 0),
                 TestBuilders.Warrior(2, health: 300, aggression: 0),
             ],
-            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())]);
+            [TestBuilders.Warrior(101, aggression: 100, weapon: TestBuilders.Executioner())])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
         battle.CommandRetreat();

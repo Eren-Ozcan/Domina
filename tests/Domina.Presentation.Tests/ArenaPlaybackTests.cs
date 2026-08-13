@@ -33,16 +33,6 @@ public class ArenaPlaybackTests
         var choreography = new ArenaChoreography(new ArenaLayout());
         var reader = new ReactionReader();
 
-        for (int i = 0; i < setup.PlayerSide.Count; i++)
-        {
-            choreography.Place(setup.PlayerSide[i].Id, Battle.PlayerTeam, i);
-        }
-
-        for (int i = 0; i < setup.EnemySide.Count; i++)
-        {
-            choreography.Place(setup.EnemySide[i].Id, Battle.EnemyTeam, i);
-        }
-
         List<RigReaction> reactions = [];
         Dictionary<WarriorId, ScenePoint> positions = [];
         Dictionary<WarriorId, CombatState> states = [];
@@ -57,7 +47,7 @@ public class ArenaPlaybackTests
             IReadOnlyList<CombatantSnapshot> snapshots = battle.Snapshots();
             foreach (CombatantSnapshot snapshot in snapshots)
             {
-                positions[snapshot.Id] = choreography.PositionFor(snapshot, snapshots);
+                positions[snapshot.Id] = choreography.PositionFor(snapshot);
                 states[snapshot.Id] = snapshot.State;
 
                 // Oyuncunun tuşu: ekip yaralanınca çekiliyor. Uzuv kaybı yalnızca
@@ -156,10 +146,11 @@ public class ArenaPlaybackTests
                 continue;
             }
 
-            // Ceset ne kaçış yoluna savrulur ne de kadrajın dışına düşer.
+            // Ceset ne kaçış yoluna savrulur ne de kadrajın dışına düşer; derinliği de
+            // arenanın içinde kalır.
             ScenePoint spot = playback.FinalPositions[id];
             Assert.InRange(spot.X, 0, layout.Width);
-            Assert.Equal(layout.GroundY, spot.Y);
+            Assert.InRange(spot.Y, layout.BackGroundY, layout.FrontGroundY);
         }
     }
 

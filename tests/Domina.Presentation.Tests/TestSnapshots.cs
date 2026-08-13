@@ -20,7 +20,11 @@ internal static class TestSnapshots
         double progress = 0,
         bool retreatRequested = false,
         bool canCancel = true,
-        double health = 100) =>
+        double health = 100,
+        int? targetId = null,
+        ArenaPoint position = default,
+        int facing = 1,
+        double speed = 0) =>
         new(
             new WarriorId(id),
             team,
@@ -31,5 +35,9 @@ internal static class TestSnapshots
             MaxStamina: 100,
             retreatRequested,
             progress,
-            canCancel);
+            canCancel,
+            targetId is int t ? new WarriorId(t) : null,
+            position,
+            facing,
+            speed);
 }

@@ -1,3 +1,4 @@
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -6,6 +7,17 @@ namespace Domina.Core.Tests;
 /// <summary>Testlerde savaşçı üretmek için kısa yollar.</summary>
 internal static class TestBuilders
 {
+    /// <summary>
+    /// Taraflar birbirinin menzilinde başlar.
+    /// </summary>
+    /// <remarks>
+    /// Uzam geldiğinden beri savaşçılar varsayılan arenada birbirine <b>yürüyor</b>.
+    /// Sonuç ağacını, kaçışı ya da hasarı sınayan testler yürüyüşü değil çarpışmayı
+    /// ölçüyor; yaklaşmayı beklemek testi hem yavaşlatır hem kırılganlaştırır.
+    /// Yaklaşmanın kendisi <c>MovementTests</c>'in konusu.
+    /// </remarks>
+    public static CombatTuning PointBlank { get; } = CombatTuning.Default with { StartOffsetX = 30 };
+
     public static Warrior Warrior(
         int id,
         string? name = null,

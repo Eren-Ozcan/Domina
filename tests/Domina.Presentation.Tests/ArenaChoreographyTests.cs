@@ -1,184 +1,112 @@
 using Domina.Core.Combat;
-using Domina.Core.Model;
 
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Savaşçıların sahnedeki yeri. Buradaki kuralların ortak amacı, <b>ekranda görünenin
-/// çözümlemede olanla aynı şeyi anlatması</b>: hamle çekirdeğin seçtiği hedefe gider,
-/// kaçan gerçekten kadrajı terk eder, ölen düştüğü yerde kalır.
+/// Koreografi artık konum <b>üretmiyor</b>, çekirdekteki arena düzlemini ekrana
+/// yansıtıyor. Bu testler o yansıtmayı ve üstüne eklenen saf görsel süslemeyi sınar.
 /// </summary>
 public class ArenaChoreographyTests
 {
-    private static readonly ArenaLayout _layout = new();
+    private readonly ArenaLayout _layout = new();
 
-    /// <summary>Üç oyuncu, üç düşman — arenadaki kadronun aynısı.</summary>
-    private static ArenaChoreography Arena()
-    {
-        var choreography = new ArenaChoreography(_layout);
-
-        for (int i = 0; i < 3; i++)
-        {
-            choreography.Place(new WarriorId(1 + i), Battle.PlayerTeam, i);
-            choreography.Place(new WarriorId(101 + i), Battle.EnemyTeam, i);
-        }
-
-        return choreography;
-    }
-
-    private static List<CombatantSnapshot> Line(params CombatantSnapshot[] snapshots) => [.. snapshots];
+    private ArenaChoreography Arena() => new(_layout);
 
     [Fact]
-    public void TheFrontRankStandsClosestToTheEnemy()
-    {
-        ScenePoint front = _layout.HomeFor(Battle.PlayerTeam, 0);
-        ScenePoint back = _layout.HomeFor(Battle.PlayerTeam, 2);
-
-        // Oyuncu tarafı merkezin solunda: öndeki savaşçı merkeze daha yakın.
-        Assert.True(front.X > back.X);
-        Assert.True(front.X < _layout.CenterX);
-
-        ScenePoint enemyFront = _layout.HomeFor(Battle.EnemyTeam, 0);
-        Assert.True(enemyFront.X > _layout.CenterX);
-        Assert.Equal(_layout.GroundY, front.Y);
-    }
-
-    [Fact]
-    public void TheLungeStopsAWeaponLengthShortOfTheTarget()
+    public void ThePositionComesStraightFromTheCore()
     {
         ArenaChoreography arena = Arena();
+        CombatantSnapshot warrior = TestSnapshots.Of(1, position: new ArenaPoint(640, 0));
 
-        // Vuruşun indiği an: toparlanmanın %35'i.
-        CombatantSnapshot attacker = TestSnapshots.Of(1, state: CombatState.AttackRecovery, progress: 0.35);
-        List<CombatantSnapshot> line = Line(attacker, TestSnapshots.Of(101, Battle.EnemyTeam));
-
-        ScenePoint spot = arena.PositionFor(attacker, line);
-
-        Assert.Equal(arena.HomeOf(new WarriorId(101)).X - _layout.MeleeRange, spot.X, 3);
+        Assert.Equal(640f, arena.PositionFor(warrior).X, 3);
+        Assert.Equal(_layout.FrontGroundY, arena.PositionFor(warrior).Y, 3);
     }
 
     /// <summary>
-    /// Hamle sabit mesafe olsaydı arkadaki savaşçılar boşluğa kılıç sallardı: çekirdek
-    /// hepsini aynı ön sıradaki düşmana yönlendiriyor.
+    /// Derinlik yandan bakan kamerada dikey kaymaya çevrilir: arkadaki savaşçı ekranda
+    /// yukarıda durur. Bu olmadan iki savaşçı üst üste çizilir ve kim önde belli olmaz.
     /// </summary>
     [Fact]
-    public void TheBackRankLungesFartherToReachTheSameTarget()
+    public void DepthLiftsTheWarriorUpTheScreen()
     {
         ArenaChoreography arena = Arena();
 
-        CombatantSnapshot front = TestSnapshots.Of(1, state: CombatState.AttackRecovery, progress: 0.35);
-        CombatantSnapshot back = TestSnapshots.Of(3, state: CombatState.AttackRecovery, progress: 0.35);
-        List<CombatantSnapshot> line = Line(front, back, TestSnapshots.Of(101, Battle.EnemyTeam));
+        ScenePoint front = arena.PositionFor(TestSnapshots.Of(1, position: new ArenaPoint(640, 0)));
+        ScenePoint back = arena.PositionFor(TestSnapshots.Of(2, position: new ArenaPoint(640, _layout.Depth)));
 
-        ScenePoint frontSpot = arena.PositionFor(front, line);
-        ScenePoint backSpot = arena.PositionFor(back, line);
-
-        Assert.Equal(frontSpot.X, backSpot.X, 3);
+        Assert.Equal(front.X, back.X, 3);
+        Assert.True(back.Y < front.Y, "Derinlikteki savaşçı ekranda yukarıda durmalı.");
+        Assert.Equal(_layout.BackGroundY, back.Y, 3);
     }
 
+    /// <summary>Uzaktaki savaşçı küçülür; öndeki tam boydadır.</summary>
     [Fact]
-    public void TheLungeRetractsWhenTheRecoveryEnds()
+    public void DepthShrinksTheWarrior()
     {
         ArenaChoreography arena = Arena();
 
-        CombatantSnapshot attacker = TestSnapshots.Of(1, state: CombatState.AttackRecovery, progress: 1);
-        ScenePoint spot = arena.PositionFor(attacker, Line(attacker, TestSnapshots.Of(101, Battle.EnemyTeam)));
-
-        Assert.Equal(arena.HomeOf(new WarriorId(1)).X, spot.X, 3);
+        Assert.Equal(1f, arena.ScaleFor(TestSnapshots.Of(1, position: new ArenaPoint(0, 0))), 3);
+        Assert.Equal(
+            _layout.BackScale,
+            arena.ScaleFor(TestSnapshots.Of(2, position: new ArenaPoint(0, _layout.Depth))),
+            3);
     }
 
+    /// <summary>Derindeki savaşçı öndekinin arkasına çizilir.</summary>
     [Fact]
-    public void TheWindupLeansBackFromTheLine()
+    public void TheNearerWarriorDrawsInFront()
     {
-        ArenaChoreography arena = Arena();
-        ScenePoint home = arena.HomeOf(new WarriorId(1));
+        CombatantSnapshot near = TestSnapshots.Of(1, position: new ArenaPoint(0, 20));
+        CombatantSnapshot far = TestSnapshots.Of(2, position: new ArenaPoint(0, 300));
 
-        CombatantSnapshot attacker = TestSnapshots.Of(1, state: CombatState.AttackWindup, progress: 1);
-        ScenePoint spot = arena.PositionFor(attacker, Line(attacker));
-
-        Assert.Equal(home.X - _layout.WindupDrawBack, spot.X, 3);
+        Assert.True(ArenaChoreography.DrawOrderFor(near) > ArenaChoreography.DrawOrderFor(far));
     }
 
     /// <summary>
-    /// Kaçış sabit mesafe olduğunda savaşçı arenanın <b>ortasında</b> yok oluyordu:
-    /// durum Escaped'e döner dönmez düğüm gizleniyor, ama savaşçı hâlâ kadrajın
-    /// içinde duruyordu.
+    /// Kılıcı toplarken hafif geri yaslanma — çekirdekte karşılığı olmayan tek konum
+    /// süslemesi. Yön savaşçının baktığı yöne bağlı.
     /// </summary>
     [Fact]
-    public void TheFleeingLeaveTheFrameBeforeTheyVanish()
+    public void TheWindupLeansBackFromTheFacing()
     {
         ArenaChoreography arena = Arena();
+        var spot = new ArenaPoint(640, 0);
 
-        CombatantSnapshot player = TestSnapshots.Of(1, state: CombatState.Retreating, progress: 1);
-        CombatantSnapshot enemy = TestSnapshots.Of(101, Battle.EnemyTeam, CombatState.Retreating, progress: 1);
+        ScenePoint idle = arena.PositionFor(TestSnapshots.Of(1, position: spot));
+        ScenePoint winding = arena.PositionFor(TestSnapshots.Of(
+            1,
+            state: CombatState.AttackWindup,
+            progress: 1,
+            position: spot,
+            facing: 1));
 
-        Assert.True(arena.PositionFor(player, Line(player)).X < 0);
-        Assert.True(arena.PositionFor(enemy, Line(enemy)).X > _layout.Width);
-    }
+        Assert.True(winding.X < idle.X, "Sağa bakan savaşçı geri (sola) yaslanmalı.");
 
-    [Fact]
-    public void TheEscapedAreAlreadyOutsideTheFrame()
-    {
-        ArenaChoreography arena = Arena();
+        ScenePoint mirrored = arena.PositionFor(TestSnapshots.Of(
+            1,
+            state: CombatState.AttackWindup,
+            progress: 1,
+            position: spot,
+            facing: -1));
 
-        CombatantSnapshot escaped = TestSnapshots.Of(1, state: CombatState.Escaped, progress: 1);
-
-        Assert.True(arena.PositionFor(escaped, Line(escaped)).X < 0);
-    }
-
-    [Fact]
-    public void TheFleeingStartFromTheirLine()
-    {
-        ArenaChoreography arena = Arena();
-
-        CombatantSnapshot leaving = TestSnapshots.Of(1, state: CombatState.Retreating, progress: 0);
-
-        Assert.Equal(arena.HomeOf(new WarriorId(1)).X, arena.PositionFor(leaving, Line(leaving)).X, 3);
+        Assert.True(mirrored.X > idle.X, "Sola bakan savaşçı ters yöne yaslanmalı.");
     }
 
     /// <summary>
-    /// Konum yalnızca duruma bakılarak hesaplansaydı hamlenin ortasında ölen savaşçı
-    /// ölür ölmez hattındaki yerine ışınlanırdı.
+    /// Ölen savaşçı düştüğü yerde kalır. Eskiden bunun için koreografinin hafızası
+    /// gerekiyordu; artık çekirdek ölüyü hareket ettirmediği için bedava geliyor.
     /// </summary>
     [Fact]
     public void TheDeadStayWhereTheyFell()
     {
         ArenaChoreography arena = Arena();
-        var enemy = TestSnapshots.Of(101, Battle.EnemyTeam);
+        var spot = new ArenaPoint(812, 140);
 
-        CombatantSnapshot lunging = TestSnapshots.Of(1, state: CombatState.AttackRecovery, progress: 0.35);
-        ScenePoint struckAt = arena.PositionFor(lunging, Line(lunging, enemy));
+        ScenePoint alive = arena.PositionFor(TestSnapshots.Of(1, position: spot));
+        ScenePoint corpse = arena.PositionFor(
+            TestSnapshots.Of(1, state: CombatState.Dead, health: 0, position: spot));
 
-        Assert.True(struckAt.X > arena.HomeOf(new WarriorId(1)).X);
-
-        CombatantSnapshot corpse = TestSnapshots.Of(1, state: CombatState.Dead, health: 0);
-
-        Assert.Equal(struckAt.X, arena.PositionFor(corpse, Line(corpse, enemy)).X, 3);
-
-        // Ceset sonraki karelerde de kımıldamamalı.
-        Assert.Equal(struckAt.X, arena.PositionFor(corpse, Line(corpse, enemy)).X, 3);
-    }
-
-    [Fact]
-    public void TheDeadWhoNeverMovedRestOnTheirLine()
-    {
-        ArenaChoreography arena = Arena();
-        CombatantSnapshot corpse = TestSnapshots.Of(1, state: CombatState.Dead, health: 0);
-
-        Assert.Equal(arena.HomeOf(new WarriorId(1)).X, arena.PositionFor(corpse, Line(corpse)).X, 3);
-    }
-
-    /// <summary>Hedef kalmadığında hamle boşa gitmez; savaşçı hattında kalır.</summary>
-    [Fact]
-    public void ThereIsNoLungeWithoutATarget()
-    {
-        ArenaChoreography arena = Arena();
-
-        CombatantSnapshot attacker = TestSnapshots.Of(1, state: CombatState.AttackRecovery, progress: 0.35);
-        CombatantSnapshot deadEnemy = TestSnapshots.Of(101, Battle.EnemyTeam, CombatState.Dead, health: 0);
-
-        ScenePoint spot = arena.PositionFor(attacker, Line(attacker, deadEnemy));
-
-        Assert.Equal(arena.HomeOf(new WarriorId(1)).X, spot.X, 3);
+        Assert.Equal(alive.X, corpse.X, 3);
+        Assert.Equal(alive.Y, corpse.Y, 3);
     }
 }

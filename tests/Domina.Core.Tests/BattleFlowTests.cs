@@ -122,7 +122,8 @@ public class BattleFlowTests
                 Assert.True(playerStanding);
                 Assert.False(enemyStanding);
                 break;
-            case BattleOutcome.PlayerDefeat:
+            case BattleOutcome.PlayerWithdrawal:
+            case BattleOutcome.PlayerWipe:
                 Assert.False(playerStanding);
                 break;
             case BattleOutcome.TimeLimit:
@@ -176,7 +177,10 @@ public class BattleFlowTests
         // İki dev, yumrukla: kimse kimseyi bitiremez, süre dolar.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 100_000, weapon: Weapon.Fists())],
-            [TestBuilders.Warrior(101, health: 100_000, weapon: Weapon.Fists())]);
+            [TestBuilders.Warrior(101, health: 100_000, weapon: Weapon.Fists())])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         BattleResult result = new Battle(setup, new SeededRandom(15)).Run();
 
@@ -195,12 +199,18 @@ public class BattleFlowTests
                 TestBuilders.Warrior(101, health: 60),
                 TestBuilders.Warrior(102, health: 60),
                 TestBuilders.Warrior(103, health: 60),
-            ]);
+            ])
+        {
+            Tuning = TestBuilders.PointBlank,
+        };
 
         BattleResult result = new Battle(setup, new SeededRandom(16)).Run();
 
         Assert.Equal(4, result.Summaries.Count);
-        Assert.True(result.Outcome is BattleOutcome.PlayerVictory or BattleOutcome.PlayerDefeat);
+        Assert.True(result.Outcome
+            is BattleOutcome.PlayerVictory
+            or BattleOutcome.PlayerWithdrawal
+            or BattleOutcome.PlayerWipe);
     }
 
     [Fact]
