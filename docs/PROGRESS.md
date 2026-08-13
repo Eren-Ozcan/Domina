@@ -1,6 +1,6 @@
 # Durum Kaydı
 
-Son güncelleme: 2026-08-12 (Faz 2.1 kapandı)
+Son güncelleme: 2026-08-13 (silah yeterliliği karara bağlandı, GDD'ye işlendi)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -256,68 +256,193 @@ Ayrım netleşince görülen eksikler:
 
 ---
 
+## Bekleyen karar — uzuv kaybı oranı nasıl yükselecek
+
+**Sonraki oturum bu soruyla açılacak.** Hedef: makul oynayan oyuncunun savaşçılarının
+kabaca **%5'i** sakat dönsün. Gerçekçi oyuncu modelinde (`losing:0.7`) ölçülen: **%1.3**.
+
+**Tuning ile çözülmüyor.** `--sever` 0.35 → 0.95 yapıldığında uzuv kaybı yalnızca
+%1.30 → %1.94 oldu ve doygunluğa girdi. Darboğaz kopma zarı değil: savaşçı, oyuncu
+müdahale ettikten *sonra* ağır darbe yiyecek kadar sahada kalmıyor. Uygulanan tek
+değişiklik `GrievousSeverityThreshold` 0.28 → 0.20.
+
+Dört seçenek kondu, hiçbiri seçilmedi:
+
+| Seçenek | Ne değişir |
+|---|---|
+| **A · olduğu gibi bırak** | Oran oyun tarzının sonucu olur: temkinli oyuncu (%5.6) sakat getirir, gidişata bakan (%1.3) ceset |
+| **B · kaçış penceresini uzat** | Kaçan daha yavaş çıkar ya da düşman peşinden gelir; hem ölümü hem sakatlığı artırır, "kaçmak da tehlikeli" tonunu güçlendirir |
+| **C · künt silah kalıcı yaralanma yapsın** | GDD §7 zaten "künt → kırık/sersemleme" vaat ediyor ama çekirdekte yok; Oni'nin tetsubo'su şu an neredeyse hiç sakatlamıyor (çarpan 0.15). Kesici sayılarına dokunmadan ikinci bir kalıcı hasar kaynağı |
+| **D · müdahale refleks penceresi olsun** | Ağır darbeden *sonra* N saniye içinde basmak. Oran üzerinde en güçlü kontrol, ama GDD §5'in "tek tuş, anlık karar" ilkesini QTE'ye yaklaştırır |
+
+Öneri: **C + B**. D en güçlü kontrolü verir ama kullanıcının Domina'da kaçındığı
+QTE çizgisine yaklaşır.
+
+---
+
 ## Sıradaki iş
 
-**Görsel stil kararı** (GDD Açık Karar #6). Faz 2.2'nin tamamı buna bağlı ve
-başka hiçbir iş bunu beklemiyor — omurga bitti.
+**Faz 2.2 — sanat üretimi.** Stil kararı verildi, önünde engel kalmadı.
 
-Değerlendirme sırasında ölçüt güzellik değil üretilebilirlik: siluet okunuyor mu,
-uzuvlara bölünüp döndürülünce dağılıyor mu, 128 px'te okunuyor mu, ve dört zırh
-kademesi birbirinden ayırt ediliyor mu.
+### Görsel stil — karara bağlandı (2026-08-13)
 
-> Piksel sanat seçilirse bu bir sanat değişimi değil **mimari değişim** olur:
-> piksel ızgarası kemik döndürmede bozulur, kalıcı uzuv kaybı kombinatoryal
-> sprite üretimine geri döner (GDD §2 bunu zaten elemişti).
+**Karanlık Edo ahşap baskı × katmanlı kâğıt tiyatrosu.** Tam kural GDD §12'de.
 
-### Bekleyen kararlar — silah yeterliliği (2026-08-12 oturumu)
+Süreç: beş aday stil için aynı sahne üretildi (dojo, antrenman alanı, silah atölyesi,
+strateji odası), sonra kazanan yönde parça ayrılmış karakter sayfası istendi.
 
-Konuşuldu, **karara bağlanmadı**. Karar verilene kadar GDD'ye girmez; burada duruyor.
+| Aday | Sonuç |
+|---|---|
+| Sumi-e | **Elendi.** Gri yıkama üstünde gri figür — savaşçı zeminden ayrılmıyor, dört zırh kademesi monokromda okunmuyor |
+| Ukiyo-e | Çalışıyor ama arka plan figür kadar kontrastlı; dövüş sahnesinde savaşçıyı yer |
+| Ahşap baskı + kâğıt tiyatrosu | **Seçildi** |
+| Gotik boyama / temiz vektör | Değerlendirildi, kimlik veya maliyet gerekçesiyle geçildi |
 
-Kilitlenen yön: **sınıf yok, savaşçılar silah üzerinden uzmanlaşır.** Yeterlilik silah
-adı başına değil **kavrayış (grip) başına** tutulur — tek el / çift el. Sebep mekanik:
-`Disability.BlocksTwoHandedWeapons` zaten var, yani **çift el ustası kolunu kaybederse
-ömrünün emeğini kaybeder.** Riskli olması kasıtlı. Yeterlilik isabeti ve saldırı hızını
-etkiler, **ham hasarı etkilemez** (Strength ile çarpışıp dengeyi patlatır).
+Seçim gerekçesi estetik değil: kâğıt tiyatrosunda değer boşluğu **figürle zemin
+arasında** (açık kâğıt / koyu kütle). Ukiyo-e'de bu ayrım renkten geliyor, burada
+değerden — değer küçültmede hayatta kalır, renk kalmaz. 128 px testi bunu doğruladı.
 
-İki koruma bandı üzerinde anlaşıldı:
-- Tek el hattı sıfırdan eğitilebilir kalmalı, yoksa doğru oynanış "sakat kalacaksa
-  bırak ölsün" olur ve GDD §7'nin sorusu sahteleşir
-- Çift el, kırılganlığının bedelini tavanla ödemeli (Nodachi 34 / Katana 22 farkı korunmalı)
+Ayrıca stil, rig'in zayıflığını kendi diline çeviriyor: düz bir uzuv mekanik
+döndüğünde boyalı figürde yanlış görünür, kâğıt kesiminde doğru görünür.
 
-Cevap bekleyen üç soru (parantez içi: riskli yön paketi olarak önerilen):
+> **Kritik üretim kuralı — temiz varlık, dokulu ekran.** Doku ve ışık parçaya
+> pişirilmez; ahşap baskı hissi tam ekran `CanvasLayer` overlay'inden, gün döngüsü
+> `CanvasModulate` tintinden gelir. Aksi hâlde 15 parçanın her biri ayrı
+> ışıklandırılmak zorunda kalır. Kan/vermilion tint dışında tutulur, yoksa vurgu ölür.
 
-1. **Hat sayısı** — iki mi (tek el / çift el), üç mü (+ fırlatma)? *(iki; fırlatma hattı
-   ancak shuriken/kunai çekirdeğe girerse açılır)*
-2. **Büyüme kaynağı** — sadece dövüşte kullanım mı, dojo antrenmanı da mı? *(ikisi;
-   antrenman şart, sakat ustanın yeniden eğitileceği yer orası)*
-3. **Acemi cezası** — yeterlilik 0'da silah kuşanılabilsin mi? *(evet ama isabet
-   belirgin düşük; "hiç kuşanamaz" roster'ı kilitler)*
+### Hedef seçimi rastgele oldu (2026-08-13)
 
-Karar verilince tek geçişte GDD'ye işlenecek: §4'e yeterlilik, Açık Karar #4'ün
-bölünmesi (aşağıdaki A grubu kilitli, B/C açık), ve aynı geçişte iki mevcut tutarsızlık.
+Çekirdek artık hedefi listedeki ilk ayakta düşman yerine **rastgele** seçiyor; hedef
+düşman ölene/kaçana kadar yapışkan. `CombatantSnapshot.TargetId` eklendi — koreografi
+hedefi artık kendisi türetmiyor, çekirdekten okuyor (eski kopyalanmış kural silindi).
 
-#### Silah listesi — çekirdeğe maliyetine göre
+| 3v3, 10.000 dövüş, `below:0.3` | Ön saf | Rastgele |
+| --- | --- | --- |
+| Zafer | %5.1 | **%36.1** |
+| Oyuncu ölümü | %32.0 | %25.8 |
+| Kaçış | %63.3 | %40.8 |
+| Uzuv kaybı | %2.50 | **%1.10** |
 
-- **A · bedava** (mevcut `Weapon` modeline sığar, sadece fabrika + denge sayısı):
-  wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi
-- **B · yeni kural, uzam yok**: sersemletme, zehir, jitte/sai ile kılıç yakalama,
-  silah kırılması
-- **C · uzam/mermi gerekir**: shuriken, kunai, yumi, fukiya, makibishi (çivi tuzağı)
+> Eski kuralda üç düşman da aynı savaşçıya yükleniyor, o savaşçı hızla eşiğin altına
+> düşüyor ve politika tüm ekibi çekiyordu. Rastgele hedefleme hasarı yayıyor.
+>
+> **Not:** odaklı ateş matematiksel olarak daha güçlü AI'dır (ölen savaşçı hasar
+> vermez), yani bu değişiklik düşmanı zayıflattı. **Uzuv kaybı yarıya indi** — oyunun
+> imza mekaniği. Faz 9'da zorluk düşman sayısı/statlarından geri alınmalı, hedefleme
+> kuralından değil.
 
-> Kalkan yerine **jitte/sai ile kılıç yakalama**: elde taşınan kalkan Japon savaşında
-> yaygın değil (*tate* yere dayanan sabit siperdir), üstelik aynı mekanik ihtiyacı
-> (hasarı sıfırlayan ayrı savunma dalı) uzam gerektirmeden karşılıyor.
+Testler: bir yeni test — aynı kadrodaki iki savaşçı farklı hedeflere hamle yapıyor;
+koreografi hedefi türetseydi ikisi aynı noktaya koşardı.
 
-> Shuriken ve makibishi'nin **ucuz versiyonu** var: shuriken = hızlı + düşük hasarlı
-> normal silah; makibishi = düşmanın `SpacingSeconds`'ını uzatan sarf malzemesi.
-> İkisi de konum bilgisi istemez, determinizmi ve sıcak döngüyü bozmaz.
+### Arena bir düzlem oldu (2026-08-13) — en büyük değişiklik
 
-#### GDD ile kodun uyuşmadığı iki yer (karar değil, düzeltme)
+Çekirdeğe **uzam** girdi: her savaşçının `ArenaPoint` konumu var, gerçekten yürüyor,
+silahın menzili var, kuşatma mümkün. Fizik motoru yok — kendi kinematiğimiz, sabit
+tick, determinizm bozulmadı.
 
-- **§2** hâlâ "Godot Skeleton2D + Bone2D" diyor; kod düz `Node2D` hiyerarşisi kullanıyor
-  (gerekçe ROADMAP Faz 2.1'de: Bone2D mesh deformasyonu içindir, bize koparma lazım)
-- **§7** künt silah için "kırık/sersemleme" vaat ediyor, **§5** blok'u ayrı bir durum
-  sayıyor — ikisi de çekirdekte yok. Blok şu an `Defense` statının içinde eriyor.
+Getirdikleri:
+
+- **Menzil:** menzil dışında saldırı başlamıyor; uzun silah uzaktan vuruyor
+- **Hedefleme uzamdan çıkıyor:** "en yakın düşman". Rastgele seçim gerekmiyor
+- **Iska:** hedef hamle sırasında menzilden çıkarsa kılıç boşluğa iniyor
+- **Kuşatma:** arkadan gelen vuruş daha isabetli, daha ağır, kaçınılamaz
+- **Kaçışın bedeli mesafeye bağlı:** çekilirken menzilindeki **her** düşman bedava
+  vuruş kazanıyor; çevrildiysen kaçmak üç darbe demek
+- **Kaçış artık sayaç değil mesafe:** savaşçı arenayı gerçekten terk ediyor
+
+> **Sunum katmanı küçüldü.** `ArenaChoreography` sahte bir uzam taklit ediyordu: hamle
+> mesafesi, kaçış mesafesi, ölünün düştüğü yerin hatırlanması. Hepsi silindi; sınıf
+> artık yalnızca arena düzlemini ekrana yansıtıyor (derinlik = dikey kayma + ölçek +
+> çizim sırası, brawler sahnelemesi) ve tek bir görsel süsleme bırakıyor: kılıcı
+> toplarken geri yaslanma. Ölünün yerinde kalması bedava geldi — çekirdek ölüyü
+> hareket ettirmiyor.
+
+Ölçüm (3v3, 10.000 dövüş, `below:0.3`): zafer %67.8, ölüm %33.6, kaçış %12.3,
+uzuv kaybı %0.56. Hız 16.000 → **8.700 dövüş/sn** (kriter: 10.000 dövüş < 10 sn,
+hâlâ sekiz kat üstünde). Dövüş süresi 7.9 → 13.1 sn (yaklaşma süresi eklendi).
+
+### Uzuv kaybı hedefe çekildi (2026-08-13)
+
+Gün boyunca %2.50 → %1.10 → %0.87 → %0.56'ya kadar aşınmıştı. Hedef: makul oynayan
+oyuncunun savaşçılarının ~%5'i sakat dönsün.
+
+Ölçerek arandı. `Domina.Sim`'e iki bayrak eklendi: **`--grievous`** (ağır darbe eşiği)
+ve **`--sever`** (kopma şansı) — Faz 9'un denge çalışması bunlarla yapılacak.
+
+Bulunan iki şey:
+
+1. **`--sever` beklendiği gibi davranmıyor.** Yükseltmek uzuv kaybını *azaltabiliyor*:
+   düşmanlar da uzuv kaybediyor, zayıflıyor, dövüş erken bitiyor. Ayrıca kopma zarı
+   tutmazsa müdahale edilmemiş savaşçı da ölmüyor — yani bu sayı hem ölümü hem
+   sakatlığı aynı anda ölçekliyor.
+2. **Asıl belirleyici tuning değil, oyuncunun ne zaman çektiği.** Aynı ayarlarla
+   politika %30 → %50 → %70 olunca uzuv kaybı %1.3 → %5.6 → %7.7 oluyor.
+
+Yapılan tek değişiklik: `GrievousSeverityThreshold` **0.28 → 0.20**. Eşik, silah
+hasarlarının kümelendiği yerin hemen altına çekildi — 0.24 ile 0.28 arasında hiçbir
+fark yok, çünkü o aralığa düşen darbe hiç yok.
+
+| Politika | Zafer | Ölüm | Kaçış | Uzuv kaybı |
+| --- | --- | --- | --- | --- |
+| `below:0.2` | %59.8 | %54.5 | %3.8 | %0.88 |
+| `below:0.3` | %53.7 | %55.0 | %6.3 | %1.27 |
+| **`below:0.5`** | %11.6 | %43.2 | %47.7 | **%5.57** |
+| `below:0.7` | %1.3 | %9.1 | %89.8 | %7.73 |
+
+> Geç çeken oyuncu **ceset** getiriyor, erken çeken **sakat**. Hedeflenen tam olarak bu:
+> tuşun ne zaman basıldığı roster'ın nasıl göründüğünü belirliyor. GDD §7'ye bu tablo
+> denge hedefi olarak işlendi.
+>
+> Zafer oranının politikaya göre %60'tan %1'e savrulması ayrı bir sorun — **Faz 9'un
+> asıl işi bu**, uzuv kaybı değil.
+
+Yeni test dosyası: `MovementTests` (yaklaşma, menzil, uzun silah mesafesi, kişisel
+alan, kuşatılmış kaçışın bedeli, ıska). Toplam 175 test yeşil.
+
+### İsabet bölgesi eklendi (2026-08-13)
+
+Her isabet artık bir bölgeye iniyor: gövde 45 / bacak 25 / kol 20 / kafa 10 ağırlıkla
+(`CombatTuning`). Amaç ileride gelecek **yuva yuva zırhın** anlamlı olması — bölgeler
+eşit olsaydı gövde zırhı dörtte bir değerinde kalırdı.
+
+> **Yazarken yakalanan tasarım sızıntısı.** İlk sürümde gövdeye inen ağır darbe uzuv
+> koparmıyordu; ölçüm oyuncu zaferini %36'dan **%53'e** çıkardı. Sebep: müdahale
+> %45 ihtimalle **tamamen bedava** hâle gelmişti — ölümden dönüyorsun, hiçbir şey
+> kaybetmiyorsun. GDD §7'nin vaadi bunun tersi. Kural düzeltildi: bölge hasarı ve zırhı
+> ilgilendirir, sonuç ağacını değil; gövde vuruşunda kopan uzuv kalanlar arasından aynı
+> ağırlıklarla seçilir. `DismembermentTests.BlowsToTheTorsoStillCostALimb` bunu
+> koruyor.
+
+Düzeltme sonrası sayılar rastgele hedeflemedeki değerlere döndü: zafer %35.9, ölüm
+%26.0, kaçış %40.9, uzuv kaybı %1.17. Toplam 175 test yeşil.
+
+### İlk iş
+
+Varlık üretim şartnamesi netleşti; sıradaki somut adım **tam ekran doku overlay'i +
+gün tinti**, ardından kesik yüzey varlıkları (omuz kütüğü, kalça kütüğü, kopan uzvun
+ucu). Konsept sayfalarında kesik yüzey **düz vermilion disk + koyu kontur** olarak
+sadeleştirilecek — kemik detayı 128 px'te kayboluyor, kopmayı taşıyan şey eksik
+zincirin siluetidir.
+
+### Silah yeterliliği — karara bağlandı (2026-08-13)
+
+Üç soru cevaplandı ve **GDD §4'e işlendi**; artık burada değil orada yaşıyor.
+
+| Soru | Karar |
+|---|---|
+| Hat sayısı | **Üç** — tek el / çift el / fırlatma. Fırlatma hattı uykuda, çekirdeğe mermi/uzam girene kadar (Açık Karar #4-C) |
+| Büyüme kaynağı | **Dövüşte kullanım + dojo antrenmanı** |
+| Acemi cezası | Yeterlilik 0'da **kuşanılabilir**, isabet belirgin düşük |
+
+Aynı geçişte: GDD §2'nin Skeleton2D satırı düzeltildi, §5 (blok) ve §7 (künt sersemletme)
+altına "kod ile fark" notları düşüldü, Açık Karar #4 dörde bölündü (A kilitli, B/C/D açık).
+
+> Kullanıcının eklediği nüans GDD'ye girdi: kavrayış kaybı **yalnızca hattı** sıfırlar.
+> Statlar hatta bağlı değil, yani sakat usta sıfırdan başlamıyor — **acemi isabetli bir
+> veteran** olarak dönüyor. Risk keskin ama yıkıcı değil.
+
+Kod tarafında henüz **hiçbir şey yok** — yeterlilik Faz 3 (meta katman) ile gelir;
+çekirdekteki karşılığı `CombatTuning` içinde isabet ve saldırı hızı çarpanı olacak.
 
 ### Akılda tutulacaklar
 - Denge sayıları **kasıtlı olarak ham**. İlk ölçüm 3v3'te oyuncu ölüm oranını

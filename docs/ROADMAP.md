@@ -139,12 +139,27 @@ bir sistem, dengeli bir sistem değil.
 > içinde, motora bağımsız. Gerekçe çekirdektekiyle aynı: motor açmadan test edilemeyen
 > karar hiç test edilmez. `src/Game` artık yalnızca düğüm kurup gelen açıyı uyguluyor.
 
-### 2.2 Sanat ve cila — ⬜ stil kararına bağlı
-- [ ] Görsel stil kararı (GDD Açık Karar #6) — **bu verilmeden ilerlenmez**
+> **2026-08-13:** çekirdeğe **uzam** eklendi (arena bir düzlem, savaşçılar yürüyor,
+> silah menzili ve kuşatma var). Sunum katmanındaki sahte konum matematiği silindi;
+> derinlik ekranda brawler sahnelemesiyle gösteriliyor. Ayrıntı: `docs/PROGRESS.md`.
+> Sanat üretimi bundan **etkilenir**: gerçek yürüme döngüsü gerekiyor, scriptli hamle
+> gerekmiyor.
+
+### 2.2 Sanat ve cila — ⬜ başlanabilir
+- [x] Görsel stil kararı — **verildi (2026-08-13):** karanlık Edo ahşap baskı ×
+      katmanlı kâğıt tiyatrosu. Tam kural GDD §12'de
+- [ ] Tam ekran doku overlay'i (`CanvasLayer`: kâğıt greni + mürekkep yayılması) ve
+      gün döngüsü tinti (`CanvasModulate`, kan tint dışında)
 - [ ] Kemiklere gerçek sanat varlıklarının asılması
+- [ ] Kesik yüzey varlıkları: omuz kütüğü, kalça kütüğü, kopan uzvun kesik ucu
 - [ ] Kamera, arena sahnesi, vuruş efektleri, ses
 - [ ] Ölüm/bitiriş (gore) animasyonları
 - [ ] Zırh kademelerinin görsel karşılığı (4 kademe × ~10 parça)
+
+> **Varlık üretim kuralı:** varlıklar düz ve temiz çizilir (gradyan yok, pişmiş ışık
+> yok, şeffaf zemin, aynı yan izdüşüm, uçlarda bindirme payı); ahşap baskı dokusu
+> ekran overlay'inden gelir. Işık parçaya pişerse uzuv döndüğünde yanlışlanır ve her
+> parça ayrı ışıklandırılmak zorunda kalır — tek kişilik üretimde karşılanamaz.
 
 **Kabul:** Bir seed verildiğinde dövüş baştan sona izlenebiliyor; olaylar ile ekranda
 görünen birebir tutuyor (uzuv kopan savaşçı ekranda da kopuk).
@@ -158,8 +173,8 @@ PlayerDefeat / 32,0 sn.*
 XL'den M'e indi** — 3D modüler dismemberment riski ortadan kalktı. Omurga bittiğine
 göre kalan riskin tamamı 2.2'de: sanat üretimi ve stil kararı.
 
-**Ön koşul:** Görsel **stil** kararı (GDD Açık Karar #6 — piksel mi mürekkep mi)
-bu faza başlamadan verilmeli. Teknik yol belli, stil değil.
+**Ön koşul:** ~~Görsel stil kararı~~ — **karşılandı (2026-08-13, GDD §12).**
+Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 
 ---
 
