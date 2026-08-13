@@ -156,8 +156,17 @@ public sealed partial class BattleArena : Node2D
 
             rig.Advance(snapshot.State, snapshot.StateProgress, delta);
 
-            ScenePoint spot = _choreography.PositionFor(snapshot, snapshots);
+            // Konum, ölçek ve çizim sırası derinlikten gelir: savaşçı arena düzleminde
+            // gerçekten yürüyor, kamera hâlâ yandan bakıyor.
+            ScenePoint spot = _choreography.PositionFor(snapshot);
+            float scale = _choreography.ScaleFor(snapshot);
+
             rig.Position = new Vector2(spot.X, spot.Y);
+
+            // Yön kökün aynalanmasıyla veriliyor (duruş kodu daima sağa bakar sayar),
+            // derinlik ölçeği de aynı Scale'e biniyor.
+            rig.Scale = new Vector2(ArenaChoreography.FacingOf(snapshot) * scale, scale);
+            rig.ZIndex = ArenaChoreography.DrawOrderFor(snapshot);
         }
     }
 
@@ -179,12 +188,10 @@ public sealed partial class BattleArena : Node2D
         {
             Warrior warrior = side[i];
 
-            // Ön sıradaki savaşçı hedefe en yakın; çekirdek de sırayla hedef seçiyor.
-            ScenePoint home = _choreography.Place(warrior.Id, team, i);
-
-            var rig = new WarriorRig { Position = new Vector2(home.X, home.Y), ZIndex = -i };
+            // Başlangıç konumunu çekirdek verir; burada yalnızca düğüm kuruluyor.
+            var rig = new WarriorRig();
             AddChild(rig);
-            rig.Build(warrior, isPlayer ? PlayerTint : EnemyTint, ArenaLayout.FacingFor(team));
+            rig.Build(warrior, isPlayer ? PlayerTint : EnemyTint, isPlayer ? 1f : -1f);
 
             _rigs[warrior.Id] = rig;
         }
@@ -196,7 +203,7 @@ public sealed partial class BattleArena : Node2D
 
         var ground = new Line2D
         {
-            Points = [new Vector2(0, layout.GroundY), new Vector2(layout.Width, layout.GroundY)],
+            Points = [new Vector2(0, layout.FrontGroundY), new Vector2(layout.Width, layout.FrontGroundY)],
             Width = 4f,
             DefaultColor = new Color(0.32f, 0.30f, 0.28f),
             ZIndex = -100,

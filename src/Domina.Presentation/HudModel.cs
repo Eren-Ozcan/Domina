@@ -116,7 +116,8 @@ public static class HudModel
     public static string DescribeOutcome(BattleOutcome outcome) => outcome switch
     {
         BattleOutcome.PlayerVictory => "ZAFER",
-        BattleOutcome.PlayerDefeat => "YENİLGİ",
+        BattleOutcome.PlayerWithdrawal => "ÇEKİLDİ",
+        BattleOutcome.PlayerWipe => "BOZGUN",
         _ => "SÜRE DOLDU",
     };
 }
