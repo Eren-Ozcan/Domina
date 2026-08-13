@@ -16,6 +16,47 @@ public sealed record CombatTuning
     /// <summary>Dövüş bu süreyi aşarsa berabere sayılır.</summary>
     public double MaxBattleSeconds { get; init; } = 180;
 
+    // ---- Arena ve hareket ----
+
+    /// <summary>Arenanın hat boyunca genişliği.</summary>
+    public double ArenaWidth { get; init; } = 1920;
+
+    /// <summary>Arenanın derinliği. Kuşatma ve çevirme bu eksende olur.</summary>
+    public double ArenaDepth { get; init; } = 420;
+
+    /// <summary>Takımların başlangıçta merkeze uzaklığı.</summary>
+    public double StartOffsetX { get; init; } = 480;
+
+    /// <summary>Aynı takımdaki savaşçıların başlangıçtaki derinlik aralığı.</summary>
+    public double StartSpacingY { get; init; } = 120;
+
+    /// <summary>Yürüme hızı (birim/saniye).</summary>
+    public double MoveSpeed { get; init; } = 240;
+
+    /// <summary>
+    /// Savaşçılar birbirine bundan daha fazla sokulamaz — üst üste binmeyi engeller.
+    /// </summary>
+    public double PersonalSpace { get; init; } = 74;
+
+    /// <summary>Menzile girdikten sonra ne kadar daha yaklaşılacağı (0-1).</summary>
+    /// <remarks>
+    /// 1.0 tam menzilde durur; menzil sınırında durmak vuruşları ıskalatır çünkü hedef
+    /// de hareket ediyor. Biraz içeri girmek daha kararlı.
+    /// </remarks>
+    public double PreferredReachFraction { get; init; } = 0.85;
+
+    /// <summary>Arkadan gelen saldırının isabet şansına eklediği.</summary>
+    /// <remarks>
+    /// Kuşatmanın mekanik karşılığı bu: çevrildiğinde birileri mutlaka arkanda kalır.
+    /// </remarks>
+    public double FlankHitBonus { get; init; } = 0.25;
+
+    /// <summary>Arkadan gelen saldırının hasar çarpanı.</summary>
+    public double FlankDamageMultiplier { get; init; } = 1.25;
+
+    /// <summary>Kaçan savaşçının arenayı terk etmiş sayılması için gereken mesafe.</summary>
+    public double ExitMargin { get; init; } = 220;
+
     // ---- Saldırı ritmi ----
 
     /// <summary>Saldırganlık 0 iken saldırılar arası bekleme.</summary>
@@ -65,10 +106,37 @@ public sealed record CombatTuning
     /// kopma zarı atılır. Düşük can ÖN KOŞUL DEĞİL — ilk darbede de olabilir
     /// (bkz. docs/GDD.md §7).
     /// </summary>
-    public double GrievousSeverityThreshold { get; init; } = 0.28;
+    /// <remarks>
+    /// 0.28'den 0.20'ye indirildi: uzuv kaybı oyunun imza mekaniği ama ölçümde
+    /// binde birkaça düşmüştü. Eşik silah hasarlarının kümelendiği yerin hemen
+    /// altına çekildi — 0.24 ile 0.28 arasında hiçbir fark yok, çünkü aradaki
+    /// aralığa düşen darbe yok.
+    /// </remarks>
+    public double GrievousSeverityThreshold { get; init; } = 0.20;
 
     /// <summary>Ağır darbede taban uzuv kopma şansı; silah ve zırh bunu ölçekler.</summary>
     public double BaseDismembermentChance { get; init; } = 0.35;
+
+    // ---- İsabet bölgesi ----
+
+    /// <summary>
+    /// Darbenin nereye ineceğinin ağırlıkları. Birbirine göre okunur, toplamları 1
+    /// olmak zorunda değil.
+    /// </summary>
+    /// <remarks>
+    /// Gövde kasıtlı olarak baskın: bölgeler eşit olsaydı gövde zırhı, dört zırh
+    /// parçasından yalnızca biri olduğu için değersizleşirdi.
+    /// </remarks>
+    public double TorsoHitWeight { get; init; } = 45;
+
+    /// <inheritdoc cref="TorsoHitWeight"/>
+    public double LegHitWeight { get; init; } = 25;
+
+    /// <inheritdoc cref="TorsoHitWeight"/>
+    public double ArmHitWeight { get; init; } = 20;
+
+    /// <inheritdoc cref="TorsoHitWeight"/>
+    public double HeadHitWeight { get; init; } = 10;
 
     // ---- Çekilme ----
 

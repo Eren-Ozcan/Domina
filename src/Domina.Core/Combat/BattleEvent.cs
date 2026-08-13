@@ -80,8 +80,19 @@ public enum BattleOutcome
     /// <summary>Dojo tarafı ayakta kaldı.</summary>
     PlayerVictory,
 
-    /// <summary>Dojo tarafında dövüşen kalmadı (ölü veya kaçmış).</summary>
-    PlayerDefeat,
+    /// <summary>
+    /// Dojo tarafı sahayı <b>sağ</b> terk etti — en az bir savaşçı kaçarak kurtuldu.
+    /// </summary>
+    /// <remarks>
+    /// Bozgundan ayrı tutulur. Oyun açısından ikisi de "dövüş kazanılmadı" demek ama
+    /// bedelleri taban tabana zıt: çekilmek seferi ve ödülü harcar, bozgun savaşçıları
+    /// harcar. Tek kutuya konursa hiçbir denge sorusu cevaplanamaz — "kaçan oyuncu
+    /// kaybediyor" gibi yanlış bir okuma çıkar.
+    /// </remarks>
+    PlayerWithdrawal,
+
+    /// <summary>Dojo tarafında kimse kalmadı ve kimse kaçamadı — ekip kırıldı.</summary>
+    PlayerWipe,
 
     /// <summary>Süre doldu — iki taraf da bitiremedi.</summary>
     TimeLimit,

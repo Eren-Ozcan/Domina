@@ -48,6 +48,23 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <summary>Mevcut durumun bitmesine kalan süre.</summary>
     public double StateTimer { get; set; }
 
+    /// <summary>
+    /// Şu an vurmaya çalıştığı düşman. Ölene ya da kaçana kadar korunur
+    /// (bkz. <c>Battle.FindTarget</c>).
+    /// </summary>
+    public Combatant? Target { get; set; }
+
+    /// <summary>Arena düzlemindeki yeri.</summary>
+    public ArenaPoint Position { get; set; }
+
+    /// <summary>
+    /// Baktığı yön: +1 sağa, -1 sola. Arkadan saldırı bunun üzerinden belirlenir.
+    /// </summary>
+    public int Facing { get; set; } = 1;
+
+    /// <summary>Bu tick'te ne kadar yol aldı — görselleştirme yürüme döngüsünü buradan sürer.</summary>
+    public double SpeedThisTick { get; set; }
+
     /// <summary>Mevcut duruma girildiğindeki toplam süre.</summary>
     /// <remarks>
     /// Görselleştirme, animasyonu durumun neresinde olunduğuna göre sürer; bunun için

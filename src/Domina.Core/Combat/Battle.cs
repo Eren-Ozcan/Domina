@@ -51,6 +51,8 @@ public sealed class Battle
             _combatants.Add(new Combatant(w, EnemyTeam));
         }
 
+        PlaceCombatants();
+
         foreach (Combatant c in _combatants)
         {
             c.BeginState(CombatState.Idle, SpacingSeconds(c));
@@ -99,7 +101,11 @@ public sealed class Battle
         c.Warrior.EffectiveStats.MaxStamina,
         c.RetreatRequested,
         c.StateProgress,
-        c.IsCancellable);
+        c.IsCancellable,
+        c.Target is { IsActive: true } t ? t.Id : null,
+        c.Position,
+        c.Facing,
+        c.SpeedThisTick);
 
     /// <summary>
     /// Oyuncunun "çek" tuşu — <b>tüm ekibi</b> çeker.
@@ -166,6 +172,8 @@ public sealed class Battle
 
         ElapsedSeconds += _tuning.TickSeconds;
 
+        Move();
+
         foreach (Combatant c in _combatants)
         {
             if (!c.IsActive)
@@ -202,6 +210,167 @@ public sealed class Battle
 
         return Result!;
     }
+
+    // --------------------------------------------------------------- hareket
+
+    /// <summary>
+    /// Başlangıç düzeni: iki taraf karşılıklı, kendi içlerinde derinliğe yayılmış.
+    /// </summary>
+    private void PlaceCombatants()
+    {
+        double centerX = _tuning.ArenaWidth / 2;
+        double centerY = _tuning.ArenaDepth / 2;
+
+        int player = 0;
+        int enemy = 0;
+
+        foreach (Combatant c in _combatants)
+        {
+            bool isPlayer = c.Team == PlayerTeam;
+            int index = isPlayer ? player++ : enemy++;
+            int count = isPlayer ? _setup.PlayerSide.Count : _setup.EnemySide.Count;
+
+            // Kadroyu derinlikte ortalar: 3 kişi -1, 0, +1 aralığına dağılır.
+            double lane = index - ((count - 1) / 2.0);
+
+            c.Position = new ArenaPoint(
+                centerX + (isPlayer ? -_tuning.StartOffsetX : _tuning.StartOffsetX),
+                centerY + (lane * _tuning.StartSpacingY));
+
+            c.Facing = isPlayer ? 1 : -1;
+        }
+    }
+
+    /// <summary>
+    /// Herkesi bir tick ilerletir: hedefe yaklaşma, kaçış, ve üst üste binmeyi
+    /// engelleyen itme.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Saldırıya kilitli savaşçı yürümez.</b> Vuruş taahhüdünün bedeli budur:
+    /// hamleyi başlattıysan hedef kaçsa bile yerinde çakılırsın.
+    /// </para>
+    /// <para>
+    /// Fizik motoru yok, kendi kinematiğimiz var — Godot'un çarpışma çözümü sürümden
+    /// sürüme değişir ve "aynı seed = aynı dövüş" garantisini bozardı.
+    /// </para>
+    /// </remarks>
+    private void Move()
+    {
+        double step = _tuning.MoveSpeed * _tuning.TickSeconds;
+
+        foreach (Combatant c in _combatants)
+        {
+            ArenaPoint before = c.Position;
+
+            if (!c.IsActive)
+            {
+                c.SpeedThisTick = 0;
+                continue;
+            }
+
+            if (c.State is CombatState.Retreating)
+            {
+                // Hedef, çıkış eşiğinin de ötesi: savaşçı eşiği geçerken durmasın.
+                double exitX = c.Team == PlayerTeam
+                    ? -(_tuning.ExitMargin * 2)
+                    : _tuning.ArenaWidth + (_tuning.ExitMargin * 2);
+
+                c.Position = c.Position.MovedToward(new ArenaPoint(exitX, c.Position.Y), step);
+            }
+            else if (c.State is CombatState.Idle && FindTarget(c) is Combatant target)
+            {
+                FaceToward(c, target);
+
+                double reach = c.Warrior.UsableWeapon.Reach * _tuning.PreferredReachFraction;
+                double gap = c.Position.DistanceTo(target.Position);
+
+                if (gap > reach)
+                {
+                    c.Position = c.Position.MovedToward(target.Position, Math.Min(step, gap - reach));
+                }
+            }
+
+            Separate(c);
+            Clamp(c);
+            c.SpeedThisTick = before.DistanceTo(c.Position) / _tuning.TickSeconds;
+        }
+    }
+
+    /// <summary>Üst üste binen savaşçıları iter. Kaçan itilmez — yolu kesilemesin.</summary>
+    private void Separate(Combatant c)
+    {
+        if (c.State is CombatState.Retreating)
+        {
+            return;
+        }
+
+        foreach (Combatant other in _combatants)
+        {
+            if (ReferenceEquals(other, c) || !other.IsActive)
+            {
+                continue;
+            }
+
+            double gap = c.Position.DistanceTo(other.Position);
+            if (gap >= _tuning.PersonalSpace)
+            {
+                continue;
+            }
+
+            // Tam üst üste düşen iki savaşçıyı ayırmak için sabit bir yön gerekir;
+            // aksi hâlde yön vektörü sıfır olur ve ikisi de kilitlenir.
+            c.Position = gap <= double.Epsilon
+                ? new ArenaPoint(c.Position.X - (_tuning.PersonalSpace / 2), c.Position.Y)
+                : c.Position.MovedAwayFrom(other.Position, _tuning.PersonalSpace - gap);
+        }
+    }
+
+    /// <summary>Derinlik arenanın dışına taşamaz; hat boyunca yalnızca kaçan çıkar.</summary>
+    private void Clamp(Combatant c)
+    {
+        if (c.State is CombatState.Retreating)
+        {
+            return;
+        }
+
+        double y = Math.Clamp(c.Position.Y, 0, _tuning.ArenaDepth);
+        double x = Math.Clamp(c.Position.X, 0, _tuning.ArenaWidth);
+        c.Position = new ArenaPoint(x, y);
+    }
+
+    private static void FaceToward(Combatant c, Combatant target)
+    {
+        double dx = target.Position.X - c.Position.X;
+        if (Math.Abs(dx) > double.Epsilon)
+        {
+            c.Facing = dx >= 0 ? 1 : -1;
+        }
+    }
+
+    /// <summary>Saldıran, savunanın arkasında mı?</summary>
+    /// <remarks>
+    /// Kuşatmanın mekanik karşılığı: çevrildiğinde birileri mutlaka arkanda kalır ve
+    /// onun vuruşu hem daha isabetli hem daha ağır olur.
+    /// </remarks>
+    private static bool IsFlanking(Combatant attacker, Combatant defender)
+    {
+        double dx = attacker.Position.X - defender.Position.X;
+        return Math.Abs(dx) > double.Epsilon && Math.Sign(dx) != defender.Facing;
+    }
+
+    /// <summary>Savaşçı hedefine vurabilecek kadar yakın mı?</summary>
+    private static bool InReach(Combatant attacker, Combatant target) =>
+        attacker.Position.DistanceTo(target.Position) <= attacker.Warrior.UsableWeapon.Reach;
+
+    /// <summary>
+    /// Kaçan savaşçı arenayı gerçekten terk etti mi? Kadrajın kenarı yetmez — ekranda
+    /// gözden kaybolması için biraz daha gitmesi gerekir.
+    /// </summary>
+    private bool HasLeftArena(Combatant c) =>
+        c.Team == PlayerTeam
+            ? c.Position.X <= -_tuning.ExitMargin
+            : c.Position.X >= _tuning.ArenaWidth + _tuning.ExitMargin;
 
     // ---------------------------------------------------------------- durum
 
@@ -241,8 +410,18 @@ public sealed class Battle
                 break;
 
             case CombatState.Retreating:
-                c.BeginState(CombatState.Escaped, 0);
-                Emit(new WarriorEscaped(ElapsedSeconds, c.Id));
+                // Kaçış artık sayaçla değil mesafeyle biter: gerçekten arenayı
+                // terk etmesi gerekiyor.
+                if (HasLeftArena(c))
+                {
+                    c.BeginState(CombatState.Escaped, 0);
+                    Emit(new WarriorEscaped(ElapsedSeconds, c.Id));
+                }
+                else
+                {
+                    c.BeginState(CombatState.Retreating, _tuning.TickSeconds);
+                }
+
                 break;
 
             case CombatState.Escaped:
@@ -255,7 +434,9 @@ public sealed class Battle
     private void StartAttack(Combatant attacker)
     {
         Combatant? target = FindTarget(attacker);
-        if (target is null)
+
+        // Menzil dışındaysa saldırı başlamaz — savaşçı yaklaşmaya devam eder.
+        if (target is null || !InReach(attacker, target))
         {
             Wait(attacker);
             return;
@@ -275,7 +456,17 @@ public sealed class Battle
         {
             attacker.Stamina = Math.Max(0, attacker.Stamina - _tuning.AttackStaminaCost);
             attacker.AttacksMade++;
-            ResolveStrike(attacker, target);
+
+            // Hedef hamle sırasında menzilden çıktıysa kılıç boşluğa iner. Vuruşa
+            // kilitlenmenin bedeli: hedef kaçarken sen yerinde çakılısın.
+            if (InReach(attacker, target))
+            {
+                ResolveStrike(attacker, target);
+            }
+            else
+            {
+                Emit(new AttackMissed(ElapsedSeconds, attacker.Id, target.Id));
+            }
         }
 
         if (attacker.State != CombatState.Dead)
@@ -286,18 +477,34 @@ public sealed class Battle
         }
     }
 
+    /// <summary>
+    /// Kaçış başlar; <b>menzilinde bulunan her düşman</b> bedava bir vuruş kazanır.
+    /// </summary>
+    /// <remarks>
+    /// "Tuşa bastım = güvendeyim" olmasın diye vardı; uzam gelince asıl anlamını
+    /// kazandı: <b>çevrildiysen kaçmanın bedeli üç bedava vuruştur.</b> Kuşatılmadan
+    /// önce çekilmek artık gerçek bir karar.
+    /// </remarks>
     private void BeginRetreat(Combatant c)
     {
-        c.BeginState(CombatState.Retreating, _tuning.RetreatSeconds);
+        c.BeginState(CombatState.Retreating, _tuning.TickSeconds);
         Emit(new RetreatStarted(ElapsedSeconds, c.Id));
 
-        // Kaçan avın arkasından bedava vuruş: "tuşa bastım = güvendeyim" olmasın.
-        Combatant? hunter = FindTarget(c);
-        if (hunter is not null && hunter.IsActive)
+        foreach (Combatant hunter in _combatants)
         {
+            if (hunter.Team == c.Team || !hunter.IsActive || !InReach(hunter, c))
+            {
+                continue;
+            }
+
             Emit(new OpportunityAttack(ElapsedSeconds, hunter.Id, c.Id));
             hunter.AttacksMade++;
             ResolveStrike(hunter, c);
+
+            if (!c.IsActive)
+            {
+                return;
+            }
         }
     }
 
@@ -318,6 +525,7 @@ public sealed class Battle
         double staminaFactor = StaminaFactor(attacker);
 
         // 1) İsabet
+        bool flanking = IsFlanking(attacker, defender);
         double hitChance = (_tuning.BaseHitChance + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
                            * staminaFactor;
 
@@ -326,14 +534,19 @@ public sealed class Battle
             hitChance += _tuning.RetreatingHitBonus;
         }
 
+        if (flanking)
+        {
+            hitChance += _tuning.FlankHitBonus;
+        }
+
         if (!_rng.Chance(Math.Clamp(hitChance, 0.05, 0.98)))
         {
             Emit(new AttackMissed(ElapsedSeconds, attacker.Id, defender.Id));
             return;
         }
 
-        // 2) Kaçınma — çekilirken kaçınılamaz, ayrıca stamina ister
-        if (defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
+        // 2) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
+        if (!flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
         {
             double evasionChance = defStats.Evasion / 100.0 * _tuning.MaxEvasionChance;
             if (_rng.Chance(evasionChance))
@@ -345,11 +558,13 @@ public sealed class Battle
             }
         }
 
-        // 3) Hasar
+        // 3) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
+        HitLocation location = RollHitLocation();
         Weapon weapon = attacker.Warrior.UsableWeapon;
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
-                     * staminaFactor;
+                     * staminaFactor
+                     * (flanking ? _tuning.FlankDamageMultiplier : 1.0);
 
         double afterDefense = raw * (1 - (defStats.Defense / 100.0 * _tuning.MaxDefenseReduction));
         double damage = Math.Max(
@@ -366,7 +581,7 @@ public sealed class Battle
             ElapsedSeconds, attacker.Id, defender.Id, damage, Math.Max(0, defender.Health)));
 
         // 4) Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
-        if (TryGrievousBlow(weapon, defender, damage, defStats))
+        if (TryGrievousBlow(weapon, defender, damage, defStats, location))
         {
             return;
         }
@@ -381,7 +596,12 @@ public sealed class Battle
     /// Ağır darbe sonucunu çözer.
     /// </summary>
     /// <returns>Ağır darbe tetiklendiyse (ölüm veya uzuv kaybı) true.</returns>
-    private bool TryGrievousBlow(Weapon weapon, Combatant defender, double damage, WarriorStats defStats)
+    private bool TryGrievousBlow(
+        Weapon weapon,
+        Combatant defender,
+        double damage,
+        WarriorStats defStats,
+        HitLocation location)
     {
         double severity = damage / defStats.MaxHealth;
         if (severity < _tuning.GrievousSeverityThreshold)
@@ -402,10 +622,12 @@ public sealed class Battle
         // yaşar, etmediyse ölür. Tuşa basmak hayat kurtarır ama bedelsiz değildir.
         if (defender.PlayerIntervened)
         {
-            BodyPart part = ChooseBodyPart(defender);
-            defender.LostLimb = true;
-            _lostParts[defender.Id] = part;
-            Emit(new WarriorDismembered(ElapsedSeconds, defender.Id, part));
+            if (SeverablePart(defender, location) is BodyPart part)
+            {
+                defender.LostLimb = true;
+                _lostParts[defender.Id] = part;
+                Emit(new WarriorDismembered(ElapsedSeconds, defender.Id, part));
+            }
 
             // Uzvunu kaybetse de canı bitmişse yine ölür.
             if (defender.Health <= 0)
@@ -420,17 +642,85 @@ public sealed class Battle
         return true;
     }
 
-    private BodyPart ChooseBodyPart(Combatant defender)
+    /// <summary>
+    /// Ölümden dönen savaşçının hangi uzvunu kaybettiği. Kaybedecek uzvu kalmadıysa
+    /// <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Darbe gövdeye inmişse bile <b>bir uzuv gider</b>: bölge yalnızca hasarı ve zırhı
+    /// ilgilendirir, sonuç ağacını değil. Aksi hâlde gövdeye inen darbelerde "çek" tuşu
+    /// <b>bedava</b> olurdu — ölümden dönersin, hiçbir şey kaybetmezsin. GDD §7'nin
+    /// vaadi tam tersi: "tuşa basmak hayat kurtarır ama bedelsiz değildir".
+    /// </para>
+    /// <para>
+    /// Ölçüldü: gövde vuruşları koparmasın denince oyuncu zaferi %36'dan %53'e çıktı,
+    /// yani müdahale neredeyse risksiz hâle geldi.
+    /// </para>
+    /// <para>
+    /// Kalan uzuvlar arasında seçim, bölge ağırlıklarının kendisiyle yapılır — gövde
+    /// hariç. Aynı uzuv iki kez kopmaz.
+    /// </para>
+    /// </remarks>
+    private BodyPart? SeverablePart(Combatant defender, HitLocation location)
     {
-        BodyPart[] available =
-            Enum.GetValues<BodyPart>()
-                .Where(p => !defender.Warrior.HasDisability(p)
-                            && !(_lostParts.TryGetValue(defender.Id, out BodyPart lost) && lost == p))
-                .ToArray();
+        BodyPart? direct = location switch
+        {
+            HitLocation.Arm => BodyPart.Arm,
+            HitLocation.Leg => BodyPart.Leg,
+            HitLocation.Head => BodyPart.Eye,
+            _ => null,
+        };
 
-        return available.Length == 0
-            ? BodyPart.Eye
-            : available[_rng.NextInt(available.Length)];
+        if (direct is BodyPart hit && !AlreadyLost(defender, hit))
+        {
+            return hit;
+        }
+
+        // Gövdeye indi ya da o uzuv zaten yok: kalanlardan ağırlıklı seçim.
+        double arm = AlreadyLost(defender, BodyPart.Arm) ? 0 : _tuning.ArmHitWeight;
+        double leg = AlreadyLost(defender, BodyPart.Leg) ? 0 : _tuning.LegHitWeight;
+        double eye = AlreadyLost(defender, BodyPart.Eye) ? 0 : _tuning.HeadHitWeight;
+        double total = arm + leg + eye;
+
+        if (total <= 0)
+        {
+            return null;
+        }
+
+        double roll = _rng.NextDouble() * total;
+        if (roll < arm)
+        {
+            return BodyPart.Arm;
+        }
+
+        return roll < arm + leg ? BodyPart.Leg : BodyPart.Eye;
+    }
+
+    private bool AlreadyLost(Combatant defender, BodyPart part) =>
+        defender.Warrior.HasDisability(part)
+        || (_lostParts.TryGetValue(defender.Id, out BodyPart lost) && lost == part);
+
+    /// <summary>Darbenin nereye indiği — ağırlıklı zar, tek RNG çağrısı.</summary>
+    private HitLocation RollHitLocation()
+    {
+        double torso = _tuning.TorsoHitWeight;
+        double leg = torso + _tuning.LegHitWeight;
+        double arm = leg + _tuning.ArmHitWeight;
+        double total = arm + _tuning.HeadHitWeight;
+
+        double roll = _rng.NextDouble() * total;
+        if (roll < torso)
+        {
+            return HitLocation.Torso;
+        }
+
+        if (roll < leg)
+        {
+            return HitLocation.Leg;
+        }
+
+        return roll < arm ? HitLocation.Arm : HitLocation.Head;
     }
 
     private void Die(Combatant c, DeathCause cause)
@@ -491,11 +781,75 @@ public sealed class Battle
     /// Toplu simülasyon on binlerce dövüş koşturuyor; sıcak döngü ayırma yapmamalı
     /// (bkz. <c>ThroughputTests</c>).
     /// </remarks>
+    /// <summary>
+    /// Saldıranın hedefi: elindeki hedef hâlâ ayaktaysa o, değilse <b>en yakın</b> düşman.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Hedef <b>yapışkandır</b>: bir kez seçilince düşman ölene ya da kaçana kadar
+    /// korunur. Her tick'te en yakına dönseydi savaşçılar iki düşman arasında salınır,
+    /// hiç vuramazdı.
+    /// </para>
+    /// <para>
+    /// Uzam gelmeden önce hedef rastgele seçiliyordu — mesafe diye bir şey olmadığı için
+    /// başka anlamlı kural yoktu. Artık kural Domina'daki gibi uzamdan çıkıyor: kılıcın
+    /// erişebileceği en yakın düşman.
+    /// </para>
+    /// </remarks>
     private Combatant? FindTarget(Combatant attacker)
     {
+        if (attacker.Target is { IsActive: true } current)
+        {
+            return current;
+        }
+
+        Combatant? nearest = null;
+        double best = double.MaxValue;
+
         foreach (Combatant c in _combatants)
         {
-            if (c.Team != attacker.Team && c.IsActive)
+            if (c.Team == attacker.Team || !c.IsActive)
+            {
+                continue;
+            }
+
+            double distance = attacker.Position.SquaredDistanceTo(c.Position);
+            if (distance < best)
+            {
+                best = distance;
+                nearest = c;
+            }
+        }
+
+        attacker.Target = nearest;
+        return nearest;
+    }
+
+    /// <summary>Karşı taraftaki ayakta savaşçılardan rastgele biri; yoksa <c>null</c>.</summary>
+    /// <remarks>
+    /// İki geçiş yapar ve dizi ayırmaz — sıcak döngüde çağrıldığı için
+    /// (bkz. <c>ThroughputTests.PerBattleAllocationStaysSmallWithoutEvents</c>).
+    /// </remarks>
+    private Combatant? RandomEnemy(int team)
+    {
+        int count = 0;
+        foreach (Combatant c in _combatants)
+        {
+            if (c.Team != team && c.IsActive)
+            {
+                count++;
+            }
+        }
+
+        if (count == 0)
+        {
+            return null;
+        }
+
+        int wanted = _rng.NextInt(count);
+        foreach (Combatant c in _combatants)
+        {
+            if (c.Team != team && c.IsActive && wanted-- == 0)
             {
                 return c;
             }
@@ -531,7 +885,11 @@ public sealed class Battle
     {
         if (CountActive(PlayerTeam) == 0)
         {
-            Complete(BattleOutcome.PlayerDefeat);
+            // Çekilmekle kırılmak aynı şey değil: biri seferi harcar, diğeri roster'ı.
+            bool anyoneEscaped = _combatants.Exists(
+                c => c.Team == PlayerTeam && c.State == CombatState.Escaped);
+
+            Complete(anyoneEscaped ? BattleOutcome.PlayerWithdrawal : BattleOutcome.PlayerWipe);
             return true;
         }
 
