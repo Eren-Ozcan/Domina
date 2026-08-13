@@ -41,7 +41,12 @@ chat'in yaptığı her şeyi AI seyirci simüle eder.
 | RNG | **Seed'li deterministik** — dövüş tekrar oynatılabilir/debug edilebilir |
 | Chat | Platform-bağımsız **adapter katmanı**; Twitch ve Kick aynı iç event'lere düşer |
 | Kayıt | **Versiyonlu save + merge-on-load + try/catch** (Domina projesindeki kalıp) |
-| Görsel teknik | **Saf 2D, cutout/iskelet animasyon** (Godot Skeleton2D + Bone2D) |
+| Görsel teknik | **Saf 2D, cutout/iskelet animasyon** (düz `Node2D` hiyerarşisi — Skeleton2D/Bone2D **değil**) |
+
+> **Neden Skeleton2D değil:** Bone2D mesh deformasyonu içindir; bizim ihtiyacımız uzvu
+> deforme etmek değil **koparmak**. Düz `Node2D` zincirinde kopma = düğümü zincirinden
+> ayırmak, ki aşağıdaki gerekçenin tarif ettiği şey tam olarak bu. Kolunu kaybeden
+> savaşçının silahı da zincirle birlikte gider.
 
 ### Neden runtime-skeletal, baked-frame değil
 Domina kare-bazlı sprite sheet kullanıyor (her animasyon karesi önceden pişirilmiş).
@@ -81,6 +86,37 @@ kanıtlanmış talep, Hades ile doğrudan kıyaslanma riski yok, Domina'dan tam 
 - **Stamina** — koşma/yuvarlanma/saldırı tüketir; azaldıkça hasar ve isabet düşer
 - **Onur (Honor)** — 0-100, başlangıç 50 (bkz. §6)
 
+### Arena bir düzlem — savaşçılar gerçekten yürür
+
+Dövüş soyut değil **uzamsal**: her savaşçının arena düzleminde bir konumu var
+(X hat boyunca, Y derinlik). Fizik motoru yok — kendi kinematiğimiz, sabit tick,
+tam determinizm.
+
+| Kural | Sonucu |
+|---|---|
+| **Silah menzili** | Uzun silah uzaktan vurur, kısa silah yaklaşmak zorundadır. Menzil dışındayken saldırı **başlamaz** |
+| **Hedef = en yakın düşman** | Kural uzamdan çıkar, ayrıca yazılması gerekmez. Hedef yapışkandır: ölene/kaçana kadar korunur, yoksa savaşçı iki düşman arasında salınıp hiç vuramaz |
+| **Vuruşa kilitlenmek yer bağlar** | Hamleyi başlattıysan yürüyemezsin; hedef menzilden çıkarsa kılıç **boşluğa iner** |
+| **Kuşatma** | Arkadan gelen vuruş daha isabetli, daha ağır, ve **kaçınılamaz** |
+| **Kişisel alan** | Savaşçılar üst üste binmez |
+| **Kaçış gerçek mesafedir** | Sayaç değil: kaçan arenayı gerçekten terk etmek zorunda |
+
+> **Kuşatmanın asıl bedeli kaçışta ödenir:** çekilme komutu verildiğinde
+> **menzilindeki her düşman** bedava bir vuruş kazanır. Çevrildiysen kaçmak bir
+> darbe değil üç darbe demektir. "Kaçmadan önce kuşatılma" böylece gerçek bir
+> uzamsal karar oluyor.
+
+> **Neden Godot fiziği değil:** çarpışma çözümü sürümden sürüme ve platformdan
+> platforma değişir; "aynı seed = aynı dövüş" garantisi ölürdü. Uzam çekirdekte,
+> saf C# ve deterministik.
+
+> **Ölçülen maliyet:** 16.000 dövüş/sn'den **8.700 dövüş/sn**'ye indik. Kabul kriteri
+> "10.000 dövüş < 10 sn" — hâlâ sekiz katı üstündeyiz.
+
+Kamera hâlâ yandan bakar; derinlik ekranda dikey kayma + hafif ölçek + çizim sırası
+olarak gösterilir (2D brawler sahnelemesi). Düzlem gerçek, görüntü düz — yani kesilmiş
+kâğıt parçalarından kurulu rig bozulmaz (§12).
+
 ### Dövüş çözümlemesi (tam otomatik, manuel nişan yok)
 Her vuruşma anı sırayla çözülür:
 1. Saldıranın **Saldırganlık**'ı saldırı sıklığını belirler
@@ -91,7 +127,40 @@ Her vuruşma anı sırayla çözülür:
 
 ### Sınıf yok
 Temel sürümde **tek karakter sınıfı: samuray**. Büyücü vb. varyasyonlar sonraya
-(DLC/genişleme) bırakıldı.
+(DLC/genişleme) bırakıldı. Savaşçılar sınıfla değil **silah yeterliliğiyle** ayrışır.
+
+### Silah yeterliliği (weapon proficiency)
+
+Yeterlilik **silah adı başına değil, kavrayış (grip) başına** tutulur. Üç hat:
+
+| Hat | Kapsam | Durum |
+|---|---|---|
+| **Tek el** | Katana, wakizashi, tantō, kama, ono, tekagi | Aktif |
+| **Çift el** | Nodachi, naginata, kanabō, bō/jō | Aktif |
+| **Fırlatma** | Shuriken, kunai, yumi, fukiya | **Uykuda** — çekirdek mermi/uzam desteği gelene kadar (Açık Karar #4-C) |
+
+**Yeterlilik yalnızca isabeti ve saldırı hızını etkiler; ham hasarı asla etkilemez.**
+Hasara da işlerse Güç (Strength) ile çarpışıp dengeyi patlatır.
+
+**Büyüme:** hem dövüşte kullanım hem dojo antrenmanı. Antrenman şart — sakat bir
+savaşçının yeni hattını sıfırdan eğiteceği yer orası; yoksa doğru oynanış
+"sakat kalacaksa bırak ölsün" olur ve §7'nin "emekliye ayır mı" sorusu sahteleşir.
+
+**Acemi cezası:** yeterlilik 0'da silah **kuşanılabilir**, ama isabet belirgin düşüktür.
+"Eşiğin altında hiç kuşanamaz" kuralı roster'ı kilitler — yeni savaşçı hiçbir şey tutamaz.
+
+**Hatlar arası aktarım yok** — yeterlilik kavrayışa bağlıdır. Aktarım statlar üzerinden
+dolaylı olur: Güç, Savunma, Kaçınma, HP ve Stamina hatta bağlı değildir ve kavrayış
+değişince kalır.
+
+> **Neden kavrayış başına — ve neden riskli:** `Disability.BlocksTwoHandedWeapons` zaten
+> var. Yani **çift el ustası kolunu kaybederse ömrünün emeğini kaybeder.** Riskin bu
+> keskinliği kasıtlı; ama yıkıcı değil: savaşçı sıfırdan başlamaz, statlarını ve
+> deneyimini korur — **acemi isabetli bir veteran** olarak döner. Tek el hattı da
+> sıfırdan eğitilebilir kalmalıdır (yukarıdaki antrenman kuralı).
+>
+> Çift el, kırılganlığının bedelini **hasar tavanıyla** öder: Nodachi 34 / Katana 22
+> farkı korunur. Kesin sayılar Faz 9'un işi.
 
 ---
 
@@ -118,11 +187,18 @@ Temel sürümde **tek karakter sınıfı: samuray**. Büyücü vb. varyasyonlar 
 | Saldırı vuruşuna kilitli an | Komut **buffer'lanır**, mevcut hareket bitince kaçış başlar |
 | Blok duruşu | Neredeyse anında kaçışa geçer |
 
+> **Kod ile fark (açık):** blok burada ayrı bir durum sayılıyor, çekirdekte değil —
+> şu an Savunma (Defense) statının içinde eriyor. Ayrı bir durum olarak gerekiyor mu,
+> yoksa bu tablo mu güncellenmeli: Faz 9'a kadar karara bağlanacak.
+
 ### Kaçış penceresi (savunmasızlık)
 Kaçış başladığı andan arenadan çıkana kadar:
 - Savaşçı **Kaçınma ve blok kullanamaz**
 - Rakip **artırılmış isabet şansıyla** vurabilir
-- Rakip bir **fırsat saldırısı** (opportunity attack) hakkı kazanır
+- **Menzilindeki her düşman** bir fırsat saldırısı (opportunity attack) kazanır —
+  yani bedel kaç düşmanın seni çevirdiğine bağlı (§4)
+- Kaçış sayaçla değil **mesafeyle** biter: savaşçı arenayı gerçekten terk etmeli,
+  bu süre boyunca savunmasız kalır
 
 ---
 
@@ -186,7 +262,33 @@ Tek darbenin **max HP'ye oranı** eşiği geçerse uzuv kaybı riski doğar.
 **Riski etkileyen faktörler:**
 - Darbe/maxHP oranı (sert vuruş = yüksek risk)
 - Silah tipi: kesici (kılıç/balta) → uzuv kaybı; künt (topuz) → kırık/sersemleme
+  (**kod ile fark:** künt silahın sersemletme etkisi çekirdekte henüz yok; künt/kesici
+  ayrımı yalnızca uzuv kaybı riskini değiştiriyor)
 - Zırh/savunma seviyesi riski **azaltır** (ekipmana yatırımı anlamlı kılar)
+
+### İsabet bölgesi
+
+Her isabet bir bölgeye iner. Ağırlıklar kasıtlı olarak eşit değil:
+
+| Bölge | Ağırlık |
+|---|---|
+| Gövde | 45 |
+| Bacak | 25 |
+| Kol | 20 |
+| Kafa | 10 |
+
+> **Neden gövde baskın:** bölgeler eşit olsaydı gövde zırhı dört parçadan yalnızca biri
+> olurdu ve değersizleşirdi; zırh yatırımı "hepsini eşit dağıt" gibi düz bir
+> optimizasyona dönerdi. Gövde baskın olunca gövde zırhı ana yatırım, uzuv zırhları
+> uzmanlaşma kararı olur.
+
+Bölge **hasarı ve zırhı** ilgilendirir; sonuç ağacını değil. Gövdeye inen ağır darbe de
+bir uzva mal olur — kopan uzuv o zaman kalan uzuvlar arasından aynı ağırlıklarla seçilir.
+
+> **Ölçülen sebep:** "gövdeye inen darbe koparmasın" denince müdahale neredeyse risksiz
+> hâle geldi ve oyuncu zaferi %36'dan %53'e çıktı (10.000 dövüş, 3v3). Oysa §7'nin
+> vaadi "tuşa basmak hayat kurtarır ama **bedelsiz değildir**". Bölgenin sonuç ağacını
+> ezmesine izin verilmiyor.
 
 ### Sonuç ağacı
 | Durum | Sonuç |
@@ -194,6 +296,25 @@ Tek darbenin **max HP'ye oranı** eşiği geçerse uzuv kaybı riski doğar.
 | Hafif/orta darbe | Sadece HP hasarı, kalıcı etki yok |
 | Ağır darbe + oyuncu zamanında pes ettiyse | **Yaşar ama uzvunu kaybeder** — kalıcı stat cezası + görsel değişiklik |
 | Ağır darbe + müdahale yoksa/geç kalındıysa | **Ölüm** — gore/bitiriş animasyonu (Domina'nın yaklaşımı) |
+
+### Ne sıklıkla olmalı
+
+Uzuv kaybı oyunun imza mekaniği; nadir bir sürpriz değil, **düzenli olarak yaşanan bir
+sonuç** olmalı. Hedef: makul oynayan bir oyuncunun savaşçılarının kabaca **%5'i** sakat
+dönsün.
+
+Ama bu tek bir sayı değil — **oyuncunun ne zaman çektiğinin fonksiyonu**, çünkü uzuv
+kaybı yalnızca zamanında müdahale edilen dövüşlerde oluşur. Ölçüm (3v3, 10.000 dövüş):
+
+| Çekme politikası | Ölüm | Uzuv kaybı |
+|---|---|---|
+| Can %20'ye düşünce (geç) | %54 | %0.9 |
+| Can %30'a düşünce | %55 | %1.3 |
+| **Can %50'ye düşünce** | %43 | **%5.6** |
+| Can %70'e düşünce (erken) | %9 | %7.7 |
+
+Yani geç çeken oyuncu **ceset** getirir, erken çeken **sakat** getirir. Tam olarak
+istenen şey bu: tuşun ne zaman basıldığı roster'ın nasıl göründüğünü belirliyor.
 
 ### Kalıcı cezalar
 | Kayıp | Etki |
@@ -291,16 +412,134 @@ Domina'nın modeli referans alınır:
 
 ---
 
+## 12. Görsel Stil
+
+**Karanlık Edo ahşap baskı × katmanlı kâğıt tiyatrosu (paper theater).**
+Ukiyo-e estetik referans; üretim dili kâğıt tiyatrosu.
+
+### Ayrım: temiz varlık, dokulu ekran
+
+Doku **varlığa gömülmez, ekrana shader olarak uygulanır**.
+
+| Katman | İçerik |
+|---|---|
+| Varlıklar (uzuv çizimleri) | Düz renk, sert kenarlı iki tonlu gölge, kalın kontur, **gradyan yok**, şeffaf zemin |
+| Tam ekran overlay (`CanvasLayer`) | Kâğıt greni, hafif mürekkep yayılması, kenar vinyeti |
+| Global renk (`CanvasModulate`) | Günün saati (dawn/gündüz/gece) — **kan/vermilion tint dışında kalır** |
+
+Gerekçe: rig 15 parçayı çalışma anında döndürüyor. Doku ve ışık parçaya pişirilirse
+uzuv döndüğünde ışık yönü yanlışlanır ve her parça ayrı ayrı ışıklandırılmak zorunda
+kalır — tek kişilik üretimde karşılanamaz. Doku ekrandan gelince varlıklar temiz
+kalır, ahşap baskı hissi tek yerden ve bedava gelir. Aynı katman gün döngüsü
+varyantlarını da bedava üretir.
+
+### Kâğıt tiyatrosu neden
+
+Rig'in zayıflığını stile çeviriyor. Düz bir uzuv mekanik döndüğünde boyalı bir
+figürde "çizim neden böyle dönüyor" diye okunur; kâğıt kesiminde "kâğıt parça
+dönüyor" diye okunur. Aynı hareket, kabul edilebilir hâle geliyor.
+
+### Palet — yedi rol
+
+| Rol | Kullanım |
+|---|---|
+| Kâğıt / zemin | Sıcak kırık beyaz — sahnenin taban değeri |
+| Mürekkep / gölge | Zifiri koyu — kontur ve gölge kütlesi |
+| Taş / metal | Nötr gri |
+| İndigo | **Oyuncu takımı** |
+| Ochre | **Yokai / düşman** |
+| Toprak / ahşap | Yapı ve mobilya |
+| Vermilion | **Yalnızca kan ve kritik vurgu** — başka hiçbir yerde kullanılmaz |
+
+Değer boşluğu figürle zemin arasındadır: sahne açık kâğıt, figür koyu kütle. Renk
+değil **değer** ayrımı olduğu için küçültmede hayatta kalır.
+
+### Zırh kademeleri siluetle ayrılır, renkle değil
+
+Renkle ayırmak mümkün değil: palet aynı anda iki takımı da ayırt etmek zorunda. Fark
+**hacimden ve şekilden** gelir, kademe başına siluet belirgin şekilde büyür:
+
+| Kademe | Siluet |
+|---|---|
+| Çıplak | Dar, yumuşak, dökümlü kumaş |
+| Deri | Vücuda oturan, sivri hatlı |
+| İple asılı ahşap tahta | Omuzdan sarkan düz levhalar — hantal, düzensiz, gövdeden ayrık |
+| Demir parçası | Tek bir plaka; gövdenin bir bölümü metal, gerisi kumaş |
+| Yarım demir | Gövde ve omuzlar metal, kollar/bacaklar açık |
+| Tam demir | Her yeri kaplayan zırh; geniş omuz, boynuzlu kabuto, siluet neredeyse iki katı |
+
+> **Ton notu:** bu liste saray samurayından çok **derme çatma ronin** dünyasına bakıyor
+> (iple asılı tahta, tek demir parçası). Bu kasıtlı: dojo fakir başlıyor, ekipman
+> zenginleştikçe siluet ağırlaşıyor. Görsel ilerleme ekonominin doğrudan karşılığı olur.
+>
+> **Kademe listesi örnektir, kilitli değildir.** Kilitli olan kural: malzeme sözlüğü tüm
+> yuvalarda ortak olacak (karışık takım kaza değil karakter görünsün) ve her kademede
+> siluet gözle görülür şekilde büyüyecek.
+
+### Zırh yuva yuva kuşanılır
+
+Zırh tek parça değil; **yuva başına** kuşanılır ve yükseltilir: miğfer · gövde · omuz
+(sağ/sol) · kol (sağ/sol) · etek/kalça · baldır (sağ/sol).
+
+- Vuruş bir bölgeye iner (bkz. §7 → İsabet bölgesi); **hasarı ve uzuv kopma riskini o
+  bölgenin zırhı belirler**, savaşçının ortalaması değil
+- Yan (sağ/sol) **nereye vurulduğunu** belirler, cezanın ne olduğunu belirlemez: hangi
+  kol koparsa kopsun stat cezası aynıdır
+- Sınırlı bütçeyle **hangi uzvu koruyacaksın** kararı doğar; bu doğrudan §4'teki silah
+  yeterliliğine bağlanır — çift el ustasının kolunu korumak ömrünün emeğini korumaktır
+
+> Referans: Domina'da zırh tam olarak böyle çalışıyor — miğfer, gövde, omuzluk, etek,
+> baldırlık ayrı parçalar ve "her zırh parçası, giyen o bölgeden vurulduğunda hasar
+> soğuruyor". Bizde ek olarak **uzuv kopma riski** de o parçadan okunur.
+
+Üretim maliyeti ek değil: §12 zaten "taban beden + kemiklere asılan ekipman parçaları"
+diyor, yuva yuva zırh bunun doğal sonucu.
+
+**Üretim:** kademe başına yeni gövde çizilmez. Tek **taban beden** + aynı kemiklere
+asılan **ekipman parçaları** (kabuto, omuzluk, göğüslük, etek, kol/baldır koruması).
+Böylece kademe = parça kombinasyonu + palet; renk ve materyal ucuz eksen olur, yalnızca
+yeni **şekil** eklemek maliyetlidir. Açık Karar #4-D'nin istediği parça parça kuşanma da
+bedava gelir.
+
+Siluet sınıfı sayısı sınırlı tutulur — 128 px'te ayırt edilen şey renk değil şekildir.
+Aynı siluet içinde istenildiği kadar renk/materyal varyantı olabilir.
+
+### Eklem ve kopma kuralları
+
+- **Omuz pivotu** gövdeye çizilen *sode* (omuzluk) altında kalır
+- **Kalça pivotu** *kusazuri* / hakama eteği altında kalır
+- **Kopma yalnızca omuz ve kalçadadır.** Dirsek, diz, bilek ve ayak bileği **hareket
+  eder ama kopmaz**: çekirdekte `BodyPart` yalnızca `Arm / Leg / Eye` tanır ve bilekten
+  kopmayla koldan kopmanın mekanik farkı yoktur — ikisi de o kolu kullanılamaz yapar
+- El ve ayak **ayrı çizim olmak zorunda değil**; `RigPose` bunlara ayrı açı vermiyor,
+  ebeveyninin dönüşünü miras alıyorlar. Ön kola ve baldıra katılırlarsa kademe başına
+  dört çizim eksilir
+- Her uzuv parçası üst ucunda **bindirme payı** taşır; ebeveyn parçanın altında gizlenir
+- Kesik yüzey: **düz koyu kontur + düz vermilion disk**. Kemik/anatomi detayı yok —
+  128 px'te kayboluyor. Kopmayı taşıyan şey lekenin kendisi değil **eksik zincirin
+  siluetidir**
+
+### Sanat referansı
+
+Ukiyo-e ahşap baskı (Total War: Shogun 2 arayüzü, Muramasa), Trek to Yomi (kontrast),
+Okami (kâğıt dokusu). Sumi-e **elendi**: gri yıkama üstünde gri figür, savaşçı zeminden
+ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
+
+---
+
 ## Açık Kararlar
 
 | # | Konu | Not |
 |---|---|---|
-| 1 | Parti boyutu seçimi | Tamamen oyuncu kararı mı, yoksa bazı encounter'lar zorunlu sayı mı dayatıyor? |
+| 1 | Parti boyutu | Üst sınır 3 mü 4 mü, ve tamamen oyuncu kararı mı yoksa bazı encounter'lar zorunlu sayı mı dayatıyor? Kod tarafı hazır: arena yerleşimi index'ten hesaplıyor, çekirdek N savaşçı destekliyor. Rastgele hedefleme geldiği için 4. savaşçı artık **erişim mekaniğine bağlı değil** — arka sıra da saldırı alıyor |
 | 2 | Sefer/harita yapısı | Kaç faz, düz mü dallanan (node-map) mı, boss ritmi |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
-| 4 | Ekipman sistemi | Silah/zırh tipleri, tek-kollu savaşçıya özel ekipman kuralları |
+| 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
+| 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
+| 4-C | Ekipman — uzam/mermi gerektirenler | Shuriken, kunai, yumi, fukiya, makibishi. Fırlatma yeterlilik hattı buna bağlı. Ucuz versiyonları var: shuriken = hızlı/düşük hasarlı normal silah, makibishi = düşmanın mesafe süresini uzatan sarf malzemesi — ikisi de konum bilgisi istemez |
+| 4-D | Ekipman — zırh ve sakat savaşçı | Zırh kademeleri, tek-kollu savaşçıya özel ekipman kuralları |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
-| 6 | Görsel **stil** | Teknik karar verildi (2D cutout/skeletal — §2). Açık kalan: **stil** — piksel mi, sumi-e/ukiyo-e mürekkep mi, başka mı. Sanat yönü ilhamı: Trek to Yomi, Okami |
+| ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
 | 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile |
 | 9 | Kaçışta kısmi ödül | Sefer iptal olduğunda **önceki odalarda** toplanan ganimet elde kalıyor mu, o da mı gidiyor? "Hepsi gider" kaçmayı çok cezalandırıp asla kullanılmaz yapabilir; "hepsi kalır" ise geç kaçmayı bedava yapar (§5, §10) |
