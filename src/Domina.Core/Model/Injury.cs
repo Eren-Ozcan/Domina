@@ -13,6 +13,26 @@ public enum BodyPart
     Eye,
 }
 
+/// <summary>Darbenin indiği bölge.</summary>
+/// <remarks>
+/// <para>
+/// <see cref="BodyPart"/>'tan ayrıdır: her bölge kaybedilebilir bir uzuv değildir.
+/// Gövdeye inen ağır darbe savaşçıyı öldürebilir ama koparacak bir şeyi yoktur.
+/// </para>
+/// <para>
+/// Bölgelerin olasılığı eşit değildir (bkz. <c>CombatTuning</c>). Eşit olsaydı gövde
+/// zırhı değersizleşir, zırh yatırımı "hepsini eşit dağıt" gibi düz bir optimizasyona
+/// dönerdi.
+/// </para>
+/// </remarks>
+public enum HitLocation
+{
+    Head,
+    Torso,
+    Arm,
+    Leg,
+}
+
 /// <summary>
 /// Bir savaşçının kalıcı sakatlığı. Ölümden dönüldüğünde kalır ve geri alınamaz.
 /// </summary>

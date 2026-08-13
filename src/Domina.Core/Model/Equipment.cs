@@ -35,6 +35,21 @@ public sealed record Weapon(
         _ => 1.0,
     };
 
+    /// <summary>
+    /// Vuruşun eriştiği mesafe (arena birimi). Savaşçı boyu 256 birimdir.
+    /// </summary>
+    /// <remarks>
+    /// Uzun silah uzaktan vurur ama yavaştır; kısa silah yaklaşmak zorundadır. Menzil
+    /// olmasaydı silahlar yalnızca hasar ve hızla ayrışırdı — naginata ile tantō
+    /// arasındaki asıl fark bu.
+    /// </remarks>
+    public double Reach => Class switch
+    {
+        _ when TwoHanded => 150,
+        WeaponClass.Piercing => 130,
+        _ => 100,
+    };
+
     public static Weapon Katana() => new("Katana", WeaponClass.Cutting, 22, false, 1.10);
 
     public static Weapon Nodachi() => new("Nodachi", WeaponClass.Cutting, 34, true, 1.60);
