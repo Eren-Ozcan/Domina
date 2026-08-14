@@ -277,27 +277,118 @@ seed 81 → hem arenada hem `Domina.Sim`'de **PlayerWipe / 18,8 sn**. Yani uzam
 
 ---
 
-## Bekleyen karar — uzuv kaybı oranı nasıl yükselecek
+## Uzuv kaybı oranı — karara bağlandı (2026-08-14)
 
-**Sonraki oturum bu soruyla açılacak.** Hedef: makul oynayan oyuncunun savaşçılarının
-kabaca **%5'i** sakat dönsün. Gerçekçi oyuncu modelinde (`losing:0.7`) ölçülen: **%1.3**.
+Bekleyen soru kapandı, ama beklenenden farklı bir yerden. Hedef "%5" olarak konmuştu;
+kullanıcı bu sayının keyfî olduğunu ve oranın **kuşamın fonksiyonu** olması gerektiğini
+söyledi — iyi zırhlı savaşçı eve sağlam dönmeli. Bu doğru çıktı ve mekanizma zaten
+kısmen kodda duruyordu, yanlış eksene bağlıydı.
 
-**Tuning ile çözülmüyor.** `--sever` 0.35 → 0.95 yapıldığında uzuv kaybı yalnızca
-%1.30 → %1.94 oldu ve doygunluğa girdi. Darboğaz kopma zarı değil: savaşçı, oyuncu
-müdahale ettikten *sonra* ağır darbe yiyecek kadar sahada kalmıyor. Uygulanan tek
-değişiklik `GrievousSeverityThreshold` 0.28 → 0.20.
+### Zırh yuva yuva oldu
 
-Dört seçenek kondu, hiçbiri seçilmedi:
+`Armor` artık tek skaler değil, **kafa/gövde/kol/bacak** için ayrı parçalar
+(`ArmorPiece`). Hasar azaltımı ve kopma direnci darbenin indiği bölgeden okunuyor.
+İsabet bölgeleri zaten bunun için vardı — `CombatTuning`'deki yorum sebebini yazıyordu
+ama karşılığı yoktu.
 
-| Seçenek | Ne değişir |
+Ölçüm için `--armor none|light|medium|heavy` eklendi (senaryonun geri kalanı sabitken
+zırh eksenini izole eder) ve rapor artık uzuvları **parça parça** sayıyor.
+
+### İki mantık hatası bulundu
+
+**1. Uzuv kaybederek kazanmak imkânsızdı.** Kopma `PlayerIntervened` istiyordu, o bayrağı
+yalnızca "Kaç" tuşu açıyordu, tuş da §5 gereği seferi bitiriyordu. 20.000 dövüş, en kötü
+zırh, **zafer + uzuv kaybı: 0 kez**. Sakat dönen her savaşçı terk edilmiş bir seferin
+anıtıydı; tek kollu bir şampiyon eve asla gelemiyordu.
+
+Sonuç ağacı ikiye ayrıldı (GDD §7 güncellendi): **öldürmeyen** ağır darbe tuşsuz da
+koparır ve dövüş sürer; **öldürücü** darbede eski kural geçerli — tuşa basılmışsa uzuvla
+yaşar, basılmamışsa ölür.
+
+> **Yazarken düzeltilen tarif.** Bu ilk önce "tuş ölümü uzuv kaybına çevirir" diye
+> yazılmıştı; kullanıcı bunun ağacın tek dalı olduğunu söyledi. Tuş bir **takas değil** —
+> sonucu basıldığı anda bilinmeyen bir çekilme başlatıyor ve bedeli bir merdivene düşüyor:
+> herkes yarasız kaçtı → herkes yaralı kaçtı → uzuv kayıplı kaçtı → ekibin bir kısmı
+> kaçtı → kimse kaçamadı. Merdiven ölçüldü ve GDD §5'e işlendi.
+>
+> Ölçüm için `--policy at:<saniye>` eklendi: cana bakan politikalar merdivenin bedelsiz
+> ucunu **kurgu gereği** ölçemiyordu (can düşmüşse zaten yara alınmıştır). `at:0` ile
+> görüldü ki temastan önce basmak **%100 yarasız** çıkış veriyor.
+
+### Kaçış bedelsiz olmaktan çıktı (2026-08-14)
+
+Kullanıcı "%100 olmamalı" dedi. Sebep tek değil üçtü ve üçü birden düzeltildi.
+
+| Neden bedelsizdi | Ne eklendi |
 |---|---|
-| **A · olduğu gibi bırak** | Oran oyun tarzının sonucu olur: temkinli oyuncu (%5.6) sakat getirir, gidişata bakan (%1.3) ceset |
-| **B · kaçış penceresini uzat** | Kaçan daha yavaş çıkar ya da düşman peşinden gelir; hem ölümü hem sakatlığı artırır, "kaçmak da tehlikeli" tonunu güçlendirir |
-| **C · künt silah kalıcı yaralanma yapsın** | GDD §7 zaten "künt → kırık/sersemleme" vaat ediyor ama çekirdekte yok; Oni'nin tetsubo'su şu an neredeyse hiç sakatlamıyor (çarpan 0.15). Kesici sayılarına dokunmadan ikinci bir kalıcı hasar kaynağı |
-| **D · müdahale refleks penceresi olsun** | Ağır darbeden *sonra* N saniye içinde basmak. Oran üzerinde en güçlü kontrol, ama GDD §5'in "tek tuş, anlık karar" ilkesini QTE'ye yaklaştırır |
+| `MoveSpeed` tek sabitti — kovalayan ile kaçan aynı hızda, net kapanma sıfır | `WarriorStats.Speed` (0-100). Oni 25, Kappa 55, Tengu 85. Kaçan ayrıca `RetreatSpeedMultiplier` kadar yavaşlar. Bacak kaybı hızı da düşürür (`Disability.SpeedMultiplier`) |
+| Yakın dövüş arenanın uzak yarısına ulaşmıyordu | `ThrownWeapon` + `Projectile`: mermi havada süre geçirir, varışta çözülür. Yeni olaylar `ProjectileLaunched/Hit/Missed`; sunum tarafında `ProjectileView`/`ProjectileTracker` |
+| Arenayı terk etmenin kendisi bedava | `EscapeMishapChance` (0.30): çıkışta kaza yarası. Canı **1'in altına indirmez** — amacı ölüm değil, bedelsizliği kaldırmak |
 
-Öneri: **C + B**. D en güçlü kontrolü verir ama kullanıcının Domina'da kaçındığı
-QTE çizgisine yaklaşır.
+**Yazarken bulunan asıl sorun:** hız eklenince avcı yetişiyor ama **hiç vuramıyordu**.
+Kural "hamleye kilitlenen yürüyemez" idi; avcı yetişip savuruyor, hamle boyunca donuyor,
+kaçan menzilden çıkıyor, kılıç her seferinde boşluğa iniyordu. Kovalamaca için kural
+askıya alındı: kovalayan **hamle sırasında** koşmaya devam eder. Toparlanmada değil —
+ikisi de açıkken kovalayan hiç durmuyor ve kaçış tamamen çöküyordu (ekiplerin %76'sı
+kırılıyordu, %30 yerine). `RetreatSpeedMultiplier` 0.85/0.92/1.0 tarandı, **0.92** seçildi.
+
+Yeni merdiven (3v3, 20.000 dövüş, hafif kuşam):
+
+| Basamak | Temasta önce | 2. sn | Can %50 | Sayıca geri kalınca |
+|---|---|---|---|---|
+| 1 · hepsi kaçtı, yarasız | %35.0 | — | — | — |
+| 2 · hepsi kaçtı, yaralı | %65.0 | %87.1 | %6.8 | — |
+| 3 · hepsi kaçtı, uzuv kayıplı | — | %7.4 | %2.3 | — |
+| 4 · kısmi kaçış, uzuvsuz | — | %4.9 | %71.8 | %29.6 |
+| 5 · kısmi kaçış, uzuv kayıplı | — | %0.6 | %17.6 | %9.3 |
+| 6 · kimse kaçamadı | — | — | %1.5 | %61.1 |
+
+> **Uzuv kaybı bandı bozulmadı** — zırhın belirlediği oranlar neredeyse aynı kaldı
+> (zırhsız %8.6, hafif %6.6, orta %2.9, ağır %0.4). Değişen ölüm ve kaçış: kaçmak artık
+> pahalı, o yüzden ölüm %41.6'dan %49.1'e çıktı, kaçış %8.7'den %4.1'e indi.
+
+Bu geçişte GDD Açık Karar **#4-C kapandı** (fırlatma hattı §4'te artık "Aktif") ve §5'e
+merdiven ile üç mekanik işlendi. Yeni test dosyası `RangedAndFlightTests`. Toplam 190 test.
+
+**2. Aynı uzuv birden çok kez kopabiliyordu.** `_lostParts` savaşçı başına tek `BodyPart`
+tutuyordu ve her yeni kayıp öncekini siliyordu; `AlreadyLost` yalnızca sonuncusuna baktığı
+için kolunu kaybeden savaşçı bacağını kaybedince "kolu duruyor" sayılıyordu. Ölçüldü:
+tek savaşçıda **22 kopma**, `[Kol, Bacak, Kol, Bacak, ...]`. Kayıt artık `BodyPartSet` —
+tekrarsızlığı tipin kendisi taşıyor, üstelik değer eşitliği olduğu için özet record'ları
+determinizm testlerinde karşılaştırılabilir kalıyor.
+
+Aynı hata, birden fazla uzvunu kaybeden savaşçının fazladan kayıplarını da yutuyordu:
+zırhsız 3v3'te 5440 sakat savaşçıya karşılık **5830 kopan uzuv** var.
+
+### Ölçülen band (3v3, 20.000 dövüş, `losing:0.7`)
+
+| Kuşam | Ölüm | **Uzuv kaybı** | Zafer |
+|---|---|---|---|
+| Zırhsız | %41.6 | **%8.6** | %68 |
+| Hafif keikogi | %38.8 | **%6.7** | %70 |
+| Dō-maru | %22.5 | **%2.9** | %89 |
+| Ō-yoroi | %16.3 | **%0.4** | %96 |
+
+`BaseDismembermentChance` **0.35 → 0.05**. Eski değer, kopmanın yalnızca kaçış
+penceresinde ateşlendiği ağaca göre ayarlanmıştı; yeni ağaçta aynı sayı uzuv kaybını
+%45'e çıkarıyordu. 0.35/0.15/0.08/0.05/0.03 tarandı — knob ölüm ve zafer oranlarını
+kayda değer biçimde oynatmıyor, yalnızca uzuv kaybını ölçekliyor.
+
+> **Tuş artık oranı belirlemiyor, ölümü belirliyor.** Aynı kuşamda hiç çekilmeyen ile
+> erken çeken oyuncunun uzuv kaybı neredeyse aynı (%8.8'e karşı %8.0); ölüm %48'den
+> %29'a düşüyor. Kazanılan dövüşlerin **%16.5'i** eve sakat bir savaşçı getiriyor.
+
+Testler: `TestBuilders.PointBlank` artık `BaseDismembermentChance`'i **sabitliyor** —
+sonuç ağacını sınayan testler kuralı sınıyor, dengeyi değil; denge sayısı devralınsaydı
+her ayarda kırılırlardı. Toplam 180 test yeşil.
+
+### Bundan geriye kalan
+
+Önceki oturumun dört seçeneğinden **C · künt silah kalıcı yaralanma yapsın** hâlâ açık
+(kullanıcı "sonraki tura" dedi). GDD §7 "künt → kırık/sersemleme" vaat ediyor, çekirdekte
+karşılığı yok; tetsubo'nun kopma çarpanı 0.15 olduğu için ağır zırhlı savaşçıya karşı
+neredeyse hiçbir kalıcı etkisi olmuyor. B/D seçenekleri artık gereksiz — oranı
+yükseltmek için konmuşlardı.
 
 ---
 
@@ -416,6 +507,10 @@ fark yok, çünkü o aralığa düşen darbe hiç yok.
 >
 > Zafer oranının politikaya göre %60'tan %1'e savrulması ayrı bir sorun — **Faz 9'un
 > asıl işi bu**, uzuv kaybı değil.
+
+> ⚠️ **Bu tablo 2026-08-14'te geçersizleşti.** Sonuç ağacı ikiye ayrılınca uzuv kaybı
+> artık çekme politikasının değil **kuşamın** fonksiyonu oldu; GDD §7'deki denge hedefi
+> zırh bandıyla değiştirildi. Bkz. yukarıdaki "Uzuv kaybı oranı — karara bağlandı".
 
 Yeni test dosyası: `MovementTests` (yaklaşma, menzil, uzun silah mesafesi, kişisel
 alan, kuşatılmış kaçışın bedeli, ıska). Toplam 175 test yeşil.

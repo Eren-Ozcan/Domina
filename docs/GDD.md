@@ -137,7 +137,7 @@ Yeterlilik **silah adı başına değil, kavrayış (grip) başına** tutulur. �
 |---|---|---|
 | **Tek el** | Katana, wakizashi, tantō, kama, ono, tekagi | Aktif |
 | **Çift el** | Nodachi, naginata, kanabō, bō/jō | Aktif |
-| **Fırlatma** | Shuriken, kunai, yumi, fukiya | **Uykuda** — çekirdek mermi/uzam desteği gelene kadar (Açık Karar #4-C) |
+| **Fırlatma** | Shuriken, kunai, yumi, fukiya | **Aktif** — çekirdek mermiyi 2026-08-14'te kazandı |
 
 **Yeterlilik yalnızca isabeti ve saldırı hızını etkiler; ham hasarı asla etkilemez.**
 Hasara da işlerse Güç (Strength) ile çarpışıp dengeyi patlatır.
@@ -191,14 +191,69 @@ değişince kalır.
 > şu an Savunma (Defense) statının içinde eriyor. Ayrı bir durum olarak gerekiyor mu,
 > yoksa bu tablo mu güncellenmeli: Faz 9'a kadar karara bağlanacak.
 
+### Kaçışın bedeli bir merdivendir
+
+Tuş bir takas değildir — "şu kadar verip şunu al" diye bir kural yoktur. Basıldığı anda
+sonucu **bilinmez**; çekilme, aşağıdaki merdivenin bir basamağında biter. Basma anı seni
+bu merdivende tek yönlü aşağı kaydırır.
+
+| Basamak | Ne olur |
+|---|---|
+| **1** | Herkes kaçtı, kimse yara almadı |
+| **2** | Herkes kaçtı, yaralılar var |
+| **3** | Herkes kaçtı, uzuv kaybeden(ler) var |
+| **4** | Ekibin bir kısmı kaçtı, kalanlar öldü — kaçanlar sağlam |
+| **5** | Ekibin bir kısmı kaçtı, kalanlar öldü — kaçanlar uzuv kaybetmiş |
+| **6** | Kimse kaçamadı |
+
+Ölçüldü (3v3, 20.000 dövüş, hafif kuşam). Sütunlar tuşun ne zaman basıldığını temsil eder:
+
+| Basamak | Temasta önce | 2. sn | Can %50 | Sayıca geri kalınca |
+|---|---|---|---|---|
+| 1 · hepsi kaçtı, yarasız | **%35.0** | — | — | — |
+| 2 · hepsi kaçtı, yaralı | %65.0 | %87.1 | %6.8 | — |
+| 3 · hepsi kaçtı, uzuv kayıplı | — | %7.4 | %2.3 | — |
+| 4 · kısmi kaçış, uzuvsuz | — | %4.9 | %71.8 | %29.6 |
+| 5 · kısmi kaçış, uzuv kayıplı | — | %0.6 | %17.6 | %9.3 |
+| 6 · kimse kaçamadı | — | — | %1.5 | **%61.1** |
+
+### Kaçışı bedelsiz olmaktan çıkaran üç şey
+
+Merdivenin üst ucu bir noktada **%100 yarasız çıkış** veriyordu: kaçmanın hiçbir riski
+yoktu. Sebebi tek tek bulundu ve üçü birden düzeltildi.
+
+| Neden bedelsizdi | Ne eklendi |
+|---|---|
+| Hız tek bir sabitti; kovalayan ile kaçan aynı hızda gidiyor, net kapanma sıfır kalıyordu | **Hız bir stat oldu.** Oni yavaş (25), Kappa orta (55), Tengu hızlı (85). Kaçan ayrıca yavaşlar — sırtı dönük koşuyor |
+| Yakın dövüş arenanın uzak yarısına ulaşamıyordu; belli bir mesafeden sonra kaçan dokunulmazdı | **Fırlatma uyandı** (§4). Mermi havada süre geçirir; hedef uçuş sırasında kaçabilir, ölebilir, sahadan çıkabilir |
+| Arenayı terk etmenin kendisi hiçbir şeye mal olmuyordu | **Kaçış zarı.** Burkulan ayak, dönüş yolunda kanayan yara. Öldürmez — canı 1'in altına indirmez |
+
+> **Kovalamacanın ayrı bir kuralı var.** Normalde hamleye kilitlenen savaşçı yürüyemez.
+> Kaçan bir hedefe karşı bu askıya alınır: kovalayan kılıcını savururken de koşar. Bu
+> olmadan avcı yetişip hamleye başlıyor, hamle boyunca donuyor, kaçan menzilden çıkıyor
+> ve kılıç **her seferinde** boşluğa iniyordu — yani yetişen düşman hiç vuramıyordu.
+> Toparlanmada ise durur; yoksa kovalayan hiç yavaşlamıyor ve kaçış tamamen çöküyor
+> (ölçüldü: sayıca geri kalınca çekilen ekibin %76'sı kırılıyordu).
+
+> **Temastan önce basmak hâlâ en iyi seçenek** ama artık garanti değil: %35 tertemiz,
+> %65 yaralı çıkış. Kaçmanın asıl bedeli yine de **seferin kendisi** — sefer iptal olur,
+> ödül alınmaz, tüm ekip onur kaybeder.
+>
+> Geç basmanın bedeli ise sert: sayıca geri kaldıktan sonra çekilmek dövüşlerin
+> **%61'inde** ekibin tamamına mal oluyor. Merdivenin söylediği şey net — *kaçacaksan
+> erken kaç.*
+
 ### Kaçış penceresi (savunmasızlık)
 Kaçış başladığı andan arenadan çıkana kadar:
 - Savaşçı **Kaçınma ve blok kullanamaz**
 - Rakip **artırılmış isabet şansıyla** vurabilir
 - **Menzilindeki her düşman** bir fırsat saldırısı (opportunity attack) kazanır —
   yani bedel kaç düşmanın seni çevirdiğine bağlı (§4)
+- **Daha hızlı düşman peşine düşer** ve yetişirse vurmaya devam eder
+- **Menzilli düşman arkandan atar**; mermi sen sahadan çıkmadan yetişirse vurur
 - Kaçış sayaçla değil **mesafeyle** biter: savaşçı arenayı gerçekten terk etmeli,
   bu süre boyunca savunmasız kalır
+- Arenayı terk ederken bir **kaza yarası** zarı atılır (öldürmez)
 
 ---
 
@@ -266,6 +321,22 @@ Tek darbenin **max HP'ye oranı** eşiği geçerse uzuv kaybı riski doğar.
   ayrımı yalnızca uzuv kaybı riskini değiştiriyor)
 - Zırh/savunma seviyesi riski **azaltır** (ekipmana yatırımı anlamlı kılar)
 
+### Zırh yuva yuvadır
+
+Zırh tek bir sayı değil; **kafa / gövde / kol / bacak** için ayrı parçalardan oluşur.
+Hasar azaltımı ve uzuv kopma direnci, darbenin **indiği bölgenin** parçasından okunur.
+
+| Takım | Kafa | Gövde | Kol | Bacak |
+|---|---|---|---|---|
+| Hafif keikogi | — | keikogi | — | — |
+| Dō-maru | — | dō | kote | suneate |
+| Ō-yoroi | kabuto | ō-yoroi gövdeliği | ağır kote | ağır suneate |
+
+> **Neden yuva yuva:** direnç tek skaler kaldığı sürece "iyi zırh" tek eksende ilerler ve
+> ekipmanın asıl ilginç kararı — **ağır göğüslük, çıplak kollar**: ucuz ve hızlı, ama eve
+> kolsuz dönme ihtimali yüksek — hiç var olmaz. Ölçümde bu doğrudan görünüyor: dō-maru'nun
+> kafası açık olduğu için göz kaybı, kol ve bacak kaybının aksine ancak yarıya iniyor.
+
 ### İsabet bölgesi
 
 Her isabet bir bölgeye iner. Ağırlıklar kasıtlı olarak eşit değil:
@@ -291,30 +362,62 @@ bir uzva mal olur — kopan uzuv o zaman kalan uzuvlar arasından aynı ağırl�
 > ezmesine izin verilmiyor.
 
 ### Sonuç ağacı
+
+Ağır darbe kopma zarını tutturduğunda **darbenin öldürücü olup olmadığı** belirleyicidir:
+
+```
+ağır darbe + kopma zarı tuttu
+  ├─ can > 0  → uzuv gider, savaşçı sahada kalır, DÖVÜŞ SÜRER
+  └─ can ≤ 0
+       ├─ oyuncu "Kaç"a basmış → uzvunu kaybeder ama YAŞAR
+       └─ basmamış             → ÖLÜM (gore/bitiriş animasyonu)
+```
+
 | Durum | Sonuç |
 |---|---|
 | Hafif/orta darbe | Sadece HP hasarı, kalıcı etki yok |
-| Ağır darbe + oyuncu zamanında pes ettiyse | **Yaşar ama uzvunu kaybeder** — kalıcı stat cezası + görsel değişiklik |
-| Ağır darbe + müdahale yoksa/geç kalındıysa | **Ölüm** — gore/bitiriş animasyonu (Domina'nın yaklaşımı) |
+| Ağır darbe, öldürmüyor | **Uzvunu kaybeder ve dövüşmeye devam eder** — tuş gerekmez |
+| Ağır darbe, öldürücü + oyuncu zamanında pes ettiyse | **Yaşar ama uzvunu kaybeder** — kalıcı stat cezası + görsel değişiklik |
+| Ağır darbe, öldürücü + müdahale yoksa/geç kalındıysa | **Ölüm** |
+
+> **Neden ikiye ayrıldı.** Önceki kuralda uzuv kaybı yalnızca `PlayerIntervened` iken
+> oluşuyordu; o bayrağı da sadece "Kaç" tuşu açıyor ve §5 gereği tuş **seferi bitiriyor**.
+> Sonuç: **uzuv kaybederek kazanmak matematiksel olarak imkânsızdı.** 20.000 dövüş
+> ölçüldü, zafer + uzuv kaybı: **0 kez**. Sakat dönen her savaşçı terk edilmiş bir
+> seferin anıtıydı; tek kollu bir şampiyon eve asla gelemiyordu. Bu, aşağıdaki "emekliye
+> ayır mı, kullanmaya devam mı" kararıyla çelişiyor — o karar sakat veteranın bir şey
+> kazanmış olmasını varsayar.
+>
+> Tuşun ağırlığı korunuyor. Ama tuş bir **takas değil**: "ölümü uzuv kaybına çevirmek"
+> ağacın yalnızca bir dalı. Tuş, sonucu basıldığı anda bilinmeyen bir **çekilme**
+> başlatır; bedeli §5'teki merdivende bir yere düşer.
 
 ### Ne sıklıkla olmalı
 
 Uzuv kaybı oyunun imza mekaniği; nadir bir sürpriz değil, **düzenli olarak yaşanan bir
-sonuç** olmalı. Hedef: makul oynayan bir oyuncunun savaşçılarının kabaca **%5'i** sakat
-dönsün.
+sonuç** olmalı. Oran **tek bir sayı değil, kuşamın fonksiyonu** — iyi zırhlı savaşçı eve
+sağlam döner, ucuz kuşamlı dönmez.
 
-Ama bu tek bir sayı değil — **oyuncunun ne zaman çektiğinin fonksiyonu**, çünkü uzuv
-kaybı yalnızca zamanında müdahale edilen dövüşlerde oluşur. Ölçüm (3v3, 10.000 dövüş):
+Ölçüldü (3v3, 20.000 dövüş, `losing:0.7` oyuncu modeli). Denge hedefi bu tablodur:
 
-| Çekme politikası | Ölüm | Uzuv kaybı |
-|---|---|---|
-| Can %20'ye düşünce (geç) | %54 | %0.9 |
-| Can %30'a düşünce | %55 | %1.3 |
-| **Can %50'ye düşünce** | %43 | **%5.6** |
-| Can %70'e düşünce (erken) | %9 | %7.7 |
+| Kuşam | Açıkta kalan | Ölüm | **Uzuv kaybı** | Zafer |
+|---|---|---|---|---|
+| Zırhsız | hepsi | %41.6 | **%8.6** | %68 |
+| Hafif keikogi | kol, bacak, kafa | %38.8 | **%6.7** | %70 |
+| Dō-maru | kafa | %22.5 | **%2.9** | %89 |
+| Ō-yoroi | — | %16.3 | **%0.4** | %96 |
 
-Yani geç çeken oyuncu **ceset** getirir, erken çeken **sakat** getirir. Tam olarak
-istenen şey bu: tuşun ne zaman basıldığı roster'ın nasıl göründüğünü belirliyor.
+Karışık bir orta-oyun kadrosu (çoğu hafif/orta kuşamda) böylece kabaca **%5** civarında
+sakat üretir — ama bu bir sabit değil, oyuncunun ekipman harcamasının sonucu.
+
+> **Tuş oranı belirlemiyor; ölümü belirliyor.** Aynı kuşamda hiç çekilmeyen ile erken
+> çeken oyuncunun uzuv kaybı neredeyse aynı (%8.8'e karşı %8.0), ölümü ise %48'den
+> %29'a düşüyor. Kural değişmeden önce tersi geçerliydi ve oran tamamen tuşun ne zaman
+> basıldığına bağlıydı — o zaman da zafer + uzuv kaybı imkânsızdı.
+
+Kazanılan dövüşlerin **%16.5'i** eve sakat bir savaşçı getiriyor (hafif kuşam ölçümü):
+sakat kadro artık yalnızca terk edilen seferlerin değil, **pahalıya kazanılan
+zaferlerin** de kaydı.
 
 ### Kalıcı cezalar
 | Kayıp | Etki |
@@ -536,7 +639,7 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
 | 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
-| 4-C | Ekipman — uzam/mermi gerektirenler | Shuriken, kunai, yumi, fukiya, makibishi. Fırlatma yeterlilik hattı buna bağlı. Ucuz versiyonları var: shuriken = hızlı/düşük hasarlı normal silah, makibishi = düşmanın mesafe süresini uzatan sarf malzemesi — ikisi de konum bilgisi istemez |
+| 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
 | 4-D | Ekipman — zırh ve sakat savaşçı | Zırh kademeleri, tek-kollu savaşçıya özel ekipman kuralları |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
