@@ -112,19 +112,57 @@ public class BatchRunnerTests
     }
 
     /// <summary>
-    /// Uzuv kaybı yalnızca <b>zamanında müdahale edilen</b> dövüşlerde oluşur
-    /// (GDD §7). Hiç çekilmeyen bir oyuncu sakat savaşçı üretmez, ölü üretir —
-    /// aracın ölçmesi gereken en önemli fark budur.
+    /// Tuş ölümü uzuv kaybına çevirir (GDD §7): çeken oyuncu daha az ölü, daha çok
+    /// sakat getirir. Aracın ölçmesi gereken en önemli fark budur.
     /// </summary>
+    /// <remarks>
+    /// Uzuv kaybı <b>yalnızca</b> müdahale edilen dövüşlerde oluşmaz — öldürmeyen ağır
+    /// darbe tuşsuz da koparır (GDD §7). Bu yüzden test toplam sakat sayısını değil
+    /// <b>ölüm farkını</b> bağlar: ölçümde çeken ve çekmeyen oyuncunun sakat sayısı
+    /// neredeyse aynı çıkıyor (%28.20'ye karşı %28.13), ölüm ise %39'dan %31'e düşüyor.
+    /// </remarks>
     [Fact]
     public void InterventionTradesDeathsForLostLimbs()
     {
         BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 500);
         BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3)).Run(1, 500);
 
-        Assert.Equal(0, reckless.PlayerLimbLosses);
         Assert.Equal(0, reckless.PlayerEscapes);
         Assert.True(careful.PlayerEscapes > 0);
+
+        Assert.True(careful.PlayerDeaths < reckless.PlayerDeaths);
         Assert.True(careful.PlayerLimbLosses > 0);
+    }
+
+    /// <summary>
+    /// Kaçışın bedeli bir merdivendir (GDD §5) ve basma anı seni tek yönlü aşağı
+    /// kaydırır: ne kadar geç basarsan o kadar çok ölü, o kadar az sağ çıkan.
+    /// </summary>
+    /// <remarks>
+    /// Tuş bir <b>takas değil</b>: "ölümü uzuv kaybına çevirir" ağacın yalnızca bir dalı.
+    /// Bu test merdivenin sırasını bağlar — sıra bozulursa §5'in vaadi bozulmuş demektir.
+    /// Mutlak sayılar değil <b>sıralama</b> bağlanır; sayılar Faz 9'un işi.
+    /// </remarks>
+    [Fact]
+    public void PressingLaterCostsMore()
+    {
+        BatchReport beforeContact = new BatchRunner(Scenario(), new RetreatAtSecond(0)).Run(1, 400);
+        BatchReport afterContact = new BatchRunner(Scenario(), new RetreatAtSecond(2)).Run(1, 400);
+        BatchReport whenLosing = new BatchRunner(Scenario(), new RetreatWhenLosing(0.7)).Run(1, 400);
+
+        // Temastan önce basmak temiz: mesafe koruyor, kimse sakat kalmıyor.
+        Assert.Equal(0, beforeContact.PlayerLimbLosses);
+
+        // Temastan sonra basmak sakatlık getirir; ilk basamakla ikincinin farkı bu.
+        Assert.True(afterContact.PlayerLimbLosses > 0);
+
+        // Merdiven aşağı indikçe ölü artar, sağ çıkan azalır. Ölçümde ilk iki basamak
+        // ölüm bakımından eşit (ikisi de sıfır) — bu yüzden sıkı sıralama yalnızca
+        // son basamakta aranır.
+        Assert.True(beforeContact.PlayerDeaths <= afterContact.PlayerDeaths);
+        Assert.True(afterContact.PlayerDeaths < whenLosing.PlayerDeaths);
+
+        Assert.True(beforeContact.PlayerEscapes >= afterContact.PlayerEscapes);
+        Assert.True(afterContact.PlayerEscapes > whenLosing.PlayerEscapes);
     }
 }

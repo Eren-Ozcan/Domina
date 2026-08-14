@@ -152,9 +152,11 @@ public class SimCliTests
             Assert.StartsWith("1,", lines[1], StringComparison.Ordinal);
 
             // Sayılar nokta ile yazılmalı: virgül ondalık ayırıcı CSV'yi bozardı.
+            // Sütun sayısı başlıktan okunur; sabit yazılsaydı her yeni sütunda kırılırdı.
+            int columns = lines[0].Count(c => c == ',');
             foreach (string line in lines.Skip(1))
             {
-                Assert.Equal(10, line.Count(c => c == ','));
+                Assert.Equal(columns, line.Count(c => c == ','));
             }
         }
         finally

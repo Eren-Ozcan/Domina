@@ -223,10 +223,15 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Ekip komutunun uzuv kaybı mekaniğine etkisi: tuşa basmak <b>herkesi</b>
-    /// ölüm yerine sakatlıkla kurtarır. Bedeli de herkesin ödemesi bu yüzden şart
-    /// (bkz. <see cref="HonorTests"/> — kaçan savaşçı onur kazanmaz).
+    /// Tuşa basmak <b>herkesi</b> ölüm yerine sakatlıkla kurtarır — tek bir savaşçıyı
+    /// değil. Bedeli de herkesin ödemesi bu yüzden şart (bkz. <see cref="HonorTests"/> —
+    /// kaçan savaşçı onur kazanmaz).
     /// </summary>
+    /// <remarks>
+    /// Koruma <b>ölümsüzlük değil</b>: kaçan savaşçının peşine yetişen düşman takılabilir
+    /// ve onu sahadan çıkmadan devirebilir. Bu yüzden test "kimse ölmedi" demiyor,
+    /// "öldürücü darbe herkeste uzuv kaybına çevrildi" diyor — asıl kural bu.
+    /// </remarks>
     [Fact]
     public void InterventionProtectsEveryWarriorNotJustOne()
     {
@@ -244,7 +249,18 @@ public class RetreatTests
         battle.CommandRetreat();
         BattleResult result = battle.Run();
 
-        Assert.DoesNotContain(result.Summaries, s => s.Team == Battle.PlayerTeam && s.Died);
+        // Vurulan her savaşçı uzvunu kaybetmiş olmalı; kimse "sadece öldü" olmamalı.
+        foreach (WarriorBattleSummary s in result.Summaries.Where(s => s.Team == Battle.PlayerTeam))
+        {
+            if (s.TimesHit > 0)
+            {
+                Assert.True(s.LostLimb, s.Name);
+            }
+        }
+
+        Assert.DoesNotContain(
+            battle.Events.OfType<WarriorDied>(),
+            e => e.Cause == DeathCause.GrievousBlow);
     }
 
     /// <summary>

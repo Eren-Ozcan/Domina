@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -95,7 +95,7 @@ public class BattleFlowTests
             Assert.Equal(died, summary.Died);
             Assert.Equal(escaped, summary.Escaped);
             Assert.Equal(dismembered, summary.LostLimb);
-            Assert.Equal(dismembered, summary.LostPart is not null);
+            Assert.Equal(dismembered, summary.LostParts != BodyPartSet.None);
 
             // İsabetler saldırıların alt kümesidir.
             Assert.True(summary.HitsLanded <= summary.AttacksMade);

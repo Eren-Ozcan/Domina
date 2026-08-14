@@ -16,7 +16,19 @@ internal static class TestBuilders
     /// ölçüyor; yaklaşmayı beklemek testi hem yavaşlatır hem kırılganlaştırır.
     /// Yaklaşmanın kendisi <c>MovementTests</c>'in konusu.
     /// </remarks>
-    public static CombatTuning PointBlank { get; } = CombatTuning.Default with { StartOffsetX = 30 };
+    /// <remarks>
+    /// <para>
+    /// <see cref="CombatTuning.BaseDismembermentChance"/> burada <b>sabitlenir</b>:
+    /// sonuç ağacını sınayan testler belirli zar değerleriyle çalışıyor ve o değerler
+    /// eşiğe göre seçildi. Denge sayısı devralınsaydı her denge ayarında bu testler
+    /// kırılırdı — oysa sınadıkları şey denge değil, kural.
+    /// </para>
+    /// </remarks>
+    public static CombatTuning PointBlank { get; } = CombatTuning.Default with
+    {
+        StartOffsetX = 30,
+        BaseDismembermentChance = 0.35,
+    };
 
     public static Warrior Warrior(
         int id,
@@ -28,14 +40,17 @@ internal static class TestBuilders
         double strength = 40,
         double accuracy = 60,
         double stamina = 100,
+        double speed = 50,
         Weapon? weapon = null,
-        Armor? armor = null) =>
+        Armor? armor = null,
+        ThrownWeapon? thrown = null) =>
         new(
             new WarriorId(id),
             name ?? $"Savaşçı{id}",
-            new WarriorStats(health, aggression, defense, evasion, strength, accuracy, stamina),
+            new WarriorStats(health, aggression, defense, evasion, strength, accuracy, stamina, speed),
             weapon,
-            armor);
+            armor,
+            thrown);
 
     /// <summary>Ağır darbe eşiğini tek vuruşta aşan silah.</summary>
     public static Weapon Executioner() =>

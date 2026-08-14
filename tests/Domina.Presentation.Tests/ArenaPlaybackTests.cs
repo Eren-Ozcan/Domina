@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -115,7 +115,14 @@ public class ArenaPlaybackTests
                 continue;
             }
 
-            Assert.Equal(summary.LostPart, Assert.Single(severed).Part);
+            // Bir savaşçı tek dövüşte birden fazla uzvunu kaybedebilir; tepkiler
+            // özetteki kümeyle birebir örtüşmeli.
+            BodyPartSet reacted = severed.Aggregate(
+                BodyPartSet.None,
+                (set, r) => r.Part is BodyPart part ? set | part.AsFlag() : set);
+
+            Assert.Equal(summary.LostParts, reacted);
+            Assert.Equal(summary.LostParts.Parts().Count(), severed.Count);
         }
     }
 
@@ -190,15 +197,45 @@ public class ArenaPlaybackTests
         Assert.InRange(swings, 1, playback.Result.Summaries.Count(s => s.Team == Battle.PlayerTeam));
     }
 
-    /// <summary>Müdahale edilmeyen dövüşte uzuv kaybı olmaz, yalnızca ölüm olur (GDD §7).</summary>
+    /// <summary>
+    /// Tuşa hiç basılmadan da uzuv kopar ve ekrana ulaşır (GDD §7 — öldürmeyen ağır
+    /// darbe tuş gerektirmez).
+    /// </summary>
+    /// <remarks>
+    /// Eski kuralda bu tepki müdahalesiz dövüşte <b>hiç</b> görünmezdi; test o zaman
+    /// tersini bekliyordu. Kural değişince kopmanın görselleştirmeye ulaştığını
+    /// doğrulayan bir şey kalmasın diye buraya bağlandı.
+    /// </remarks>
     [Fact]
-    public void NobodyIsMaimedWhenTheButtonIsNeverPressed()
+    public void MaimingReachesTheScreenWithoutAnyButtonPress()
     {
+        var seedsWithMaiming = 0;
+
         for (long seed = 1; seed <= 40; seed++)
         {
             Playback playback = Watch(seed, pullOut: false);
 
-            Assert.DoesNotContain(playback.Reactions, r => r.Kind == RigReactionKind.Dismember);
+            List<RigReaction> severed =
+                playback.Reactions.FindAll(r => r.Kind == RigReactionKind.Dismember);
+
+            if (severed.Count == 0)
+            {
+                continue;
+            }
+
+            seedsWithMaiming++;
+
+            // Her sakatlanma tepkisi özetteki kayıpla örtüşmeli — kimse "hayalet uzuv"
+            // kaybetmemeli.
+            foreach (RigReaction reaction in severed)
+            {
+                WarriorBattleSummary summary = playback.Result.SummaryFor(reaction.Warrior);
+
+                Assert.True(summary.LostLimb);
+                Assert.True(summary.LostParts.Has(Assert.NotNull(reaction.Part)));
+            }
         }
+
+        Assert.True(seedsWithMaiming > 0);
     }
 }

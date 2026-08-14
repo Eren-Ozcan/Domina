@@ -1,12 +1,18 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Uzuv kaybı sonuç ağacı (GDD §7): ağır darbe geldiğinde oyuncu müdahale ettiyse
-/// savaşçı <b>uzvunu kaybederek yaşar</b>, etmediyse ölür. Bu ağaç oyunun kimliğini
-/// belirleyen mekanik — "tuşa basmak hayat kurtarır ama bedelsiz değildir".
+/// Uzuv kaybı sonuç ağacı (GDD §7). Belirleyici olan darbenin <b>öldürücü olup
+/// olmadığı</b>:
+/// <code>
+/// ağır darbe + kopma zarı tuttu
+///   ├─ can > 0  → uzuv gider, dövüş sürer
+///   └─ can ≤ 0  → tuşa basılmışsa uzuvla yaşar, basılmamışsa ölür
+/// </code>
+/// Bu ağaç oyunun kimliğini belirleyen mekanik — "tuşa basmak hayat kurtarır ama
+/// bedelsiz değildir".
 /// </summary>
 public class DismembermentTests
 {
@@ -34,55 +40,141 @@ public class DismembermentTests
         Tuning = AlwaysLimb,
     };
 
+    /// <summary>
+    /// Öldürmeyen ağır darbe hiçbir tuşa basılmadan uzva mal olur ve savaşçı sahada
+    /// kalır.
+    /// </summary>
+    /// <remarks>
+    /// Bu dalın varlık sebebi: kopma yalnızca <c>PlayerIntervened</c> iken oluşurken,
+    /// o bayrağı da yalnızca seferi bitiren "Kaç" tuşu açtığı için <b>uzuv kaybederek
+    /// kazanmak imkânsızdı</b> (20.000 dövüş, zafer + uzuv kaybı: 0 kez).
+    /// </remarks>
     [Fact]
-    public void GrievousBlowWithoutInterventionKills()
+    public void ANonLethalGrievousBlowCostsALimbWithNoButtonPressed()
     {
         var battle = new Battle(Executioner(), new FixedRandom(0.0));
+        battle.Run();
+
+        // İlk kopma, savaşçı hâlâ ayaktayken olmalı: canı 300, tek darbe ~90.
+        WarriorDismembered first = battle.Events.OfType<WarriorDismembered>().First();
+        AttackLanded blow = battle.Events
+            .OfType<AttackLanded>()
+            .First(e => e.Defender == new WarriorId(1));
+
+        Assert.Equal(first.Warrior, blow.Defender);
+        Assert.True(blow.DefenderHealthRemaining > 0);
+
+        // Ve dövüş kopmadan sonra devam etmiş olmalı.
+        Assert.Contains(
+            battle.Events.OfType<AttackLanded>(),
+            e => e.AtSeconds > first.AtSeconds);
+    }
+
+    /// <summary>Uzvunu kaybeden savaşçı dövüşü kazanabilir — eve sakat şampiyon gelir.</summary>
+    /// <remarks>
+    /// Eski sonuç ağacında bu imkânsızdı: kopma "Kaç" tuşunu gerektiriyordu, tuş da
+    /// seferi bitiriyordu. 20.000 dövüş ölçüldü, zafer + uzuv kaybı hiç görülmedi.
+    /// </remarks>
+    [Fact]
+    public void AWarriorCanWinTheBattleAfterLosingALimb()
+    {
+        // Kurban sert vuruyor (2 darbede bitirir), cellat sık ama hafif vuruyor:
+        // eşik düşürüldüğü için o hafif darbeler de uzva mal olur.
+        var setup = new BattleSetup(
+            [TestBuilders.Warrior(1, "Kurban", health: 400, aggression: 100, weapon: TestBuilders.Executioner())],
+            [
+                TestBuilders.Warrior(
+                    101,
+                    "Cellat",
+                    health: 100,
+                    aggression: 100,
+                    weapon: new Weapon("Testere", WeaponClass.Cutting, 30, false, 0.4)),
+            ])
+        {
+            Tuning = AlwaysLimb with { GrievousSeverityThreshold = 0.05 },
+        };
+
+        var battle = new Battle(setup, new FixedRandom(0.0));
+        BattleResult result = battle.Run();
+
+        WarriorBattleSummary survivor = result.SummaryFor(new WarriorId(1));
+
+        Assert.Equal(BattleOutcome.PlayerVictory, result.Outcome);
+        Assert.True(survivor.LostLimb);
+        Assert.False(survivor.Died);
+    }
+
+    [Fact]
+    public void ALethalGrievousBlowWithoutInterventionKills()
+    {
+        // Canı 60: tek darbe hem eşiği aşar hem canı bitirir, tuşa da basılmamış.
+        var battle = new Battle(Executioner(defenderHealth: 60), new FixedRandom(0.0));
         BattleResult result = battle.Run();
 
         WarriorBattleSummary victim = result.SummaryFor(new WarriorId(1));
 
         Assert.True(victim.Died);
-        Assert.False(victim.LostLimb);
-        Assert.Null(victim.LostPart);
-
-        // Canı bitmeden, doğrudan ağır darbeyle ölmüş olmalı.
-        WarriorDied death = battle.Events.OfType<WarriorDied>().Single();
-        Assert.Equal(DeathCause.GrievousBlow, death.Cause);
+        Assert.Equal(
+            DeathCause.GrievousBlow,
+            battle.Events.OfType<WarriorDied>().Single().Cause);
     }
 
+    /// <summary>
+    /// Tuşun işi: öldürücü darbeyi uzuv kaybına çevirmek.
+    /// </summary>
+    /// <remarks>
+    /// Kurtuluş <b>ölümsüzlük değil</b> — kurtulan savaşçı 1 canla kalır ve kaçışın geri
+    /// kalanını bir sonraki darbede ölecek durumda geçirir. Bu test o dalı izole etmek
+    /// için celladı yavaş tutuyor: peşinden yetişemesin, tek darbenin sonucu ölçülebilsin.
+    /// </remarks>
     [Fact]
-    public void GrievousBlowAfterInterventionCostsALimbButNotLife()
+    public void InterventionTurnsALethalBlowIntoALimbLoss()
     {
-        var battle = new Battle(Executioner(), new FixedRandom(0.0));
+        BattleSetup setup = Executioner(defenderHealth: 60) with
+        {
+            EnemySide =
+            [
+                TestBuilders.Warrior(
+                    101, "Cellat", aggression: 100, speed: 1, weapon: TestBuilders.Executioner()),
+            ],
+        };
+
+        var battle = new Battle(setup, new FixedRandom(0.0));
 
         // Tuşa basmak "zamanında müdahale" sayılır — kaçış henüz başlamamış olsa bile.
         Assert.True(battle.CommandRetreat());
 
-        BattleResult result = battle.Run();
-        WarriorBattleSummary victim = result.SummaryFor(new WarriorId(1));
+        WarriorBattleSummary victim = battle.Run().SummaryFor(new WarriorId(1));
 
         Assert.False(victim.Died);
         Assert.True(victim.LostLimb);
-        Assert.NotNull(victim.LostPart);
         Assert.Contains(battle.Events, e => e is WarriorDismembered);
         Assert.DoesNotContain(battle.Events, e => e is WarriorDied);
     }
 
+    /// <summary>
+    /// Koparacak uzvu kalmamış savaşçıyı tuş kurtaramaz — çevrilecek bir bedel yoktur.
+    /// </summary>
     [Fact]
-    public void DismembermentDoesNotSaveAWarriorWhoseHealthIsGone()
+    public void InterventionCannotSaveAWarriorWithNoLimbsLeftToLose()
     {
-        // Canı 100: aynı darbe hem eşiği aşar hem canı bitirir. Uzvunu kaybeder
-        // ama yine de ölür — müdahale ölümsüzlük değildir.
-        var battle = new Battle(Executioner(defenderHealth: 100), new FixedRandom(0.0));
+        Warrior victim = TestBuilders.Warrior(1, "Kurban", health: 60, aggression: 0);
+        victim.AddDisability(BodyPart.Arm);
+        victim.AddDisability(BodyPart.Leg);
+        victim.AddDisability(BodyPart.Eye);
+
+        var setup = new BattleSetup(
+            [victim],
+            [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
+        {
+            Tuning = AlwaysLimb,
+        };
+
+        var battle = new Battle(setup, new FixedRandom(0.0));
         battle.CommandRetreat();
 
-        WarriorBattleSummary victim = battle.Run().SummaryFor(new WarriorId(1));
-
-        Assert.True(victim.Died);
-        Assert.True(victim.LostLimb);
-        Assert.Contains(battle.Events, e => e is WarriorDismembered);
-        Assert.Equal(DeathCause.Wounds, battle.Events.OfType<WarriorDied>().Single().Cause);
+        Assert.True(battle.Run().SummaryFor(new WarriorId(1)).Died);
+        Assert.DoesNotContain(battle.Events, e => e is WarriorDismembered);
     }
 
     [Fact]
@@ -127,19 +219,113 @@ public class DismembermentTests
     }
 
     [Fact]
-    public void HeavyArmorPreventsDismembermentThatLightArmorAllows()
+    public void HeavyArmorPreventsDismembermentThatBareSkinAllows()
     {
         // Ekipmana yatırımı anlamlı kılan kalem: aynı darbe, aynı zar, farklı zırh.
-        var unarmored = new Battle(Executioner(armor: Armor.None()), new FixedRandom(0.20));
+        // Bacağa inen darbe — çıplak bacakta 0.35, ağır suneate altında 0.35 × 0.60 = 0.21.
+        var unarmored = new Battle(Executioner(armor: Armor.None()), new FixedRandom(0.30));
         unarmored.CommandRetreat();
         unarmored.Run();
 
-        var armored = new Battle(Executioner(armor: Armor.Heavy()), new FixedRandom(0.20));
+        var armored = new Battle(Executioner(armor: Armor.Heavy()), new FixedRandom(0.30));
         armored.CommandRetreat();
         armored.Run();
 
         Assert.Contains(unarmored.Events, e => e is WarriorDismembered);
         Assert.DoesNotContain(armored.Events, e => e is WarriorDismembered);
+    }
+
+    /// <summary>
+    /// Direnç, darbenin indiği <b>bölgenin</b> parçasından okunur — takımın ortalamasından
+    /// değil.
+    /// </summary>
+    /// <remarks>
+    /// Yuva yuva zırhın bütün gerekçesi bu: hafif keikogi gövdeyi örter, kolu örtmez.
+    /// Aynı kuşam, aynı zar, aynı silah — darbe kola inince kol kopar, gövdeye inince
+    /// kopmaz. Direnç tek skaler kalsaydı ikisi de aynı sonucu verirdi ve "ucuz kuşam
+    /// al, kollarını riske at" diye bir karar hiç var olmazdı.
+    /// </remarks>
+    [Fact]
+    public void TheStruckRegionDecidesResistanceNotTheSuit()
+    {
+        // Zar 0.30 — keikogi'li gövde: 0.35 × 0.80 = 0.28 (kopmaz).
+        //            Açık kol:         0.35 × 1.00 = 0.35 (kopar).
+        var toTheArm = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
+        toTheArm.CommandRetreat();
+        toTheArm.Run();
+
+        var toTheTorso = new Battle(AtRegion(HitLocation.Torso, Armor.Light()), new FixedRandom(0.30));
+        toTheTorso.CommandRetreat();
+        toTheTorso.Run();
+
+        Assert.Contains(toTheArm.Events, e => e is WarriorDismembered);
+        Assert.DoesNotContain(toTheTorso.Events, e => e is WarriorDismembered);
+    }
+
+    /// <summary>Kolu örten parça, kolu örtmeyen kuşamın izin verdiği kopmayı durdurur.</summary>
+    [Fact]
+    public void KoteProtectsTheArmThatAKeikogiLeavesBare()
+    {
+        var bareArms = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
+        bareArms.CommandRetreat();
+        bareArms.Run();
+
+        // Dō-maru'nun kotesi: 0.35 × 0.70 = 0.245, zarın altında kalır.
+        var withKote = new Battle(AtRegion(HitLocation.Arm, Armor.Medium()), new FixedRandom(0.30));
+        withKote.CommandRetreat();
+        withKote.Run();
+
+        Assert.Contains(bareArms.Events, e => e is WarriorDismembered);
+        Assert.DoesNotContain(withKote.Events, e => e is WarriorDismembered);
+    }
+
+    /// <summary>
+    /// Bir savaşçı aynı uzvu iki kez kaybedemez — kaçış boyunca kaç darbe yerse yesin.
+    /// </summary>
+    /// <remarks>
+    /// Kayıtlar savaşçı başına tek parça tutulurken her yeni kayıp öncekini siliyordu:
+    /// kolunu kaybeden savaşçı bacağını kaybedince "kolu duruyor" sayılıyor, kol tekrar
+    /// kopabiliyordu. Ölçüldü: tek savaşçıda 22 kopma, Kol/Bacak sırayla.
+    /// </remarks>
+    [Fact]
+    public void ALimbCanOnlyBeLostOncePerWarrior()
+    {
+        var setup = new BattleSetup(
+            [TestBuilders.Warrior(1, "Kurban", health: 100_000, aggression: 0)],
+            [
+                TestBuilders.Warrior(101, "Cellat1", aggression: 100, weapon: TestBuilders.Executioner()),
+                TestBuilders.Warrior(102, "Cellat2", aggression: 100, weapon: TestBuilders.Executioner()),
+                TestBuilders.Warrior(103, "Cellat3", aggression: 100, weapon: TestBuilders.Executioner()),
+            ])
+        {
+            // Can devasa, her darbe ağır, her zar kopmayı tutturuyor: kurban yalnızca
+            // "kaybedecek uzvu kalmadı" kuralıyla durabilir.
+            Tuning = TestBuilders.PointBlank with { GrievousSeverityThreshold = 0.0 },
+        };
+
+        var battle = new Battle(setup, new FixedRandom(0.0));
+        battle.CommandRetreat();
+        BattleResult result = battle.Run();
+
+        BodyPart[] lost = [.. battle.Events.OfType<WarriorDismembered>().Select(e => e.Part)];
+
+        Assert.NotEmpty(lost);
+        Assert.Equal(lost.Length, lost.Distinct().Count());
+        Assert.Equal(lost.Order(), result.SummaryFor(new WarriorId(1)).LostParts.Parts().Order());
+    }
+
+    /// <summary>Her darbeyi verilen bölgeye indiren kurulum.</summary>
+    private static BattleSetup AtRegion(HitLocation location, Armor armor)
+    {
+        CombatTuning tuning = TestBuilders.PointBlank with
+        {
+            TorsoHitWeight = location == HitLocation.Torso ? 100 : 0,
+            LegHitWeight = location == HitLocation.Leg ? 100 : 0,
+            ArmHitWeight = location == HitLocation.Arm ? 100 : 0,
+            HeadHitWeight = location == HitLocation.Head ? 100 : 0,
+        };
+
+        return Executioner(armor: armor) with { Tuning = tuning };
     }
 
     [Fact]
