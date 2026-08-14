@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Sim;
@@ -35,7 +35,7 @@ internal static class Scenarios
             new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana()),
         ],
         [
-            Yokai(101, "Kappa", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35),
+            Yokai(101, "Kappa", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35, speed: 55),
         ]);
 
     private static BattleSetup ThreeVsThree() => new(
@@ -55,9 +55,18 @@ internal static class Scenarios
                 Armor.Light()),
         ],
         [
-            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, weapon: Weapon.Tetsubo()),
-            Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35),
-            Yokai(103, "Tengu", health: 90, aggression: 70, defense: 10, evasion: 50, strength: 40),
+            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
+            Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+            Yokai(
+                103,
+                "Tengu",
+                health: 90,
+                aggression: 70,
+                defense: 10,
+                evasion: 50,
+                strength: 40,
+                speed: 85,
+                thrown: ThrownWeapon.Shuriken()),
         ]);
 
     private static BattleSetup Veteran() => new(
@@ -78,7 +87,7 @@ internal static class Scenarios
                 Armor.Heavy()),
         ],
         [
-            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, weapon: Weapon.Tetsubo()),
+            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
         ]);
 
     private static BattleSetup Ambush()
@@ -88,13 +97,27 @@ internal static class Scenarios
         {
             EnemySide =
             [
-                Yokai(101, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35),
-                Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35),
-                Yokai(103, "Tengu", health: 90, aggression: 70, defense: 10, evasion: 50, strength: 40),
+                Yokai(101, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+                Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+                Yokai(
+                103,
+                "Tengu",
+                health: 90,
+                aggression: 70,
+                defense: 10,
+                evasion: 50,
+                strength: 40,
+                speed: 85,
+                thrown: ThrownWeapon.Shuriken()),
             ],
         };
     }
 
+    /// <param name="speed">
+    /// Yokai'ler hızda kasıtlı olarak ayrışır: Oni ağır ve yavaş, Tengu hızlı. Kaçmanın
+    /// bedelini belirleyen şey budur — yavaş düşmandan temastan önce çekilmek bedelsize
+    /// yakındır, hızlı olan peşinden gelip yetişir.
+    /// </param>
     private static Warrior Yokai(
         int id,
         string name,
@@ -104,10 +127,15 @@ internal static class Scenarios
         double evasion,
         double strength,
         double accuracy = 58,
-        Weapon? weapon = null) =>
+        double speed = 50,
+        Weapon? weapon = null,
+        ThrownWeapon? thrown = null) =>
         new(
             new WarriorId(id),
             name,
-            new WarriorStats(health, aggression, defense, evasion, strength, accuracy, MaxStamina: 100),
-            weapon ?? Weapon.Katana());
+            new WarriorStats(
+                health, aggression, defense, evasion, strength, accuracy, MaxStamina: 100, Speed: speed),
+            weapon ?? Weapon.Katana(),
+            armor: null,
+            thrown: thrown);
 }

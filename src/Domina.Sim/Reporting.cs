@@ -21,6 +21,9 @@ internal sealed class CsvReport(TextWriter writer)
         "player_deaths",
         "player_escapes",
         "player_limb_losses",
+        "lost_arms",
+        "lost_legs",
+        "lost_eyes",
         "enemy_deaths",
         "player_attacks",
         "player_hits",
@@ -39,7 +42,7 @@ internal sealed class CsvReport(TextWriter writer)
 
         writer.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1}"));
+            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.LostArms},{row.LostLegs},{row.LostEyes},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1}"));
     }
 }
 
@@ -58,6 +61,7 @@ internal static class SummaryReport
         writer.WriteLine($"Senaryo         : {options.Scenario.Name} — {options.Scenario.Description}");
         writer.WriteLine($"Dövüş           : {report.Battles} (seed {options.FirstSeed}..{lastSeed})");
         writer.WriteLine($"Kaçış politikası: {options.PolicyLabel}");
+        writer.WriteLine($"Kuşam           : {options.ArmorLabel}");
         writer.WriteLine($"Koşma süresi    : {wallClock.TotalSeconds:F2} sn ({perSecond:F0} dövüş/sn)");
         writer.WriteLine($"Dövüş süresi    : ortalama {report.AverageSeconds:F1} sn (oyun içi)");
         writer.WriteLine();
@@ -73,6 +77,9 @@ internal static class SummaryReport
         WriteCount(writer, "  Ölüm", report.PlayerDeaths, report.PlayerDeathRate);
         WriteCount(writer, "  Kaçış", report.PlayerEscapes, report.PlayerEscapeRate);
         WriteCount(writer, "  Uzuv kaybı", report.PlayerLimbLosses, report.PlayerLimbLossRate);
+        WriteCount(writer, "    · kol", report.LostArms, report.LostArmRate);
+        WriteCount(writer, "    · bacak", report.LostLegs, report.LostLegRate);
+        WriteCount(writer, "    · göz", report.LostEyes, report.LostEyeRate);
         writer.WriteLine($"  İsabet oranı              %{report.PlayerAccuracy * 100:F1}");
         writer.WriteLine($"  Hasar verilen/alınan      {report.PlayerDamageDealt:F0} / {report.PlayerDamageTaken:F0}");
         writer.WriteLine();

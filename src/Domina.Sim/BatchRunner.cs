@@ -1,9 +1,15 @@
 using Domina.Core.Combat;
+using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Sim;
 
 /// <summary>Tek bir dövüşün toplu simülasyona giren özeti.</summary>
+/// <remarks>
+/// Uzuv kayıpları <b>parça parça</b> sayılır. Toplam oran, yuva yuva zırhın işe
+/// yarayıp yaramadığını gizler: kolları açık bir kuşam ile tam takım aynı toplamı
+/// verebilir, ama kaybedilen uzuvların dağılımı bambaşkadır.
+/// </remarks>
 internal sealed record BattleRow(
     ulong Seed,
     BattleOutcome Outcome,
@@ -11,6 +17,9 @@ internal sealed record BattleRow(
     int PlayerDeaths,
     int PlayerEscapes,
     int PlayerLimbLosses,
+    int LostArms,
+    int LostLegs,
+    int LostEyes,
     int EnemyDeaths,
     int PlayerAttacks,
     int PlayerHits,
@@ -36,11 +45,28 @@ internal sealed class BatchRunner
 {
     private readonly BattleSetup _setup;
 
-    public BatchRunner(Scenario scenario, IRetreatPolicy? retreatPolicy, CombatTuning? tuning = null)
+    /// <param name="playerArmor">
+    /// Verilirse oyuncu tarafındaki herkesin kuşamını bununla değiştirir. Zırh eksenini
+    /// <b>tek başına</b> ölçmek için: senaryonun geri kalanı sabit kalır, yalnızca kuşam
+    /// değişir, böylece uzuv kaybı farkı zırhtan mı yoksa statlardan mı geliyor ayrışır.
+    /// </param>
+    public BatchRunner(
+        Scenario scenario,
+        IRetreatPolicy? retreatPolicy,
+        CombatTuning? tuning = null,
+        Armor? playerArmor = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
 
         BattleSetup built = scenario.Build();
+
+        if (playerArmor is not null)
+        {
+            foreach (Warrior w in built.PlayerSide)
+            {
+                w.Armor = playerArmor;
+            }
+        }
 
         _setup = built with
         {
@@ -89,6 +115,9 @@ internal sealed class BatchRunner
         int playerDeaths = 0;
         int playerEscapes = 0;
         int playerLimbLosses = 0;
+        int lostArms = 0;
+        int lostLegs = 0;
+        int lostEyes = 0;
         int enemyDeaths = 0;
         int playerAttacks = 0;
         int playerHits = 0;
@@ -120,6 +149,26 @@ internal sealed class BatchRunner
             if (s.LostLimb)
             {
                 playerLimbLosses++;
+
+                // Parçalar tek tek sayılır: bir savaşçı aynı dövüşte birden fazla
+                // uzvunu kaybedebilir, "sakat döndü" oranı bunu gizler.
+                foreach (BodyPart part in s.LostParts.Parts())
+                {
+                    switch (part)
+                    {
+                        case BodyPart.Arm:
+                            lostArms++;
+                            break;
+                        case BodyPart.Leg:
+                            lostLegs++;
+                            break;
+                        case BodyPart.Eye:
+                            lostEyes++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
 
             playerAttacks += s.AttacksMade;
@@ -135,6 +184,9 @@ internal sealed class BatchRunner
             playerDeaths,
             playerEscapes,
             playerLimbLosses,
+            lostArms,
+            lostLegs,
+            lostEyes,
             enemyDeaths,
             playerAttacks,
             playerHits,
@@ -163,6 +215,12 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     public int PlayerEscapes { get; private set; }
 
     public int PlayerLimbLosses { get; private set; }
+
+    public int LostArms { get; private set; }
+
+    public int LostLegs { get; private set; }
+
+    public int LostEyes { get; private set; }
 
     public int EnemyDeaths { get; private set; }
 
@@ -197,6 +255,12 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     /// <summary>Denge çalışmasının en kritik sayısı: kalıcı sakatlık üretme hızı.</summary>
     public double PlayerLimbLossRate => Rate(PlayerLimbLosses, PlayerAppearances);
 
+    public double LostArmRate => Rate(LostArms, PlayerAppearances);
+
+    public double LostLegRate => Rate(LostLegs, PlayerAppearances);
+
+    public double LostEyeRate => Rate(LostEyes, PlayerAppearances);
+
     public double EnemyDeathRate => Rate(EnemyDeaths, EnemyAppearances);
 
     public double PlayerAccuracy => Rate(PlayerHits, PlayerAttacks);
@@ -230,6 +294,9 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         PlayerDeaths += row.PlayerDeaths;
         PlayerEscapes += row.PlayerEscapes;
         PlayerLimbLosses += row.PlayerLimbLosses;
+        LostArms += row.LostArms;
+        LostLegs += row.LostLegs;
+        LostEyes += row.LostEyes;
         EnemyDeaths += row.EnemyDeaths;
         PlayerAttacks += row.PlayerAttacks;
         PlayerHits += row.PlayerHits;

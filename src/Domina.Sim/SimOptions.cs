@@ -1,9 +1,13 @@
 using System.Globalization;
 using Domina.Core.Combat;
+using Domina.Core.Model;
 
 namespace Domina.Sim;
 
 /// <summary>Komut satırından çözülmüş çalıştırma ayarları.</summary>
+/// <param name="PlayerArmor">
+/// Verilmişse senaryodaki kuşamı ezer; <c>null</c> ise senaryonunki kullanılır.
+/// </param>
 internal sealed record SimOptions(
     Scenario Scenario,
     int Battles,
@@ -11,7 +15,9 @@ internal sealed record SimOptions(
     IRetreatPolicy? RetreatPolicy,
     string PolicyLabel,
     string? CsvPath,
-    CombatTuning Tuning);
+    CombatTuning Tuning,
+    Armor? PlayerArmor,
+    string ArmorLabel);
 
 /// <summary>Ayrıştırma sonucu: ayarlar, yardım isteği veya hata.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
@@ -39,6 +45,8 @@ internal static class SimArgs
         string policySpec = "never";
         string? csvPath = null;
         CombatTuning tuning = CombatTuning.Default;
+        Armor? playerArmor = null;
+        string armorLabel = "senaryodaki";
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -110,6 +118,16 @@ internal static class SimArgs
                     tuning = tuning with { BaseDismembermentChance = sever };
                     break;
 
+                case "--armor":
+                    if (!TryParseArmor(value, out playerArmor))
+                    {
+                        return ParsedArgs.Fail(
+                            $"Bilinmeyen kuşam: {value} (none | light | medium | heavy)");
+                    }
+
+                    armorLabel = playerArmor!.Name;
+                    break;
+
                 default:
                     return ParsedArgs.Fail($"Bilinmeyen seçenek: {arg}");
             }
@@ -125,10 +143,33 @@ internal static class SimArgs
         if (!TryParsePolicy(policySpec, out IRetreatPolicy? policy, out string label))
         {
             return ParsedArgs.Fail(
-                $"Bilinmeyen kaçış politikası: {policySpec} (never | below:<0-1> | losing:<0-1>)");
+                $"Bilinmeyen kaçış politikası: {policySpec} "
+                + "(never | below:<0-1> | losing:<0-1> | at:<saniye>)");
         }
 
-        return ParsedArgs.Ok(new SimOptions(scenario, battles, firstSeed, policy, label, csvPath, tuning));
+        return ParsedArgs.Ok(new SimOptions(
+            scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel));
+    }
+
+    /// <summary>
+    /// Oyuncu tarafına zorlanacak kuşamı çözer.
+    /// </summary>
+    /// <remarks>
+    /// Zırh artık yuva yuva olduğu için "iyi zırh = düşük uzuv kaybı" iddiası ancak
+    /// senaryonun geri kalanı sabitken ölçülebilir. Bu seçenek o ölçümün aracıdır.
+    /// </remarks>
+    private static bool TryParseArmor(string spec, out Armor? armor)
+    {
+        armor = spec.ToLowerInvariant() switch
+        {
+            "none" => Armor.None(),
+            "light" => Armor.Light(),
+            "medium" => Armor.Medium(),
+            "heavy" => Armor.Heavy(),
+            _ => null,
+        };
+
+        return armor is not null;
     }
 
     private static bool TryFraction(string text, out double value) =>
@@ -150,6 +191,19 @@ internal static class SimArgs
         {
             policy = NeverRetreat.Instance;
             label = "hiç çekilme";
+            return true;
+        }
+
+        if (spec.StartsWith("at:", StringComparison.OrdinalIgnoreCase)
+            && double.TryParse(
+                spec["at:".Length..],
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out double atSecond)
+            && atSecond >= 0)
+        {
+            policy = new RetreatAtSecond(atSecond);
+            label = string.Create(CultureInfo.InvariantCulture, $"{atSecond:0.##}. saniyede çek");
             return true;
         }
 
@@ -190,19 +244,24 @@ internal static class SimArgs
         writer.WriteLine();
         writer.WriteLine("Kullanım:");
         writer.WriteLine("  Domina.Sim [--scenario <ad>] [--battles <N>] [--seed <S>]");
-        writer.WriteLine("             [--policy never|below:<oran>] [--out <dosya.csv>]");
+        writer.WriteLine("             [--policy never|below:<oran>|losing:<oran>|at:<sn>]");
+        writer.WriteLine("             [--out <dosya.csv>]");
         writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
+        writer.WriteLine("             [--armor none|light|medium|heavy]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
         writer.WriteLine($"  --battles   Dövüş sayısı (varsayılan: {DefaultBattles})");
         writer.WriteLine($"  --seed      İlk seed; sonrakiler birer artar (varsayılan: {DefaultSeed})");
-        writer.WriteLine("  --policy    never | below:<oran> | losing:<oran> (varsayılan: never)");
+        writer.WriteLine("  --policy    never | below:<oran> | losing:<oran> | at:<sn>");
+        writer.WriteLine("              (varsayılan: never)");
         writer.WriteLine("              below   = canı düşen olunca çek (kaba taban)");
         writer.WriteLine("              losing  = sayıca gerideyken canı düşünce çek (oyuncu modeli)");
+        writer.WriteLine("              at      = verilen saniyede, olan bitene bakmadan çek");
         writer.WriteLine("  --out       Dövüş başına satır yazılacak CSV dosyası");
         writer.WriteLine("  --grievous  Ağır darbe eşiği (darbe/azami can oranı)");
         writer.WriteLine("  --sever     Ağır darbede taban uzuv kopma şansı");
+        writer.WriteLine("  --armor     Oyuncu tarafının kuşamını ezer (zırh eksenini izole eder)");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)
