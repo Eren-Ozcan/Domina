@@ -27,7 +27,7 @@ public sealed class ArenaChoreography(ArenaLayout layout)
     {
         ScenePoint ground = Layout.Project(snapshot.Position);
 
-        if (snapshot.State != CombatState.AttackWindup)
+        if (snapshot.State is not (CombatState.AttackWindup or CombatState.ThrowWindup))
         {
             return ground;
         }

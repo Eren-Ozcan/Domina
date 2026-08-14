@@ -24,6 +24,7 @@ public sealed class RigAnimator
     private const double _dodgeDecayPerSecond = 3.4;
     private const double _overswingDecayPerSecond = 2.6;
     private const double _opportunityDecayPerSecond = 2.4;
+    private const double _stumbleDecayPerSecond = 1.8;
     private const double _deathFallPerSecond = 3.2;
 
     private readonly HashSet<BodyPart> _lost = [];
@@ -33,6 +34,7 @@ public sealed class RigAnimator
     private double _dodge;
     private double _overswing;
     private double _opportunity;
+    private double _stumble;
     private double _deathLean;
 
     /// <summary>Kaybedilen uzuvlar kalıcıdır — geri takılmaz.</summary>
@@ -66,6 +68,15 @@ public sealed class RigAnimator
                 _opportunity = 1;
                 break;
 
+            case RigReactionKind.Throw:
+                // Fırlatma da bir savurmadır; kolun geri gelişi aynı eğriyi kullanır.
+                _overswing = 1;
+                break;
+
+            case RigReactionKind.Stumble:
+                _stumble = 1;
+                break;
+
             case RigReactionKind.Dismember:
                 if (reaction.Part is BodyPart part && _lost.Add(part))
                 {
@@ -92,6 +103,7 @@ public sealed class RigAnimator
         _dodge = Decay(_dodge, delta, _dodgeDecayPerSecond);
         _overswing = Decay(_overswing, delta, _overswingDecayPerSecond);
         _opportunity = Decay(_opportunity, delta, _opportunityDecayPerSecond);
+        _stumble = Decay(_stumble, delta, _stumbleDecayPerSecond);
 
         if (state == CombatState.Dead)
         {
@@ -120,8 +132,11 @@ public sealed class RigAnimator
 
         RigPose pose = state switch
         {
-            CombatState.AttackWindup => Windup(phase),
-            CombatState.AttackRecovery => Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
+            // Fırlatma da bir toplanma ve savurmadır; yordamsal duruşta yakın dövüşle
+            // aynı eğrileri kullanır. Gerçek sanat geldiğinde ayrışacak yer burası.
+            CombatState.AttackWindup or CombatState.ThrowWindup => Windup(phase),
+            CombatState.AttackRecovery or CombatState.ThrowRecovery =>
+                Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
             CombatState.Retreating => Retreat(),
             _ => Idle(),
         };
@@ -134,7 +149,9 @@ public sealed class RigAnimator
             pose = Swing(Curves.Smooth(1 - _opportunity));
         }
 
-        if (_overswing > 0 && (state == CombatState.AttackRecovery || _opportunity > 0))
+        if (_overswing > 0
+            && (state is CombatState.AttackRecovery or CombatState.ThrowRecovery
+                || _opportunity > 0))
         {
             pose = Overswung(pose);
         }
@@ -339,6 +356,21 @@ public sealed class RigAnimator
                 Torso = pose.Torso + (0.22f * t),
                 Head = pose.Head + (0.30f * t),
                 HurtBlend = t * 0.7f,
+            };
+        }
+
+        if (_stumble > 0)
+        {
+            // Sendeleme sarsılma değil: kimse vurmadı, savaşçı kendi ayağına takıldı.
+            // Bu yüzden gövde geriye değil YANA gider ve bacak ayrışır.
+            float t = Curves.Smooth(_stumble);
+            pose = pose with
+            {
+                RootRotation = pose.RootRotation + (0.26f * t),
+                Torso = pose.Torso + (0.14f * t),
+                NearHip = pose.NearHip - (0.34f * t),
+                NearKnee = pose.NearKnee + (0.40f * t),
+                HurtBlend = Math.Max(pose.HurtBlend, t * 0.45f),
             };
         }
 

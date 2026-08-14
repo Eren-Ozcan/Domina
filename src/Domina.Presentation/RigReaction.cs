@@ -20,6 +20,18 @@ public enum RigReactionKind
 
     /// <summary>Uzvunu kaybetti — kalıcı.</summary>
     Dismember,
+
+    /// <summary>Mermi fırlattı.</summary>
+    Throw,
+
+    /// <summary>
+    /// Kaçarken sendeledi — kimsenin vurmadığı yara.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Flinch"/>'ten ayrı tutulur: ortada vuran biri yok, o yüzden ekranda
+    /// darbe yönü de yok. Sendeleme kendi başına okunmalı.
+    /// </remarks>
+    Stumble,
 }
 
 /// <param name="Part">Yalnızca <see cref="RigReactionKind.Dismember"/> için doludur.</param>
@@ -101,6 +113,20 @@ public sealed class ReactionReader
 
             case WarriorDismembered lost:
                 into.Add(new RigReaction(lost.Warrior, RigReactionKind.Dismember, lost.Part));
+                break;
+
+            case ProjectileLaunched launched:
+                // Merminin uçuşu bir tepki değil, ayrı bir sahne nesnesi (bkz.
+                // ProjectileView). Buradaki tek iş atan savaşçının hamlesini göstermek.
+                into.Add(new RigReaction(launched.Attacker, RigReactionKind.Throw));
+                break;
+
+            case ProjectileHit hit:
+                into.Add(new RigReaction(hit.Defender, RigReactionKind.Flinch));
+                break;
+
+            case EscapeMishap mishap:
+                into.Add(new RigReaction(mishap.Warrior, RigReactionKind.Stumble));
                 break;
 
             // Ölümün ve arenadan çıkışın burada karşılığı YOK, çünkü ikisi de tek
