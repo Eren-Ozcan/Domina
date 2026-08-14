@@ -14,6 +14,12 @@ public enum CombatState
     /// <summary>Saldırı sonrası toparlanma. Kesilebilir.</summary>
     AttackRecovery,
 
+    /// <summary>Fırlatma hamlesine kilitli. <b>Kesilemez</b>, tıpkı yakın dövüş vuruşu gibi.</summary>
+    ThrowWindup,
+
+    /// <summary>Fırlatma sonrası toparlanma. Kesilebilir.</summary>
+    ThrowRecovery,
+
     /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
     Retreating,
 
@@ -102,7 +108,14 @@ internal sealed class Combatant(Warrior warrior, int team)
     public bool CanDefend => State != CombatState.Retreating;
 
     /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
-    public bool IsCancellable => State is CombatState.Idle or CombatState.AttackRecovery;
+    public bool IsCancellable =>
+        State is CombatState.Idle or CombatState.AttackRecovery or CombatState.ThrowRecovery;
+
+    /// <summary>Bu dövüşte kalan mermi. Kalıcı hale dokunulmaz, sayaç burada tutulur.</summary>
+    public int ThrowsLeft { get; set; } = warrior.UsableThrown?.Ammo ?? 0;
+
+    /// <summary>Atacak mermisi var mı?</summary>
+    public bool CanThrow => ThrowsLeft > 0 && Warrior.UsableThrown is not null;
 
     // ---- Performans sayaçları (onur hesabını ve toplu simülasyonu besler) ----
 

@@ -22,7 +22,8 @@ public sealed class Warrior
         string name,
         WarriorStats baseStats,
         Weapon? weapon = null,
-        Armor? armor = null)
+        Armor? armor = null,
+        ThrownWeapon? thrown = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -31,6 +32,7 @@ public sealed class Warrior
         BaseStats = baseStats;
         Weapon = weapon ?? Weapon.Katana();
         Armor = armor ?? Armor.None();
+        Thrown = thrown;
         Honor = HonorScale.Starting;
     }
 
@@ -45,6 +47,18 @@ public sealed class Warrior
     public Weapon Weapon { get; set; }
 
     public Armor Armor { get; set; }
+
+    /// <summary>Fırlatma yuvası. <c>null</c> ise savaşçı menzilli saldıramaz.</summary>
+    public ThrownWeapon? Thrown { get; set; }
+
+    /// <summary>
+    /// Fırlatma, kol kaybından sonra da mümkündür — tek elle atılır.
+    /// </summary>
+    /// <remarks>
+    /// İki elli yakın dövüş silahını kullanamayan savaşçının elinde kalan tek gerçek
+    /// tehdit budur (bkz. <see cref="UsableWeapon"/>).
+    /// </remarks>
+    public ThrownWeapon? UsableThrown => Thrown;
 
     /// <summary>0-100. Ekonomiyi ve seppuku eşiğini besler (bkz. docs/GDD.md §6).</summary>
     public double Honor { get; set; }
@@ -67,6 +81,7 @@ public sealed class Warrior
                     Strength = s.Strength * d.StrengthMultiplier,
                     Evasion = s.Evasion * d.EvasionMultiplier,
                     Accuracy = s.Accuracy * d.AccuracyMultiplier,
+                    Speed = s.Speed * d.SpeedMultiplier,
                 };
             }
 
@@ -115,6 +130,15 @@ public readonly record struct WarriorId(int Value)
 /// <param name="Strength">Hasar çarpanını besler (0-100).</param>
 /// <param name="Accuracy">İsabet şansı (0-100).</param>
 /// <param name="MaxStamina">Azami stamina.</param>
+/// <param name="Speed">
+/// Yürüme hızı (0-100). Yaklaşmayı, kuşatmayı ve <b>kaçabilmeyi</b> belirler.
+/// </param>
+/// <remarks>
+/// <see cref="Speed"/> geç eklendi ve varsayılanı 50'dir: hız tek bir sabitken kovalayan
+/// ile kaçan aynı hızda gidiyordu, yani <b>kaçış her zaman başarılıydı</b>. Sırtını
+/// dönüp koşan savaşçıya kimse yetişemiyordu ve temastan önce basılan "Kaç" tuşu
+/// %100 bedelsiz çıkış veriyordu (ölçüldü, 20.000 dövüş).
+/// </remarks>
 public readonly record struct WarriorStats(
     double MaxHealth,
     double Aggression,
@@ -122,7 +146,8 @@ public readonly record struct WarriorStats(
     double Evasion,
     double Strength,
     double Accuracy,
-    double MaxStamina)
+    double MaxStamina,
+    double Speed = 50)
 {
     /// <summary>Yeni bir acemi için taban.</summary>
     public static WarriorStats Recruit() => new(
@@ -132,7 +157,8 @@ public readonly record struct WarriorStats(
         Evasion: 35,
         Strength: 40,
         Accuracy: 55,
-        MaxStamina: 100);
+        MaxStamina: 100,
+        Speed: 50);
 }
 
 /// <summary>Onur ölçeğinin sabitleri.</summary>

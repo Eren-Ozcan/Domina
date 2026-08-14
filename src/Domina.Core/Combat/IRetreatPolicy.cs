@@ -55,6 +55,22 @@ public sealed class RetreatBelowHealth(double healthFraction) : IRetreatPolicy
 }
 
 /// <summary>
+/// Belirli bir saniyede, olan bitene bakmadan çeken oyuncu.
+/// </summary>
+/// <remarks>
+/// Cana bakan politikalar kaçışın <b>bedelsiz</b> ucunu ölçemez: can düşmüşse zaten yara
+/// alınmıştır, yani "kimse yara almadan çekildi" durumu kurgu gereği hiç oluşmaz. Oysa
+/// gerçek oyuncu eşleşmeyi görüp daha ilk saniyede basabilir. Bu politika o ucu ölçmek
+/// içindir.
+/// </remarks>
+public sealed class RetreatAtSecond(double seconds) : IRetreatPolicy
+{
+    public double Seconds { get; } = seconds;
+
+    public bool ShouldRetreat(in RetreatContext context) => context.ElapsedSeconds >= Seconds;
+}
+
+/// <summary>
 /// Dövüş <b>döndüğünde</b> çeken oyuncu: sayıca geride kalmış ve canı da eşiğin
 /// altındaysa çekilir.
 /// </summary>

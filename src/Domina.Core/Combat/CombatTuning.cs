@@ -30,8 +30,24 @@ public sealed record CombatTuning
     /// <summary>Aynı takımdaki savaşçıların başlangıçtaki derinlik aralığı.</summary>
     public double StartSpacingY { get; init; } = 120;
 
-    /// <summary>Yürüme hızı (birim/saniye).</summary>
-    public double MoveSpeed { get; init; } = 240;
+    /// <summary>Hız statı 0 iken yürüme hızı (birim/saniye).</summary>
+    /// <remarks>
+    /// Hız tek bir sabitken kovalayan ile kaçan aynı hızda gidiyordu; net kapanma sıfır
+    /// olduğu için <b>kaçış her zaman başarılıydı</b>. Uçlar 50'de eski sabite (240)
+    /// denk gelecek şekilde seçildi, böylece mevcut denge tabanı korunuyor.
+    /// </remarks>
+    public double MoveSpeedAtZeroSpeed { get; init; } = 150;
+
+    /// <inheritdoc cref="MoveSpeedAtZeroSpeed"/>
+    public double MoveSpeedAtMaxSpeed { get; init; } = 330;
+
+    /// <summary>Kaçanın hız çarpanı — sırtı dönük, dengesi bozuk.</summary>
+    /// <remarks>
+    /// Kovalamacanın tek ayar düğmesi bu. 0.85 çok sert: kaçan hiç arayı açamıyor ve
+    /// temastan sonra basılan tuş neredeyse her zaman en az bir ölüye mal oluyordu
+    /// (%56 kısmi kaçış). 0.92'de erken basmak hâlâ işe yarıyor, geç basmak yakıyor.
+    /// </remarks>
+    public double RetreatSpeedMultiplier { get; init; } = 0.92;
 
     /// <summary>
     /// Savaşçılar birbirine bundan daha fazla sokulamaz — üst üste binmeyi engeller.
@@ -79,6 +95,20 @@ public sealed record CombatTuning
     /// <summary>Çekilirken savunmasızlık: kaçınma/blok yok, üstüne isabet bonusu.</summary>
     public double RetreatingHitBonus { get; init; } = 0.30;
 
+    /// <summary>Fırlatmanın taban isabet şansı; yakın dövüşten düşüktür.</summary>
+    /// <remarks>
+    /// Menzilli saldırı bedava olmamalı: uzaktan vurabilmenin bedeli, daha sık ıskalamak
+    /// ve daha az hasar. Yoksa herkesin cebine shuriken koymak baskın strateji olurdu.
+    /// </remarks>
+    public double BaseThrowHitChance { get; init; } = 0.40;
+
+    /// <summary>Menzilin tam ucunda isabetin düştüğü oran.</summary>
+    /// <remarks>
+    /// Menzilin dibinden atmak neredeyse yakın dövüş kadar isabetli, ucundan atmak
+    /// umut atışıdır — mesafenin iki yönlü bir karar olmasını sağlayan şey bu.
+    /// </remarks>
+    public double ThrowFalloffAtMaxRange { get; init; } = 0.55;
+
     // ---- Hasar ----
 
     /// <summary>Güç 100 iken silah hasarına uygulanan çarpan.</summary>
@@ -115,7 +145,24 @@ public sealed record CombatTuning
     public double GrievousSeverityThreshold { get; init; } = 0.20;
 
     /// <summary>Ağır darbede taban uzuv kopma şansı; silah ve zırh bunu ölçekler.</summary>
-    public double BaseDismembermentChance { get; init; } = 0.35;
+    /// <remarks>
+    /// 0.35'ten 0.05'e indirildi. 0.35, kopmanın <b>yalnızca kaçış penceresinde</b>
+    /// ateşlendiği eski sonuç ağacına göre ayarlanmıştı; ağaç ikiye ayrılıp öldürmeyen
+    /// ağır darbe de koparmaya başlayınca (docs/GDD.md §7) aynı sayı uzuv kaybını
+    /// %45'e çıkardı. Tarandı (3v3, 10.000 dövüş, <c>losing:0.7</c>) — ölüm ve zafer
+    /// oranları bu knobla kayda değer biçimde oynamıyor, yalnızca uzuv kaybı ölçekleniyor.
+    /// </remarks>
+    public double BaseDismembermentChance { get; init; } = 0.05;
+
+    /// <summary>
+    /// Öldürücü darbeden "Kaç" tuşuyla kurtulan savaşçının kalan canı.
+    /// </summary>
+    /// <remarks>
+    /// Tuş ölümü uzuv kaybına çevirir (docs/GDD.md §7) ama sağlık vermez: savaşçı
+    /// kaçışın geri kalanını bir sonraki darbede ölecek durumda geçirir. Kurtuluş
+    /// garanti değil, sadece bir şans.
+    /// </remarks>
+    public double SurvivalHealthAfterIntervention { get; init; } = 1;
 
     // ---- İsabet bölgesi ----
 
@@ -142,6 +189,22 @@ public sealed record CombatTuning
 
     /// <summary>Kaçış komutundan arenadan çıkışa kadar geçen savunmasız süre.</summary>
     public double RetreatSeconds { get; init; } = 1.2;
+
+    /// <summary>
+    /// Arenayı terk ederken kaza yarası alma şansı.
+    /// </summary>
+    /// <remarks>
+    /// Kaçışın soyut bedeli: burkulan ayak, dönüş yolunda kanayan yara. Öldürmez
+    /// (bkz. <c>Battle.RollEscapeMishap</c>), yalnızca "bedelsiz çıkış" diye bir şey
+    /// kalmasın diye vardır — temastan önce basılan tuş bunsuz %100 temiz çıkış veriyordu.
+    /// </remarks>
+    public double EscapeMishapChance { get; init; } = 0.30;
+
+    /// <inheritdoc cref="EscapeMishapChance"/>
+    public double EscapeMishapMinDamage { get; init; } = 3;
+
+    /// <inheritdoc cref="EscapeMishapChance"/>
+    public double EscapeMishapMaxDamage { get; init; } = 12;
 
     public static CombatTuning Default { get; } = new();
 }

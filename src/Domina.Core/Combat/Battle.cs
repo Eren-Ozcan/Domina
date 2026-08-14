@@ -25,7 +25,27 @@ public sealed class Battle
     private readonly BattleSetup _setup;
     private readonly CombatTuning _tuning;
     private readonly IRandomSource _rng;
-    private readonly Dictionary<WarriorId, BodyPart> _lostParts = [];
+    /// <summary>
+    /// Bu dövüşte kaybedilen uzuvlar, savaşçı başına.
+    /// </summary>
+    /// <remarks>
+    /// Savaşçı başına <b>küme</b> tutulur, tek parça değil: kuşatılmış bir savaşçı
+    /// kaçarken menzilindeki her düşmandan bir fırsat saldırısı yer (§5), yani tek
+    /// dövüşte birden fazla uzvunu kaybedebilir. Tek parça tutulduğunda her yeni kayıp
+    /// öncekini siliyordu ve <see cref="AlreadyLost"/> yalnızca sonuncusuna baktığı için
+    /// aynı uzuv tekrar tekrar kopabiliyordu (ölçüldü: tek savaşçıda 22 kopma,
+    /// Kol/Bacak sırayla).
+    /// </remarks>
+    private readonly Dictionary<WarriorId, BodyPartSet> _lostParts = [];
+
+    /// <summary>
+    /// Havadaki mermiler. Atıldıkları sırada durur, sırayla çözülür.
+    /// </summary>
+    /// <remarks>
+    /// Sıra determinizm için şart: aynı tick'te iki mermi varırsa hangisinin önce
+    /// çözüleceği sabit olmalı, yoksa aynı seed aynı dövüşü vermez.
+    /// </remarks>
+    private readonly List<Projectile> _projectiles = [];
 
     public Battle(BattleSetup setup, IRandomSource rng)
     {
@@ -174,6 +194,15 @@ public sealed class Battle
 
         Move();
 
+        // Mermiler savaşçılardan önce ilerler: hareketten sonra, hamlelerden önce.
+        // Havadaki mermi bu tick'te nereye varacağını hedefin YENİ yerine göre bulur.
+        AdvanceProjectiles();
+
+        if (Finish())
+        {
+            return false;
+        }
+
         foreach (Combatant c in _combatants)
         {
             if (!c.IsActive)
@@ -257,8 +286,6 @@ public sealed class Battle
     /// </remarks>
     private void Move()
     {
-        double step = _tuning.MoveSpeed * _tuning.TickSeconds;
-
         foreach (Combatant c in _combatants)
         {
             ArenaPoint before = c.Position;
@@ -269,6 +296,8 @@ public sealed class Battle
                 continue;
             }
 
+            double step = StepFor(c);
+
             if (c.State is CombatState.Retreating)
             {
                 // Hedef, çıkış eşiğinin de ötesi: savaşçı eşiği geçerken durmasın.
@@ -278,7 +307,7 @@ public sealed class Battle
 
                 c.Position = c.Position.MovedToward(new ArenaPoint(exitX, c.Position.Y), step);
             }
-            else if (c.State is CombatState.Idle && FindTarget(c) is Combatant target)
+            else if (FindTarget(c) is Combatant target && CanAdvanceOn(c, target))
             {
                 FaceToward(c, target);
 
@@ -296,6 +325,97 @@ public sealed class Battle
             c.SpeedThisTick = before.DistanceTo(c.Position) / _tuning.TickSeconds;
         }
     }
+
+    /// <summary>
+    /// Arenayı terk ederken alınan kaza yarası.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kaçmak hiçbir zaman tamamen temiz değildir: burkulan ayak, karanlıkta yenen bir
+    /// dal, dönüş yolunda kanayan bir yara. Kimseyi <b>öldürmez</b> — canı 1'in altına
+    /// indirmez. Amacı ölüm değil, "hiç bedel ödemeden çıktım" durumunu ortadan kaldırmak.
+    /// </para>
+    /// <para>
+    /// Bu, uzamsal olmayan tek yaralanma kaynağı: ekranda karşılığı bir vuruş değil, bir
+    /// sendeleme. Diğer iki kaynak (yetişen düşman, arkadan gelen fırlatma) uzamsaldır.
+    /// </para>
+    /// </remarks>
+    private void RollEscapeMishap(Combatant c)
+    {
+        if (!_rng.Chance(_tuning.EscapeMishapChance))
+        {
+            return;
+        }
+
+        double damage = Lerp(
+            _tuning.EscapeMishapMinDamage,
+            _tuning.EscapeMishapMaxDamage,
+            _rng.NextDouble());
+
+        damage = Math.Min(damage, Math.Max(0, c.Health - 1));
+        if (damage <= 0)
+        {
+            return;
+        }
+
+        c.Health -= damage;
+        c.DamageTaken += damage;
+        Emit(new EscapeMishap(ElapsedSeconds, c.Id, damage, c.Health));
+    }
+
+    /// <summary>
+    /// Savaşçı bu tick'te hedefine doğru ilerleyebilir mi?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kural normalde "hamleye kilitlendiysen yürüyemezsin" — vuruş taahhüdünün bedeli.
+    /// <b>Kaçan bir hedefe karşı bu kural askıya alınır:</b> kovalayan, kılıcını
+    /// savururken de koşmaya devam eder.
+    /// </para>
+    /// <para>
+    /// Sebebi ölçüldü. Kural iki savaşçının durup vuruştuğu duruma göre yazılmıştı;
+    /// kovalamacada ise avcı yetişip hamleye başlıyor, hamle boyunca donuyor, kaçan bu
+    /// arada menzilden çıkıyor ve kılıç <b>her seferinde</b> boşluğa iniyordu. Yani
+    /// yetişen düşman hiç vuramıyordu ve GDD §5'in "kaçış boyunca savunmasız kalır"
+    /// vaadinin karşılığı yoktu.
+    /// </para>
+    /// </remarks>
+    /// <remarks>
+    /// <para>
+    /// Yalnızca <b>hamle</b> sırasında; toparlanmada değil. İkisi de açık olduğunda
+    /// kovalayan hiç durmuyor, net hızı hep kaçanın üstünde kalıyor ve kaçış çöküyordu
+    /// (ölçüldü: sayıca geri kalınca çekilen ekibin %76'sı tamamen kırılıyordu, %30
+    /// yerine). Toparlanmada durmak kovalayana nefes aldırıyor ve kaçana arayı açma şansı
+    /// veriyor — takip bir kovalamaca oluyor, bir infaz değil.
+    /// </para>
+    /// </remarks>
+    private static bool CanAdvanceOn(Combatant c, Combatant target) =>
+        c.State is CombatState.Idle
+        || (target.State is CombatState.Retreating && c.State is CombatState.AttackWindup);
+
+    /// <summary>
+    /// Bir savaşçının bu tick'te kat edeceği mesafe.
+    /// </summary>
+    /// <remarks>
+    /// Hız savaşçıdan savaşçıya değişir; kovalamacanın sonucunu belirleyen budur. Kaçan
+    /// ayrıca yavaşlar: sırtı dönük koşan biri karşısındakinden daha hızlı gidemez.
+    /// </remarks>
+    private double StepFor(Combatant c)
+    {
+        double speed = Lerp(
+            _tuning.MoveSpeedAtZeroSpeed,
+            _tuning.MoveSpeedAtMaxSpeed,
+            Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
+
+        if (c.State is CombatState.Retreating)
+        {
+            speed *= _tuning.RetreatSpeedMultiplier;
+        }
+
+        return speed * _tuning.TickSeconds;
+    }
+
+    private static double Lerp(double from, double to, double t) => from + ((to - from) * t);
 
     /// <summary>Üst üste binen savaşçıları iter. Kaçan itilmez — yolu kesilemesin.</summary>
     private void Separate(Combatant c)
@@ -398,7 +518,12 @@ public sealed class Battle
                 ResolveWindupEnd(c);
                 break;
 
+            case CombatState.ThrowWindup:
+                ReleaseThrow(c);
+                break;
+
             case CombatState.AttackRecovery:
+            case CombatState.ThrowRecovery:
                 // Toparlanma bitti — buffer'lanmış kaçış komutu şimdi işlenir.
                 if (c.RetreatRequested)
                 {
@@ -414,6 +539,7 @@ public sealed class Battle
                 // terk etmesi gerekiyor.
                 if (HasLeftArena(c))
                 {
+                    RollEscapeMishap(c);
                     c.BeginState(CombatState.Escaped, 0);
                     Emit(new WarriorEscaped(ElapsedSeconds, c.Id));
                 }
@@ -435,10 +561,25 @@ public sealed class Battle
     {
         Combatant? target = FindTarget(attacker);
 
-        // Menzil dışındaysa saldırı başlamaz — savaşçı yaklaşmaya devam eder.
-        if (target is null || !InReach(attacker, target))
+        if (target is null)
         {
             Wait(attacker);
+            return;
+        }
+
+        // Menzil dışındaysa yaklaşmaya devam eder — ama atacak bir şeyi varsa atar.
+        // Fırlatmanın asıl işi bu boşluğu doldurmak: yaklaşma ve kaçış artık bedava değil.
+        if (!InReach(attacker, target))
+        {
+            if (InThrowRange(attacker, target))
+            {
+                BeginThrow(attacker, target);
+            }
+            else
+            {
+                Wait(attacker);
+            }
+
             return;
         }
 
@@ -511,6 +652,127 @@ public sealed class Battle
     /// <summary>Vuracak kimse yok — kısa bir süre bekleyip yeniden bakar.</summary>
     private static void Wait(Combatant c) => c.BeginState(CombatState.Idle, 0.2);
 
+    // ---------------------------------------------------------------- fırlatma
+
+    /// <summary>Hedef yakın dövüş menzilinin dışında ama atış menzilinde mi?</summary>
+    private static bool InThrowRange(Combatant attacker, Combatant target) =>
+        attacker.CanThrow
+        && attacker.Warrior.UsableThrown is ThrownWeapon t
+        && attacker.Position.DistanceTo(target.Position) <= t.Range;
+
+    private void BeginThrow(Combatant attacker, Combatant target)
+    {
+        ThrownWeapon thrown = attacker.Warrior.UsableThrown!;
+
+        FaceToward(attacker, target);
+        attacker.BeginState(CombatState.ThrowWindup, thrown.ThrowSeconds * _tuning.WindupFraction);
+        Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
+    }
+
+    /// <summary>Hamle bitti: mermi havalanır. Buradan sonrası uçuşun işi.</summary>
+    private void ReleaseThrow(Combatant attacker)
+    {
+        ThrownWeapon? thrown = attacker.Warrior.UsableThrown;
+        Combatant? target = FindTarget(attacker);
+
+        if (thrown is not null && target is not null && attacker.CanThrow)
+        {
+            attacker.ThrowsLeft--;
+            attacker.AttacksMade++;
+
+            double distance = attacker.Position.DistanceTo(target.Position);
+            double flight = Math.Max(_tuning.TickSeconds, distance / thrown.Speed);
+
+            _projectiles.Add(new Projectile(attacker, target, thrown, attacker.Position, flight));
+            Emit(new ProjectileLaunched(
+                ElapsedSeconds,
+                attacker.Id,
+                target.Id,
+                thrown.Name,
+                attacker.Position,
+                target.Position,
+                flight));
+        }
+
+        if (attacker.State != CombatState.Dead)
+        {
+            attacker.BeginState(
+                CombatState.ThrowRecovery,
+                (thrown?.ThrowSeconds ?? _tuning.TickSeconds) * (1 - _tuning.WindupFraction));
+        }
+    }
+
+    /// <summary>
+    /// Havadaki mermileri bir tick ilerletir ve varanları çözer.
+    /// </summary>
+    /// <remarks>
+    /// Liste sırası korunur: aynı tick'te iki mermi varırsa hangisinin önce işleneceği
+    /// atılış sırasına bağlıdır. Rastgele olsaydı aynı seed aynı dövüşü vermezdi.
+    /// </remarks>
+    private void AdvanceProjectiles()
+    {
+        if (_projectiles.Count == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _projectiles.Count; i++)
+        {
+            Projectile p = _projectiles[i];
+            p.SecondsToImpact -= _tuning.TickSeconds;
+
+            if (p.SecondsToImpact > 0)
+            {
+                continue;
+            }
+
+            ResolveProjectile(p);
+            _projectiles.RemoveAt(i--);
+        }
+    }
+
+    /// <summary>
+    /// Varan merminin sonucu.
+    /// </summary>
+    /// <remarks>
+    /// Uçuş sırasında hedef ölmüş, kaçmış ya da menzilden çıkmış olabilir — mermi o zaman
+    /// boşa gider. Kaçınma yok: gelen şeyi göremeyen savaşçı ondan sıyrılamaz, savunması
+    /// yalnızca zırhı ve mesafedir.
+    /// </remarks>
+    private void ResolveProjectile(Projectile p)
+    {
+        Combatant attacker = p.Attacker;
+        Combatant target = p.Target;
+
+        if (!target.IsActive
+            || attacker.Position.DistanceTo(target.Position) > p.Weapon.Range)
+        {
+            Emit(new ProjectileMissed(ElapsedSeconds, attacker.Id, target.Id));
+            return;
+        }
+
+        WarriorStats atkStats = attacker.Warrior.EffectiveStats;
+        double reachedFraction =
+            Math.Clamp(attacker.Position.DistanceTo(target.Position) / p.Weapon.Range, 0, 1);
+        double hitChance = (_tuning.BaseThrowHitChance
+                            + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
+                           * (1 - (reachedFraction * _tuning.ThrowFalloffAtMaxRange));
+
+        if (!target.CanDefend)
+        {
+            hitChance += _tuning.RetreatingHitBonus;
+        }
+
+        if (!_rng.Chance(Math.Clamp(hitChance, 0.05, 0.95)))
+        {
+            Emit(new ProjectileMissed(ElapsedSeconds, attacker.Id, target.Id));
+            return;
+        }
+
+        // Güç fırlatmaya karışmaz: kargıyı iten kol değil, atışın kendisi.
+        ApplyBlow(attacker, target, p.Weapon.Damage, p.Weapon.DismembermentFactor, BlowSource.Projectile);
+    }
+
     // -------------------------------------------------------------- çözümleme
 
     private void ResolveStrike(Combatant attacker, Combatant defender)
@@ -559,17 +821,46 @@ public sealed class Battle
         }
 
         // 3) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
-        HitLocation location = RollHitLocation();
         Weapon weapon = attacker.Warrior.UsableWeapon;
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
                      * staminaFactor
                      * (flanking ? _tuning.FlankDamageMultiplier : 1.0);
 
-        double afterDefense = raw * (1 - (defStats.Defense / 100.0 * _tuning.MaxDefenseReduction));
+        ApplyBlow(attacker, defender, raw, weapon.DismembermentFactor, BlowSource.Melee);
+    }
+
+    /// <summary>Darbenin kaynağı — yalnızca hangi olayın yayınlanacağını belirler.</summary>
+    private enum BlowSource
+    {
+        Melee,
+        Projectile,
+    }
+
+    /// <summary>
+    /// İsabet etmiş bir darbenin sonucunu uygular: bölge, zırh, hasar, kopma ağacı.
+    /// </summary>
+    /// <remarks>
+    /// Yakın dövüş ve fırlatma <b>aynı</b> yoldan geçer. Ayrı yazılsalardı zırhın bölgeye
+    /// göre okunması ya da ağır darbe ağacı iki yerde ayrı ayrı bakım isterdi ve biri
+    /// sessizce geride kalırdı.
+    /// </remarks>
+    private void ApplyBlow(
+        Combatant attacker,
+        Combatant defender,
+        double rawDamage,
+        double dismembermentFactor,
+        BlowSource source)
+    {
+        WarriorStats defStats = defender.Warrior.EffectiveStats;
+        HitLocation location = RollHitLocation();
+        ArmorPiece struckPiece = defender.Warrior.Armor.At(location);
+
+        double afterDefense =
+            rawDamage * (1 - (defStats.Defense / 100.0 * _tuning.MaxDefenseReduction));
         double damage = Math.Max(
             _tuning.MinimumDamage,
-            afterDefense - defender.Warrior.Armor.DamageReduction);
+            afterDefense - struckPiece.DamageReduction);
 
         defender.Health -= damage;
         defender.TimesHit++;
@@ -577,11 +868,13 @@ public sealed class Battle
         attacker.HitsLanded++;
         attacker.DamageDealt += damage;
 
-        Emit(new AttackLanded(
-            ElapsedSeconds, attacker.Id, defender.Id, damage, Math.Max(0, defender.Health)));
+        double remaining = Math.Max(0, defender.Health);
+        Emit(source == BlowSource.Melee
+            ? new AttackLanded(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining)
+            : new ProjectileHit(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining));
 
-        // 4) Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
-        if (TryGrievousBlow(weapon, defender, damage, defStats, location))
+        // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
+        if (TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor))
         {
             return;
         }
@@ -596,12 +889,19 @@ public sealed class Battle
     /// Ağır darbe sonucunu çözer.
     /// </summary>
     /// <returns>Ağır darbe tetiklendiyse (ölüm veya uzuv kaybı) true.</returns>
+    /// <remarks>
+    /// Direnç, darbenin <b>indiği</b> bölgenin zırhından okunur — koparılan uzvun
+    /// değil. Zar "bu vuruş kesip geçti mi" sorusudur; kolu örten kote, gövdeye inen
+    /// darbeyi durduramaz. Gövde vuruşunun yine de bir uzva mal olması ayrı bir kural
+    /// (bkz. <see cref="SeverablePart"/>).
+    /// </remarks>
     private bool TryGrievousBlow(
-        Weapon weapon,
         Combatant defender,
         double damage,
         WarriorStats defStats,
-        HitLocation location)
+        HitLocation location,
+        ArmorPiece struckPiece,
+        double dismembermentFactor)
     {
         double severity = damage / defStats.MaxHealth;
         if (severity < _tuning.GrievousSeverityThreshold)
@@ -610,35 +910,48 @@ public sealed class Battle
         }
 
         double chance = _tuning.BaseDismembermentChance
-                        * weapon.DismembermentFactor
-                        * (1 - defender.Warrior.Armor.DismembermentResistance);
+                        * dismembermentFactor
+                        * (1 - struckPiece.DismembermentResistance);
 
         if (!_rng.Chance(chance))
         {
             return false;
         }
 
-        // Sonuç ağacı (docs/GDD.md §7): oyuncu müdahale ettiyse uzvunu kaybederek
-        // yaşar, etmediyse ölür. Tuşa basmak hayat kurtarır ama bedelsiz değildir.
-        if (defender.PlayerIntervened)
+        // Sonuç ağacı (docs/GDD.md §7): belirleyici olan darbenin öldürücü olup olmadığı.
+        bool severed = TrySever(defender, location);
+
+        // Öldürmeyen ağır darbe: uzuv gider, savaşçı sahada kalır ve dövüşmeye devam
+        // eder. Tuş gerekmez — böylece uzuv kaybederek KAZANMAK mümkün olur.
+        if (defender.Health > 0)
         {
-            if (SeverablePart(defender, location) is BodyPart part)
-            {
-                defender.LostLimb = true;
-                _lostParts[defender.Id] = part;
-                Emit(new WarriorDismembered(ElapsedSeconds, defender.Id, part));
-            }
+            return true;
+        }
 
-            // Uzvunu kaybetse de canı bitmişse yine ölür.
-            if (defender.Health <= 0)
-            {
-                Die(defender, DeathCause.Wounds);
-            }
-
+        // Öldürücü darbe: tuşa basmak ölümü uzuv kaybına çevirir. Koparacak uzuv
+        // kalmadıysa çevirecek bir şey de yoktur — savaşçı ölür.
+        if (defender.PlayerIntervened && severed)
+        {
+            defender.Health = _tuning.SurvivalHealthAfterIntervention;
             return true;
         }
 
         Die(defender, DeathCause.GrievousBlow);
+        return true;
+    }
+
+    /// <summary>Koparılabilecek bir uzuv varsa koparır.</summary>
+    /// <returns>Uzuv koptuysa true.</returns>
+    private bool TrySever(Combatant defender, HitLocation location)
+    {
+        if (SeverablePart(defender, location) is not BodyPart part)
+        {
+            return false;
+        }
+
+        defender.LostLimb = true;
+        _lostParts[defender.Id] = _lostParts.GetValueOrDefault(defender.Id) | part.AsFlag();
+        Emit(new WarriorDismembered(ElapsedSeconds, defender.Id, part));
         return true;
     }
 
@@ -699,7 +1012,7 @@ public sealed class Battle
 
     private bool AlreadyLost(Combatant defender, BodyPart part) =>
         defender.Warrior.HasDisability(part)
-        || (_lostParts.TryGetValue(defender.Id, out BodyPart lost) && lost == part);
+        || _lostParts.GetValueOrDefault(defender.Id).Has(part);
 
     /// <summary>Darbenin nereye indiği — ağırlıklı zar, tek RNG çağrısı.</summary>
     private HitLocation RollHitLocation()
@@ -905,6 +1218,16 @@ public sealed class Battle
     private void Complete(BattleOutcome outcome)
     {
         IsFinished = true;
+
+        // Dövüş biterken havada kalan mermiler ıska sayılır. Sessizce yok olsalardı
+        // görselleştirmede ekranda asılı kalırlardı: atıldıkları olay var, sonuçları yok.
+        foreach (Projectile p in _projectiles)
+        {
+            Emit(new ProjectileMissed(ElapsedSeconds, p.Attacker.Id, p.Target.Id));
+        }
+
+        _projectiles.Clear();
+
         Emit(new BattleEnded(ElapsedSeconds, outcome));
 
         var summaries = _combatants.ConvertAll(c => new WarriorBattleSummary(
@@ -921,7 +1244,7 @@ public sealed class Battle
             c.DamageTaken,
             c.LostLimb)
         {
-            LostPart = _lostParts.TryGetValue(c.Id, out BodyPart p) ? p : null,
+            LostParts = _lostParts.GetValueOrDefault(c.Id),
         });
 
         Result = new BattleResult(outcome, ElapsedSeconds, summaries);

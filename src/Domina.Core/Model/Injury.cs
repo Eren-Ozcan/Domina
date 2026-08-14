@@ -13,6 +13,50 @@ public enum BodyPart
     Eye,
 }
 
+/// <summary>
+/// Kaybedilmiş uzuvların kümesi.
+/// </summary>
+/// <remarks>
+/// Liste değil <b>küme</b>: aynı uzuv iki kez kaybedilemez, tip bu kuralı taşısın.
+/// Küme aynı zamanda değer eşitliğine sahiptir — dövüş özetleri record olduğu için
+/// bu şart: liste tutulsaydı iki özdeş koşu referans farkı yüzünden farklı sayılır ve
+/// determinizm testleri anlamsızlaşırdı. Kayıpların <b>sırası</b> gerekiyorsa olay
+/// akışındaki <c>WarriorDismembered</c> zaten sıralı.
+/// </remarks>
+[Flags]
+public enum BodyPartSet
+{
+    None = 0,
+    Arm = 1 << 0,
+    Leg = 1 << 1,
+    Eye = 1 << 2,
+}
+
+public static class BodyPartSetExtensions
+{
+    public static BodyPartSet AsFlag(this BodyPart part) => part switch
+    {
+        BodyPart.Arm => BodyPartSet.Arm,
+        BodyPart.Leg => BodyPartSet.Leg,
+        BodyPart.Eye => BodyPartSet.Eye,
+        _ => BodyPartSet.None,
+    };
+
+    public static bool Has(this BodyPartSet set, BodyPart part) => (set & part.AsFlag()) != 0;
+
+    /// <summary>Kümedeki uzuvlar, <see cref="BodyPart"/> sırasıyla.</summary>
+    public static IEnumerable<BodyPart> Parts(this BodyPartSet set)
+    {
+        foreach (BodyPart part in Enum.GetValues<BodyPart>())
+        {
+            if (set.Has(part))
+            {
+                yield return part;
+            }
+        }
+    }
+}
+
 /// <summary>Darbenin indiği bölge.</summary>
 /// <remarks>
 /// <para>
@@ -47,6 +91,15 @@ public sealed record Disability(BodyPart Part)
 
     /// <summary>Kaçınmaya uygulanan çarpan.</summary>
     public double EvasionMultiplier => Part == BodyPart.Leg ? 0.55 : 1.0;
+
+    /// <summary>
+    /// Yürüme hızına uygulanan çarpan.
+    /// </summary>
+    /// <remarks>
+    /// Bacağını kaybeden savaşçı yalnızca kaçınmayı değil <b>kaçabilmeyi</b> de kaybeder:
+    /// topallayan biri kovalayandan uzaklaşamaz. Uzuv kaybının en ağır ikincil bedeli bu.
+    /// </remarks>
+    public double SpeedMultiplier => Part == BodyPart.Leg ? 0.60 : 1.0;
 
     /// <summary>İsabet şansına uygulanan çarpan.</summary>
     public double AccuracyMultiplier => Part == BodyPart.Eye ? 0.75 : 1.0;

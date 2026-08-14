@@ -50,8 +50,14 @@ public sealed record WarriorBattleSummary(
     double DamageTaken,
     bool LostLimb)
 {
-    /// <summary>Uzuv kaybedildiyse hangisi. Meta katman bunu kalıcı sakatlığa çevirir.</summary>
-    public BodyPart? LostPart { get; init; }
+    /// <summary>
+    /// Bu dövüşte kaybedilen uzuvlar. Meta katman bunları kalıcı sakatlığa çevirir.
+    /// </summary>
+    /// <remarks>
+    /// Birden fazla olabilir: kuşatılmış savaşçı kaçarken menzilindeki her düşmandan bir
+    /// fırsat saldırısı yer (§5) ve her biri ayrı bir uzva mal olabilir.
+    /// </remarks>
+    public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
 
     public bool Died => FinalState == CombatState.Dead;
 

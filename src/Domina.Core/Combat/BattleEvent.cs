@@ -54,9 +54,54 @@ public sealed record RetreatBuffered(double AtSeconds, WarriorId Warrior) : Batt
 /// <summary>Kaçış başladı. Bu andan itibaren savaşçı kaçınamaz/bloklayamaz.</summary>
 public sealed record RetreatStarted(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
+/// <summary>
+/// Mermi havalandı. Görselleştirme uçuşu bu olaydan sürer.
+/// </summary>
+/// <remarks>
+/// Mermi <b>anında çözülmez</b>: uçuş süresi boyunca havada durur ve varış anında
+/// <see cref="ProjectileHit"/> veya <see cref="ProjectileMissed"/> ile sonuçlanır.
+/// Anında çözülseydi ekrandaki uçuş ile hasarın anı birbirini tutmazdı.
+/// </remarks>
+/// <param name="FlightSeconds">Varışa kalan süre — görselleştirme hızını buradan alır.</param>
+public sealed record ProjectileLaunched(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    string Weapon,
+    ArenaPoint From,
+    ArenaPoint To,
+    double FlightSeconds) : BattleEvent(AtSeconds);
+
+/// <summary>Mermi hedefe ulaştı.</summary>
+public sealed record ProjectileHit(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    double Damage,
+    double DefenderHealthRemaining) : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Mermi boşa gitti — ıskalandı ya da hedef varmadan sahadan çıktı.
+/// </summary>
+public sealed record ProjectileMissed(double AtSeconds, WarriorId Attacker, WarriorId Defender)
+    : BattleEvent(AtSeconds);
+
 /// <summary>Kaçan avın arkasından gelen bedava vuruş.</summary>
 public sealed record OpportunityAttack(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Arenayı terk ederken alınan kaza yarası — kimsenin vurmadığı tek yara.
+/// </summary>
+/// <remarks>
+/// Görselleştirme bunu vuruş olarak değil <b>sendeleme</b> olarak oynatmalı; ortada
+/// vuran biri yok.
+/// </remarks>
+public sealed record EscapeMishap(
+    double AtSeconds,
+    WarriorId Warrior,
+    double Damage,
+    double HealthRemaining) : BattleEvent(AtSeconds);
 
 /// <summary>Savaşçı arenadan sağ çıktı.</summary>
 public sealed record WarriorEscaped(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
