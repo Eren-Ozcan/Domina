@@ -70,6 +70,9 @@ ile başlar. Aynı seed + aynı girdiler = aynı sonuç. Bu üç şeyi sağlar:
 - [x] Stamina tüketimi ve düşük stamina cezaları
 - [x] Uzuv kaybı riski: darbe/maxHP oranı × silah tipi × zırh (GDD §7)
 - [x] Sonuç ağacı: hafif / ağır+pes / ağır+müdahalesiz (ölüm)
+- [x] **Hücum (charge):** mesafe eşiği + olasılıkla başlar, koşarken savunma yok ve yol
+      boyunca fırsat saldırısı yenir, varışta hasar çarpanı; kaçana hücum edilmez ve
+      "çek" komutu hücumu keser (GDD §4)
 - [x] 1v1, 2vX, 3vX çoklu savaşçı desteği
 - [x] Dövüş **olay akışı (event stream)** üretir — görselleştirme bunu tüketecek
       (`Vurdu`, `Kaçındı`, `UzuvKopti`, `Öldü`, `KaçışBaşladı`...)
@@ -118,6 +121,7 @@ bir sistem, dengeli bir sistem değil.
       fırsat saldırısının ayrı bir vuruşu var
 - [x] Kesme pencereleri (cancel window) animasyon zamanlamasıyla eşleştirme
 - [x] **Uzuv kopma:** uzvun rig'den ayrılması, kan VFX, kalıcı model değişimi
+- [x] Hücum duruşu: öne yatık koşu — kaçışın aynası, HUD'da "hücumda"
 - [x] Sakat animasyon setleri: topallama (kaçarken de), tek elli duruş
 - [x] Ölüm animasyonu (yığılma — gore geçici sanatla anlamsız, sanatla gelecek);
       ceset düştüğü yerde kalıyor
