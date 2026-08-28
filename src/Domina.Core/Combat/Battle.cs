@@ -47,6 +47,19 @@ public sealed class Battle
     /// </remarks>
     private readonly List<Projectile> _projectiles = [];
 
+    /// <summary>
+    /// İlk isabet düştü mü? Kaçış tuşunu açan eşik budur.
+    /// </summary>
+    /// <remarks>
+    /// Eşik <b>isabet</b>, hamle değil: silah havaya kalktı diye savaş başlamış sayılmaz,
+    /// kan aktı diye sayılır. Iskalanan hamleler boyunca ekip hâlâ ucuza çekilebilir —
+    /// zırhın karşılığı budur (bkz. docs/GDD.md §5).
+    /// </remarks>
+    private bool _contactMade;
+
+    /// <summary>Temastan önce arka arkaya reddedilen "çek" basışları.</summary>
+    private int _refusedRetreatPresses;
+
     public Battle(BattleSetup setup, IRandomSource rng)
     {
         ArgumentNullException.ThrowIfNull(setup);
@@ -97,6 +110,18 @@ public sealed class Battle
     public IReadOnlyList<BattleEvent> Events => _events;
 
     /// <summary>
+    /// İlk isabet düştüyse true — yani <see cref="CommandRetreat"/> artık kabul edilir.
+    /// </summary>
+    /// <remarks>
+    /// Arayüz tuşu bundan önce pasif çizer. Savaşçı bazlı değil <b>dövüş bazlı</b> bir
+    /// bayraktır: hangi tarafın vurduğu fark etmez, ilk kan savaşı başlatır.
+    /// </remarks>
+    public bool ContactMade => _contactMade;
+
+    /// <summary>Temastan önce arka arkaya kaç kez tuşa basıldığı.</summary>
+    public int RefusedRetreatPresses => _refusedRetreatPresses;
+
+    /// <summary>
     /// Savaşçıların anlık hali. Godot katmanı bunu HUD'a basar (can/stamina barı,
     /// "çek" tuşunun hangi savaşçı için aktif olduğu).
     /// </summary>
@@ -145,6 +170,14 @@ public sealed class Battle
     /// <returns>En az bir savaşçı komutu kabul ettiyse true.</returns>
     public bool CommandRetreat()
     {
+        if (!_contactMade)
+        {
+            // Savaş henüz başlamadı: kimse dokunmadan çekilmek yok (§5).
+            _refusedRetreatPresses++;
+            Emit(new RetreatRefused(ElapsedSeconds, _refusedRetreatPresses));
+            return false;
+        }
+
         bool accepted = false;
 
         foreach (Combatant c in _combatants)
@@ -873,6 +906,9 @@ public sealed class Battle
             ? new AttackLanded(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining)
             : new ProjectileHit(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining));
 
+        // İlk isabet kaçış tuşunu açar; hangi taraf vurursa vursun.
+        _contactMade = true;
+
         // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
         if (TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor))
         {
@@ -1055,6 +1091,13 @@ public sealed class Battle
     {
         if (_setup.RetreatPolicy is null || c.RetreatRequested || c.Team != PlayerTeam)
         {
+            return;
+        }
+
+        if (!_contactMade)
+        {
+            // Politika oyuncunun tuşunu taklit eder; tuş temastan önce kapalıysa politika
+            // da susar. Aksi hâlde reddedilen basış sayacı simülasyonda şişerdi.
             return;
         }
 

@@ -42,6 +42,23 @@ public sealed record AttackLanded(
 public sealed record WarriorDismembered(double AtSeconds, WarriorId Warrior, BodyPart Part)
     : BattleEvent(AtSeconds);
 
+/// <summary>
+/// Tuşa temastan önce basıldı ve komut reddedildi (bkz. docs/GDD.md §5).
+/// </summary>
+/// <remarks>
+/// <para>
+/// Kaçış yalnızca ilk isabetten sonra açılır: kimse dokunmadan çekilmek yok. Reddedilen
+/// basış yine de olay üretir, çünkü arayüzün söyleyecek bir şeyi var — kural ilk kez
+/// görülüyorsa öğretilmeli, ısrarla tekrarlanıyorsa cevaplanmalı.
+/// </para>
+/// <para>
+/// <paramref name="ConsecutivePresses"/> bu dövüşteki üst üste reddedilen basış
+/// sayısıdır; ilk kabul edilen komutta anlamını yitirir. Metni çekirdek üretmez —
+/// sayıyı verir, ne yazılacağına sunum katmanı karar verir.
+/// </para>
+/// </remarks>
+public sealed record RetreatRefused(double AtSeconds, int ConsecutivePresses) : BattleEvent(AtSeconds);
+
 /// <summary>Oyuncu "çek" tuşuna bastı. Henüz kaçış başlamamış olabilir (bkz. buffer).</summary>
 public sealed record RetreatCommanded(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
