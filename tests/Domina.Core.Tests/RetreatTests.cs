@@ -370,11 +370,17 @@ public class RetreatTests
 
         var battle = new Battle(setup, new SeededRandom(10));
 
-        // Politika da tuşla aynı kapıdan geçer: ilk isabete kadar susar.
-        StepUntil(battle, b => b.ContactMade);
-        Assert.False(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);
+        // Politika da tuşla aynı kapıdan geçer: ilk isabete kadar susar. Sessizlik,
+        // temasın düştüğü tick'in sonunda değil ondan ÖNCEKİ her tick'te sınanır:
+        // aynı tick içinde önce vuruş çözülür, sonra sıradaki savaşçının politikası
+        // okunur — yani temas tick'inde komut çoktan kabul edilmiş olabilir.
+        while (!battle.ContactMade)
+        {
+            Assert.False(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);
+            Assert.True(battle.Step(), "Dövüş hiç temas olmadan bitti.");
+        }
 
-        battle.Step();
+        Assert.True(StepUntil(battle, b => b.SnapshotOf(new WarriorId(1)).RetreatRequested));
 
         Assert.True(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);
         Assert.True(battle.SnapshotOf(new WarriorId(2)).RetreatRequested);

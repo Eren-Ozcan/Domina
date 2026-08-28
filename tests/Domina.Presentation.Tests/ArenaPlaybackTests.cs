@@ -21,6 +21,7 @@ public class ArenaPlaybackTests
 
     private sealed record Playback(
         BattleResult Result,
+        IReadOnlyList<BattleEvent> Events,
         List<RigReaction> Reactions,
         Dictionary<WarriorId, ScenePoint> FinalPositions,
         Dictionary<WarriorId, CombatState> FinalStates);
@@ -64,7 +65,7 @@ public class ArenaPlaybackTests
 
             if (!running)
             {
-                return new Playback(battle.Result!, reactions, positions, states);
+                return new Playback(battle.Result!, battle.Events, reactions, positions, states);
             }
         }
     }
@@ -191,10 +192,14 @@ public class ArenaPlaybackTests
             r => r.Kind == RigReactionKind.OpportunitySwing));
 
         int swings = playback.Reactions.Count(r => r.Kind == RigReactionKind.OpportunitySwing);
+        int events = playback.Events.OfType<OpportunityAttack>().Count();
 
-        // Her savaşçı en fazla bir kez kaçmaya başlar, dolayısıyla bedava vuruş da
-        // savaşçı başına en fazla bir tanedir.
-        Assert.InRange(swings, 1, playback.Result.Summaries.Count(s => s.Team == Battle.PlayerTeam));
+        // Sayı bir üst sınıra değil olay akışına bağlanır: bedava vuruş artık yalnızca
+        // kaçıştan değil hücumdan da geliyor (GDD §4), yani savaşçı başına bir tane
+        // varsayımı doğru değil. Bağlanan şey sayının kendisi değil, olay ile ekranın
+        // birebir tutması.
+        Assert.True(events > 0);
+        Assert.Equal(events, swings);
     }
 
     /// <summary>
