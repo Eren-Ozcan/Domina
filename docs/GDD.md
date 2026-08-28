@@ -168,6 +168,9 @@ değişince kalır.
 
 - **Tek tuş**, anlık karar. Mash/QTE **yok**. Otomatik eşik **yok** —
   oyuncu basmazsa savaşçı gerçekten ölür.
+- **Savaş başlamadan çekilmek yok.** Tuş **ilk isabete kadar kapalıdır**: eşik
+  hamle değil, kan. Iskalanan hamleler boyunca ekip hâlâ ucuza çekilebilir —
+  zırhın karşılığı budur.
 - Komut **tüm ekibi** kapsar: bir kez "kaç" denince sahadaki 1-3 savaşçının
   hepsi çekilir ve hepsi onur kaybeder. Tek bir savaşçı ayrıca çekilemez.
 
@@ -179,6 +182,28 @@ değişince kalır.
 > Ekip bazlı komut kararı **nadir ve ağır** yapar: bir savaşçıyı kurtarmak, seferi
 > ve tüm ekibin onurunu bırakmak demektir. Uzuv kaybı mekaniğinin bedeli de böylece
 > gerçek bir bedele bağlanır.
+
+### Tuş ne zaman açılır
+
+| An | Tuş |
+|---|---|
+| Savaş başladı, henüz kimse vurmadı | **Kapalı** — üstünde "SAVAŞ BAŞLAMADI" yazar |
+| İlk isabet düştü (hangi taraf vurursa vursun) | **Açık**, dövüş bitene kadar açık kalır |
+
+Kapalı tuşa basmak sessizce yutulmaz; çekirdek basışı sayar ve olay üretir, metni
+arayüz yazar:
+
+- **Oyun başında en fazla 3 kez** kuralı öğreten kısa bir bilgi çıkar, sonra susar.
+  Bilineni tekrarlamak bilgi değil gürültüdür.
+- **Aynı dövüşte üst üste 11. basışta** alaycı bir cevap gelir ve
+  **"Dereyi görmeden paçaları sıvama"** başarımı açılır.
+
+> **Neden hamle değil isabet:** yayını çeken düşman 30 m öteden nişan alırken tuşun
+> açılması gerekiyor; erişim eşiği menzilli düşmanda yanlış çalışırdı. İsabet eşiği
+> hem yakın dövüşte hem menzilde aynı şeyi söyler: *sana dokundular.*
+
+> **Neden hiç açılmıyor değil de kapalı duruyor:** tuş gizlenseydi kuralın varlığı
+> öğrenilmezdi. Oyuncu tuşun yokluğunu değil, ne zaman geleceğini merak etmeli.
 
 ### Animasyon kesme (cancel window)
 | Durum | Davranış |
@@ -199,23 +224,36 @@ bu merdivende tek yönlü aşağı kaydırır.
 
 | Basamak | Ne olur |
 |---|---|
-| **1** | Herkes kaçtı, kimse yara almadı |
+| **1** | ~~Herkes kaçtı, kimse yara almadı~~ — **artık ulaşılamaz**, aşağıya bakınız |
 | **2** | Herkes kaçtı, yaralılar var |
 | **3** | Herkes kaçtı, uzuv kaybeden(ler) var |
 | **4** | Ekibin bir kısmı kaçtı, kalanlar öldü — kaçanlar sağlam |
 | **5** | Ekibin bir kısmı kaçtı, kalanlar öldü — kaçanlar uzuv kaybetmiş |
 | **6** | Kimse kaçamadı |
 
-Ölçüldü (3v3, 20.000 dövüş, hafif kuşam). Sütunlar tuşun ne zaman basıldığını temsil eder:
+Ölçüldü (3v3, 20.000 dövüş, hafif kuşam, temas kuralı devrede). Sütunlar tuşun ne
+zaman basıldığını temsil eder:
 
-| Basamak | Temasta önce | 2. sn | Can %50 | Sayıca geri kalınca |
+| Basamak | Tuş açılır açılmaz | 2. sn | Can %50 | Sayıca geri kalınca |
 |---|---|---|---|---|
-| 1 · hepsi kaçtı, yarasız | **%35.0** | — | — | — |
-| 2 · hepsi kaçtı, yaralı | %65.0 | %87.1 | %6.8 | — |
-| 3 · hepsi kaçtı, uzuv kayıplı | — | %7.4 | %2.3 | — |
-| 4 · kısmi kaçış, uzuvsuz | — | %4.9 | %71.8 | %29.6 |
-| 5 · kısmi kaçış, uzuv kayıplı | — | %0.6 | %17.6 | %9.3 |
-| 6 · kimse kaçamadı | — | — | %1.5 | **%61.1** |
+| 1 · hepsi kaçtı, yarasız | **%0.0** | %0.0 | %0.0 | %0.0 |
+| 2 · hepsi kaçtı, yaralı | %92.8 | %91.8 | %10.6 | — |
+| 3 · hepsi kaçtı, uzuv kayıplı | %7.2 | %8.2 | %2.3 | — |
+| 4 · kısmi kaçış, uzuvsuz | — | — | %71.1 | %11.1 |
+| 5 · kısmi kaçış, uzuv kayıplı | — | — | %12.9 | %2.7 |
+| 6 · kimse kaçamadı | — | — | %3.1 | **%86.2** |
+
+> **Birinci basamak kapandı (2026-08-29).** Eskiden temastan önce basmak dövüşlerin
+> **%35'inde** ekibi tertemiz eve getiriyordu; ölçüm 20.000 dövüşte **sıfır** uzuv
+> kaybı, **sıfır** ölüm veriyordu. Yapısal bir dalı vardı: kaçış zarı en fazla 12 hasar
+> verir, 100 azami cana karşı şiddeti 0.12'de kalır ve 0.20'lik ağır darbe eşiğini hiç
+> geçmez. Yani "silah dokunmadan uzuv gitmez" kuralı, temas öncesi kaçışı bedelsiz
+> kılıyordu.
+>
+> Çözüm sakatlanmaya yeni bir zar eklemek **değil**, tuşu geciktirmek oldu: kimse
+> dokunmadan çekilme diye bir şey yok. Ekranda sebepsiz kopan uzuv çizilmiyor
+> (ortada yalnızca `Stumble` var, kopma animasyonu yok) ama basamak da bedava değil —
+> tuş açılır açılmaz basıldığında bile ekiplerin **%7.2'si** en az bir uzuv kaybediyor.
 
 ### Kaçışı bedelsiz olmaktan çıkaran üç şey
 
@@ -235,13 +273,30 @@ yoktu. Sebebi tek tek bulundu ve üçü birden düzeltildi.
 > Toparlanmada ise durur; yoksa kovalayan hiç yavaşlamıyor ve kaçış tamamen çöküyor
 > (ölçüldü: sayıca geri kalınca çekilen ekibin %76'sı kırılıyordu).
 
-> **Temastan önce basmak hâlâ en iyi seçenek** ama artık garanti değil: %35 tertemiz,
-> %65 yaralı çıkış. Kaçmanın asıl bedeli yine de **seferin kendisi** — sefer iptal olur,
-> ödül alınmaz, tüm ekip onur kaybeder.
+> **Erken basmak hâlâ en iyi seçenek** ama tertemiz çıkış diye bir şey kalmadı: tuş
+> açılır açılmaz basıldığında ekiplerin **%92.8'i yaralı**, **%7.2'si uzuv kayıplı**
+> dönüyor. Kaçmanın asıl bedeli yine de **seferin kendisi** — sefer iptal olur, ödül
+> alınmaz, tüm ekip onur kaybeder.
 >
 > Geç basmanın bedeli ise sert: sayıca geri kaldıktan sonra çekilmek dövüşlerin
-> **%61'inde** ekibin tamamına mal oluyor. Merdivenin söylediği şey net — *kaçacaksan
+> **%86'sında** ekibin tamamına mal oluyor. Merdivenin söylediği şey net — *kaçacaksan
 > erken kaç.*
+
+### Kaçmanın onur bedeli
+
+Çekilmek onur düşürür. İki ayrı kalemden:
+
+| Kalem | Nerede | Not |
+|---|---|---|
+| Performans içindeki ceza | `HonorTuning.EscapePerformancePenalty` | İsabet oranıyla harmanlanır: iyi dövüşüp sonra çekilen, kötü dövüşenden hâlâ iyidir |
+| Tuşun düz bedeli | `HonorTuning.RetreatHonorPenalty` | Performanstan bağımsız, her çekilişte uygulanır |
+
+İkinci kalem ayrı duruyor çünkü tek başına performansa gömülü ceza yeterince isabetli
+bir savaşçının kaçtığı hâlde onur **kazanmasına** izin veriyordu. Çekilmenin bedeli,
+ne kadar iyi dövüşüldüğünden bağımsız olarak görünmeli.
+
+> **Sayı henüz kararlaştırılmadı** (Açık Karar #8). Koddaki değer yer tutucudur;
+> ölçüm-önce-karar kuralı gereği Faz 9'da oturacak.
 
 ### Kaçış penceresi (savunmasızlık)
 Kaçış başladığı andan arenadan çıkana kadar:
@@ -487,12 +542,23 @@ Sonuç: single-player, yayın moduyla **mekanik olarak eşdeğer**. Hiçbir sist
 
 - Üs: dojo — antrenman alanları, revir, eğitmen (sensei) skill tree'si
 - Sefere **1, 2 veya 3 savaşçı** gönderilir
-- Sefer = art arda **fazlar** (oda-oda ilerleme), sonunda boss/büyük ödül
-- **Pes etme seferi bitirir:** "kaç" denen odadan sonrası iptal, ekip dojo'ya döner,
-  o seferin ödülü alınmaz (§5). Kaçmak savaşçıyı kurtarır ama seferi harcar —
-  kararın ağırlığı buradan gelir.
+- **Sefer = tek oda, tek dövüş** (yönelim, 2026-08-29). Art arda odalardan geçilen bir
+  koşu yok; günlük döngüde bir karşılaşma seçilir, dövüş biter, ekip dojo'ya döner
+- **Pes etme seferi bitirir:** dövüş terk edilir, o seferin ödülü alınmaz (§5). Tek
+  dövüşlük seferde bu ikisi aynı cümle — çekilmek o dövüşün ödülünü siler, başka bir
+  şeyi değil
 - Üste kalan savaşçılar güvende; **sadece sefere giden ekip** permadeath riskinde
 - Permadeath: ölen savaşçı kalıcı olarak gider
+
+> **Tek dövüşlük seferin sonucu:** zincir olmadığı için oda-oda yıpranma yok. Zorluk
+> tek karşılaşmanın kendisinden gelmek zorunda; can eritme üzerinden kurulamaz.
+> Denge tarafında bu iyi haber — `Domina.Sim` zaten tek dövüş simüle ediyor, zincir
+> modellemesi gerekmiyor.
+>
+> **Açık kalan:** sefere çıkmanın peşin bir bedeli olmalı mı (gün, erzak, kontrat
+> ücreti) ve düşman kadrosu girmeden önce görünüyor mu? Kaçmanın bedeli yalnızca o
+> dövüşün ödülüyse ve giriş bedavaysa, "gir–bak–kaç" ucuz bir keşif döngüsüne dönüşür.
+> Tuşun temasa kadar kapalı olması bunu pahalılaştırır ama tek başına kapatmaz.
 
 ### Skill tree derinliği
 | Katman | Derinlik |
@@ -635,7 +701,7 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | # | Konu | Not |
 |---|---|---|
 | 1 | Parti boyutu | Üst sınır 3 mü 4 mü, ve tamamen oyuncu kararı mı yoksa bazı encounter'lar zorunlu sayı mı dayatıyor? Kod tarafı hazır: arena yerleşimi index'ten hesaplıyor, çekirdek N savaşçı destekliyor. Rastgele hedefleme geldiği için 4. savaşçı artık **erişim mekaniğine bağlı değil** — arka sıra da saldırı alıyor |
-| 2 | Sefer/harita yapısı | Kaç faz, düz mü dallanan (node-map) mı, boss ritmi |
+| 2 | Sefer/harita yapısı | **Daraldı (2026-08-29):** sefer tek oda/tek dövüş olarak düşünülüyor (§10), yani faz sayısı ve node-map sorusu düşüyor. Geriye kalan: karşılaşmalar günlük döngüde nasıl sunulur, boss ritmi nereden gelir |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
 | 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
@@ -644,5 +710,6 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
-| 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile |
-| 9 | Kaçışta kısmi ödül | Sefer iptal olduğunda **önceki odalarda** toplanan ganimet elde kalıyor mu, o da mı gidiyor? "Hepsi gider" kaçmayı çok cezalandırıp asla kullanılmaz yapabilir; "hepsi kalır" ise geç kaçmayı bedava yapar (§5, §10) |
+| 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil |
+| ~~9~~ | ~~Kaçışta kısmi ödül~~ | **Düştü (2026-08-29).** Sefer tek dövüşse önceki odalarda toplanmış ganimet diye bir şey yok; çekilmek o dövüşün ödülünü siler, o kadar (§10) |
+| 10 | Seferin peşin bedeli | Karşılaşmaya girmek gün/erzak/ücret yiyor mu, ve düşman kadrosu girmeden görünüyor mu? Tek dövüşlük seferde "gir–bak–kaç" döngüsünü kapatan kalem bu (§10) |
