@@ -117,6 +117,34 @@ Kamera hâlâ yandan bakar; derinlik ekranda dikey kayma + hafif ölçek + çizi
 olarak gösterilir (2D brawler sahnelemesi). Düzlem gerçek, görüntü düz — yani kesilmiş
 kâğıt parçalarından kurulu rig bozulmaz (§12).
 
+### Hücum (charge) — mesafenin karşılığı
+
+Herkesin tek bir sabit hızda yürüdüğü bir arenada mesafenin anlamı yok. Hücum,
+uzağa düşmüş savaşçıya mesafeyi bir fırsata çevirme yolu verir — bedeli kendini
+savunmasız bırakmaktır.
+
+| Kural | Karar |
+|---|---|
+| **Tetik** | `Idle` durumdaki savaşçı hedefine bir **mesafe eşiğinden** uzaksa, her karar anında seed'li bir **olasılıkla** hücuma kalkar. Eşiğin altında asla hücum edilmez — zaten menzile varılıyor. **Fırlatma önceliklidir:** atacak mermisi olan atar, hücuma kalkmaz |
+| **Hız** | Hücum sırasında hareket hızı bir **çarpanla** artar (`Speed` stat'ının üstüne, `RetreatSpeedMultiplier` ile aynı yerden) |
+| **Ödül** | Varışta yapılan **ilk vuruş hasar çarpanı** kazanır (momentum). Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
+| **Bedel** | Savaşçı kaçınamaz, bloklayamaz; yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik |
+| **Iskalama** | Hedef ölür, sahadan çıkar ya da **kaçmaya başlarsa** hücum boşa gider: savaşçı `Idle`'a düşer, ödül alınmaz. Bir süre sınırı da vardır — o kadar sürede varılamayan hücum aynı şekilde boşa gider |
+| **Kaçana hücum yok** | Kaçmakta olan hedef hücum başlatmaz ve başlamış hücumu bitirir. Ölçüldü: aksi hâlde hızlanma kaçışın tek ayar düğmesini (`RetreatSpeedMultiplier`, §5) devre dışı bırakıyor |
+| **"Çek" komutu hücumu keser** | Hücum savaşçının **kendi kararlarına** karşı taahhütlüdür — ondan vazgeçip başka hamle seçemez — ama oyuncunun komutu ayrı bir eksendir ve hücumu anında keser. Bedeli ödenmiştir: yenen bedava vuruşlar geri gelmez, hasar çarpanı harcanmaz |
+
+**Taahhüt nerede duruyor:** savaşçı hücuma kalktıktan sonra fikir değiştirip başka bir
+hamle seçemez; hücum ya varır ya boşa gider. Kesen tek şey oyuncunun "çek" komutudur.
+Ölçüldü — komut da kesemeseydi, tuşa basıldığı anda koşmakta olan savaşçı hücumu
+bitirmek, düşman hattına varmak ve oradan kaçmaya başlamak zorunda kalıyordu; bu, **ilk
+temasta basmayı geç basmaktan ölümcül** yapıp §5'in merdivenini ters çeviriyordu
+(3v3, 2.000 dövüş: ilk temasta %18,9 ölü, 2. saniyede %13,2). Komut hücumu kesince
+merdiven yerine oturdu: **%1,0 → %13,2 → %36,6**.
+
+**Sayılar açık:** mesafe eşiği, olasılık, hız çarpanı, hasar çarpanı ve süre sınırı
+`CombatTuning` üzerinden ayarlanır ve **`Domina.Sim` ile ölçüldükten sonra** kilitlenir —
+önden seçilmez (Açık Karar #11).
+
 ### Dövüş çözümlemesi (tam otomatik, manuel nişan yok)
 Her vuruşma anı sırayla çözülür:
 1. Saldıranın **Saldırganlık**'ı saldırı sıklığını belirler
@@ -209,6 +237,7 @@ arayüz yazar:
 | Durum | Davranış |
 |---|---|
 | Idle, yaklaşma, saldırı sonrası toparlanma, blok | Komut **anında** işlenir |
+| **Hücum** (§4) | Komut **anında** işlenir — koşu kesilir, hücum boşa gider |
 | Saldırı vuruşuna kilitli an | Komut **buffer'lanır**, mevcut hareket bitince kaçış başlar |
 | Blok duruşu | Neredeyse anında kaçışa geçer |
 
@@ -541,7 +570,9 @@ Sonuç: single-player, yayın moduyla **mekanik olarak eşdeğer**. Hiçbir sist
 ## 10. Sefer ve Roster
 
 - Üs: dojo — antrenman alanları, revir, eğitmen (sensei) skill tree'si
-- Sefere **1, 2 veya 3 savaşçı** gönderilir
+- Sefere **en fazla 4 savaşçı** gönderilir; sayı oyuncunun kararıdır. Bazı
+  karşılaşmalar (düello, baskın) **tam bir sayı dayatır** — o encounter kendi kuralını
+  yazar, üst sınır yine 4
 - **Sefer = tek oda, tek dövüş** (yönelim, 2026-08-29). Art arda odalardan geçilen bir
   koşu yok; günlük döngüde bir karşılaşma seçilir, dövüş biter, ekip dojo'ya döner
 - **Pes etme seferi bitirir:** dövüş terk edilir, o seferin ödülü alınmaz (§5). Tek
@@ -555,10 +586,28 @@ Sonuç: single-player, yayın moduyla **mekanik olarak eşdeğer**. Hiçbir sist
 > Denge tarafında bu iyi haber — `Domina.Sim` zaten tek dövüş simüle ediyor, zincir
 > modellemesi gerekmiyor.
 >
-> **Açık kalan:** sefere çıkmanın peşin bir bedeli olmalı mı (gün, erzak, kontrat
-> ücreti) ve düşman kadrosu girmeden önce görünüyor mu? Kaçmanın bedeli yalnızca o
-> dövüşün ödülüyse ve giriş bedavaysa, "gir–bak–kaç" ucuz bir keşif döngüsüne dönüşür.
-> Tuşun temasa kadar kapalı olması bunu pahalılaştırır ama tek başına kapatmaz.
+### Karşılaşmaya girmenin bedeli (kilitlendi 2026-08-29)
+
+- **Girmek bir gün yer** — kaçılsa da yer. Kaynak muhasebesi gerektirmez, ekonomi
+  sayıları henüz açıkken de çalışır, ve zaman zaten en kıt kaynaktır. "Gir–bak–kaç"
+  döngüsünü kapatan kalem budur
+- **Düşman kadrosu kısmen görünür:** girmeden önce yalnızca kaba bir tehdit işareti
+  okunur (yokai türü ya da zorluk bandı). Tam kadro ve statlar görünmez — seçim
+  bilgili olur, sürpriz ölmez
+- **Günde tek karşılaşma teklifi:** al ya da bırak. Girilmezse gün dojo'da geçer.
+  Liste/harita ekranı yok
+
+> Girişin gün yemesi, kaçmanın onur bedeli (§5) ve tuşun ilk temasa kadar kapalı
+> olması birlikte keşif döngüsünü kapatır: bakmak için girmek bir gün ve bir dövüş
+> göze almak demektir.
+
+### Zorluk eğrisi — boss yok (2026-08-29)
+
+Sefer zinciri olmadığı için boss ritmi diye ayrı bir yapı **kurulmuyor**. Karşılaşmalar
+gün geçtikçe **tek bir eğri üzerinde zorlaşır**; ayrı boss encounter'ı, boss takvimi
+veya tehdit sayacı yok. Bestiary'deki boss adayları (Gashadokuro, Shuten-dōji,
+Yamata-no-Orochi) şimdilik yalnızca eğrinin üst ucundaki güçlü düşmanlardır. Boss
+fikri ileride tekrar açılabilir; şu an kural değil.
 
 ### Skill tree derinliği
 | Katman | Derinlik |
@@ -700,8 +749,8 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 
 | # | Konu | Not |
 |---|---|---|
-| 1 | Parti boyutu | Üst sınır 3 mü 4 mü, ve tamamen oyuncu kararı mı yoksa bazı encounter'lar zorunlu sayı mı dayatıyor? Kod tarafı hazır: arena yerleşimi index'ten hesaplıyor, çekirdek N savaşçı destekliyor. Rastgele hedefleme geldiği için 4. savaşçı artık **erişim mekaniğine bağlı değil** — arka sıra da saldırı alıyor |
-| 2 | Sefer/harita yapısı | **Daraldı (2026-08-29):** sefer tek oda/tek dövüş olarak düşünülüyor (§10), yani faz sayısı ve node-map sorusu düşüyor. Geriye kalan: karşılaşmalar günlük döngüde nasıl sunulur, boss ritmi nereden gelir |
+| ~~1~~ | ~~Parti boyutu~~ | **Kilitlendi (2026-08-29).** Üst sınır **4**, sayı oyuncunun kararı; düello/baskın gibi encounter'lar tam sayı dayatabilir (§10). Çekirdek zaten N savaşçı destekliyor. **Takip eden iş:** dört savaşçılık arena 2.2'de kamera ve okunurluk sorunu çıkarır |
+| ~~2~~ | ~~Sefer/harita yapısı~~ | **Kapandı (2026-08-29).** Sefer tek oda/tek dövüş; günde **tek karşılaşma teklifi**, al ya da bırak; harita ekranı yok. **Boss yapısı kurulmuyor** — zorluk tek eğri üzerinde artar (§10) |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
 | 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
@@ -712,4 +761,5 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
 | 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil |
 | ~~9~~ | ~~Kaçışta kısmi ödül~~ | **Düştü (2026-08-29).** Sefer tek dövüşse önceki odalarda toplanmış ganimet diye bir şey yok; çekilmek o dövüşün ödülünü siler, o kadar (§10) |
-| 10 | Seferin peşin bedeli | Karşılaşmaya girmek gün/erzak/ücret yiyor mu, ve düşman kadrosu girmeden görünüyor mu? Tek dövüşlük seferde "gir–bak–kaç" döngüsünü kapatan kalem bu (§10) |
+| ~~10~~ | ~~Seferin peşin bedeli~~ | **Kapandı (2026-08-29).** Girmek **bir gün** yer (kaçılsa da), düşman kadrosu **kısmen** görünür — yalnızca tehdit işareti (§10) |
+| 11 | Hücum sayıları | Mesafe eşiği, tick başına hücum olasılığı, hız çarpanı, hasar çarpanı. Kural §4'te kilitli; sayılar `Domina.Sim` ölçümünden sonra (bkz. Açık Karar 8'in yöntemi) |
