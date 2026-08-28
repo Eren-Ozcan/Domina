@@ -131,6 +131,7 @@ public static class HudModel
             CombatState.Idle => "bekliyor",
             CombatState.AttackWindup => "saldırıyor",
             CombatState.AttackRecovery => "toparlanıyor",
+            CombatState.Charging => "hücumda",
             CombatState.Retreating => "çekiliyor",
             CombatState.Escaped => "kurtuldu",
             CombatState.Dead => "öldü",

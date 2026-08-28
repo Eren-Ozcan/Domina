@@ -138,6 +138,7 @@ public sealed class RigAnimator
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
                 Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
             CombatState.Retreating => Retreat(),
+            CombatState.Charging => Charge(),
             _ => Idle(),
         };
 
@@ -243,6 +244,35 @@ public sealed class RigAnimator
         };
     }
 
+    /// <summary>
+    /// Hücum duruşu: öne yatmış, silah geride, koşu döngüsü kaçıştan daha uzun adımlı.
+    /// </summary>
+    /// <remarks>
+    /// Kaçışın aynası: ikisi de koşudur, ikisinde de savunma yoktur, ama biri hedefe
+    /// diğeri hedeften kaçar. Farkı taşıyan şey gövdenin yönü — kaçarken geriye,
+    /// hücumda öne yatar (docs/GDD.md §4).
+    /// </remarks>
+    private RigPose Charge()
+    {
+        float run = MathF.Sin((float)_clock * 12f);
+
+        return new RigPose
+        {
+            Visible = true,
+            Torso = -0.34f,
+            Head = 0.12f,
+            NearShoulder = 1.75f + (run * 0.5f),
+            NearElbow = -1.05f,
+            FarShoulder = 2.9f - (run * 0.5f),
+            FarElbow = -0.7f,
+            NearHip = run * 0.95f,
+            NearKnee = MathF.Max(0, -run) * 1.05f,
+            FarHip = -run * 0.95f,
+            FarKnee = MathF.Max(0, run) * 1.05f,
+            Weapon = -0.6f,
+        };
+    }
+
     private RigPose Retreat()
     {
         // Savunmasızlık penceresi: sırtını dönmüş, koşuyor. Kaçınma/blok yok — duruşun
@@ -315,9 +345,10 @@ public sealed class RigAnimator
     /// </remarks>
     private RigPose OneLegged(RigPose pose, CombatState state)
     {
-        bool fleeing = state == CombatState.Retreating;
-        float speed = fleeing ? 5.4f : 2.2f;
-        float reach = fleeing ? 0.24f : 0.10f;
+        // Koşan iki durum var; ikisi de aynı sekme döngüsünü kullanır.
+        bool running = state is CombatState.Retreating or CombatState.Charging;
+        float speed = running ? 5.4f : 2.2f;
+        float reach = running ? 0.24f : 0.10f;
         float hop = MathF.Abs(MathF.Sin((float)_clock * speed)) * reach;
 
         return pose with
