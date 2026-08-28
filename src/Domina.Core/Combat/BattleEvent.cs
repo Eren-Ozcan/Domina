@@ -103,6 +103,25 @@ public sealed record ProjectileHit(
 public sealed record ProjectileMissed(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
+/// <summary>Savaşçı hücuma kalktı: hızlandı, savunmayı bıraktı.</summary>
+public sealed record ChargeStarted(double AtSeconds, WarriorId Warrior, WarriorId Target)
+    : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Hücum hedefe vardı; bunu takip eden vuruş hasar çarpanı taşır.
+/// </summary>
+public sealed record ChargeConnected(double AtSeconds, WarriorId Warrior, WarriorId Target)
+    : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Hücum boşa gitti: hedef öldü, kaçtı, sahadan çıktı ya da süre doldu.
+/// </summary>
+/// <remarks>
+/// Hücumun taahhüdünün ekranda görünen karşılığı bu — koşan savaşçı kimseye varamadan
+/// açıkta kalır.
+/// </remarks>
+public sealed record ChargeMissed(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
+
 /// <summary>Kaçan avın arkasından gelen bedava vuruş.</summary>
 public sealed record OpportunityAttack(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);

@@ -20,6 +20,11 @@ public enum CombatState
     /// <summary>Fırlatma sonrası toparlanma. Kesilebilir.</summary>
     ThrowRecovery,
 
+    /// <summary>
+    /// Hedefe hücum ediyor: hızlanmış, taahhütlü. <b>Kesilemez</b>, kaçınamaz, bloklayamaz.
+    /// </summary>
+    Charging,
+
     /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
     Retreating,
 
@@ -104,12 +109,68 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <summary>Hâlâ dövüşe katılıyor mu?</summary>
     public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
 
-    /// <summary>Kaçınma ve blok yalnızca çekilmiyorken mümkündür.</summary>
-    public bool CanDefend => State != CombatState.Retreating;
+    /// <summary>
+    /// Kaçınma ve blok yalnızca çekilmiyor <b>ve hücum etmiyorken</b> mümkündür.
+    /// </summary>
+    /// <remarks>
+    /// Hücumun bedeli budur: hızın karşılığında savunmayı bırakırsın (docs/GDD.md §4).
+    /// </remarks>
+    public bool CanDefend => State is not (CombatState.Retreating or CombatState.Charging);
 
     /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
+    /// <remarks>
+    /// <b>Hücum kaçış komutuyla kesilir.</b> Hücum kendi kararlarına karşı taahhütlüdür —
+    /// savaşçı ondan vazgeçip başka bir hamle seçemez — ama oyuncunun "çek" komutu ayrı
+    /// bir eksendir. Kesilemez olsaydı komut anında koşmakta olan savaşçı hücumu
+    /// bitirmek, düşman hattına varmak ve oradan kaçmaya başlamak zorunda kalırdı;
+    /// ölçüldü, bu <b>ilk temasta basmayı geç basmaktan ölümcül</b> yapıp docs/GDD.md
+    /// §5'in merdivenini ters çeviriyordu. Kesilse bile hücumun bedeli ödenmiştir: yol
+    /// boyunca yenen bedava vuruşlar geri gelmez ve hasar çarpanı harcanmaz.
+    /// </remarks>
     public bool IsCancellable =>
-        State is CombatState.Idle or CombatState.AttackRecovery or CombatState.ThrowRecovery;
+        State is CombatState.Idle
+            or CombatState.AttackRecovery
+            or CombatState.ThrowRecovery
+            or CombatState.Charging;
+
+    // ---- Hücum ----
+
+    /// <summary>
+    /// Hücumla varılan ilk vuruş henüz çözülmedi: hasar çarpanı bu vuruşta harcanır.
+    /// </summary>
+    public bool ChargeBonusPending { get; set; }
+
+    /// <summary>Mevcut hücumun başlangıcından bu yana geçen süre.</summary>
+    public double ChargeSeconds { get; set; }
+
+    /// <summary>
+    /// Bu hücum boyunca hangi düşmanlar bedava vuruşunu kullandı.
+    /// </summary>
+    /// <remarks>
+    /// Fırsat saldırısı hücum başına <b>düşman başına bir kez</b>: aksi halde yanından
+    /// geçilen düşman her tick'te vurur ve hücum bir hamle değil bir infaz olurdu.
+    /// </remarks>
+    public HashSet<WarriorId> ChargeOpportunists { get; } = [];
+
+    /// <summary>Hücum sayaçlarını sıfırlar.</summary>
+    public void ClearCharge()
+    {
+        ChargeBonusPending = false;
+        ChargeSeconds = 0;
+        ChargeOpportunists.Clear();
+    }
+
+    /// <summary>Bekleyen hücum bonusunu okur ve harcar.</summary>
+    public bool ConsumeChargeBonus()
+    {
+        if (!ChargeBonusPending)
+        {
+            return false;
+        }
+
+        ChargeBonusPending = false;
+        return true;
+    }
 
     /// <summary>Bu dövüşte kalan mermi. Kalıcı hale dokunulmaz, sayaç burada tutulur.</summary>
     public int ThrowsLeft { get; set; } = warrior.UsableThrown?.Ammo ?? 0;

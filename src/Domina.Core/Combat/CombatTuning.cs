@@ -73,6 +73,42 @@ public sealed record CombatTuning
     /// <summary>Kaçan savaşçının arenayı terk etmiş sayılması için gereken mesafe.</summary>
     public double ExitMargin { get; init; } = 220;
 
+    // ---- Hücum ----
+
+    /// <summary>
+    /// Hücumun düşünülebilmesi için hedefe olması gereken en az mesafe.
+    /// </summary>
+    /// <remarks>
+    /// Bunun altında hücum yok: zaten menzile yürünüyor, koşmanın kazandıracağı bir şey
+    /// olmadığı gibi savunmayı bırakmanın da karşılığı olmazdı (docs/GDD.md §4).
+    /// </remarks>
+    public double ChargeMinDistance { get; init; } = 320;
+
+    /// <summary>Mesafe uygunken her <c>Idle</c> kararında hücuma kalkma olasılığı.</summary>
+    public double ChargeChance { get; init; } = 0.35;
+
+    /// <summary>Hücum sırasındaki hız çarpanı.</summary>
+    public double ChargeSpeedMultiplier { get; init; } = 1.6;
+
+    /// <summary>
+    /// Hücumla varılan ilk vuruşun hasar çarpanı — momentumun karşılığı.
+    /// </summary>
+    /// <remarks>
+    /// Uzuv kaybı riski hasar/maxHP oranından geldiği için (docs/GDD.md §7) hücumun
+    /// sakatlama olasılığını artırması buradan <b>kendiliğinden</b> çıkar; ayrı bir
+    /// kopma çarpanı yoktur.
+    /// </remarks>
+    public double ChargeDamageMultiplier { get; init; } = 1.5;
+
+    /// <summary>
+    /// Hücum bu kadar sürerse hedefe varılamamış sayılır ve hamle boşa gider.
+    /// </summary>
+    /// <remarks>
+    /// Zaman sınırı olmasaydı hücum, kaçan bir hedefi süresiz kovalayan kalıcı bir hız
+    /// bonusuna dönerdi ve §5'in kaçış dengesini yıkardı.
+    /// </remarks>
+    public double ChargeMaxSeconds { get; init; } = 4.0;
+
     // ---- Saldırı ritmi ----
 
     /// <summary>Saldırganlık 0 iken saldırılar arası bekleme.</summary>
