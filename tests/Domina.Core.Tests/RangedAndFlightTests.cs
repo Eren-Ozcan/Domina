@@ -18,6 +18,44 @@ public class RangedAndFlightTests
     private static CombatTuning NoMishap { get; } =
         TestBuilders.PointBlank with { EscapeMishapChance = 0 };
 
+    /// <summary>Hafif ve hızlı silah: öldürmeden ilk kanı akıtır.</summary>
+    /// <remarks>
+    /// "Çek" tuşu ilk isabete kadar kapalı (GDD §5). Kaçışın mekaniğini ölçen testlerin
+    /// önce savaşı başlatması gerekiyor; kaçacak savaşçının kendi vuruşu bunun en ucuz
+    /// yolu — kimsenin canını riske atmadan tuşu açar.
+    /// </remarks>
+    private static Weapon Quick { get; } =
+        new("Test-Tantō", WeaponClass.Cutting, 12, TwoHanded: false, AttackSeconds: 0.4);
+
+    /// <summary>Hiç hasar vermeyen silah: savaşı başlatır, kimseyi yaralamaz.</summary>
+    private static Weapon Harmless { get; } =
+        new("Test-Sopa", WeaponClass.Blunt, 0, TwoHanded: false, AttackSeconds: 0.4);
+
+    /// <summary>İki savaşçı arasındaki hat üstü mesafe.</summary>
+    private static double Gap(Battle battle) => Math.Abs(
+        battle.SnapshotOf(new WarriorId(1)).Position.X
+        - battle.SnapshotOf(new WarriorId(101)).Position.X);
+
+    /// <summary>İlk isabete kadar adımlar, sonra tuşa basar ve kaçışın başladığı anı döner.</summary>
+    private static double PressAfterFirstBlood(Battle battle)
+    {
+        while (!battle.ContactMade && battle.Step())
+        {
+        }
+
+        battle.CommandRetreat();
+
+        for (int i = 0; i < 400 && !battle.Events.Any(e => e is RetreatStarted); i++)
+        {
+            if (!battle.Step())
+            {
+                break;
+            }
+        }
+
+        return battle.Events.OfType<RetreatStarted>().First().AtSeconds;
+    }
+
     [Fact]
     public void AFasterWarriorCatchesUpWithASlowerOne()
     {
@@ -26,21 +64,27 @@ public class RangedAndFlightTests
         Assert.True(CaughtUp(hunterSpeed: 100));
     }
 
+    /// <remarks>
+    /// Ölçülen şey <b>kaçış başladıktan sonra</b> yenen darbe. İlk isabet zaten tuşu açan
+    /// darbedir ve iki kurulumda da düşer; kovalamacayı ayıran, aradaki mesafenin
+    /// kapanıp kapanmadığıdır.
+    /// </remarks>
     private static bool CaughtUp(double hunterSpeed)
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 400, aggression: 0, speed: 50)],
-            [TestBuilders.Warrior(101, "Kovalayan", aggression: 100, speed: hunterSpeed)])
+            [TestBuilders.Warrior(1, "Kaçan", health: 900, aggression: 0, speed: 50)],
+            [TestBuilders.Warrior(101, "Kovalayan", health: 400, aggression: 100, speed: hunterSpeed)])
         {
-            // Menzil dışında başlarlar: yetişebilmek yalnızca hızla mümkün.
-            Tuning = NoMishap with { StartOffsetX = 150 },
+            Tuning = NoMishap,
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        double left = PressAfterFirstBlood(battle);
         battle.Run();
 
-        return battle.Events.OfType<AttackLanded>().Any(e => e.Defender == new WarriorId(1));
+        return battle.Events
+            .OfType<AttackLanded>()
+            .Any(e => e.Defender == new WarriorId(1) && e.AtSeconds > left);
     }
 
     /// <summary>Bacağını kaybeden savaşçı yalnızca kaçınmayı değil kaçabilmeyi de kaybeder.</summary>
@@ -60,18 +104,39 @@ public class RangedAndFlightTests
     public void RetreatingIsSlowerThanChasing()
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 400, aggression: 0, speed: 50)],
-            [TestBuilders.Warrior(101, "Kovalayan", aggression: 100, speed: 50)])
+            [TestBuilders.Warrior(1, "Kaçan", health: 900, aggression: 0, speed: 50)],
+            [TestBuilders.Warrior(101, "Kovalayan", health: 400, aggression: 100, speed: 50)])
         {
             Tuning = NoMishap with { StartOffsetX = 60 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
-        battle.Run();
+        PressAfterFirstBlood(battle);
 
-        // Hızlar eşit ama kaçan yavaşlar; aradaki fark kovalayanı menzile sokar.
-        Assert.Contains(battle.Events.OfType<AttackLanded>(), e => e.Defender == new WarriorId(1));
+        // Ölçülen şey adım hızı: aynı Speed değerine sahip iki savaşçıdan sırtı dönük
+        // koşan daha yavaş ilerler. Darbeye bakmak yanıltıcı olurdu — kovalayan vuruş
+        // yaptığı sürece duruyor ve net olarak geride kalabiliyor (bkz. Battle.CanAdvanceOn).
+        var compared = false;
+
+        for (int i = 0; i < 200 && battle.Step(); i++)
+        {
+            CombatantSnapshot fleeing = battle.SnapshotOf(new WarriorId(1));
+            CombatantSnapshot chasing = battle.SnapshotOf(new WarriorId(101));
+
+            if (fleeing.State != CombatState.Retreating || chasing.Speed <= 0)
+            {
+                continue;
+            }
+
+            Assert.True(
+                fleeing.Speed < chasing.Speed,
+                $"Kaçan yavaşlamadı: {fleeing.Speed} vs {chasing.Speed}");
+
+            compared = true;
+            break;
+        }
+
+        Assert.True(compared, "Kovalamacanın ölçülebildiği bir tick bulunamadı.");
     }
 
     // ------------------------------------------------------------------ fırlatma
@@ -131,7 +196,9 @@ public class RangedAndFlightTests
         ThrownWeapon twoShots = ThrownWeapon.Shuriken() with { Ammo = 2, Range = 4000 };
 
         var battle = new Battle(Thrower(startOffset: 250, twoShots), new FixedRandom(0.0));
-        battle.CommandRetreat();
+
+        // İlk mermi hedefi bulur ve tuşu açar; ikincisi kaçarken arkadan gelir.
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Equal(2, battle.Events.OfType<ProjectileLaunched>().Count());
@@ -155,7 +222,9 @@ public class RangedAndFlightTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+
+        // İlk mermi hedefi bulur — tuşu açan da odur. Ölçülen, ondan SONRAKİ mermi.
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Contains(battle.Events, e => e is ProjectileLaunched);
@@ -178,19 +247,28 @@ public class RangedAndFlightTests
 
         for (ulong seed = 1; seed <= 200; seed++)
         {
+            // Tuşu açan temas zararsız: karşı taraf sıfır hasarlı bir silahla vuruyor
+            // (MinimumDamage da 0). Ölçülen tek şey kaçış zarı olsun diye — savaşın
+            // başlamış olması ön koşul, ölçülen değer değil.
             var setup = new BattleSetup(
                 [TestBuilders.Warrior(1, "Kaçan", health: 4, aggression: 0)],
-                [TestBuilders.Warrior(101, "Yavaş", aggression: 0, speed: 1)])
+                [
+                    TestBuilders.Warrior(
+                        101, "Yavaş", health: 400, aggression: 100, speed: 1,
+                        weapon: Harmless),
+                ])
             {
                 Tuning = TestBuilders.PointBlank with
                 {
-                    StartOffsetX = 400,
                     EscapeMishapChance = 1.0,
+                    MinimumDamage = 0,
                 },
             };
 
             var battle = new Battle(setup, new Domina.Core.Rng.SeededRandom(seed));
-            battle.CommandRetreat();
+            while (!battle.ContactMade && battle.Step()) { }
+            if (seed == 6) { foreach (var ev in battle.Events) Console.WriteLine($"DBG {ev.AtSeconds:F2} {ev}"); }
+            PressAfterFirstBlood(battle);
             BattleResult result = battle.Run();
 
             WarriorBattleSummary summary = result.SummaryFor(new WarriorId(1));
@@ -209,15 +287,21 @@ public class RangedAndFlightTests
     [Fact]
     public void WithoutTheMishapRollLeavingIsClean()
     {
+        // Temas uzaktan kurulur: yakın dövüşte çekilmek bedava vuruş demek olurdu ve
+        // "tertemiz çıkış" ölçülemezdi.
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 100, aggression: 0)],
-            [TestBuilders.Warrior(101, "Yavaş", aggression: 0, speed: 1)])
+            [
+                TestBuilders.Warrior(
+                    1, "Kaçan", health: 100, aggression: 100, accuracy: 100,
+                    thrown: ThrownWeapon.Shuriken()),
+            ],
+            [TestBuilders.Warrior(101, "Yavaş", health: 400, aggression: 0, speed: 1)])
         {
             Tuning = NoMishap with { StartOffsetX = 400 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         BattleResult result = battle.Run();
 
         Assert.DoesNotContain(battle.Events, e => e is EscapeMishap);

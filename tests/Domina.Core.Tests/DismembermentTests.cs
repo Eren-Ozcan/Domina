@@ -33,8 +33,47 @@ public class DismembermentTests
     };
 
     /// <summary>Tek vuruşta ağır darbe eşiğini aşan ama öldürmeyen kurulum.</summary>
-    private static BattleSetup Executioner(double defenderHealth = 300, Armor? armor = null) => new(
-        [TestBuilders.Warrior(1, "Kurban", health: defenderHealth, aggression: 0, armor: armor)],
+    /// <summary>
+    /// Hafif ve hızlı silah: ağır darbe eşiğini aşmadan <b>ilk kanı akıtır</b>.
+    /// </summary>
+    /// <remarks>
+    /// "Çek" tuşu ilk isabetten önce kapalı olduğu için (GDD §5) müdahale dalını ölçen
+    /// testin savaşı önce başlatması gerekir. Kurbanın kendi vuruşu bunun en ucuz yolu:
+    /// kimsenin canını riske atmadan tuşu açar.
+    /// </remarks>
+    private static Weapon Quick { get; } =
+        new("Test-Tantō", WeaponClass.Cutting, 12, TwoHanded: false, AttackSeconds: 0.4);
+
+    /// <summary>
+    /// Savaşı başlatır, sonra "çek" tuşuna basar.
+    /// </summary>
+    /// <remarks>
+    /// Tuş ilk isabete kadar kapalıdır (GDD §5): temas öncesi kaçış diye bir şey yok.
+    /// Müdahale dalını ölçen testlerin konusu bu değil, ön koşulu.
+    /// </remarks>
+    private static bool PressAfterFirstBlood(Battle battle)
+    {
+        while (!battle.ContactMade && battle.Step())
+        {
+        }
+
+        return battle.CommandRetreat();
+    }
+
+    private static BattleSetup Executioner(
+        double defenderHealth = 300,
+        Armor? armor = null,
+        double victimAggression = 0,
+        Weapon? victimWeapon = null) => new(
+        [
+            TestBuilders.Warrior(
+                1,
+                "Kurban",
+                health: defenderHealth,
+                aggression: victimAggression,
+                weapon: victimWeapon,
+                armor: armor),
+        ],
         [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
     {
         Tuning = AlwaysLimb,
@@ -130,7 +169,7 @@ public class DismembermentTests
     [Fact]
     public void InterventionTurnsALethalBlowIntoALimbLoss()
     {
-        BattleSetup setup = Executioner(defenderHealth: 60) with
+        BattleSetup setup = Executioner(defenderHealth: 60, victimAggression: 100, victimWeapon: Quick) with
         {
             EnemySide =
             [
@@ -142,7 +181,8 @@ public class DismembermentTests
         var battle = new Battle(setup, new FixedRandom(0.0));
 
         // Tuşa basmak "zamanında müdahale" sayılır — kaçış henüz başlamamış olsa bile.
-        Assert.True(battle.CommandRetreat());
+        // Tuş ancak savaş başlayınca açılır (§5), o yüzden önce ilk kan akmalı.
+        Assert.True(PressAfterFirstBlood(battle));
 
         WarriorBattleSummary victim = battle.Run().SummaryFor(new WarriorId(1));
 
@@ -158,7 +198,10 @@ public class DismembermentTests
     [Fact]
     public void InterventionCannotSaveAWarriorWithNoLimbsLeftToLose()
     {
-        Warrior victim = TestBuilders.Warrior(1, "Kurban", health: 60, aggression: 0);
+        // Kurban tuşu açacak kadar dövüşür: hızlı ve hafif silahla ilk kanı akıtır,
+        // sonra basar. Aksi hâlde tuş hiç açılmadan ölürdü ve dal ölçülmemiş olurdu.
+        Warrior victim = TestBuilders.Warrior(
+            1, "Kurban", health: 60, aggression: 100, weapon: Quick);
         victim.AddDisability(BodyPart.Arm);
         victim.AddDisability(BodyPart.Leg);
         victim.AddDisability(BodyPart.Eye);
@@ -171,7 +214,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        Assert.True(PressAfterFirstBlood(battle));
 
         Assert.True(battle.Run().SummaryFor(new WarriorId(1)).Died);
         Assert.DoesNotContain(battle.Events, e => e is WarriorDismembered);
@@ -189,7 +232,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Contains(battle.Events, e => e is AttackLanded);
@@ -211,7 +254,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.20));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Contains(battle.Events, e => e is AttackLanded);
@@ -224,11 +267,11 @@ public class DismembermentTests
         // Ekipmana yatırımı anlamlı kılan kalem: aynı darbe, aynı zar, farklı zırh.
         // Bacağa inen darbe — çıplak bacakta 0.35, ağır suneate altında 0.35 × 0.60 = 0.21.
         var unarmored = new Battle(Executioner(armor: Armor.None()), new FixedRandom(0.30));
-        unarmored.CommandRetreat();
+        PressAfterFirstBlood(unarmored);
         unarmored.Run();
 
         var armored = new Battle(Executioner(armor: Armor.Heavy()), new FixedRandom(0.30));
-        armored.CommandRetreat();
+        PressAfterFirstBlood(armored);
         armored.Run();
 
         Assert.Contains(unarmored.Events, e => e is WarriorDismembered);
@@ -251,11 +294,11 @@ public class DismembermentTests
         // Zar 0.30 — keikogi'li gövde: 0.35 × 0.80 = 0.28 (kopmaz).
         //            Açık kol:         0.35 × 1.00 = 0.35 (kopar).
         var toTheArm = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
-        toTheArm.CommandRetreat();
+        PressAfterFirstBlood(toTheArm);
         toTheArm.Run();
 
         var toTheTorso = new Battle(AtRegion(HitLocation.Torso, Armor.Light()), new FixedRandom(0.30));
-        toTheTorso.CommandRetreat();
+        PressAfterFirstBlood(toTheTorso);
         toTheTorso.Run();
 
         Assert.Contains(toTheArm.Events, e => e is WarriorDismembered);
@@ -267,12 +310,12 @@ public class DismembermentTests
     public void KoteProtectsTheArmThatAKeikogiLeavesBare()
     {
         var bareArms = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
-        bareArms.CommandRetreat();
+        PressAfterFirstBlood(bareArms);
         bareArms.Run();
 
         // Dō-maru'nun kotesi: 0.35 × 0.70 = 0.245, zarın altında kalır.
         var withKote = new Battle(AtRegion(HitLocation.Arm, Armor.Medium()), new FixedRandom(0.30));
-        withKote.CommandRetreat();
+        PressAfterFirstBlood(withKote);
         withKote.Run();
 
         Assert.Contains(bareArms.Events, e => e is WarriorDismembered);
@@ -304,7 +347,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         BattleResult result = battle.Run();
 
         BodyPart[] lost = [.. battle.Events.OfType<WarriorDismembered>().Select(e => e.Part)];
@@ -342,7 +385,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         WarriorDismembered lost = battle.Events.OfType<WarriorDismembered>().First();
@@ -370,7 +413,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Contains(battle.Events, e => e is WarriorDismembered);
@@ -391,7 +434,7 @@ public class DismembermentTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
-        battle.CommandRetreat();
+        PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.True(victim.IsAlive);

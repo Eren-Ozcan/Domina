@@ -16,7 +16,7 @@ public class HudModelTests
             TestSnapshots.Of(1),
             TestSnapshots.Of(2),
             TestSnapshots.Of(101, Battle.EnemyTeam),
-        ]);
+        ], contactMade: true);
 
         Assert.True(prompt.Enabled);
         Assert.False(prompt.Locked);
@@ -35,7 +35,7 @@ public class HudModelTests
             TestSnapshots.Of(1),
             TestSnapshots.Of(2, state: CombatState.AttackWindup, canCancel: false),
             TestSnapshots.Of(3, state: CombatState.AttackWindup, canCancel: false),
-        ]);
+        ], contactMade: true);
 
         Assert.True(prompt.Locked);
         Assert.Equal("EKİBİ ÇEK (3) · 2 kilitli", prompt.Text);
@@ -49,7 +49,7 @@ public class HudModelTests
             TestSnapshots.Of(1),
             TestSnapshots.Of(2, state: CombatState.Dead, health: 0),
             TestSnapshots.Of(3, state: CombatState.Escaped),
-        ]);
+        ], contactMade: true);
 
         Assert.Equal("EKİBİ ÇEK (1)", prompt.Text);
     }
@@ -61,7 +61,7 @@ public class HudModelTests
         [
             TestSnapshots.Of(1, state: CombatState.Retreating),
             TestSnapshots.Of(2, retreatRequested: true, state: CombatState.AttackWindup, canCancel: false),
-        ]);
+        ], contactMade: true);
 
         Assert.False(prompt.Enabled);
         Assert.Equal("EKİP ÇEKİLİYOR", prompt.Text);
@@ -74,7 +74,7 @@ public class HudModelTests
         [
             TestSnapshots.Of(1, state: CombatState.Dead, health: 0),
             TestSnapshots.Of(101, Battle.EnemyTeam),
-        ]);
+        ], contactMade: true);
 
         Assert.False(prompt.Enabled);
         Assert.Equal("—", prompt.Text);
@@ -121,5 +121,68 @@ public class HudModelTests
         Assert.Equal(
             "seed 52  ·  15.2 sn  ·  ZAFER",
             HudModel.DescribeStatus(52, 15.24, BattleOutcome.PlayerVictory));
+    }
+
+    /// <summary>
+    /// Savaş başlamadan çekilmek yok (GDD §5): tuş ilk isabete kadar pasif.
+    /// </summary>
+    /// <remarks>
+    /// Tuş gizlenmiyor, pasif duruyor. Gizlenseydi kuralın varlığı hiç öğrenilmezdi;
+    /// oyuncu tuşun neden yokluğunu değil, ne zaman geleceğini merak etmeli.
+    /// </remarks>
+    [Fact]
+    public void TheButtonStaysShutUntilTheFirstBloodIsDrawn()
+    {
+        RetreatPrompt prompt = HudModel.DescribeRetreat(
+        [
+            TestSnapshots.Of(1),
+            TestSnapshots.Of(2),
+            TestSnapshots.Of(101, Battle.EnemyTeam),
+        ], contactMade: false);
+
+        // Basılabilir kalır ama komutu reddedilir: basış kuralı öğreten metni doğurur.
+        Assert.True(prompt.Shut);
+        Assert.Equal("SAVAŞ BAŞLAMADI", prompt.Text);
+    }
+
+    /// <summary>Kural oyun başında öğretilir.</summary>
+    [Fact]
+    public void TheRuleIsTaughtOnTheFirstPresses()
+    {
+        RetreatRefusalNotice notice = HudModel.DescribeRefusal(
+            consecutivePresses: 1,
+            teachingNoticesShown: 0);
+
+        Assert.Equal(RetreatNoticeKind.Teaching, notice.Kind);
+        Assert.NotEqual(string.Empty, notice.Text);
+        Assert.Null(notice.AchievementId);
+    }
+
+    /// <summary>
+    /// Öğrettikten sonra susar. Bildiğini tekrarlamak bilgi değil gürültüdür.
+    /// </summary>
+    [Fact]
+    public void TheRuleStopsBeingRepeatedOnceItIsKnown()
+    {
+        RetreatRefusalNotice notice = HudModel.DescribeRefusal(
+            consecutivePresses: 2,
+            teachingNoticesShown: HudModel.TeachingNoticeLimit);
+
+        Assert.Equal(RetreatNoticeKind.None, notice.Kind);
+        Assert.Equal(string.Empty, notice.Text);
+    }
+
+    /// <summary>
+    /// Israrla basana cevap verilir — kaç kez öğretildiğinden bağımsız olarak.
+    /// </summary>
+    [Fact]
+    public void ThePersistentPresserGetsAnswered()
+    {
+        RetreatRefusalNotice notice = HudModel.DescribeRefusal(
+            HudModel.TauntPressCount,
+            teachingNoticesShown: HudModel.TeachingNoticeLimit);
+
+        Assert.Equal(RetreatNoticeKind.Taunt, notice.Kind);
+        Assert.Equal(HudModel.CowardAchievementId, notice.AchievementId);
     }
 }

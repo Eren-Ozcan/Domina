@@ -41,10 +41,68 @@ public class RetreatTests
         return false;
     }
 
+    /// <summary>
+    /// Tuşu açan ana kadar adımlar: kaçış ancak ilk isabetten sonra mümkün (GDD §5).
+    /// </summary>
+    /// <remarks>
+    /// Buradaki testlerin çoğu "komut verildi" anından sonrasını ölçer; savaşın
+    /// başlamasını beklemek onların konusu değil, ön koşulu.
+    /// </remarks>
+    private static void OpenTheButton(Battle battle) =>
+        Assert.True(StepUntil(battle, b => b.ContactMade), "İlk isabet düşmedi.");
+
+    /// <summary>
+    /// Savaş başlamadan çekilinmez: kimse dokunmadan tuş kapalıdır (GDD §5).
+    /// </summary>
+    /// <remarks>
+    /// Eşik <b>isabet</b>, hamle değil. Bu, temas öncesi kaçışın eskiden ölçülen
+    /// %35'lik tamamen sağlam dönüş dalını komple kaldırır — sakatlanmaya yeni bir
+    /// kural eklemeden.
+    /// </remarks>
+    [Fact]
+    public void TheButtonIsShutUntilTheFirstBloodIsDrawn()
+    {
+        var battle = new Battle(Duel(), new SeededRandom(31));
+
+        Assert.False(battle.ContactMade);
+        Assert.False(battle.CommandRetreat());
+        Assert.False(battle.SnapshotOf(_fighter).RetreatRequested);
+        Assert.DoesNotContain(battle.Events, e => e is RetreatCommanded);
+
+        OpenTheButton(battle);
+        Assert.True(battle.CommandRetreat());
+    }
+
+    /// <summary>
+    /// Reddedilen basış sessizce yutulmaz: sayılır ve olay üretir.
+    /// </summary>
+    /// <remarks>
+    /// Sayı sunum katmanı içindir — kuralı ilk kez görene öğretmek, ısrarla basana
+    /// cevap vermek için. Metni çekirdek üretmez.
+    /// </remarks>
+    [Fact]
+    public void RefusedPressesAreCountedNotSwallowed()
+    {
+        var battle = new Battle(Duel(), new SeededRandom(32));
+
+        battle.CommandRetreat();
+        battle.CommandRetreat();
+        battle.CommandRetreat();
+
+        Assert.Equal(3, battle.RefusedRetreatPresses);
+        Assert.Equal(
+            [1, 2, 3],
+            battle.Events.OfType<RetreatRefused>().Select(e => e.ConsecutivePresses));
+    }
+
     [Fact]
     public void CommandIsAcceptedImmediatelyWhenTheWarriorIsIdle()
     {
         var battle = new Battle(Duel(), new SeededRandom(1));
+
+        Assert.True(StepUntil(
+            battle,
+            b => b.ContactMade && b.SnapshotOf(_fighter).State == CombatState.Idle));
 
         Assert.True(battle.CommandRetreat());
         Assert.Equal(CombatState.Retreating, battle.SnapshotOf(_fighter).State);
@@ -59,7 +117,9 @@ public class RetreatTests
     {
         var battle = new Battle(Duel(), new SeededRandom(2));
 
-        Assert.True(StepUntil(battle, b => b.SnapshotOf(_fighter).State == CombatState.AttackWindup));
+        Assert.True(StepUntil(
+            battle,
+            b => b.ContactMade && b.SnapshotOf(_fighter).State == CombatState.AttackWindup));
 
         Assert.True(battle.CommandRetreat());
 
@@ -75,7 +135,9 @@ public class RetreatTests
     {
         var battle = new Battle(Duel(), new SeededRandom(3));
 
-        StepUntil(battle, b => b.SnapshotOf(_fighter).State == CombatState.AttackWindup);
+        StepUntil(
+            battle,
+            b => b.ContactMade && b.SnapshotOf(_fighter).State == CombatState.AttackWindup);
         battle.CommandRetreat();
 
         Assert.True(StepUntil(battle, b => b.SnapshotOf(_fighter).State == CombatState.Retreating));
@@ -91,7 +153,10 @@ public class RetreatTests
     public void RetreatingCostsAFreeSwingToTheOpponent()
     {
         var battle = new Battle(Duel(), new SeededRandom(4));
+        OpenTheButton(battle);
         battle.CommandRetreat();
+
+        Assert.True(StepUntil(battle, b => b.Events.Any(e => e is OpportunityAttack)));
 
         OpportunityAttack free = battle.Events.OfType<OpportunityAttack>().First();
         Assert.Equal(_enemy, free.Attacker);
@@ -103,20 +168,32 @@ public class RetreatTests
     {
         // Kaçınma 100 ve zar 0.40: normalde kaçınır (şans 0.45), çekilirken kaçamaz.
         var defending = new Battle(Duel(playerEvasion: 100), new FixedRandom(0.40));
-        StepUntil(defending, b => b.Events.Any(e => e is AttackDodged or AttackLanded));
+        StepUntil(defending, b => b.Events.Any(e => e is AttackDodged));
 
         var fleeing = new Battle(Duel(playerEvasion: 100), new FixedRandom(0.40));
+        OpenTheButton(fleeing);
         fleeing.CommandRetreat();
+        StepUntil(fleeing, b => b.Events.Any(e => e is RetreatStarted));
+
+        fleeing.Run();
+
+        // Karşılaştırma kaçış BAŞLADIKTAN sonrasına bakar; öncesi normal dövüştür.
+        // Aynı tick içinde ikisi de görülüyor: duran savaşçı hamleyi kaçınıyor,
+        // kaçmaya başladıktan sonra gelen bedava vuruş kaçınılmadan yiyor.
+        int left = fleeing.Events.ToList().FindIndex(e => e is RetreatStarted);
+        List<BattleEvent> afterLeaving = fleeing.Events.Skip(left).ToList();
 
         Assert.Contains(defending.Events, e => e is AttackDodged);
-        Assert.Contains(fleeing.Events, e => e is AttackLanded { Defender.Value: 1 });
-        Assert.DoesNotContain(fleeing.Events, e => e is AttackDodged);
+        Assert.Contains(fleeing.Events, e => e is AttackDodged { Defender.Value: 1 });
+        Assert.DoesNotContain(afterLeaving, e => e is AttackDodged { Defender.Value: 1 });
+        Assert.Contains(afterLeaving, e => e is AttackLanded { Defender.Value: 1 });
     }
 
     [Fact]
     public void EscapingLeavesTheArenaAliveButLosesTheBattle()
     {
         var battle = new Battle(Duel(), new SeededRandom(5));
+        OpenTheButton(battle);
         battle.CommandRetreat();
 
         BattleResult result = battle.Run();
@@ -136,6 +213,7 @@ public class RetreatTests
     public void RepeatingTheCommandChangesNothing()
     {
         var battle = new Battle(Duel(), new SeededRandom(6));
+        OpenTheButton(battle);
 
         Assert.True(battle.CommandRetreat());
         Assert.False(battle.CommandRetreat());
@@ -145,6 +223,7 @@ public class RetreatTests
     public void AnEmptyArenaRejectsFurtherCommands()
     {
         var battle = new Battle(Duel(), new SeededRandom(7));
+        OpenTheButton(battle);
         battle.CommandRetreat();
         battle.Run();
 
@@ -176,6 +255,7 @@ public class RetreatTests
         };
 
         var battle = new Battle(setup, new SeededRandom(9));
+        OpenTheButton(battle);
         Assert.True(battle.CommandRetreat());
 
         for (int id = 1; id <= 3; id++)
@@ -211,7 +291,11 @@ public class RetreatTests
         var battle = new Battle(setup, new SeededRandom(21));
 
         // Biri vuruşa kilitlenene kadar ilerlet; diğeri hâlâ bekliyor olacak.
-        StepUntil(battle, b => b.SnapshotOf(new WarriorId(1)).State == CombatState.AttackWindup);
+        StepUntil(
+            battle,
+            b => b.ContactMade
+                 && b.SnapshotOf(new WarriorId(1)).State == CombatState.AttackWindup
+                 && b.SnapshotOf(new WarriorId(2)).CanCancel);
         Assert.True(battle.SnapshotOf(new WarriorId(2)).CanCancel);
 
         battle.CommandRetreat();
@@ -246,6 +330,7 @@ public class RetreatTests
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));
+        OpenTheButton(battle);
         battle.CommandRetreat();
         BattleResult result = battle.Run();
 
@@ -284,6 +369,11 @@ public class RetreatTests
         };
 
         var battle = new Battle(setup, new SeededRandom(10));
+
+        // Politika da tuşla aynı kapıdan geçer: ilk isabete kadar susar.
+        StepUntil(battle, b => b.ContactMade);
+        Assert.False(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);
+
         battle.Step();
 
         Assert.True(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);

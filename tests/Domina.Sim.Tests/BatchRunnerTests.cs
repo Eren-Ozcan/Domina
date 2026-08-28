@@ -139,30 +139,32 @@ public class BatchRunnerTests
     /// kaydırır: ne kadar geç basarsan o kadar çok ölü, o kadar az sağ çıkan.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Tuş bir <b>takas değil</b>: "ölümü uzuv kaybına çevirir" ağacın yalnızca bir dalı.
     /// Bu test merdivenin sırasını bağlar — sıra bozulursa §5'in vaadi bozulmuş demektir.
     /// Mutlak sayılar değil <b>sıralama</b> bağlanır; sayılar Faz 9'un işi.
+    /// </para>
+    /// <para>
+    /// Merdivenin en üst basamağı artık "temastan önce bas" değil: tuş ilk isabete kadar
+    /// kapalı. En erken basış bile bedava değildir ve bu test onu da bağlar — eskiden
+    /// temas öncesi basış %0 uzuv kaybı veriyordu, yani basamak hiç yoktu.
+    /// </para>
     /// </remarks>
     [Fact]
     public void PressingLaterCostsMore()
     {
-        BatchReport beforeContact = new BatchRunner(Scenario(), new RetreatAtSecond(0)).Run(1, 400);
-        BatchReport afterContact = new BatchRunner(Scenario(), new RetreatAtSecond(2)).Run(1, 400);
+        BatchReport asSoonAsItOpens = new BatchRunner(Scenario(), new RetreatAtSecond(0)).Run(1, 400);
+        BatchReport afterAWhile = new BatchRunner(Scenario(), new RetreatAtSecond(2)).Run(1, 400);
         BatchReport whenLosing = new BatchRunner(Scenario(), new RetreatWhenLosing(0.7)).Run(1, 400);
 
-        // Temastan önce basmak temiz: mesafe koruyor, kimse sakat kalmıyor.
-        Assert.Equal(0, beforeContact.PlayerLimbLosses);
+        // Tuşun açıldığı anda basmak bile sakatlık getirir: temas olmadan kaçış yok.
+        Assert.True(asSoonAsItOpens.PlayerLimbLosses > 0);
 
-        // Temastan sonra basmak sakatlık getirir; ilk basamakla ikincinin farkı bu.
-        Assert.True(afterContact.PlayerLimbLosses > 0);
+        // Merdiven aşağı indikçe ölü artar, sağ çıkan azalır.
+        Assert.True(asSoonAsItOpens.PlayerDeaths <= afterAWhile.PlayerDeaths);
+        Assert.True(afterAWhile.PlayerDeaths < whenLosing.PlayerDeaths);
 
-        // Merdiven aşağı indikçe ölü artar, sağ çıkan azalır. Ölçümde ilk iki basamak
-        // ölüm bakımından eşit (ikisi de sıfır) — bu yüzden sıkı sıralama yalnızca
-        // son basamakta aranır.
-        Assert.True(beforeContact.PlayerDeaths <= afterContact.PlayerDeaths);
-        Assert.True(afterContact.PlayerDeaths < whenLosing.PlayerDeaths);
-
-        Assert.True(beforeContact.PlayerEscapes >= afterContact.PlayerEscapes);
-        Assert.True(afterContact.PlayerEscapes > whenLosing.PlayerEscapes);
+        Assert.True(asSoonAsItOpens.PlayerEscapes >= afterAWhile.PlayerEscapes);
+        Assert.True(afterAWhile.PlayerEscapes > whenLosing.PlayerEscapes);
     }
 }

@@ -118,7 +118,14 @@ public class MovementTests
         };
 
         var battle = new Battle(setup, new SeededRandom(5));
+
+        // Tuş ilk isabete kadar kapalı (GDD §5); kuşatmanın bedeli ondan sonra ölçülür.
+        while (!battle.ContactMade && battle.Step())
+        {
+        }
+
         battle.CommandRetreat();
+        StepMany(battle, 10);
 
         int swings = battle.Events.OfType<OpportunityAttack>().Count();
         Assert.True(swings > 1, $"Çevrilmiş savaşçı tek bedava vuruşla kurtuldu: {swings}");
@@ -141,6 +148,11 @@ public class MovementTests
 
         var battle = new Battle(setup, new SeededRandom(2));
         StepMany(battle, 20);
+
+        while (!battle.ContactMade && battle.Step())
+        {
+        }
+
         battle.CommandRetreat();
         StepMany(battle, 60);
 
