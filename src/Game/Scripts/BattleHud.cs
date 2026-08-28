@@ -19,10 +19,26 @@ public sealed partial class BattleHud : CanvasLayer
     private static readonly Color StaminaColor = new(0.78f, 0.70f, 0.32f);
     private static readonly Color LockedColor = new(0.85f, 0.55f, 0.20f);
 
+    /// <summary>Savaş başlamadan basılan tuşun rengi: basılabilir ama sönük.</summary>
+    private static readonly Color ShutColor = new(0.45f, 0.45f, 0.48f);
+
     private readonly Dictionary<WarriorId, WarriorPanel> _panels = [];
     private Label _status = null!;
+    private Label _notice = null!;
     private Button _retreat = null!;
     private long _seed;
+
+    /// <summary>İşlenmiş son reddedilen basış sayısı — aynı basışa iki kez cevap verilmesin.</summary>
+    private int _refusalsSeen;
+
+    /// <summary>
+    /// Kuralı öğreten metnin bugüne dek kaç kez gösterildiği.
+    /// </summary>
+    /// <remarks>
+    /// Kalıcı hâli oyun kaydının işi; burada oturum boyunca tutuluyor. Kayıt katmanı
+    /// geldiğinde bu alan oradan doldurulmalı, yoksa kural her açılışta tekrar anlatılır.
+    /// </remarks>
+    private int _teachingShown;
 
     /// <summary>Arayüzü kurar.</summary>
     /// <param name="battle">Gösterilecek dövüş.</param>
@@ -47,6 +63,11 @@ public sealed partial class BattleHud : CanvasLayer
         _status = new Label { Position = new Vector2(24, 20) };
         _status.AddThemeFontSizeOverride("font_size", 20);
         AddChild(_status);
+
+        _notice = new Label { Position = new Vector2(24, 48) };
+        _notice.AddThemeFontSizeOverride("font_size", 18);
+        _notice.AddThemeColorOverride("font_color", ShutColor);
+        AddChild(_notice);
 
         var player = Column(new Vector2(24, 60));
         var enemy = Column(new Vector2(1560, 60));
@@ -82,7 +103,7 @@ public sealed partial class BattleHud : CanvasLayer
             }
         }
 
-        RetreatPrompt prompt = HudModel.DescribeRetreat(snapshots);
+        RetreatPrompt prompt = HudModel.DescribeRetreat(snapshots, battle.ContactMade);
         _retreat.Text = prompt.Text;
         _retreat.Disabled = !prompt.Enabled;
 
@@ -90,12 +111,43 @@ public sealed partial class BattleHud : CanvasLayer
         {
             _retreat.AddThemeColorOverride("font_color", LockedColor);
         }
+        else if (prompt.Shut)
+        {
+            _retreat.AddThemeColorOverride("font_color", ShutColor);
+        }
         else
         {
             _retreat.RemoveThemeColorOverride("font_color");
         }
 
+        ShowRefusalIfAny(battle);
+
         _status.Text = HudModel.DescribeStatus(_seed, battle.ElapsedSeconds, battle.Result?.Outcome);
+    }
+
+    /// <summary>
+    /// Savaş başlamadan basılan tuşa cevap verir.
+    /// </summary>
+    /// <remarks>
+    /// Metni çekirdek üretmez: reddedilen basışın sayısını verir, ne yazılacağına
+    /// <see cref="HudModel.DescribeRefusal"/> karar verir.
+    /// </remarks>
+    private void ShowRefusalIfAny(Battle battle)
+    {
+        if (battle.RefusedRetreatPresses <= _refusalsSeen)
+        {
+            return;
+        }
+
+        _refusalsSeen = battle.RefusedRetreatPresses;
+
+        RetreatRefusalNotice notice = HudModel.DescribeRefusal(_refusalsSeen, _teachingShown);
+        _notice.Text = notice.Text;
+
+        if (notice.Kind == RetreatNoticeKind.Teaching)
+        {
+            _teachingShown++;
+        }
     }
 
     private VBoxContainer Column(Vector2 position)
