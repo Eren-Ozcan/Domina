@@ -38,10 +38,26 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
         double aggressionScore = (summary.Accuracy - 0.5) * 2;
 
         // Kaçarak biten dövüş onur getirmez.
-        double escapePenalty = summary.Escaped ? -0.6 : 0;
+        double escapePenalty = summary.Escaped ? _tuning.EscapePerformancePenalty : 0;
 
         double score = Math.Clamp(aggressionScore + escapePenalty, -1, 1);
         return score * _tuning.PerformanceHonorSwing;
+    }
+
+    /// <summary>
+    /// Çekilmenin düz onur bedeli.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="PerformanceDelta"/> ile toplanır, onun yerine geçmez: biri "nasıl
+    /// dövüştü", bu "çekildi mi". Savaş başlamadan çekilmek artık mümkün olmadığı için
+    /// (bkz. docs/GDD.md §5) bu ceza her zaman <b>başlamış</b> bir dövüşü terk etmenin
+    /// bedelidir.
+    /// </remarks>
+    public double RetreatDelta(WarriorBattleSummary summary)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+
+        return summary.Escaped ? -_tuning.RetreatHonorPenalty : 0;
     }
 
     /// <summary>Aktif dövüşe verilen chat tepkisinin onura etkisi.</summary>
