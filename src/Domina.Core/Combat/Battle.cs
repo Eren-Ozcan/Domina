@@ -423,7 +423,7 @@ public sealed class Battle
     /// </para>
     /// </remarks>
     private static bool CanAdvanceOn(Combatant c, Combatant target) =>
-        c.State is CombatState.Idle
+        c.State is CombatState.Idle or CombatState.Charging
         || (target.State is CombatState.Retreating && c.State is CombatState.AttackWindup);
 
     /// <summary>
@@ -443,6 +443,10 @@ public sealed class Battle
         if (c.State is CombatState.Retreating)
         {
             speed *= _tuning.RetreatSpeedMultiplier;
+        }
+        else if (c.State is CombatState.Charging)
+        {
+            speed *= _tuning.ChargeSpeedMultiplier;
         }
 
         return speed * _tuning.TickSeconds;
@@ -567,6 +571,10 @@ public sealed class Battle
                 c.BeginState(CombatState.Idle, SpacingSeconds(c));
                 break;
 
+            case CombatState.Charging:
+                AdvanceCharge(c);
+                break;
+
             case CombatState.Retreating:
                 // Kaçış artık sayaçla değil mesafeyle biter: gerçekten arenayı
                 // terk etmesi gerekiyor.
@@ -607,6 +615,10 @@ public sealed class Battle
             if (InThrowRange(attacker, target))
             {
                 BeginThrow(attacker, target);
+            }
+            else if (ShouldCharge(attacker, target))
+            {
+                BeginCharge(attacker, target);
             }
             else
             {
@@ -651,6 +663,143 @@ public sealed class Battle
         }
     }
 
+    // ----------------------------------------------------------------- hücum
+
+    /// <summary>
+    /// Savaşçı bu karar anında hücuma kalkar mı?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Yalnızca mesafe uygunsa ve zar tutarsa (docs/GDD.md §4). Kaçış komutu almış
+    /// savaşçı hücum etmez — kendini iki taahhüdün arasında bırakmak istemeyiz.
+    /// </para>
+    /// <para>
+    /// <b>Kaçan hedefe hücum edilmez</b> ve hedef hücum sırasında kaçmaya başlarsa hamle
+    /// boşa gider. Ölçüldü: aksi hâlde hücum bir hamle değil bir <b>kovalama aracı</b>
+    /// oluyor, 1.6 kat hız kaçışın tek ayar düğmesini (<c>RetreatSpeedMultiplier</c>)
+    /// devre dışı bırakıyor ve docs/GDD.md §5'in merdiveni <b>ters dönüyordu</b> —
+    /// erken basmak geç basmaktan ölümcül hâle geliyordu.
+    /// </para>
+    /// <para>
+    /// <b>Fırlatma önceliklidir:</b> atacak mermisi olan savaşçı atar, hücuma kalkmaz.
+    /// Mesafeyi kapatmak menzilli savaşçının çözmesi gereken sorun değil; hücum,
+    /// uzaktan vuramayanın mesafeye verdiği cevaptır.
+    /// </para>
+    /// </remarks>
+    private bool ShouldCharge(Combatant c, Combatant target) =>
+        !c.RetreatRequested
+        && target.State is not CombatState.Retreating
+        && c.Position.DistanceTo(target.Position) >= _tuning.ChargeMinDistance
+        && _rng.Chance(_tuning.ChargeChance);
+
+    private void BeginCharge(Combatant c, Combatant target)
+    {
+        c.ClearCharge();
+        FaceToward(c, target);
+        c.BeginState(CombatState.Charging, _tuning.TickSeconds);
+        Emit(new ChargeStarted(ElapsedSeconds, c.Id, target.Id));
+    }
+
+    /// <summary>
+    /// Hücumu bir tick ilerletir: yol boyunca yenen bedava vuruşlar, varış ve ıskalama.
+    /// </summary>
+    /// <remarks>
+    /// Çekilme gibi tick tick yeniden kurulur; hücumun ne zaman biteceğini süre değil
+    /// <b>mesafe</b> belirler.
+    /// </remarks>
+    private void AdvanceCharge(Combatant c)
+    {
+        RollChargeOpportunities(c);
+
+        if (!c.IsActive || c.State != CombatState.Charging)
+        {
+            return;
+        }
+
+        Combatant? target = FindTarget(c);
+
+        if (target is null || target.State is CombatState.Retreating)
+        {
+            EndCharge(c, connected: false);
+            return;
+        }
+
+        if (InReach(c, target))
+        {
+            c.ChargeSeconds = 0;
+            c.ChargeOpportunists.Clear();
+            c.ChargeBonusPending = true;
+            Emit(new ChargeConnected(ElapsedSeconds, c.Id, target.Id));
+
+            c.BeginState(
+                CombatState.AttackWindup,
+                c.Warrior.UsableWeapon.AttackSeconds * _tuning.WindupFraction);
+
+            Emit(new AttackStarted(ElapsedSeconds, c.Id, target.Id));
+            return;
+        }
+
+        c.ChargeSeconds += _tuning.TickSeconds;
+
+        if (c.ChargeSeconds >= _tuning.ChargeMaxSeconds)
+        {
+            EndCharge(c, connected: false);
+            return;
+        }
+
+        c.BeginState(CombatState.Charging, _tuning.TickSeconds);
+    }
+
+    /// <summary>
+    /// Hücum eden savaşçının yanından geçtiği düşmanların bedava vuruşu.
+    /// </summary>
+    /// <remarks>
+    /// Kaçış penceresiyle (bkz. <see cref="BeginRetreat"/>) aynı mekanik: savunmayı
+    /// bırakan savaşçı menziline girdiği herkese bir vuruş borçlanır. Hücum başına düşman
+    /// başına <b>bir kez</b> — yoksa yanından geçilen düşman her tick'te vururdu.
+    /// </remarks>
+    private void RollChargeOpportunities(Combatant c)
+    {
+        foreach (Combatant hunter in _combatants)
+        {
+            if (hunter.Team == c.Team
+                || !hunter.IsActive
+                || !InReach(hunter, c)
+                || !c.ChargeOpportunists.Add(hunter.Id))
+            {
+                continue;
+            }
+
+            Emit(new OpportunityAttack(ElapsedSeconds, hunter.Id, c.Id));
+            hunter.AttacksMade++;
+            ResolveStrike(hunter, c);
+
+            if (!c.IsActive)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>Hücum hedefe varmadan bitti — bonus harcanmaz, savaşçı açıkta kalır.</summary>
+    private void EndCharge(Combatant c, bool connected)
+    {
+        c.ClearCharge();
+
+        if (!connected)
+        {
+            Emit(new ChargeMissed(ElapsedSeconds, c.Id));
+        }
+
+        if (c.RetreatRequested)
+        {
+            BeginRetreat(c);
+            return;
+        }
+
+        c.BeginState(CombatState.Idle, SpacingSeconds(c));
+    }
+
     /// <summary>
     /// Kaçış başlar; <b>menzilinde bulunan her düşman</b> bedava bir vuruş kazanır.
     /// </summary>
@@ -661,6 +810,14 @@ public sealed class Battle
     /// </remarks>
     private void BeginRetreat(Combatant c)
     {
+        if (c.State is CombatState.Charging)
+        {
+            // Koşu yarıda kesildi: bonus harcanmaz, yenen vuruşlar geri gelmez.
+            c.ClearCharge();
+            Emit(new ChargeMissed(ElapsedSeconds, c.Id));
+        }
+
+        c.ClearCharge();
         c.BeginState(CombatState.Retreating, _tuning.TickSeconds);
         Emit(new RetreatStarted(ElapsedSeconds, c.Id));
 
@@ -819,6 +976,16 @@ public sealed class Battle
         WarriorStats defStats = defender.Warrior.EffectiveStats;
         double staminaFactor = StaminaFactor(attacker);
 
+        // Hücum bonusu ıskalansa da harcanır: momentum bir kez kullanılır. Kaçmaya
+        // başlamış bir hedefe ise hiç uygulanmaz — momentum karşısında duran düşmana
+        // çarpmaktan gelir, sırtını dönene değil. Ölçüldü: bonus kaçana da işlerken
+        // hücum, ilk temasta basılan tuşu geç basmaktan ölümcül yapıyor ve GDD §5'in
+        // merdivenini ters çeviriyordu.
+        double chargeMultiplier =
+            attacker.ConsumeChargeBonus() && defender.State is not CombatState.Retreating
+                ? _tuning.ChargeDamageMultiplier
+                : 1.0;
+
         // 1) İsabet
         bool flanking = IsFlanking(attacker, defender);
         double hitChance = (_tuning.BaseHitChance + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
@@ -858,7 +1025,8 @@ public sealed class Battle
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
                      * staminaFactor
-                     * (flanking ? _tuning.FlankDamageMultiplier : 1.0);
+                     * (flanking ? _tuning.FlankDamageMultiplier : 1.0)
+                     * chargeMultiplier;
 
         ApplyBlow(attacker, defender, raw, weapon.DismembermentFactor, BlowSource.Melee);
     }
