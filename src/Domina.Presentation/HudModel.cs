@@ -134,6 +134,7 @@ public static class HudModel
             CombatState.ChargeWindup => "güç topluyor",
             CombatState.Charging => "hücumda",
             CombatState.Stunned => "sersemledi",
+            CombatState.WeaponBound => "silahı tutuldu",
             CombatState.Retreating => "çekiliyor",
             CombatState.Escaped => "kurtuldu",
             CombatState.Dead => "öldü",

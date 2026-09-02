@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation;
@@ -17,6 +17,14 @@ public enum RigReactionKind
 
     /// <summary>Kaçanın arkasından bedava vuruş yaptı.</summary>
     OpportunitySwing,
+
+    /// <summary>Gelen silahı yakaladı — jitte/sai'nin tek seferlik hamlesi.</summary>
+    /// <remarks>
+    /// <see cref="Dodge"/>'dan ayrı tutulur: kaçınmada savunan yana çekilir, yakalamada
+    /// <b>öne</b> gider. İkisi aynı tepkiye bağlansaydı ekranda jitte'nin yaptığı iş
+    /// kaçınmadan ayırt edilemezdi.
+    /// </remarks>
+    Catch,
 
     /// <summary>Uzvunu kaybetti — kalıcı.</summary>
     Dismember,
@@ -96,6 +104,14 @@ public sealed class ReactionReader
 
             case AttackMissed missed:
                 into.Add(new RigReaction(missed.Attacker, RigReactionKind.Overswing));
+                break;
+
+            case AttackCaught caught:
+                // Yalnızca yakalayan tepki üretir. Saldıranın karşılığı tek seferlik
+                // değil: silahı yakalanan savaşçı CombatState.WeaponBound durumuna
+                // geçer ve duruşu oradan sürülür — buraya ikinci bir tepki eklemek
+                // aynı işi bir kez daha, üstelik yalnızca bir an için yapmak olurdu.
+                into.Add(new RigReaction(caught.Defender, RigReactionKind.Catch));
                 break;
 
             case AttackDodged dodged:

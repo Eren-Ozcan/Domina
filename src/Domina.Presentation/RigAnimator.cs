@@ -25,6 +25,7 @@ public sealed class RigAnimator
     private const double _overswingDecayPerSecond = 2.6;
     private const double _opportunityDecayPerSecond = 2.4;
     private const double _stumbleDecayPerSecond = 1.8;
+    private const double _catchDecayPerSecond = 2.8;
     private const double _deathFallPerSecond = 3.2;
 
     private readonly HashSet<BodyPart> _lost = [];
@@ -35,6 +36,7 @@ public sealed class RigAnimator
     private double _overswing;
     private double _opportunity;
     private double _stumble;
+    private double _catch;
     private double _deathLean;
 
     /// <summary>Kaybedilen uzuvlar kalıcıdır — geri takılmaz.</summary>
@@ -73,6 +75,10 @@ public sealed class RigAnimator
                 _overswing = 1;
                 break;
 
+            case RigReactionKind.Catch:
+                _catch = 1;
+                break;
+
             case RigReactionKind.Stumble:
                 _stumble = 1;
                 break;
@@ -104,6 +110,7 @@ public sealed class RigAnimator
         _overswing = Decay(_overswing, delta, _overswingDecayPerSecond);
         _opportunity = Decay(_opportunity, delta, _opportunityDecayPerSecond);
         _stumble = Decay(_stumble, delta, _stumbleDecayPerSecond);
+        _catch = Decay(_catch, delta, _catchDecayPerSecond);
 
         if (state == CombatState.Dead)
         {
@@ -141,6 +148,7 @@ public sealed class RigAnimator
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
                 Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
             CombatState.Stunned => Stagger(),
+            CombatState.WeaponBound => Bound(),
             CombatState.Retreating => Retreat(),
             CombatState.Charging => Charge(),
             _ => Idle(),
@@ -212,6 +220,38 @@ public sealed class RigAnimator
             FarHip = -0.22f,
             FarKnee = 0.20f,
             Weapon = 0.35f,
+        };
+    }
+
+    /// <summary>
+    /// Silahı yakalandı: savaşçı öne kilitli, kolu havada tutulu.
+    /// </summary>
+    /// <remarks>
+    /// Sersemlemeden (<see cref="Stagger"/>) ekranda ayrışması şart: sersemleyen savaşçı
+    /// çöker ve salınır, silahı yakalanan savaşçı <b>gergin</b> durur — kol yukarıda
+    /// sıkışmış, gövde öne kaçmış. İkisi aynı görünseydi oyuncu jitte'nin açtığı
+    /// pencereyi künt silahın açtığından ayıramazdı.
+    /// </remarks>
+    private RigPose Bound()
+    {
+        // Titreşim: kurtulmaya çalışan ama kurtulamayan kol. Sersemlemenin yavaş
+        // salınımından kasıtlı olarak hızlı ve küçük.
+        float strain = MathF.Sin((float)_clock * 9f) * 0.035f;
+
+        return new RigPose
+        {
+            Visible = true,
+            Torso = -0.22f + strain,
+            Head = 0.16f - strain,
+            NearShoulder = 3.05f + strain,
+            NearElbow = -1.05f - strain,
+            FarShoulder = 2.30f,
+            FarElbow = -0.60f,
+            NearHip = -0.20f,
+            NearKnee = 0.14f,
+            FarHip = 0.18f,
+            FarKnee = 0.22f,
+            Weapon = -0.95f + strain,
         };
     }
 
@@ -419,6 +459,21 @@ public sealed class RigAnimator
                 Torso = pose.Torso + (0.22f * t),
                 Head = pose.Head + (0.30f * t),
                 HurtBlend = t * 0.7f,
+            };
+        }
+
+        if (_catch > 0)
+        {
+            // Yakalama kaçınmanın tersidir: savunan yana değil ÖNE gider ve boştaki
+            // kol gelen silahı karşılamak üzere yukarı çıkar.
+            float t = Curves.Smooth(_catch);
+            pose = pose with
+            {
+                RootRotation = pose.RootRotation + (0.12f * t),
+                Torso = pose.Torso - (0.18f * t),
+                FarShoulder = pose.FarShoulder + (0.85f * t),
+                FarElbow = pose.FarElbow - (0.50f * t),
+                NearShoulder = pose.NearShoulder + (0.30f * t),
             };
         }
 
