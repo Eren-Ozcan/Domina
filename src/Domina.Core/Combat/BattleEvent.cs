@@ -35,6 +35,21 @@ public sealed record AttackLanded(
     double Damage,
     double DefenderHealthRemaining) : BattleEvent(AtSeconds);
 
+/// <summary>
+/// Savunan, gelen silahı yakaladı: hasar yok ve saldıran <paramref name="BindSeconds"/>
+/// boyunca kilitli kalır.
+/// </summary>
+/// <remarks>
+/// Kaçınmadan ayrı bir olaydır çünkü ekranda anlatacağı şey ayrı: kaçınmada savunan
+/// çekilir, yakalamada iki savaşçı bir an <b>birbirine kenetlenir</b>. Sunum katmanı
+/// bunu iki tarafı da içeren tek bir duruş olarak oynatmalı.
+/// </remarks>
+public sealed record AttackCaught(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    double BindSeconds) : BattleEvent(AtSeconds);
+
 /// <summary>Ağır darbe savaşçıyı sersemletti: <paramref name="Seconds"/> boyunca donar.</summary>
 public sealed record WarriorStunned(
     double AtSeconds,

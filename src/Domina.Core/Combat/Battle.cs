@@ -577,8 +577,9 @@ public sealed class Battle
                 break;
 
             case CombatState.Stunned:
-                // Sersemleme bitti: savaşçı normal karar döngüsüne döner. Bu arada
-                // verilmiş kaçış komutu yutulmaz, burada işlenir.
+            case CombatState.WeaponBound:
+                // Sersemleme ya da kenetlenme bitti: savaşçı normal karar döngüsüne
+                // döner. Bu arada verilmiş kaçış komutu yutulmaz, burada işlenir.
                 if (c.RetreatRequested)
                 {
                     BeginRetreat(c);
@@ -1212,7 +1213,16 @@ public sealed class Battle
             return;
         }
 
-        // 2) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
+        // 2) Yakalama — kaçınmadan ÖNCE denenir. Yakalama taahhütlü savunmadır: savaşçı
+        // gelen silahın üstüne gider. Kaçınmadan sonra gelseydi kural hiç ısırmazdı;
+        // kaçınma zaten tutmuş olurdu ve jitte yalnızca "kaçınamayanın son çaresi"
+        // olarak kalırdı — oysa asıl karşılığı saldıranı kilitlemek.
+        if (TryCatch(attacker, defender, flanking))
+        {
+            return;
+        }
+
+        // 3) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
         if (!flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
         {
             double evasionChance = defStats.Evasion / 100.0 * _tuning.MaxEvasionChance;
@@ -1225,7 +1235,7 @@ public sealed class Battle
             }
         }
 
-        // 3) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
+        // 4) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
         Weapon weapon = attacker.Warrior.UsableWeapon;
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
@@ -1240,6 +1250,69 @@ public sealed class Battle
             weapon.DismembermentFactor,
             weapon.StunFactor,
             BlowSource.Melee);
+    }
+
+    /// <summary>
+    /// Yakalama zarını atar; tuttuysa vuruşu siler ve saldıranı kilitler.
+    /// </summary>
+    /// <returns>Vuruş yakalandıysa true — çağıran orada durur.</returns>
+    /// <remarks>
+    /// <para>
+    /// GDD §4'ün kalkanı reddederken bıraktığı boşluk budur: elde taşınan kalkan Japon
+    /// savaşında yaygın değildi, ama gelen kılıcı <b>durduran</b> bir alet vardı. Zar üç
+    /// şeyden beslenir — savunanın aletinin kavrayışı (<c>CatchSkill</c>), saldıranın
+    /// silahının yakalanabilirliği (<c>CatchFactor</c>) ve savunanın <b>İsabet</b>'i.
+    /// Kaçınma Kaçınma'ya bağlıyken yakalamanın İsabet'e bağlanması bilinçli: iki savunma
+    /// ekseni aynı stattan beslenseydi ekipman kararı stat kararının kopyası olurdu.
+    /// </para>
+    /// <para>
+    /// Üç koruma kuralı var. <b>Yalnızca yakın dövüş yakalanır</b> — havada gelen mermi
+    /// çengele oturmaz. <b>Arkadan gelen vuruş yakalanmaz</b>: görülmeyen silah tutulamaz,
+    /// ve kural burada da işleseydi kuşatmanın (§5) bedeli silinirdi. <b>Çekilen savaşçı
+    /// yakalamaz</b> — sırtı dönük koşan biri karşısındakinin silahına gitmez, ve
+    /// sersemletmede olduğu gibi kaçış vaadinin üstüne yeni bir zar konmaz.
+    /// </para>
+    /// </remarks>
+    private bool TryCatch(Combatant attacker, Combatant defender, bool flanking)
+    {
+        if (flanking || !defender.CanDefend || defender.RetreatRequested)
+        {
+            return false;
+        }
+
+        Weapon catcher = defender.Warrior.UsableWeapon;
+        if (!catcher.CanCatch || defender.Stamina < _tuning.CatchStaminaCost)
+        {
+            return false;
+        }
+
+        Weapon caught = attacker.Warrior.UsableWeapon;
+        double accuracyBonus =
+            defender.Warrior.EffectiveStats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
+
+        double chance = _tuning.BaseCatchChance
+                        * catcher.CatchSkill
+                        * caught.CatchFactor
+                        * (caught.TwoHanded ? _tuning.CatchTwoHandedFactor : 1.0)
+                        * (1 + accuracyBonus);
+
+        if (!_rng.Chance(Math.Clamp(chance, 0, 1)))
+        {
+            return false;
+        }
+
+        defender.Stamina -= _tuning.CatchStaminaCost;
+        defender.CatchesMade++;
+        attacker.TimesCaught++;
+
+        // Yakalanan savaşçı hücumunu da kaybeder — kenetlenen kol momentum taşımaz.
+        attacker.ClearCharge();
+
+        attacker.BeginState(CombatState.WeaponBound, _tuning.CatchBindSeconds);
+        Emit(new AttackCaught(
+            ElapsedSeconds, attacker.Id, defender.Id, _tuning.CatchBindSeconds));
+
+        return true;
     }
 
     /// <summary>Darbenin kaynağı — yalnızca hangi olayın yayınlanacağını belirler.</summary>
@@ -1783,6 +1856,8 @@ public sealed class Battle
             LostParts = _lostParts.GetValueOrDefault(c.Id),
             TimesStunned = c.TimesStunned,
             StunsInflicted = c.StunsInflicted,
+            CatchesMade = c.CatchesMade,
+            TimesCaught = c.TimesCaught,
             ChargesStarted = c.ChargesStarted,
             ChargesConnected = c.ChargesConnected,
             ChargeOpportunitiesTaken = c.ChargeOpportunitiesTaken,

@@ -47,6 +47,17 @@ public enum CombatState
     /// </remarks>
     Stunned,
 
+    /// <summary>
+    /// Silahı yakalandı: kilitli kaldığı süre boyunca yürüyemez, vuramaz, <b>kaçınamaz</b>.
+    /// </summary>
+    /// <remarks>
+    /// Sersemletmeden ayrı bir durumdur, çünkü sebebi de görüntüsü de ayrıdır: sersemleyen
+    /// savaşçı kendi ağırlığıyla sendeler, silahı yakalanan savaşçı <b>karşısındakine
+    /// bağlı</b> durur. Tek durumda birleştirilseydi ne ekranda ayrışabilirlerdi ne de
+    /// jitte'nin karşılığı ölçümde kendi sayacını taşıyabilirdi.
+    /// </remarks>
+    WeaponBound,
+
     /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
     Retreating,
 
@@ -138,7 +149,8 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <b>Hücum savunmayı kapatmaz.</b> Koşan ya da güç toplayan savaşçı normal oranıyla
     /// kaçınır (docs/GDD.md §4). Sırtını dönüp kaçan dönmez — savunmasızlık kaçışa özgüdür.
     /// </remarks>
-    public bool CanDefend => State is not (CombatState.Retreating or CombatState.Stunned);
+    public bool CanDefend => State is not (
+        CombatState.Retreating or CombatState.Stunned or CombatState.WeaponBound);
 
     /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
     /// <remarks>
@@ -257,6 +269,12 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     /// <summary>Kaç düşmanı sersemletti — künt silahın karşılığının ölçüldüğü sayaç.</summary>
     public int StunsInflicted { get; set; }
+
+    /// <summary>Kaç kez gelen silahı yakaladı — jitte/sai'nin karşılığının sayacı.</summary>
+    public int CatchesMade { get; set; }
+
+    /// <summary>Kaç kez kendi silahı yakalanıp açıkta kaldı.</summary>
+    public int TimesCaught { get; set; }
 
     /// <summary>Bu dövüşte kaç kez hücuma kalktı.</summary>
     public int ChargesStarted { get; set; }

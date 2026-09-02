@@ -26,6 +26,46 @@ public sealed record Weapon(
     bool TwoHanded,
     double AttackSeconds)
 {
+    /// <summary>
+    /// Bu silah, karşısındakinin kavradığı bir hedef sunuyor mu?
+    /// </summary>
+    /// <remarks>
+    /// Yalnızca yumruk için kapalıdır: yakalanacak bir namlu, bir sap yoktur.
+    /// Sınıfın kendi zorluğu <see cref="CatchFactor"/>'da; bu bayrak "ortada tutulacak
+    /// bir şey var mı" sorusunun cevabı.
+    /// </remarks>
+    public bool Catchable { get; init; } = true;
+
+    /// <summary>
+    /// Bu silahla düşmanın silahını yakalama becerisi. 0 = yakalayamaz.
+    /// </summary>
+    /// <remarks>
+    /// Jitte ve sai'nin var oluş sebebi budur. GDD §4 "kalkan yok" derken bıraktığı
+    /// mekanik boşluğu bunlar doldurur: elde taşınan kalkan Japon savaşında yaygın
+    /// değildi, ama gelen kılıcı <b>durduran</b> bir alet vardı. Sai'nin üç çatalı
+    /// jitte'nin tek çengelinden daha iyi kavrar.
+    /// </remarks>
+    public double CatchSkill { get; init; }
+
+    /// <summary>Yakalayabilir mi?</summary>
+    public bool CanCatch => CatchSkill > 0;
+
+    /// <summary>
+    /// Bu silahın <b>yakalanabilirliği</b> — çengele giren namlunun ne kadar tutulduğu.
+    /// </summary>
+    /// <remarks>
+    /// Kesici silah çengele oturur; delici uç kayar; künt sopanın kavranacak keskin
+    /// hattı yoktur. Yakalama zarında bu, saldıranın silahından okunur — savunanın
+    /// <see cref="CatchSkill"/>'i ile çarpılır.
+    /// </remarks>
+    public double CatchFactor => !Catchable ? 0 : Class switch
+    {
+        WeaponClass.Cutting => 1.0,
+        WeaponClass.Piercing => 0.7,
+        WeaponClass.Blunt => 0.25,
+        _ => 1.0,
+    };
+
     /// <summary>Uzuv kopma riskine uygulanan çarpan.</summary>
     public double DismembermentFactor => Class switch
     {
@@ -75,8 +115,45 @@ public sealed record Weapon(
 
     public static Weapon Tetsubo() => new("Tetsubo", WeaponClass.Blunt, 30, true, 1.55);
 
+    /// <summary>
+    /// Tek çengelli tutma aleti: hasarı düşük, karşılığı gelen kılıcı durdurmak.
+    /// </summary>
+    /// <remarks>
+    /// Katana'nın (22/1.10) yanında 14/1.00 durur — takas budur: yakalama, kaybedilen
+    /// hasarı ödemek zorunda. Ödeyip ödemediği ölçülür (<c>katana</c>/<c>jitte</c>
+    /// senaryoları).
+    /// </remarks>
+    public static Weapon Jitte() => new("Jitte", WeaponClass.Blunt, 14, false, 1.00)
+    {
+        CatchSkill = 1.0,
+    };
+
+    /// <summary>
+    /// Üç çatallı tutma aleti. Jitte ile aynı hasarı taşır, daha yavaş vurur, daha iyi kavrar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Keskin değildir — künt sınıfta durmasının sebebi budur; sai bir kesme aleti değil,
+    /// bir tutma ve dürtme aletidir.
+    /// </para>
+    /// <para>
+    /// 13/1.05 ile başladı ve düpedüz kötüydü (%61.92 zafer, kontrol %73.09): fazladan
+    /// kavrayış, kaybedilen hasarı ödemiyordu. 14/1.05'te üçü de yarım puan içinde
+    /// (%72.73). Jitte ile arasındaki fark hasar değil <b>hacim</b>: sai dövüş başına
+    /// 3.71, jitte 2.75 yakalar — yani kalabalığa karşı sai'nin daha çok işi olmalıdır.
+    /// Bu kuşatma ölçümü henüz yapılmadı.
+    /// </para>
+    /// </remarks>
+    public static Weapon Sai() => new("Sai", WeaponClass.Blunt, 14, false, 1.05)
+    {
+        CatchSkill = 1.25,
+    };
+
     /// <summary>Silahsız/uzuv kaybı sonrası düşülen taban.</summary>
-    public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80);
+    public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80)
+    {
+        Catchable = false,
+    };
 }
 
 /// <summary>

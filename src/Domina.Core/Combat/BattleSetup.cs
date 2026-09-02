@@ -69,6 +69,17 @@ public sealed record WarriorBattleSummary(
     /// <summary>Kaç düşman sersemletildi.</summary>
     public int StunsInflicted { get; init; }
 
+    /// <summary>Kaç kez gelen silah yakalandı.</summary>
+    /// <remarks>
+    /// Jitte/sai'nin karşılığı ancak bununla ölçülür: yakalama aleti hasarda kaybeder,
+    /// kazandığını bu sayaçta ve düşmanın kilitli kaldığı süredeki bedava vuruşlarda
+    /// geri alır (docs/GDD.md §7).
+    /// </remarks>
+    public int CatchesMade { get; init; }
+
+    /// <summary>Kaç kez kendi silahı yakalanıp açıkta kalındı.</summary>
+    public int TimesCaught { get; init; }
+
     /// <summary>Bu dövüşte kaç kez hücuma kalkıldı.</summary>
     /// <remarks>
     /// Hücumun sayıları ancak bu iki sayaçla ölçülebilir: eşik ve olasılık hücumun ne

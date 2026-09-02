@@ -378,6 +378,53 @@ public sealed record CombatTuning
     /// </remarks>
     public double ArmorStunResistanceShare { get; init; } = 0.6;
 
+    // ---- Kılıç yakalama ----
+
+    /// <summary>
+    /// Yakalama aletiyle gelen vuruşu tutma taban şansı; silah, kavrayış ve isabet
+    /// bunu ölçekler.
+    /// </summary>
+    /// <remarks>
+    /// GDD §4 kalkanı reddederken "aynı mekanik ihtiyacı jitte/sai karşılar" diyordu;
+    /// karşılığı kodda yoktu. Yakalama, savunmanın kaçınmadan sonraki <b>ikinci</b>
+    /// eksenidir: kaçınma darbeyi ıskalatır ve orada biter, yakalama darbeyi durdurur
+    /// <b>ve</b> saldıranı açıkta bırakır.
+    /// </remarks>
+    public double BaseCatchChance { get; init; } = 0.24;
+
+    /// <summary>Yakalamanın stamina bedeli. Yalnızca tutan zar için ödenir.</summary>
+    /// <remarks>
+    /// Kaçınmadan (<see cref="DodgeStaminaCost"/>) pahalıdır: kaçınma savaşçıyı olduğu
+    /// yerden çeker, yakalama karşıdakinin bütün ağırlığını tutar. Pahalı olmasaydı
+    /// yakalama aleti bedava bir ikinci savunma katmanı olurdu.
+    /// </remarks>
+    public double CatchStaminaCost { get; init; } = 16;
+
+    /// <summary>Silahı yakalanan saldıranın açıkta kaldığı süre.</summary>
+    /// <remarks>
+    /// Kural bu süreyle yaşar: yakalama yalnızca hasarı silseydi zayıf bir kaçınma
+    /// olurdu. Asıl karşılık, saldıranın kilitlendiği ve <b>kaçınamadığı</b> penceredir —
+    /// yakalayanın kendi düşük hasarı bu pencerede telafi edilir.
+    /// </remarks>
+    public double CatchBindSeconds { get; init; } = 0.6;
+
+    /// <summary>Çift el silahla gelen vuruşun yakalanma şansına uygulanan çarpan.</summary>
+    /// <remarks>
+    /// Yakalamanın kendi cevabı budur — yoksa jitte her eşleşmede doğru seçim olurdu.
+    /// Nodachi'nin kaldıracı tek elle tutulan bir çengeli söker; ağır silah seçen
+    /// savaşçı bunun karşılığını burada alır.
+    /// </remarks>
+    public double CatchTwoHandedFactor { get; init; } = 0.75;
+
+    /// <summary>İsabet 100 iken yakalama şansına eklenen oran.</summary>
+    /// <remarks>
+    /// Yakalama bir zamanlama işidir, bir refleks işi değil: kaçınma Kaçınma'ya bağlıyken
+    /// yakalama <b>İsabet</b>'e bağlanır. İki savunma ekseni aynı stattan beslenseydi
+    /// yakalama aleti yalnızca kaçınması yüksek savaşçının işine yarar, ekipman kararı
+    /// stat kararının kopyası olurdu.
+    /// </remarks>
+    public double CatchAccuracyBonusAtMax { get; init; } = 0.5;
+
     // ---- Uzuv kaybı ----
 
     /// <summary>
