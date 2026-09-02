@@ -264,6 +264,55 @@ internal static class SimArgs
                     tuning = tuning with { ArmorStunResistanceShare = stunArmorShare };
                     break;
 
+                case "--catch-chance":
+                    if (!TryFraction(value, out double catchChance))
+                    {
+                        return ParsedArgs.Fail($"--catch-chance 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BaseCatchChance = catchChance };
+                    break;
+
+                case "--catch-bind":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double catchBind)
+                        || catchBind < 0)
+                    {
+                        return ParsedArgs.Fail($"--catch-bind negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { CatchBindSeconds = catchBind };
+                    break;
+
+                case "--catch-two-handed":
+                    if (!TryFraction(value, out double catchTwoHanded))
+                    {
+                        return ParsedArgs.Fail($"--catch-two-handed 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { CatchTwoHandedFactor = catchTwoHanded };
+                    break;
+
+                case "--catch-stamina":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double catchStamina)
+                        || catchStamina < 0)
+                    {
+                        return ParsedArgs.Fail($"--catch-stamina negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { CatchStaminaCost = catchStamina };
+                    break;
+
+                case "--catch-accuracy":
+                    if (!TryFraction(value, out double catchAccuracy))
+                    {
+                        return ParsedArgs.Fail($"--catch-accuracy 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { CatchAccuracyBonusAtMax = catchAccuracy };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -407,6 +456,9 @@ internal static class SimArgs
         writer.WriteLine("             [--stun-chance <0-1>] [--stun-threshold <0-1>]");
         writer.WriteLine("             [--stun-seconds <sn>] [--stun-head <>=1>]");
         writer.WriteLine("             [--stun-armor-share <0-1>]");
+        writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sn>]");
+        writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <sayı>]");
+        writer.WriteLine("             [--catch-accuracy <0-1>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -435,6 +487,11 @@ internal static class SimArgs
         writer.WriteLine("  --stun-seconds     Sersemleyen savaşçının donduğu süre");
         writer.WriteLine("  --stun-head        Kafaya inen darbenin sersemletme çarpanı");
         writer.WriteLine("  --stun-armor-share Zırhın kopma direncinin sersemletmeye sayılan payı");
+        writer.WriteLine("  --catch-chance     Yakalama aletiyle gelen vuruşu tutma taban şansı");
+        writer.WriteLine("  --catch-bind       Silahı yakalanan saldıranın açıkta kaldığı süre");
+        writer.WriteLine("  --catch-two-handed Çift el silahın yakalanma şansına uygulanan çarpan");
+        writer.WriteLine("  --catch-stamina    Yakalamanın stamina bedeli");
+        writer.WriteLine("  --catch-accuracy   İsabet 100 iken yakalama şansına eklenen oran");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

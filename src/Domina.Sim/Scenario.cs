@@ -27,6 +27,12 @@ internal static class Scenarios
         new("ambush", "veteran pusuya düşüyor (1v3)", Ambush),
         new("blade", "kesici usta vs oni (1v1) — künt/kesici takasının kesici ucu", Blade),
         new("club", "künt usta vs oni (1v1) — aynı dövüş, yalnızca silah sınıfı farklı", Club),
+        new("katana", "tek el usta vs oni (1v1) — kılıç yakalamanın kontrolü", KatanaControl),
+        new("jitte", "aynı dövüş, yalnızca silah jitte — yakalamanın ucu", JitteCatch),
+        new("sai", "aynı dövüş, sai ile — daha iyi kavrayış, daha düşük hasar", SaiCatch),
+        new("jitte-heavy", "jitte vs çift el nodachi taşıyan oni — yakalamanın cevabı", JitteVsTwoHanded),
+        new("katana-heavy", "jitte-heavy'nin kontrolü: aynı düşman, katana ile", KatanaVsTwoHanded),
+        new("3v3-jitte", "3v3, acemi katana yerine jitte taşıyor — kilidin takım değeri", ThreeVsThreeJitte),
     ];
 
     public static Scenario? Find(string name) =>
@@ -40,9 +46,23 @@ internal static class Scenarios
             Yokai(101, "Kappa", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35, speed: 55),
         ]);
 
-    private static BattleSetup ThreeVsThree() => new(
+    private static BattleSetup ThreeVsThree() => ThreeVsThreeWith(Weapon.Katana());
+
+    /// <summary>
+    /// Kilit süresinin (<c>CatchBindSeconds</c>) asıl ölçüldüğü yer.
+    /// </summary>
+    /// <remarks>
+    /// 1v1'de kilit neredeyse hiçbir şey yapmaz: açılan pencere savaşçının zaten kendi
+    /// saldırı döngüsünde beklediği boşluğa denk gelir. Kilidin vaadi <b>takım</b>
+    /// vaadidir — yakalayanın açtığı pencereyi yakalayan değil, <b>yanındakiler</b>
+    /// kullanır. Ölçüm bunu görebilmek için üç kişilik kadroda yapılır; kontrol
+    /// <c>3v3</c>, tek fark acemi'nin silahı.
+    /// </remarks>
+    private static BattleSetup ThreeVsThreeJitte() => ThreeVsThreeWith(Weapon.Jitte());
+
+    private static BattleSetup ThreeVsThreeWith(Weapon recruitWeapon) => new(
         [
-            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana(), Armor.Light()),
+            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), recruitWeapon, Armor.Light()),
             new Warrior(
                 new WarriorId(2),
                 "Kıdemli",
@@ -107,7 +127,45 @@ internal static class Scenarios
     /// <inheritdoc cref="Blade"/>
     private static BattleSetup Club() => Trade(Weapon.Tetsubo());
 
-    private static BattleSetup Trade(Weapon weapon) => new(
+    /// <summary>
+    /// Kılıç yakalamanın ölçülebilir sorusu: yakalama aleti, kaybettiği hasarı ödüyor mu?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kontrol katana (22/1.10), deney jitte (14/1.00) ve sai (13/1.05). Üçü de <b>tek
+    /// el</b>: karşılaştırma silah sınıfını değil <b>yakalamayı</b> yalıtsın diye el
+    /// sayısı sabit tutuldu. <see cref="Trade"/> ile aynı gövdeden kurulur, yani statlar,
+    /// kuşam ve düşman da aynıdır.
+    /// </para>
+    /// <para>
+    /// Düşmanın silahı önemlidir: Oni burada varsayılan katana'yı taşır. Tetsubo taşısaydı
+    /// yakalanabilirlik 0.25'e inerdi ve ölçüm "yakalama işe yarıyor mu" sorusunu değil
+    /// "künt silaha karşı işe yarıyor mu" sorusunu cevaplardı.
+    /// </para>
+    /// </remarks>
+    private static BattleSetup KatanaControl() => Trade(Weapon.Katana());
+
+    /// <inheritdoc cref="KatanaControl"/>
+    private static BattleSetup JitteCatch() => Trade(Weapon.Jitte());
+
+    /// <inheritdoc cref="KatanaControl"/>
+    private static BattleSetup SaiCatch() => Trade(Weapon.Sai());
+
+    /// <summary>
+    /// Yakalamanın kendi cevabının ölçüldüğü çift: düşman <b>çift el</b> nodachi taşır.
+    /// </summary>
+    /// <remarks>
+    /// <c>CatchTwoHandedFactor</c> yalnızca burada görünür. Ölçülmeden bırakılsaydı jitte
+    /// her eşleşmede doğru seçim olur, ağır silah seçen düşmanın kaldıracı hiçbir şeye
+    /// karşılık gelmezdi. Kontrol (<see cref="KatanaVsTwoHanded"/>) aynı düşmanla katana
+    /// taşır — fark yalnızca yakalamadan gelsin diye.
+    /// </remarks>
+    private static BattleSetup JitteVsTwoHanded() => Trade(Weapon.Jitte(), Weapon.Nodachi());
+
+    /// <inheritdoc cref="JitteVsTwoHanded"/>
+    private static BattleSetup KatanaVsTwoHanded() => Trade(Weapon.Katana(), Weapon.Nodachi());
+
+    private static BattleSetup Trade(Weapon weapon, Weapon? enemyWeapon = null) => new(
         [
             new Warrior(
                 new WarriorId(1),
@@ -124,7 +182,18 @@ internal static class Scenarios
                 weapon,
                 Armor.Medium()),
         ],
-        [Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25)]);
+        [
+            Yokai(
+                101,
+                "Oni",
+                health: 150,
+                aggression: 55,
+                defense: 30,
+                evasion: 15,
+                strength: 60,
+                speed: 25,
+                weapon: enemyWeapon),
+        ]);
 
     private static BattleSetup Ambush()
     {

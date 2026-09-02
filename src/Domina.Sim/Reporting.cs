@@ -89,6 +89,7 @@ internal static class SummaryReport
         writer.WriteLine($"  İsabet oranı              %{report.PlayerAccuracy * 100:F1}");
         writer.WriteLine($"  Hasar verilen/alınan      {report.PlayerDamageDealt:F0} / {report.PlayerDamageTaken:F0}");
         writer.WriteLine($"  Sersemleme (savaşçı başına) yenen {report.StunsTakenPerWarrior:F2} / geçirilen {report.StunsInflictedPerWarrior:F2}");
+        writer.WriteLine($"  Yakalama (savaşçı başına)  yapılan {report.CatchesPerWarrior:F2} / yenen {report.TimesCaughtPerWarrior:F2}");
         writer.WriteLine($"  Hücum (dövüş başına)      {report.ChargesPerBattle:F2}  varış %{report.ChargeConnectRate * 100:F1}  bedava vuruş/hücum {report.OpportunitiesPerCharge:F2}");
         writer.WriteLine($"    · birikmede dağılan     %{report.ChargeBreakRate * 100:F1}");
         writer.WriteLine(

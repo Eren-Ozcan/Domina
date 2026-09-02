@@ -27,6 +27,8 @@ internal sealed record BattleRow(
     double PlayerDamageTaken,
     int PlayerStunsTaken,
     int PlayerStunsInflicted,
+    int PlayerCatchesMade,
+    int PlayerTimesCaught,
     int PlayerChargesStarted,
     int PlayerChargesConnected,
     int PlayerChargeOpportunitiesTaken,
@@ -147,6 +149,8 @@ internal sealed class BatchRunner
         double damageTaken = 0;
         int stunsTaken = 0;
         int stunsInflicted = 0;
+        int catchesMade = 0;
+        int timesCaught = 0;
         int chargesStarted = 0;
         int chargesConnected = 0;
         int chargeOpportunities = 0;
@@ -201,6 +205,8 @@ internal sealed class BatchRunner
 
             stunsTaken += s.TimesStunned;
             stunsInflicted += s.StunsInflicted;
+            catchesMade += s.CatchesMade;
+            timesCaught += s.TimesCaught;
             chargesStarted += s.ChargesStarted;
             chargesConnected += s.ChargesConnected;
             chargeOpportunities += s.ChargeOpportunitiesTaken;
@@ -230,6 +236,8 @@ internal sealed class BatchRunner
             damageTaken,
             stunsTaken,
             stunsInflicted,
+            catchesMade,
+            timesCaught,
             chargesStarted,
             chargesConnected,
             chargeOpportunities,
@@ -288,6 +296,17 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     /// <summary>Oyuncu savaşçılarının düşmana geçirdiği sersemletme sayısı.</summary>
     public int PlayerStunsInflicted { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının yakaladığı düşman vuruşu sayısı.</summary>
+    /// <remarks>
+    /// Jitte/sai'nin karşılığı yalnızca burada görünür: yakalama aleti hasarda kaybeder,
+    /// kazandığını bu sayıda ve kilitlenen düşmanın açık kaldığı pencerede geri alır
+    /// (docs/GDD.md Açık Karar #4-B).
+    /// </remarks>
+    public int PlayerCatchesMade { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının silahının yakalandığı sayı.</summary>
+    public int PlayerTimesCaught { get; private set; }
 
     public int PlayerChargesStarted { get; private set; }
 
@@ -360,6 +379,15 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     public double StunsInflictedPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerStunsInflicted / PlayerAppearances;
 
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yaptığı yakalama.</summary>
+    public double CatchesPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerCatchesMade / PlayerAppearances;
+
+    /// <summary>Yakaladığı vuruşun, kendisine yöneltilen tüm vuruşlara oranı değil —
+    /// dövüş başına yakalanma sayısıdır; yakalamanın iki yönlü olup olmadığını gösterir.</summary>
+    public double TimesCaughtPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerTimesCaught / PlayerAppearances;
+
     public double AverageSeconds => Battles == 0 ? 0 : TotalSeconds / Battles;
 
     public void Add(BattleRow row)
@@ -398,6 +426,8 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         PlayerDamageDealt += row.PlayerDamageDealt;
         PlayerDamageTaken += row.PlayerDamageTaken;
         PlayerStunsTaken += row.PlayerStunsTaken;
+        PlayerCatchesMade += row.PlayerCatchesMade;
+        PlayerTimesCaught += row.PlayerTimesCaught;
         PlayerStunsInflicted += row.PlayerStunsInflicted;
         PlayerChargesStarted += row.PlayerChargesStarted;
         PlayerChargesConnected += row.PlayerChargesConnected;
