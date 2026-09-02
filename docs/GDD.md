@@ -621,6 +621,76 @@ kapanması kuralın asıl dişidir; ölçümde kaybedilen hamleden çok bu ısı
 > %69.31'den %65.20'ye iniyor. Mutlak denge Faz 9'un işi; buradaki sayılar sınıflar
 > arası **oranı** tutar.
 
+### Kılıç yakalama — jitte ve sai (kilitlendi 2026-09-03)
+
+§4 elde taşınan kalkanı reddediyor (*tate* yere dayanan sabit siperdir, kol kalkanı
+Japon savaşında yaygın değil) ve aynı mekanik ihtiyacı **jitte/sai**'nin karşıladığını
+söylüyordu. Kural artık çekirdekte.
+
+**Yakalama, kaçınmadan önce denenen ikinci savunma eksenidir.** Kaçınma darbeyi
+ıskalatır ve orada biter; yakalama darbeyi **siler** ve saldıranı **0.6 saniye** açıkta
+bırakır — kilitli savaşçı yürümez, vurmaz, kaçınamaz.
+
+Zar üç şeyden beslenir:
+
+| Çarpan | Nereden okunur | Değerler |
+|---|---|---|
+| Kavrayış (`CatchSkill`) | Savunanın aleti | jitte 1.0, sai 1.25, diğer her şey 0 |
+| Yakalanabilirlik (`CatchFactor`) | Saldıranın silahı | kesici 1.0, delici 0.7, künt 0.25, yumruk 0 |
+| Kaldıraç | Saldıranın silahı çift else | ×0.75 |
+
+| Sayı | Değer |
+|---|---|
+| Taban şans | 0.24 |
+| Kilit süresi | 0.6 sn |
+| Stamina bedeli | 16 |
+| İsabet 100'ken eklenen oran | 0.5 |
+
+**Yakalama İsabet'e bağlanır, Kaçınma'ya değil.** İki savunma ekseni aynı stattan
+beslenseydi ekipman kararı stat kararının kopyası olur, jitte yalnızca "kaçınması
+yüksek savaşçının ikinci savunması" olurdu.
+
+**Üç koruma kuralı:**
+
+- **Yalnızca yakın dövüş yakalanır** — havada gelen mermi çengele oturmaz
+- **Arkadan gelen vuruş yakalanmaz**: görülmeyen silah tutulamaz, ve kural burada da
+  işleseydi kuşatmanın (§5) bedeli silinirdi
+- **Çekilen savaşçı yakalamaz** — sersemletmedeki korumanın eşi: kaçış vaadinin üstüne
+  yeni bir zar konmaz
+
+İki alet (14 hasar / jitte 1.00 sn, sai 1.05 sn) bilerek **künt** sınıftadır: ikisi de
+keskin değil, tutma ve dürtme aletidir. Aralarındaki fark hasar değil **hacim** — sai
+dövüş başına 3.71, jitte 2.75 yakalar.
+
+> **Ölçüm (1v1, 20.000 dövüş, `losing:0.7`; kontrol aynı gövdede katana):**
+>
+> | Silah | Zafer | Uzuv kaybı | Yakalama/dövüş |
+> |---|---|---|---|
+> | Katana (kontrol) | %73.09 | %0.90 | 0.00 |
+> | Jitte | %72.63 | %0.52 | 2.75 |
+> | Sai | %72.73 | %0.45 | 3.71 |
+>
+> Taban şans burada döndü: 0.15'te jitte %61.16, 0.20'de %68.53, 0.30'da %77.22.
+> 0.24'te katana zaferde önde kalıyor, yakalama aletleri **eve sakat dönmemeyi** alıyor —
+> her seçenek bir şeyde en iyi.
+>
+> **Ağır silah yakalamanın cevabıdır.** Düşman çift el nodachi taşıdığında jitte %29.37,
+> katana %34.78 kazanıyor ve jitte uzuv korumasını da kaybediyor (%11.77'ye karşı
+> %11.42) — yani jitte'yi nodachi'ye karşı taşımak düpedüz yanlış seçim. Kaldıraç
+> çarpanı 0.5'te bu delik 14 puana çıkıyordu (%21.04); 0.75 tuzağı bir tercihe indiriyor.
+>
+> **Kilit süresi ölçümde neredeyse hiçbir şey yapmıyor** — sersemletme süresindeki
+> bulgunun aynısı. 1v1'de 0 sn ile 1.2 sn arası yalnızca %72.44 → %73.72. Açılan pencere
+> savaşçının zaten kendi saldırı döngüsünde beklediği boşluğa denk geliyor; kuralın
+> ısırdığı yer **silinen vuruş**. 3v3'te takım değeri de ayrışmadı, ama sebebi başka:
+> orada jitte taşıyan acemi dövüş başına yalnızca ~0.57 **yakalanabilir** vuruş görüyor
+> (tavan `--catch-chance 1.0` ile ölçüldü). 0.6 sn, ekranda okunacak kadar uzun ve
+> takasın döndüğü yerin altında olduğu için seçildi.
+>
+> **Stamina bedeli yakalamayı seyrekleştirerek değil, yorarak ısırıyor.** Bedel 0'da
+> zafer %76.85, 16'da %72.63 — ama yakalama sayısı ikisinde de aynı (2.72 / 2.75).
+> 8'de hiç bağlamıyor (%76.85), 30'da yıkıcı (%41.07).
+
 ### Zırh yuva yuvadır
 
 Zırh tek bir sayı değil; **kafa / gövde / kılıç kolu / boştaki kol / sağ bacak /
@@ -1046,7 +1116,7 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 | ~~2~~ | ~~Sefer/harita yapısı~~ | **Kapandı (2026-08-29).** Sefer tek oda/tek dövüş; günde **tek karşılaşma teklifi**, al ya da bırak; harita ekranı yok. **Boss yapısı kurulmuyor** — zorluk tek eğri üzerinde artar (§10) |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
-| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Açık kalanlar:** zehir, jitte/sai ile kılıç yakalama, silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
+| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Açık kalanlar:** zehir, silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
 | ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |

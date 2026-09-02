@@ -1,6 +1,6 @@
 # Durum Kaydı
 
-Son güncelleme: 2026-09-02 (sersemletme çekirdeğe girdi, #4-B'nin ilk maddesi kilitlendi)
+Son güncelleme: 2026-09-03 (kılıç yakalama çekirdeğe girdi; #4-B'de yalnızca zehir ve silah kırılması kaldı)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -17,9 +17,12 @@ kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık 
 | Faz 2.2 — Sanat ve cila | ⬜ Görsel stil kararına bağlı |
 | Faz 3+ | ⬜ Başlanmadı |
 
-Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test` → 173/173 yeşil,
-`dotnet format --verify-no-changes` temiz.
+Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test -c Release` → 245/245 yeşil.
 Godot projesi ayrı derleniyor: `dotnet build src/Game/Domina.Game.csproj`.
+
+> `dotnet format --verify-no-changes` **temiz değil**: 6 adet IDE1006 (`_` öneki)
+> uyarısı var — `HudModel.cs` ve `ArmorWeightTests.cs`. Eski bir borç, bu turda
+> oluşmadı; sayı 2026-09-03'te değişmedi.
 
 ---
 
@@ -454,6 +457,78 @@ tutulan şey sınıflar arası **oran**.
 Yeni test dosyası: `StunTests` (9 test). Toplam 233 test yeşil.
 
 **4-B'de açık kalanlar:** zehir, jitte/sai ile kılıç yakalama, silah kırılması.
+
+---
+
+## Kılıç yakalama çekirdeğe girdi (2026-09-03)
+
+Açık Karar **#4-B'nin ikinci maddesi kapandı**: jitte ve sai artık GDD §4'ün kalkanı
+reddederken bıraktığı boşluğu dolduruyor. Kural ve sayı tablosu §7'de.
+
+Kural: yakalama **kaçınmadan önce** denenen ikinci savunma eksenidir. Kaçınma darbeyi
+ıskalatır ve orada biter; yakalama darbeyi siler **ve** saldıranı 0.6 sn kilitler —
+kilitli savaşçı yürümez, vurmaz, kaçınamaz. Zar savunanın kavrayışından, saldıranın
+silahının yakalanabilirliğinden ve savunanın **İsabet**'inden beslenir.
+
+### Ölçüm — takas nerede dönüyor
+
+Üç yeni senaryo (`katana` / `jitte` / `sai`): aynı savaşçı, aynı düşman, üçü de **tek
+el**, yalnızca silah farklı. El sayısı sabit tutuldu ki ölçülen şey silah sınıfı değil
+yakalama olsun.
+
+| Silah | Zafer | Uzuv kaybı | Yakalama/dövüş |
+| --- | --- | --- | --- |
+| Katana (kontrol) | %73.09 | %0.90 | 0.00 |
+| Jitte | %72.63 | %0.52 | 2.75 |
+| Sai | %72.73 | %0.45 | 3.71 |
+
+Taban şans tarandı: 0.15'te jitte %61.16, 0.20'de %68.53, 0.30'da %77.22. **0.24**
+takasın döndüğü yer — katana zaferde önde kalıyor, yakalama aletleri eve sakat
+dönmemeyi alıyor. 4-D'nin "her seçenek bir şeyde en iyi" deseni ayakta.
+
+### Ağır silah yakalamanın cevabı
+
+İki senaryo daha (`jitte-heavy` / `katana-heavy`): düşman çift el nodachi taşıyor.
+Jitte %29.37, katana %34.78 kazanıyor ve jitte uzuv korumasını da kaybediyor (%11.77'ye
+karşı %11.42) — nodachi'ye karşı jitte düpedüz yanlış seçim. Kaldıraç çarpanı 0.5'te
+delik 14 puana çıkıyordu (%21.04); **0.75** tuzağı bir tercihe indiriyor.
+
+### Kilit süresi yine ölçülmedi — ama sebebi başka
+
+Sersemletme süresindeki bulgunun aynısı: 1v1'de 0 sn ile 1.2 sn arası yalnızca
+%72.44 → %73.72. Açılan pencere savaşçının zaten beklediği boşluğa denk geliyor;
+kuralın ısırdığı yer **silinen vuruş**.
+
+Kilidin takım değerini ölçmek için `3v3-jitte` eklendi ve orada da ayrışmadı — ama
+sebebi farklı: jitte taşıyan acemi dövüş başına yalnızca **~0.57 yakalanabilir vuruş**
+görüyor (tavan `--catch-chance 1.0` ile ölçüldü, 0.19/savaşçı). Kalabalıkta hedef
+bölünüyor, Tengu mermi atıyor, Oni'nin tetsubo'su zaten zor yakalanıyor. **Kilidin takım
+değeri hâlâ ölçülmemiş bir soru.** 0.6 sn, ekranda okunacak kadar uzun ve takasın
+döndüğü yerin altında olduğu için seçildi.
+
+### Stamina bedeli beklenmedik yerden ısırıyor
+
+Bedel 0'da zafer %76.85, 16'da %72.63 — ama **yakalama sayısı ikisinde de aynı**
+(2.72 / 2.75). Yani bedel yakalamayı seyrekleştirmiyor, savaşçıyı **yoruyor**: stamina
+saldırıyı ve kaçınmayı besliyor. 8'de hiç bağlamıyor, 30'da yıkıcı (%41.07).
+
+### Sai'nin ilk sayıları yanlıştı
+
+13/1.05 ile başladı ve düpedüz kötüydü (%61.92): fazladan kavrayış kaybedilen hasarı
+ödemiyordu. 14/1.05'te üçü de yarım puan içinde. Jitte ile farkı hasar değil **hacim** —
+sai daha çok yakalar, yani kalabalığa karşı daha çok işi olmalı. **Bu kuşatma ölçümü
+yapılmadı.**
+
+Yeni durum: `CombatState.WeaponBound` — sersemlemeden ayrı tutuldu, çünkü sebebi de
+ekrandaki görüntüsü de ayrı (sersemleyen çöker ve salınır, yakalanan gergin durur).
+Yeni test dosyası: `WeaponCatchTests` (12 test). Toplam 245 test yeşil.
+
+**4-B'de açık kalanlar:** zehir, silah kırılması.
+
+> **Not:** `ThroughputTests` Debug'da bütçenin (10 sn) sınırında duruyor ve tüm süit
+> birlikte koşarken düşebiliyor. Değişiklikten bağımsız: izole koşuda üçer kez
+> ölçüldü, değişiklikten önce de sonra da 7-9 sn. Release'te 2 sn. Bütçe ya
+> yükseltilmeli ya da test Release'e bağlanmalı.
 
 ---
 
