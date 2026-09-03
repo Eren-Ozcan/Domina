@@ -33,6 +33,12 @@ internal static class Scenarios
         new("jitte-heavy", "jitte vs çift el nodachi taşıyan oni — yakalamanın cevabı", JitteVsTwoHanded),
         new("katana-heavy", "jitte-heavy'nin kontrolü: aynı düşman, katana ile", KatanaVsTwoHanded),
         new("3v3-jitte", "3v3, acemi katana yerine jitte taşıyor — kilidin takım değeri", ThreeVsThreeJitte),
+        new("tanto", "kısa bıçaklı usta vs oni (1v1) — zehrin kontrolü", TantoControl),
+        new("poison", "aynı dövüş, bıçağın namlusu zehirli — zehrin ucu", PoisonedTanto),
+        new("tanto-armored", "kısa bıçak vs zırhlı oni — zırh duvarının kontrolü", TantoVsArmored),
+        new("poison-armored", "zehirli bıçak vs zırhlı oni — zehir duvarı aşıyor mu", PoisonedVsArmored),
+        new("katana-armored", "katana vs zırhlı oni — zehrin karşısındaki gerçek seçenek", KatanaVsArmored),
+        new("3v3-poison", "3v3, tengu zehirli shuriken atıyor — zehir oyuncunun üstüne dönünce", ThreeVsThreePoison),
     ];
 
     public static Scenario? Find(string name) =>
@@ -59,6 +65,22 @@ internal static class Scenarios
     /// <c>3v3</c>, tek fark acemi'nin silahı.
     /// </remarks>
     private static BattleSetup ThreeVsThreeJitte() => ThreeVsThreeWith(Weapon.Jitte());
+
+    /// <summary>
+    /// Zehrin <b>oyuncu tarafına</b> döndüğü ölçüm: tengu zehirli shuriken atar.
+    /// </summary>
+    /// <remarks>
+    /// Zehir çekilen savaşçıda da işlemeye devam eder — kaçış bir panzehir değildir.
+    /// Kuralın §5'in merdivenini bozup bozmadığı ancak burada görünür: kontrol
+    /// <c>3v3</c>, tek fark tengu'nun merisinin ucundaki doz.
+    /// </remarks>
+    private static BattleSetup ThreeVsThreePoison()
+    {
+        BattleSetup control = ThreeVsThree();
+        control.EnemySide[2].Thrown = ThrownWeapon.PoisonedShuriken();
+
+        return control;
+    }
 
     private static BattleSetup ThreeVsThreeWith(Weapon recruitWeapon) => new(
         [
@@ -165,7 +187,48 @@ internal static class Scenarios
     /// <inheritdoc cref="JitteVsTwoHanded"/>
     private static BattleSetup KatanaVsTwoHanded() => Trade(Weapon.Katana(), Weapon.Nodachi());
 
-    private static BattleSetup Trade(Weapon weapon, Weapon? enemyWeapon = null) => new(
+    /// <summary>
+    /// Zehrin ölçülebilir sorusu: doz, silahın kaybettiği hasarı ödüyor mu?
+    /// </summary>
+    /// <remarks>
+    /// Kontrol temiz tantō (13/0.85), deney aynı bıçağın zehirli hâli. Tek fark namludaki
+    /// doz — hasar, hız, sınıf ve düşman aynı; <see cref="Trade"/> gövdesinden kurulur.
+    /// </remarks>
+    private static BattleSetup TantoControl() => Trade(Weapon.Tanto());
+
+    /// <inheritdoc cref="TantoControl"/>
+    private static BattleSetup PoisonedTanto() => Trade(Weapon.PoisonedTanto());
+
+    /// <summary>
+    /// Zehrin asıl iddiasının ölçüldüğü çift: düşman <b>tam kuşam</b> taşır.
+    /// </summary>
+    /// <remarks>
+    /// Zehir, zırhın hasar azaltımının etrafından dolaşan tek yoldur. Kısa bıçağın 13
+    /// hasarı ō-yoroi'nin önünde neredeyse tamamen erir; doz erimez. Ölçülmeden bırakılsa
+    /// zehir yalnızca "biraz daha hasar" olurdu ve zırhın önündeki karşılığı hiç görünmezdi.
+    /// </remarks>
+    private static BattleSetup TantoVsArmored() => Trade(Weapon.Tanto(), enemyArmor: Armor.Heavy());
+
+    /// <inheritdoc cref="TantoVsArmored"/>
+    private static BattleSetup PoisonedVsArmored() =>
+        Trade(Weapon.PoisonedTanto(), enemyArmor: Armor.Heavy());
+
+    /// <summary>
+    /// Zırhlı düşmanın karşısındaki <b>gerçek</b> alternatif: sıradan bir kılıç.
+    /// </summary>
+    /// <remarks>
+    /// Temiz tantō, zırhın önünde zaten kaybeden bir silah; zehri yalnızca ona karşı
+    /// ölçmek "zehir işe yarıyor" diye yanıltıcı bir cevap verirdi. Zehirli bıçağın
+    /// gerçekten bir yere oturup oturmadığı, oyuncunun elindeki normal seçenekle
+    /// karşılaştırılınca görünür.
+    /// </remarks>
+    private static BattleSetup KatanaVsArmored() =>
+        Trade(Weapon.Katana(), enemyArmor: Armor.Heavy());
+
+    private static BattleSetup Trade(
+        Weapon weapon,
+        Weapon? enemyWeapon = null,
+        Armor? enemyArmor = null) => new(
         [
             new Warrior(
                 new WarriorId(1),
@@ -192,7 +255,8 @@ internal static class Scenarios
                 evasion: 15,
                 strength: 60,
                 speed: 25,
-                weapon: enemyWeapon),
+                weapon: enemyWeapon,
+                armor: enemyArmor),
         ]);
 
     private static BattleSetup Ambush()
@@ -234,13 +298,14 @@ internal static class Scenarios
         double accuracy = 58,
         double speed = 50,
         Weapon? weapon = null,
-        ThrownWeapon? thrown = null) =>
+        ThrownWeapon? thrown = null,
+        Armor? armor = null) =>
         new(
             new WarriorId(id),
             name,
             new WarriorStats(
                 health, aggression, defense, evasion, strength, accuracy, MaxStamina: 100, Speed: speed),
             weapon ?? Weapon.Katana(),
-            armor: null,
+            armor: armor,
             thrown: thrown);
 }

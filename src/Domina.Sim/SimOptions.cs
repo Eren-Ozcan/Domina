@@ -313,6 +313,50 @@ internal static class SimArgs
                     tuning = tuning with { CatchAccuracyBonusAtMax = catchAccuracy };
                     break;
 
+                case "--poison-damage":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonDamage)
+                        || poisonDamage < 0)
+                    {
+                        return ParsedArgs.Fail($"--poison-damage negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { PoisonDamagePerTick = poisonDamage };
+                    break;
+
+                case "--poison-seconds":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonSeconds)
+                        || poisonSeconds < 0)
+                    {
+                        return ParsedArgs.Fail($"--poison-seconds negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { PoisonSeconds = poisonSeconds };
+                    break;
+
+                case "--poison-tick":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonTick)
+                        || poisonTick <= 0)
+                    {
+                        return ParsedArgs.Fail($"--poison-tick pozitif bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { PoisonTickSeconds = poisonTick };
+                    break;
+
+                case "--poison-dose":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonDose)
+                        || poisonDose < 0)
+                    {
+                        return ParsedArgs.Fail($"--poison-dose negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { PoisonMaxDose = poisonDose };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -459,6 +503,8 @@ internal static class SimArgs
         writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sn>]");
         writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <sayı>]");
         writer.WriteLine("             [--catch-accuracy <0-1>]");
+        writer.WriteLine("             [--poison-damage <sayı>] [--poison-seconds <sn>]");
+        writer.WriteLine("             [--poison-tick <sn>] [--poison-dose <sayı>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -492,6 +538,10 @@ internal static class SimArgs
         writer.WriteLine("  --catch-two-handed Çift el silahın yakalanma şansına uygulanan çarpan");
         writer.WriteLine("  --catch-stamina    Yakalamanın stamina bedeli");
         writer.WriteLine("  --catch-accuracy   İsabet 100 iken yakalama şansına eklenen oran");
+        writer.WriteLine("  --poison-damage    Zehrin bir tikte verdiği hasar (doz 1 iken)");
+        writer.WriteLine("  --poison-seconds   Bir dozun ömrü");
+        writer.WriteLine("  --poison-tick      Zehrin hasar verme aralığı");
+        writer.WriteLine("  --poison-dose      Bir savaşçıda birikebilecek azami doz");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

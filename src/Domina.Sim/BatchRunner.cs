@@ -29,6 +29,11 @@ internal sealed record BattleRow(
     int PlayerStunsInflicted,
     int PlayerCatchesMade,
     int PlayerTimesCaught,
+    int PlayerTimesPoisoned,
+    int PlayerPoisonsInflicted,
+    double PlayerPoisonDamageTaken,
+    double PlayerPoisonDamageDealt,
+    int PlayerPoisonDeaths,
     int PlayerChargesStarted,
     int PlayerChargesConnected,
     int PlayerChargeOpportunitiesTaken,
@@ -151,6 +156,11 @@ internal sealed class BatchRunner
         int stunsInflicted = 0;
         int catchesMade = 0;
         int timesCaught = 0;
+        int timesPoisoned = 0;
+        int poisonsInflicted = 0;
+        double poisonDamageTaken = 0;
+        double poisonDamageDealt = 0;
+        int poisonDeaths = 0;
         int chargesStarted = 0;
         int chargesConnected = 0;
         int chargeOpportunities = 0;
@@ -173,6 +183,11 @@ internal sealed class BatchRunner
             if (s.Died)
             {
                 playerDeaths++;
+
+                if (s.DeathCause == DeathCause.Poison)
+                {
+                    poisonDeaths++;
+                }
             }
 
             if (s.Escaped)
@@ -207,6 +222,10 @@ internal sealed class BatchRunner
             stunsInflicted += s.StunsInflicted;
             catchesMade += s.CatchesMade;
             timesCaught += s.TimesCaught;
+            timesPoisoned += s.TimesPoisoned;
+            poisonsInflicted += s.PoisonsInflicted;
+            poisonDamageTaken += s.PoisonDamageTaken;
+            poisonDamageDealt += s.PoisonDamageDealt;
             chargesStarted += s.ChargesStarted;
             chargesConnected += s.ChargesConnected;
             chargeOpportunities += s.ChargeOpportunitiesTaken;
@@ -238,6 +257,11 @@ internal sealed class BatchRunner
             stunsInflicted,
             catchesMade,
             timesCaught,
+            timesPoisoned,
+            poisonsInflicted,
+            poisonDamageTaken,
+            poisonDamageDealt,
+            poisonDeaths,
             chargesStarted,
             chargesConnected,
             chargeOpportunities,
@@ -307,6 +331,30 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     /// <summary>Oyuncu savaşçılarının silahının yakalandığı sayı.</summary>
     public int PlayerTimesCaught { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının yediği zehirli vuruş sayısı.</summary>
+    public int PlayerTimesPoisoned { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının düşmana geçirdiği zehirli vuruş sayısı.</summary>
+    public int PlayerPoisonsInflicted { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının zehirden yediği toplam hasar.</summary>
+    /// <remarks>
+    /// Zehrin karşılığı yalnızca burada görünür: zehirli silah açık dövüşte hasar
+    /// kaybeder, kazandığını zırhın azaltamadığı bu hasarda geri alır
+    /// (docs/GDD.md Açık Karar #4-B).
+    /// </remarks>
+    public double PlayerPoisonDamageTaken { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının zehirle verdiği toplam hasar.</summary>
+    public double PlayerPoisonDamageDealt { get; private set; }
+
+    /// <summary>Zehirden ölen oyuncu savaşçısı sayısı.</summary>
+    /// <remarks>
+    /// Ölümün <b>sahada</b> mı yoksa sonrasında mı geldiğini söyleyen tek sayı budur;
+    /// zehrin "başka türlü öldürüyor" iddiası ancak buradan doğrulanır.
+    /// </remarks>
+    public int PlayerPoisonDeaths { get; private set; }
 
     public int PlayerChargesStarted { get; private set; }
 
@@ -388,6 +436,21 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     public double TimesCaughtPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerTimesCaught / PlayerAppearances;
 
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yediği zehirli vuruş.</summary>
+    public double PoisoningsTakenPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerTimesPoisoned / PlayerAppearances;
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına geçirdiği zehirli vuruş.</summary>
+    public double PoisoningsInflictedPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerPoisonsInflicted / PlayerAppearances;
+
+    /// <summary>Ölümlerin zehirden gelen payı.</summary>
+    public double PoisonDeathShare => Rate(PlayerPoisonDeaths, PlayerDeaths);
+
+    /// <summary>Verilen hasarın zehirden gelen payı — dozun gerçekten ne kadar iş yaptığı.</summary>
+    public double PoisonShareOfDamageDealt =>
+        PlayerDamageDealt <= 0 ? 0 : PlayerPoisonDamageDealt / PlayerDamageDealt;
+
     public double AverageSeconds => Battles == 0 ? 0 : TotalSeconds / Battles;
 
     public void Add(BattleRow row)
@@ -428,6 +491,11 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         PlayerStunsTaken += row.PlayerStunsTaken;
         PlayerCatchesMade += row.PlayerCatchesMade;
         PlayerTimesCaught += row.PlayerTimesCaught;
+        PlayerTimesPoisoned += row.PlayerTimesPoisoned;
+        PlayerPoisonsInflicted += row.PlayerPoisonsInflicted;
+        PlayerPoisonDamageTaken += row.PlayerPoisonDamageTaken;
+        PlayerPoisonDamageDealt += row.PlayerPoisonDamageDealt;
+        PlayerPoisonDeaths += row.PlayerPoisonDeaths;
         PlayerStunsInflicted += row.PlayerStunsInflicted;
         PlayerChargesStarted += row.PlayerChargesStarted;
         PlayerChargesConnected += row.PlayerChargesConnected;
