@@ -24,7 +24,8 @@ internal static class TestSnapshots
         int? targetId = null,
         ArenaPoint position = default,
         int facing = 1,
-        double speed = 0) =>
+        double speed = 0,
+        bool poisoned = false) =>
         new(
             new WarriorId(id),
             team,
@@ -39,5 +40,6 @@ internal static class TestSnapshots
             targetId is int t ? new WarriorId(t) : null,
             position,
             facing,
-            speed);
+            speed,
+            poisoned);
 }

@@ -39,6 +39,28 @@ public class SimCliTests
         Assert.Equal("x.csv", options.CsvPath);
     }
 
+    /// <summary>
+    /// Zehrin dört düğmesi komut satırından taranabilir olmalı.
+    /// </summary>
+    /// <remarks>
+    /// Sayılar ancak süpürülerek kilitlenir (bkz. docs/PROGRESS.md); tarama düğmesi
+    /// olmayan bir kural, ölçülemeyen bir kuraldır.
+    /// </remarks>
+    [Fact]
+    public void ThePoisonKnobsCanBeSwept()
+    {
+        SimOptions options = Parse(
+            "--poison-damage", "2.5",
+            "--poison-seconds", "6",
+            "--poison-tick", "1",
+            "--poison-dose", "3");
+
+        Assert.Equal(2.5, options.Tuning.PoisonDamagePerTick, precision: 9);
+        Assert.Equal(6, options.Tuning.PoisonSeconds, precision: 9);
+        Assert.Equal(1, options.Tuning.PoisonTickSeconds, precision: 9);
+        Assert.Equal(3, options.Tuning.PoisonMaxDose, precision: 9);
+    }
+
     [Fact]
     public void TheRetreatPolicyCanStandInForThePlayer()
     {

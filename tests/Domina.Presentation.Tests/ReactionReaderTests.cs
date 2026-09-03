@@ -42,6 +42,28 @@ public class ReactionReaderTests
         Assert.Equal(RigReactionKind.Overswing, reaction.Kind);
     }
 
+    /// <summary>
+    /// Zehrin hasarı ekranda görünür, zehirlenme anı ayrıca görünmez.
+    /// </summary>
+    /// <remarks>
+    /// Zehirlenme anının karşılığı vuruşun kendisidir ve orada zaten bir irkilme var;
+    /// ikinci bir tepki aynı anı iki kez oynatırdı. Görülmesi gereken şey, <b>sonradan</b>
+    /// gelen ve vuranı olmayan hasar.
+    /// </remarks>
+    [Fact]
+    public void PoisonShowsWhenItWorksNotWhenItLands()
+    {
+        var reader = new ReactionReader();
+        var events = Stream(
+            new WarriorPoisoned(1, _attacker, _defender, 1.0, 6.0),
+            new PoisonTicked(2, _defender, 2.5, 80));
+
+        RigReaction reaction = Assert.Single(reader.Drain(events));
+
+        Assert.Equal(_defender, reaction.Warrior);
+        Assert.Equal(RigReactionKind.PoisonThroe, reaction.Kind);
+    }
+
     /// <summary>Kaçınma stamina harcar; harcamanın nereye gittiği ekranda görünmeli.</summary>
     [Fact]
     public void ADodgeMovesBothSides()

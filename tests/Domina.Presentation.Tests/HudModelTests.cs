@@ -111,6 +111,33 @@ public class HudModelTests
         Assert.Equal(expected, HudModel.DescribeState(TestSnapshots.Of(1, state: state)));
 
     /// <summary>
+    /// Zehir durumun yerine geçmez, üstüne yazılır.
+    /// </summary>
+    /// <remarks>
+    /// Zehirlenmiş savaşçı yürür, vurur ve çekilir; paneli "zehirlendi" deyip sussaydı
+    /// oyuncu savaşçının ne yaptığını göremezdi. Görmesi gereken şey ikisi birden:
+    /// hâlâ dövüşüyor <b>ve</b> canı gidiyor.
+    /// </remarks>
+    [Fact]
+    public void PoisonIsWrittenOnTopOfTheState()
+    {
+        Assert.Equal(
+            "saldırıyor · zehirli",
+            HudModel.DescribeState(
+                TestSnapshots.Of(1, state: CombatState.AttackWindup, poisoned: true)));
+
+        Assert.Equal(
+            "çekilecek · vuruş bitince · zehirli",
+            HudModel.DescribeState(
+                TestSnapshots.Of(
+                    1,
+                    state: CombatState.AttackWindup,
+                    retreatRequested: true,
+                    canCancel: false,
+                    poisoned: true)));
+    }
+
+    /// <summary>
     /// Seed sürekli görünür durmalı: bir dövüşü tekrar açmanın ve toplu simülasyondaki
     /// karşılığını bulmanın tek yolu o.
     /// </summary>
