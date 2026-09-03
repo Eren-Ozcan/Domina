@@ -1,6 +1,6 @@
 # Durum Kaydı
 
-Son güncelleme: 2026-09-03 (kılıç yakalama çekirdeğe girdi; #4-B'de yalnızca zehir ve silah kırılması kaldı)
+Son güncelleme: 2026-09-03 (zehir çekirdeğe girdi; #4-B'de yalnızca silah kırılması kaldı)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -523,7 +523,76 @@ Yeni durum: `CombatState.WeaponBound` — sersemlemeden ayrı tutuldu, çünkü 
 ekrandaki görüntüsü de ayrı (sersemleyen çöker ve salınır, yakalanan gergin durur).
 Yeni test dosyası: `WeaponCatchTests` (12 test). Toplam 245 test yeşil.
 
-**4-B'de açık kalanlar:** zehir, silah kırılması.
+**4-B'de açık kalan:** silah kırılması.
+
+---
+
+## Zehir çekirdeğe girdi (2026-09-03)
+
+Açık Karar **#4-B'nin üçüncü maddesi kapandı**: zehir artık kodda. Kural ve sayı
+tablosu GDD §7'de.
+
+Kural: zehirli silahın **her isabeti** savunana bir doz bırakır — zar yok, namlu deriyi
+çizdiyse zehir de girmiştir. Doz saniyede bir can yer ve bu hasar **ne zırhtan ne
+Savunma statından** geçer; zehir, hasar azaltımının etrafından dolaşan tek yoldur. Doz
+birikir (tavan 3.0), süre her yeni vuruşta baştan kurulur (6.0 sn).
+
+Kilitlenen sayılar: tik başına 2.5 hasar, tik aralığı 1.0 sn, dozun ömrü 6.0 sn, azami
+doz 3.0. Zehirli tantō 7/0.85 (temiz tantō 13/0.85), zehirli shuriken 12 hasar / 2
+cephane.
+
+### İlk kurulum yanlış cevap veriyordu
+
+Zehirli bıçak 13 hasarla dururken ölçüm "zehir işe yarıyor" diyordu ama **iddiayı
+doğrulamıyordu**: açık dövüşte %74.00, ō-yoroi kuşanmış oni'ye karşı %55.99 (katana
+%73.09 / %68.62). Yani zehir zırhı aşmıyor, yalnızca zayıf bir bıçağı kurtarıyordu —
+çünkü çıktının çoğu hâlâ çelikti ve zırh çeliği okuyor.
+
+Bıçak 7'ye indirilip doz büyütülünce çıktının %60'ı zehre geçti ve iddia doğrulandı:
+
+| Silah | Zırhsız oni | Ō-yoroi kuşanmış oni |
+|---|---|---|
+| Katana (kontrol) | %73.09 | %68.62 |
+| Temiz tantō | %31.14 | %1.23 |
+| Zehirli tantō | %72.19 | **%77.19** |
+
+Beklenmedik sonuç: **zehirlinin karşısında ağır kuşanmak zarardır.** Plaka dozu
+durdurmuyor, ağırlığı ise oni'nin vuruşunu geciktiriyor — zırhın işareti bu eşleşmede
+ters dönüyor.
+
+### Asıl düğme doz tavanı, ömür değil
+
+Tavan: 1'de zehirli bıçak düpedüz kötü (%16.71), 2'de hâlâ geride (%50.92), 3'te katana
+ile başa baş, 5'te baskın (%82.25).
+
+Ömür 6 saniyeden sonra neredeyse hiçbir şey yapmıyor (3 sn %52.90, 4.5 sn %68.83,
+6 sn %72.19, 9 sn %73.11): hızlı vuran silah süreyi zaten sürekli yeniliyor, uzun ömür
+yalnızca **son** vuruştan sonrasını uzatıyor — o da çoğu dövüşte bitmiş dövüş.
+
+Tik aralığı tarafsız bir düğme değil, doğrudan hasar hızı (0.5 sn'de %94.93, 1 sn'de
+%72.19, 2 sn'de %30.40). 1 sn seçildi çünkü dozun ömrüne bölününce zehir **sayılabilir**
+oluyor: altı vuruş.
+
+### Zehir oyuncunun üstüne dönünce
+
+`3v3-poison` eklendi (tengu zehirli shuriken atıyor; kontrol aynı kadro): zafer
+%65.20'den %60.35'e, kaçış %8.10'dan %6.86'ya iniyor, ölüm %45.45'ten %50.44'e çıkıyor
+ve ölümlerin %1.3'ü doğrudan zehirden.
+
+**Çekilen savaşçının zehri durmuyor** — bu kasıtlı: sersemletme ve yakalama kaçış
+vaadinin üstüne *yeni bir zar* konmasın diye çekilene işlemiyor, ama zehir yeni bir zar
+değil, çoktan ödenmiş bir bedelin devamı; tuş bir panzehir değil. Ölçüm §5'in
+merdiveninin ayakta kaldığını söylüyor: kaçış hâlâ çalışıyor, yalnızca daha pahalı.
+
+### Zehrin almadığı şeyler
+
+Zehir uzuv koparmaz ve sersemletmez — ikisi de *darbenin* sonucu, zehirde vuran kimse
+yok. Zehirle gelen ölüm ayrı bir sebep taşıyor (`DeathCause.Poison`), yoksa "başka türlü
+öldürüyor" iddiası hiçbir sayaçta görünmezdi.
+
+Yeni test dosyası: `PoisonTests` (9 test). Toplam 257 test yeşil.
+
+**4-B'de açık kalan:** silah kırılması.
 
 > **Not:** `ThroughputTests` Debug'da bütçenin (10 sn) sınırında duruyor ve tüm süit
 > birlikte koşarken düşebiliyor. Değişiklikten bağımsız: izole koşuda üçer kez

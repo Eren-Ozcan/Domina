@@ -691,6 +691,64 @@ dövüş başına 3.71, jitte 2.75 yakalar.
 > zafer %76.85, 16'da %72.63 — ama yakalama sayısı ikisinde de aynı (2.72 / 2.75).
 > 8'de hiç bağlamıyor (%76.85), 30'da yıkıcı (%41.07).
 
+### Zehir (kilitlendi 2026-09-03)
+
+Zehir, **hasar azaltımının etrafından dolaşan tek yoldur**. Plaka kesiği durdurur, künt
+kuvvetin bir payını durdurur (yukarıda 0.6), zehri hiç durdurmaz — doz zırha değil kana
+işler. Silahın kendi çeliğinin hafif olması bunun bedelidir.
+
+**Kural.** Zehirli silahın indirdiği her isabet, savunana bir **doz** bırakır — zar
+atılmaz, namlu deriyi çizdiyse zehir de girmiştir. Doz saniyede bir can yer; hasar ne
+zırhtan ne Savunma statından geçer. Doz **birikir** (tavana kadar), süre her yeni vuruşta
+baştan kurulur.
+
+| Sayı | Değer |
+|---|---|
+| Tik başına hasar (doz 1 iken) | 2.5 |
+| Tik aralığı | 1.0 sn |
+| Dozun ömrü | 6.0 sn |
+| Azami doz | 3.0 |
+| Zehirli tantō | 7 hasar / 0.85 sn (temiz tantō 13/0.85) |
+| Zehirli shuriken | 12 hasar, 2 cephane (temiz shuriken 12, 4 cephane) |
+
+**Üç sınır kuralı:**
+
+- **Zehir uzuv koparmaz ve sersemletmez.** İkisi de *darbenin* sonucudur; zehirde vuran
+  kimse yok. Zehirli silah oyunun imza mekaniğinden pay almaz — takasın yarısı budur
+- **Zehrin öldürmesi ayrı bir sebeptir** (`DeathCause.Poison`): savaşçıyı sahadaki hiçbir
+  vuruş düşürmemiştir
+- **Çekilen savaşçının zehri durmaz.** Sersemletme ve yakalama, kaçış vaadinin üstüne
+  *yeni bir zar* konmasın diye çekilene işlemez; zehir yeni bir zar değil, çoktan ödenmiş
+  bir bedelin devamıdır — tuş bir panzehir değildir
+
+> **Ölçüm (1v1, 20.000 dövüş, `losing:0.7`):**
+>
+> | Silah | Zırhsız oni | Ō-yoroi kuşanmış oni |
+> |---|---|---|
+> | Katana (kontrol) | %73.09 | %68.62 |
+> | Temiz tantō | %31.14 | %1.23 |
+> | Zehirli tantō | %72.19 | **%77.19** |
+>
+> Zehirli bıçak açık dövüşte katana ile başa baş, zırhın önünde öne geçiyor. **Zehirlinin
+> karşısında ō-yoroi kuşanmak zarardır:** plaka dozu okumaz, ağırlığı ise vuruşu geciktirir.
+>
+> **İlk kurulum yanlış cevap veriyordu.** Bıçak 13 hasarla dururken zehir yalnızca zayıf
+> bir silahı kurtarıyordu (%74.00 / %55.99) — zırhı hiç aşmıyordu, çünkü çıktısının çoğu
+> hâlâ çelikti. Bıçak 7'ye indirilip doz büyütülünce çıktının %60'ı zehre geçti ve iddia
+> ancak o zaman doğrulandı.
+>
+> **Asıl düğme doz tavanı:** 1'de zehirli bıçak düpedüz kötü (%16.71), 2'de hâlâ geride
+> (%50.92), 3'te başa baş, 5'te baskın (%82.25). Dozun **ömrü** ise 6 saniyeden sonra
+> neredeyse hiçbir şey yapmıyor (3 sn %52.90, 6 sn %72.19, 9 sn %73.11): hızlı vuran silah
+> süreyi zaten sürekli yeniliyor. Tik aralığı tarafsız bir düğme değil, doğrudan hasar
+> hızıdır (0.5 sn'de %94.93, 2 sn'de %30.40); 1 sn, dozun ömrüne bölününce zehri
+> **sayılabilir** yapıyor — altı vuruş.
+>
+> **Zehir oyuncunun üstüne döndüğünde** (3v3, tengu zehirli shuriken atıyor; kontrol aynı
+> kadro): zafer %65.20'den %60.35'e, kaçış %8.10'dan %6.86'ya iniyor, ölüm %45.45'ten
+> %50.44'e çıkıyor ve ölümlerin %1.3'ü doğrudan zehirden. §5'in merdiveni ayakta — kaçış
+> hâlâ çalışıyor, yalnızca daha pahalı.
+
 ### Zırh yuva yuvadır
 
 Zırh tek bir sayı değil; **kafa / gövde / kılıç kolu / boştaki kol / sağ bacak /
@@ -1116,7 +1174,7 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 | ~~2~~ | ~~Sefer/harita yapısı~~ | **Kapandı (2026-08-29).** Sefer tek oda/tek dövüş; günde **tek karşılaşma teklifi**, al ya da bırak; harita ekranı yok. **Boss yapısı kurulmuyor** — zorluk tek eğri üzerinde artar (§10) |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
-| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Açık kalanlar:** zehir, silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
+| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Zehir kilitlendi (2026-09-03)** — doz zırhın etrafından dolaşır: tik başına 2.5, tik 1.0 sn, ömür 6.0 sn, azami doz 3.0; zehirli tantō açık dövüşte katana ile başa baş (%72.19'a karşı %73.09), zırhlı düşmanın önünde önde (%77.19'a karşı %68.62). Zehir uzuv koparmaz, sersemletmez ve çekilende de durmaz. **Açık kalan:** silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
 | ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
