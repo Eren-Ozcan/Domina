@@ -121,12 +121,18 @@ public static class HudModel
     /// </remarks>
     public static string DescribeState(in CombatantSnapshot snapshot)
     {
+        // Zehir bir durum değil, durumun üstüne binen bir işaret: zehirlenmiş savaşçı
+        // yürümeye, vurmaya ve çekilmeye devam eder. Paneli ayrı bir satır yerine ek
+        // olarak yazmasının sebebi bu — ve oyuncunun görmesi gereken şey zaten "hâlâ
+        // dövüşüyor ama can gidiyor".
+        string mark = snapshot.Poisoned && snapshot.IsActive ? " · zehirli" : string.Empty;
+
         if (snapshot.RetreatRequested && snapshot.IsActive && snapshot.State != CombatState.Retreating)
         {
-            return "çekilecek · vuruş bitince";
+            return "çekilecek · vuruş bitince" + mark;
         }
 
-        return snapshot.State switch
+        string label = snapshot.State switch
         {
             CombatState.Idle => "bekliyor",
             CombatState.AttackWindup => "saldırıyor",
@@ -140,6 +146,8 @@ public static class HudModel
             CombatState.Dead => "öldü",
             _ => string.Empty,
         };
+
+        return label.Length == 0 ? label : label + mark;
     }
 
     /// <summary>

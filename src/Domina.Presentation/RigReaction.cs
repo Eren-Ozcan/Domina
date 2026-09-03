@@ -40,6 +40,16 @@ public enum RigReactionKind
     /// darbe yönü de yok. Sendeleme kendi başına okunmalı.
     /// </remarks>
     Stumble,
+
+    /// <summary>
+    /// Zehir işledi — kimsenin vurmadığı ikinci yara.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Flinch"/>'ten ayrı tutulur: ortada darbe de, darbenin yönü de yok.
+    /// <see cref="Stumble"/>'ın eğrilerini ödünç alır ama kendi türü olarak kalır —
+    /// sendeleme kaçarken olur, zehir dövüşün ortasında.
+    /// </remarks>
+    PoisonThroe,
 }
 
 /// <param name="Part">Yalnızca <see cref="RigReactionKind.Dismember"/> için doludur.</param>
@@ -129,6 +139,13 @@ public sealed class ReactionReader
 
             case WarriorDismembered lost:
                 into.Add(new RigReaction(lost.Warrior, RigReactionKind.Dismember, lost.Part));
+                break;
+
+            case PoisonTicked poison:
+                // Doz bir kez daha işledi. Zehirlenme anının kendisi (WarriorPoisoned)
+                // tepki üretmez: onun ekrandaki karşılığı vuruşun kendisidir, ve orada
+                // zaten bir irkilme var.
+                into.Add(new RigReaction(poison.Warrior, RigReactionKind.PoisonThroe));
                 break;
 
             case ProjectileLaunched launched:

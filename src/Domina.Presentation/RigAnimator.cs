@@ -83,6 +83,13 @@ public sealed class RigAnimator
                 _stumble = 1;
                 break;
 
+            case RigReactionKind.PoisonThroe:
+                // Yordamsal duruşta sendelemenin eğrisini ödünç alır: ikisinde de vuran
+                // yok, savaşçı kendi ağırlığıyla bükülür. Gerçek sanat geldiğinde
+                // ayrışacak yer burası (bkz. docs/ROADMAP.md 2.2).
+                _stumble = 1;
+                break;
+
             case RigReactionKind.Dismember:
                 if (reaction.Part is BodyPart part && _lost.Add(part))
                 {
