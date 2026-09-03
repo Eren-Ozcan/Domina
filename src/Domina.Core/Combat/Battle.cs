@@ -150,7 +150,8 @@ public sealed class Battle
         c.Target is { IsActive: true } t ? t.Id : null,
         c.Position,
         c.Facing,
-        c.SpeedThisTick);
+        c.SpeedThisTick,
+        c.IsPoisoned);
 
     /// <summary>
     /// Oyuncunun "çek" tuşu — <b>tüm ekibi</b> çeker.
@@ -240,6 +241,20 @@ public sealed class Battle
         {
             if (!c.IsActive)
             {
+                continue;
+            }
+
+            TickPoison(c);
+
+            if (!c.IsActive)
+            {
+                // Zehir bitirdiyse bu savaşçının sırası burada kapanır; kalan hamleler
+                // ölü bir savaşçının hamleleri olurdu.
+                if (Finish())
+                {
+                    return false;
+                }
+
                 continue;
             }
 
@@ -1165,6 +1180,7 @@ public sealed class Battle
             p.Weapon.Damage,
             p.Weapon.DismembermentFactor,
             p.Weapon.StunFactor,
+            p.Weapon.Poison,
             BlowSource.Projectile);
     }
 
@@ -1249,6 +1265,7 @@ public sealed class Battle
             raw,
             weapon.DismembermentFactor,
             weapon.StunFactor,
+            weapon.Poison,
             BlowSource.Melee);
     }
 
@@ -1336,6 +1353,7 @@ public sealed class Battle
         double rawDamage,
         double dismembermentFactor,
         double stunFactor,
+        double poison,
         BlowSource source)
     {
         WarriorStats defStats = defender.Warrior.EffectiveStats;
@@ -1387,12 +1405,127 @@ public sealed class Battle
             Die(defender, DeathCause.Wounds);
         }
 
+        // Zehir zardan geçmez: namlu deriyi çizdiyse doz girmiştir. Ölen savaşçıya
+        // zehir işlenmez — zehrin karşılığı zaman, ölünün zamanı yok.
+        if (defender.IsActive && defender.Health > 0 && poison > 0)
+        {
+            ApplyPoison(attacker, defender, poison);
+        }
+
         // Sersemletme zarı en sonda: ayakta kalmayan savaşçının donacak bir şeyi yok.
         // Kopma zarından SONRA atılır ki aynı ağır darbenin iki sonucu belirli bir
         // sırada çözülsün — seed aynıysa dövüş de aynı kalır.
         if (defender.IsActive && defender.Health > 0)
         {
             TryStun(attacker, defender, damage, defStats, location, struckPiece, stunFactor);
+        }
+    }
+
+    /// <summary>
+    /// Zehirli vuruşun dozunu savunana işler.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Zar atılmaz: zehir namlunun üstündedir, vuruş deriyi çizdiyse doz da girmiştir.
+    /// Zırh burada da hiçbir şey yapmaz — kuralın tamamı bunun üzerine kurulu
+    /// (<see cref="CombatTuning.PoisonDamagePerTick"/>).
+    /// </para>
+    /// <para>
+    /// Doz <b>birikir</b> (tavanı <see cref="CombatTuning.PoisonMaxDose"/>), süre ise her
+    /// vuruşta baştan kurulur. Süre birikseydi zehirli silah tek bir dövüşte sonsuza kadar
+    /// uzayan bir hasar kuyruğu üretirdi; doz birikmeseydi ilk vuruştan sonraki vuruşların
+    /// zehri hiçbir şeye yaramazdı.
+    /// </para>
+    /// </remarks>
+    private void ApplyPoison(Combatant attacker, Combatant defender, double potency)
+    {
+        bool wasClean = !defender.IsPoisoned;
+
+        defender.PoisonDose = Math.Min(defender.PoisonDose + potency, _tuning.PoisonMaxDose);
+        defender.PoisonSecondsLeft = _tuning.PoisonSeconds;
+        defender.PoisonSource = attacker;
+
+        // Saat yalnızca temiz kana ilk doz girerken kurulur: her yeni vuruşta sıfırlansaydı
+        // hızlı vuran zehirli silah, hasarı sürekli erteleyerek kendi zehrini iptal ederdi.
+        if (wasClean)
+        {
+            defender.PoisonTickTimer = _tuning.PoisonTickSeconds;
+        }
+
+        defender.TimesPoisoned++;
+        attacker.PoisonsInflicted++;
+
+        Emit(new WarriorPoisoned(
+            ElapsedSeconds,
+            attacker.Id,
+            defender.Id,
+            defender.PoisonDose,
+            defender.PoisonSecondsLeft));
+    }
+
+    /// <summary>
+    /// Zehrin saatini ilerletir ve sırası geldiyse hasarı uygular.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Zehir hasarı <b>zırhtan da Savunma statından da geçmez</b>: doz kana girmiştir,
+    /// arada plaka yoktur. Zehirli silahın açık dövüşteki düşük hasarı bunun bedelidir.
+    /// </para>
+    /// <para>
+    /// Zehir uzuv koparmaz ve sersemletmez — ikisi de <b>darbenin</b> sonucudur, oysa
+    /// burada vuran kimse yok. Öldürebilir; ölüm sebebi ayrı tutulur
+    /// (<see cref="DeathCause.Poison"/>) çünkü savaşçıyı sahadaki hiçbir vuruş düşürmemiştir.
+    /// </para>
+    /// <para>
+    /// <b>Çekilen savaşçının zehri durmaz.</b> Sersemletme ve yakalama, kaçış vaadinin
+    /// üstüne yeni bir zar konmasın diye çekilene işlemez; zehir yeni bir zar değil, çoktan
+    /// ödenmiş bir bedelin devamıdır — tuş bir panzehir değildir.
+    /// </para>
+    /// </remarks>
+    private void TickPoison(Combatant c)
+    {
+        if (!c.IsPoisoned)
+        {
+            return;
+        }
+
+        c.PoisonSecondsLeft -= _tuning.TickSeconds;
+        c.PoisonTickTimer -= _tuning.TickSeconds;
+
+        if (c.PoisonTickTimer > 0)
+        {
+            if (c.PoisonSecondsLeft <= 0)
+            {
+                c.ClearPoison();
+            }
+
+            return;
+        }
+
+        double damage = _tuning.PoisonDamagePerTick * c.PoisonDose;
+
+        c.Health -= damage;
+        c.PoisonDamageTaken += damage;
+        c.DamageTaken += damage;
+
+        if (c.PoisonSource is Combatant source)
+        {
+            source.PoisonDamageDealt += damage;
+            source.DamageDealt += damage;
+        }
+
+        c.PoisonTickTimer += _tuning.PoisonTickSeconds;
+
+        Emit(new PoisonTicked(ElapsedSeconds, c.Id, damage, Math.Max(0, c.Health)));
+
+        if (c.PoisonSecondsLeft <= 0)
+        {
+            c.ClearPoison();
+        }
+
+        if (c.Health <= 0)
+        {
+            Die(c, DeathCause.Poison);
         }
     }
 
@@ -1642,6 +1775,7 @@ public sealed class Battle
     {
         c.BeginState(CombatState.Dead, 0);
         c.Health = 0;
+        c.DeathCause = cause;
         Emit(new WarriorDied(ElapsedSeconds, c.Id, cause));
     }
 
@@ -1856,6 +1990,11 @@ public sealed class Battle
             LostParts = _lostParts.GetValueOrDefault(c.Id),
             TimesStunned = c.TimesStunned,
             StunsInflicted = c.StunsInflicted,
+            DeathCause = c.DeathCause,
+            TimesPoisoned = c.TimesPoisoned,
+            PoisonsInflicted = c.PoisonsInflicted,
+            PoisonDamageTaken = c.PoisonDamageTaken,
+            PoisonDamageDealt = c.PoisonDamageDealt,
             CatchesMade = c.CatchesMade,
             TimesCaught = c.TimesCaught,
             ChargesStarted = c.ChargesStarted,

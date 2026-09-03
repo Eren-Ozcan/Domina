@@ -69,6 +69,30 @@ public sealed record WarriorBattleSummary(
     /// <summary>Kaç düşman sersemletildi.</summary>
     public int StunsInflicted { get; init; }
 
+    /// <summary>Öldüyse ölümün sebebi; hayatta kaldıysa null.</summary>
+    /// <remarks>
+    /// Zehirle ölüm ile darbeyle ölüm aynı kutuya konsaydı zehrin ölçümü yapılamazdı:
+    /// zehirli silahın iddiası "daha çok öldürüyor" değil, <b>başka türlü</b> öldürüyor.
+    /// </remarks>
+    public DeathCause? DeathCause { get; init; }
+
+    /// <summary>Kaç kez zehirli vuruş yendi.</summary>
+    /// <remarks>
+    /// Zehrin karşılığı iki sayıda birden okunur: bu sayaç silahın <b>temas</b> sıklığını,
+    /// <see cref="PoisonDamageTaken"/> ise dozun gerçekten ne kadar iş yaptığını söyler
+    /// (docs/GDD.md §7).
+    /// </remarks>
+    public int TimesPoisoned { get; init; }
+
+    /// <summary>Kaç düşman zehirlendi.</summary>
+    public int PoisonsInflicted { get; init; }
+
+    /// <summary>Zehirden yenen toplam hasar — zırhın hiç azaltmadığı tek hasar.</summary>
+    public double PoisonDamageTaken { get; init; }
+
+    /// <summary>Zehirle verilen toplam hasar.</summary>
+    public double PoisonDamageDealt { get; init; }
+
     /// <summary>Kaç kez gelen silah yakalandı.</summary>
     /// <remarks>
     /// Jitte/sai'nin karşılığı ancak bununla ölçülür: yakalama aleti hasarda kaybeder,

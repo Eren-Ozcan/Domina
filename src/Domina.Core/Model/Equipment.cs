@@ -66,6 +66,20 @@ public sealed record Weapon(
         _ => 1.0,
     };
 
+    /// <summary>
+    /// Namluya sürülmüş zehrin gücü. 0 = temiz silah.
+    /// </summary>
+    /// <remarks>
+    /// Zehir, zırhın <b>cevabıdır</b>: kanı zehirleyen doz plakadan okunmaz, deriyi
+    /// çizen her vuruşla girer ve zırhın hasar azaltımından da savunma statından da
+    /// bağımsız işler. Silahın kendi hasarı bunun bedelini öder — zehirli bıçak açık
+    /// dövüşte kısa kalır, karşılığını süreyle alır.
+    /// </remarks>
+    public double Poison { get; init; }
+
+    /// <summary>Silah zehirli mi?</summary>
+    public bool IsPoisoned => Poison > 0;
+
     /// <summary>Uzuv kopma riskine uygulanan çarpan.</summary>
     public double DismembermentFactor => Class switch
     {
@@ -149,6 +163,35 @@ public sealed record Weapon(
         CatchSkill = 1.25,
     };
 
+    /// <summary>
+    /// Kısa bıçak. Zehrin kontrolü: aynı bıçak, temiz namlu.
+    /// </summary>
+    /// <remarks>
+    /// Zehir ölçümü ancak tek farkla yapılabilir. <see cref="PoisonedTanto"/> ile
+    /// arasındaki tek fark namluya sürülen doz; hasar, hız ve sınıf aynıdır.
+    /// </remarks>
+    public static Weapon Tanto() => new("Tantō", WeaponClass.Cutting, 13, false, 0.85);
+
+    /// <summary>
+    /// Namlusu zehirlenmiş kısa bıçak — zırhın önünde duran tek silah.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Çelik olarak neredeyse zararsızdır (7, temiz tantō 13 iken): çıktısının çoğu
+    /// dozdan gelir, ve zırh dozu okuyamaz. Takas budur — zehir uzuv koparmaz, sersemletmez
+    /// ve hemen öldürmez; karşılığında <b>zamanla</b> ödenir.
+    /// </para>
+    /// <para>
+    /// Hasar 13 iken ölçüm yanlış cevap veriyordu: zehir zırhı aşmıyor, yalnızca zayıf bir
+    /// bıçağı kurtarıyordu (açık dövüşte %74.00, zırhlı düşmana karşı %55.99 — katana
+    /// %73.09 / %68.62). Bıçak 7'ye indirilip doz büyütülünce çıktının %60'ı zehre geçti
+    /// ve iddia doğrulandı: %72.19 / <b>%77.19</b>. Zehirlinin karşısında ō-yoroi kuşanmak
+    /// artık zarar — plaka dozu durdurmaz, ağırlığı ise vuruşu geciktirir.
+    /// </para>
+    /// </remarks>
+    public static Weapon PoisonedTanto() =>
+        Tanto() with { Name = "Zehirli tantō", Damage = 7, Poison = 1.0 };
+
     /// <summary>Silahsız/uzuv kaybı sonrası düşülen taban.</summary>
     public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80)
     {
@@ -187,6 +230,12 @@ public sealed record ThrownWeapon(
     int Ammo,
     double ThrowSeconds)
 {
+    /// <inheritdoc cref="Weapon.Poison"/>
+    public double Poison { get; init; }
+
+    /// <inheritdoc cref="Weapon.IsPoisoned"/>
+    public bool IsPoisoned => Poison > 0;
+
     /// <inheritdoc cref="Weapon.DismembermentFactor"/>
     public double DismembermentFactor => Class switch
     {
@@ -208,6 +257,16 @@ public sealed record ThrownWeapon(
     /// <summary>Hızlı, hafif, çok sayıda.</summary>
     public static ThrownWeapon Shuriken() =>
         new("Shuriken", WeaponClass.Cutting, 12, 700, 1400, 4, 0.7);
+
+    /// <summary>
+    /// Ucu zehirlenmiş shuriken: az sayıda, hasarı aynı, arkasında doz bırakır.
+    /// </summary>
+    /// <remarks>
+    /// Zehrin menzilli hâli. Mermi <b>yakalanamaz</b> (bkz. <see cref="Weapon.CatchSkill"/>),
+    /// yani zehirli uç yakalama aletinin de cevabıdır; karşılığında cephane yarıya iner.
+    /// </remarks>
+    public static ThrownWeapon PoisonedShuriken() =>
+        Shuriken() with { Name = "Zehirli shuriken", Ammo = 2, Poison = 1.0 };
 
     /// <summary>Yavaş ve ağır; az sayıda ama ciddi hasar.</summary>
     public static ThrownWeapon ThrowingSpear() =>

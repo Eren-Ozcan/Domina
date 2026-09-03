@@ -139,6 +139,13 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// </summary>
     public bool PlayerIntervened => RetreatRequested || State == CombatState.Retreating;
 
+    /// <summary>Öldüyse ölümün sebebi.</summary>
+    /// <remarks>
+    /// Olay akışı sebebi zaten taşıyor, ama toplu simülasyon olayları biriktirmez
+    /// (<c>BattleSetup.CollectEvents</c>). Zehirle ölüm ancak burada sayılabilir.
+    /// </remarks>
+    public DeathCause? DeathCause { get; set; }
+
     /// <summary>Hâlâ dövüşe katılıyor mu?</summary>
     public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
 
@@ -242,6 +249,47 @@ internal sealed class Combatant(Warrior warrior, int team)
         return true;
     }
 
+    // ---- Zehir ----
+
+    /// <summary>
+    /// Kanındaki zehrin gücü. 0 = temiz.
+    /// </summary>
+    /// <remarks>
+    /// Doz <b>birikir</b>, süre yenilenir: ikinci vuruş ilk vuruşun zehrini silmez, üstüne
+    /// koyar (tavanı <c>CombatTuning.PoisonMaxDose</c>). Tek bir "zehirli mi" bayrağı
+    /// olsaydı zehirli silahın sürekli vurmasının hiçbir karşılığı olmazdı.
+    /// </remarks>
+    public double PoisonDose { get; set; }
+
+    /// <summary>Zehrin bitmesine kalan süre.</summary>
+    public double PoisonSecondsLeft { get; set; }
+
+    /// <summary>Bir sonraki zehir hasarına kalan süre.</summary>
+    /// <remarks>
+    /// Zehir kendi saatiyle işler, simülasyon adımıyla değil — aksi hâlde tick
+    /// çözünürlüğü değişince zehrin gücü de değişirdi.
+    /// </remarks>
+    public double PoisonTickTimer { get; set; }
+
+    /// <summary>Zehri kim verdi — hasarın yazılacağı savaşçı.</summary>
+    /// <remarks>
+    /// Son vuran tutulur. Zehir zamana yayıldığı için hasarın sahibi vuruş anında
+    /// kaybolur; kaydedilmezse zehirle öldüren savaşçı hiçbir sayaçta görünmez.
+    /// </remarks>
+    public Combatant? PoisonSource { get; set; }
+
+    /// <summary>Zehirli mi?</summary>
+    public bool IsPoisoned => PoisonDose > 0 && PoisonSecondsLeft > 0;
+
+    /// <summary>Zehri temizler — dozu, süreyi ve kaynağı birlikte.</summary>
+    public void ClearPoison()
+    {
+        PoisonDose = 0;
+        PoisonSecondsLeft = 0;
+        PoisonTickTimer = 0;
+        PoisonSource = null;
+    }
+
     /// <summary>Bu dövüşte kalan mermi. Kalıcı hale dokunulmaz, sayaç burada tutulur.</summary>
     public int ThrowsLeft { get; set; } = warrior.UsableThrown?.Ammo ?? 0;
 
@@ -275,6 +323,22 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     /// <summary>Kaç kez kendi silahı yakalanıp açıkta kaldı.</summary>
     public int TimesCaught { get; set; }
+
+    /// <summary>Kaç kez zehirli bir vuruş yedi.</summary>
+    /// <remarks>
+    /// Zehrin karşılığı tek sayıda okunamaz: kaç kez zehirlendiği silahın <b>temas</b>
+    /// sıklığını, aldığı zehir hasarı ise dozun ne kadar iş yaptığını söyler.
+    /// </remarks>
+    public int TimesPoisoned { get; set; }
+
+    /// <summary>Kaç düşmanı zehirledi.</summary>
+    public int PoisonsInflicted { get; set; }
+
+    /// <summary>Zehirden yediği toplam hasar.</summary>
+    public double PoisonDamageTaken { get; set; }
+
+    /// <summary>Zehriyle verdiği toplam hasar.</summary>
+    public double PoisonDamageDealt { get; set; }
 
     /// <summary>Bu dövüşte kaç kez hücuma kalktı.</summary>
     public int ChargesStarted { get; set; }

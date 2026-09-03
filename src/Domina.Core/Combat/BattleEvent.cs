@@ -58,6 +58,32 @@ public sealed record WarriorStunned(
     double Seconds) : BattleEvent(AtSeconds);
 
 /// <summary>
+/// Vuruş zehir taşıyordu: savunanın kanına doz girdi.
+/// </summary>
+/// <remarks>
+/// Hasarın kendisi ayrı bir olaydır (<see cref="PoisonTicked"/>). İkisi ayrı durur çünkü
+/// ekranda anlatacakları da ayrı: zehirlenme <b>bir kez</b> olur ve silahı ele verir,
+/// hasar süre boyunca tekrar eder.
+/// </remarks>
+/// <param name="Dose">Vuruştan sonra savunanın kanındaki toplam doz.</param>
+/// <param name="Seconds">Dozun yenilenen ömrü.</param>
+public sealed record WarriorPoisoned(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    double Dose,
+    double Seconds) : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Zehir bir kez daha işledi. Vuran kimse yok; hasar zırhtan da savunmadan da geçmez.
+/// </summary>
+public sealed record PoisonTicked(
+    double AtSeconds,
+    WarriorId Warrior,
+    double Damage,
+    double HealthRemaining) : BattleEvent(AtSeconds);
+
+/// <summary>
 /// Ağır darbe geldi ve savaşçı çekilmekte olduğu için <b>yaşadı ama uzvunu kaybetti</b>.
 /// Oyuncu zamanında müdahale etmeseydi bu olay <see cref="WarriorDied"/> olurdu.
 /// </summary>
@@ -189,6 +215,15 @@ public enum DeathCause
 
     /// <summary>Ağır darbe geldi ve kimse çekmedi — uzuv kopmasıyla ölüm.</summary>
     GrievousBlow,
+
+    /// <summary>
+    /// Zehir bitirdi. Vuruşla ölümün arasında saniyeler var; ölümü <b>kimse</b> indirmedi.
+    /// </summary>
+    /// <remarks>
+    /// Ayrı bir sebep olarak durur çünkü onur hesabı ile ekranın söyleyeceği söz de ayrı:
+    /// zehirle düşen savaşçı savaş meydanında değil, ondan sonra ölür.
+    /// </remarks>
+    Poison,
 }
 
 public enum BattleOutcome

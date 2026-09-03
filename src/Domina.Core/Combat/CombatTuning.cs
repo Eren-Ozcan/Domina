@@ -425,6 +425,62 @@ public sealed record CombatTuning
     /// </remarks>
     public double CatchAccuracyBonusAtMax { get; init; } = 0.5;
 
+    // ---- Zehir ----
+
+    /// <summary>
+    /// Zehrin bir tikte verdiği hasar (doz 1 iken). Zırh ve Savunma bunu <b>azaltmaz</b>.
+    /// </summary>
+    /// <remarks>
+    /// Kuralın tamamı buradan asılır: zehir, hasar azaltımının etrafından dolaşan tek
+    /// yoldur. Plaka kesiği durdurur, künt kuvvetin bir payını durdurur
+    /// (<see cref="ArmorStunResistanceShare"/>), zehri hiç durdurmaz — çünkü zehir zırha
+    /// değil kana işler. Zehirli silahın kendi hasarının düşük olması bunun bedelidir.
+    /// </remarks>
+    /// <remarks>
+    /// Ölçüldü (<c>poison</c>/<c>katana</c>, 20.000 dövüş, <c>losing:0.7</c>): 2.5'te
+    /// zehirli bıçak açık dövüşte katana ile başa baş (%72.19'a karşı %73.09) ama zırhlı
+    /// düşmanın önünde öne geçiyor (%77.19'a karşı %68.62). 1.2'de zehir yalnızca zayıf
+    /// bir silahı kurtarıyor, zırhı hiç aşmıyor (%74.00 / %55.99); 3.0'da her iki eksende
+    /// de baskın (%79.25 / %88.47).
+    /// </remarks>
+    public double PoisonDamagePerTick { get; init; } = 2.5;
+
+    /// <summary>Zehrin hasar verme aralığı.</summary>
+    /// <remarks>
+    /// Tick süresinden (<see cref="TickSeconds"/>) bağımsız tutulur: zehir simülasyon
+    /// adımına bağlansaydı 20 Hz'lik çözünürlük hasarı da yirmiye katlardı.
+    /// </remarks>
+    /// <remarks>
+    /// Aralık tarafsız bir düğme değil, doğrudan hasar hızıdır: aynı doz 0.5 sn'de
+    /// %94.93, 1 sn'de %72.19, 2 sn'de %30.40 zafer veriyor. 1 sn seçildi çünkü ekranda
+    /// tek tek okunabilen bir ritim, ve dozun ömrü (<see cref="PoisonSeconds"/>) buna
+    /// bölününce zehir <b>sayılabilir</b> bir şey oluyor: altı vuruş.
+    /// </remarks>
+    public double PoisonTickSeconds { get; init; } = 1.0;
+
+    /// <summary>Bir dozun ömrü. Her yeni vuruş süreyi baştan kurar.</summary>
+    /// <remarks>
+    /// Ölçümde 6 saniyeden sonrası neredeyse hiçbir şey yapmıyor: 3 sn'de %52.90,
+    /// 4.5'te %68.83, 6'da %72.19, 9'da %73.11. Sebep, zehirli silahın hızlı vurup
+    /// süreyi sürekli yenilemesi — uzun ömür yalnızca <b>son</b> vuruştan sonrasını
+    /// uzatır, o da çoğu dövüşte bitmiş dövüştür.
+    /// </remarks>
+    public double PoisonSeconds { get; init; } = 6.0;
+
+    /// <summary>Bir savaşçıda birikebilecek azami doz.</summary>
+    /// <remarks>
+    /// Tavan olmasaydı zehirli silah kendi kendini besleyen bir sarmal olurdu: her vuruş
+    /// dozu büyütür, büyüyen doz düşmanı yavaşlatmadan öldürür ve silahın düşük hasarı
+    /// hiçbir şeyin bedeli olmaktan çıkardı.
+    /// </remarks>
+    /// <remarks>
+    /// Asıl denge düğmesi budur: 1'de zehirli bıçak düpedüz kötü (%16.71), 2'de hâlâ
+    /// geride (%50.92), 3'te katana ile başa baş (%72.19), 5'te baskın (%82.25). Tavan
+    /// aynı zamanda kuralın <b>üst sınırını</b> yazar — üç vuruşluk zehir taşıyan bir
+    /// savaşçının dördüncü vuruşu artık zehir için değil, hasar için atılır.
+    /// </remarks>
+    public double PoisonMaxDose { get; init; } = 3.0;
+
     // ---- Uzuv kaybı ----
 
     /// <summary>

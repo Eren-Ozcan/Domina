@@ -24,6 +24,11 @@ namespace Domina.Core.Combat;
 /// </param>
 /// <param name="Facing">Baktığı yön (+1 sağa, -1 sola).</param>
 /// <param name="Speed">Bu tick'teki hızı — yürüme döngüsü buradan sürülür.</param>
+/// <param name="Poisoned">
+/// Kanında hâlâ zehir var mı? Bir <b>durum</b> değildir — zehirlenmiş savaşçı yürür,
+/// vurur, kaçınır; bu yüzden <see cref="CombatState"/> içinde temsil edilemez, ayrı bir
+/// bayrak olarak taşınır.
+/// </param>
 /// <param name="TargetId">
 /// Vurmaya çalıştığı düşman; hedefi yoksa <c>null</c>. Hedef seçimi rastgele olduğu için
 /// görselleştirme bunu <b>kendi başına türetemez</b> — hamlenin nereye gideceği buradan
@@ -43,7 +48,8 @@ public readonly record struct CombatantSnapshot(
     WarriorId? TargetId = null,
     ArenaPoint Position = default,
     int Facing = 1,
-    double Speed = 0)
+    double Speed = 0,
+    bool Poisoned = false)
 {
     public double HealthFraction => MaxHealth <= 0 ? 0 : Health / MaxHealth;
 
