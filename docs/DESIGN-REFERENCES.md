@@ -84,16 +84,19 @@ sebebi gösterdi: savunmasızlık, hücumu *kimin yaptığına* göre asimetrik 
 (GDD §4, "Neden hücum savunmayı kapatmıyor"). M&B'de bunu taşıyabilen şey, oyuncunun
 kontrolündeki tek bir vuruş olması; bizde hücum otomatik ve iki taraf da yapıyor.
 
-**Uygulandı — ve kısmen tuttu.** M&B'nin "hasar hıza bağlıdır" kalıbı alındı: varış
-vuruşunun çarpanı artık `1 + (varış hızı ÷ azami yürüme hızı) × oran`. Model doğrulandı,
-**denge beklentisi doğrulanmadı.**
+**Uygulandı — ve iki adımda tuttu.** M&B'nin "hasar hıza bağlıdır" kalıbı alındı: varış
+vuruşunun çarpanı artık `1 + (varış hızı ÷ azami yürüme hızı) × oran`. **İlk ölçümde denge
+beklentisi doğrulanmadı:** `Speed` ekseni hâlâ atıldı (3v3 zaferi Hız 0'da %83.9, Hız 100'de
+%84.7). Sebep kalıbın kendisi değil, bizim tarafımızdaki ikinci bağdı — hücum zarı karar adımı
+başına atıldığı için hızlı savaşçı fırsat penceresinden çabuk geçiyor ve **daha seyrek** hücum
+ediyordu (2.20 → 1.20). Kalıbın verdiği artışı bizim kendi örnekleme biçimimiz yiyordu.
 
-Gerekçe şuydu: ölçümde atıl çıkan `ChargeSpeedMultiplier` ekseni böylece canlanır. Canlanmadı
-(zafer 1.0'da %84.5, 2.5'te %83.4). Sebep GDD §4'te yazılı — hızlı savaşçı daha sert ama
-**daha seyrek** hücum ediyor, çünkü fırsat penceresi hıza ters çalışıyor.
+Zar fırsat başına bir kez atılınca sıklık hızdan koptu ve kalıp beklendiği gibi çalıştı:
+zafer Hız 0'da **%83.6**, Hız 100'de **%87.0** (GDD §4, "Fırsat başına tek zar").
 
 Ders: kaynak bir **kalıbı** doğrular, o kalıbın senin sisteminde ne yapacağını değil. M&B'de
-hız hücumun tek değişkeni; bizde hücumun sıklığı da hıza bağlı ve ters işaretli.
+hız hücumun tek değişkeni; bizde hıza bağlı ikinci bir kanal daha vardı ve ters işaretliydi.
+Kalıbı ölçüp düz çıkması onu çürütmez — önce kendi sistemindeki karşı kanalı ara.
 
 > [Couched lance damage (Mount & Blade Wiki)](https://mountandblade.fandom.com/wiki/Couched_lance_damage) ·
 > [Bannerlord couch lance rehberi](https://gamerempire.net/mount-blade-2-bannerlord-how-to-couch-lance/)

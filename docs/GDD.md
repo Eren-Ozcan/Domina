@@ -127,7 +127,7 @@ savunmasız bırakmaktır.
 | Kural | Karar |
 |---|---|
 | **Tetik: fırsat, eşik değil** | Savaşçı sabit bir mesafeye bakmaz, **boşluğa** bakar: *"şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar vaktim var mı?"* Her düşman için sorulan şey, ona vurabilir hale gelmesinin ne kadar süreceği — `(mesafe − menzili) ÷ hızı`. Biri bunu birikme süresinden kısa sürede yapabiliyorsa fırsat yoktur. **Fırlatma önceliklidir:** atacak mermisi olan atar, hücuma kalkmaz |
-| **Karar savaşçının kendisidir** | Fırsat doğduğunda kullanılıp kullanılmayacağı **Saldırganlık**'la ölçeklenen bir zara bağlı: atılgan olan atlar, ölçülü olan mesafeyi yürüyerek kapatır |
+| **Karar savaşçının kendisidir** | Fırsat doğduğunda kullanılıp kullanılmayacağı **Saldırganlık**'la ölçeklenen bir zara bağlı: atılgan olan atlar, ölçülü olan mesafeyi yürüyerek kapatır. Zar **fırsat başına bir kez** atılır — fırsat sürdükçe her karar adımında yeniden değil |
 | **Birikme** | Koşu hemen başlamaz: savaşçı önce **yerinde durup güç toplar**. Bu sürede kıpırdamaz, kaçınamaz, bloklayamaz ve **yediği ilk isabetle hücum dağılır** — koşu hiç başlamaz, hasar çarpanı kazanılmaz. Hücumun asıl bedeli burada ödenir |
 | **Hız** | Hücum sırasında hareket hızı bir **çarpanla** artar (`Speed` stat'ının üstüne, `RetreatSpeedMultiplier` ile aynı yerden) |
 | **Ödül** | Varışta yapılan ilk vuruş **hasar çarpanı** kazanır, ve çarpan **varış anındaki gerçek hızdan** çıkar: `1 + (varış hızı ÷ azami yürüme hızı) × oran`. Momentum hızdır — ağır Oni'nin hücumu Tengu'nunki kadar sert olamaz. Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
@@ -189,10 +189,10 @@ kendisinden türediği için silindi.
 
 | Sayı | Değer | Ölçüm |
 |---|---|---|
-| Olasılık, Saldırganlık 0 | **0.12** | Fırsat doğduğunda kullanma eğilimi. Acemi (Sald. 40) 0.25, tengu (70) 0.35 |
-| Olasılık, Saldırganlık 100 | **0.45** | Tek sıklık düğmesi. 0.12-0.45 → 2.32 kalkış / **1.71 tamamlanmış hücum**; 0.30-1.00 → 2.80 kalkış ama hücumun 3v3 zaferine katkısı +%9'a fırlıyor |
+| Olasılık, Saldırganlık 0 | **0.35** | Gördüğü fırsatların kaçını kullandığı. Acemi (Sald. 40) 0.61, tengu (70) 0.81 |
+| Olasılık, Saldırganlık 100 | **1.00** | Tek sıklık düğmesi. 0.35-1.00 → 1.88 kalkış / **1.63 tamamlanmış hücum**, yani adım başına atılan eski zarın (0.12-0.45) ürettiği sıklığın yerini tutuyor. Aynı kuralla 0.12-0.45 → 0.78 kalkış, 0.50-1.00 → 2.15 |
 | Birikme | **0.75 sn** | Dağılma oranı 0.25 sn'de %5.7, 0.5'te %13.0, **0.75'te %23.6**, sonrası %23-24'te düzleşiyor. 0.75 eğrinin dizi: ötesi taahhüdü uzatır ama riski artırmaz |
-| Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi.** Hasar hıza bağlandıktan sonra yeniden ölçüldü ve hâlâ atıl: zafer 1.0'da %84.5, 2.5'te %83.4 |
+| Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi** ve öyle kalıyor: zafer 1.0'da %84.8, 1.6'da %84.5, 2.5'te %84.4. İki tarafa birden işlediği için düz olması beklenir — canlanması gereken şey `Speed` stat'ıydı, bu çarpan değil |
 | Hasar oranı (azami hızda) | **0.43** | Speed 50'lik savaşçıya 1.6× hızla ~1.50 çarpan verir. 0.25-0.6 bandı düz; 0.9 ve üstü **aleyhe** dönüyor (ölüm %43.2), çünkü oran iki tarafa da işler ve varyans zayıf tarafa yarar |
 | Süre sınırı | **4.0 sn** | Hiç dolmuyor (mesafe ~0.6 sn'de kapanıyor). Sonsuz kovalamaya karşı emniyet supabı olarak duruyor |
 
@@ -200,13 +200,40 @@ Kilitli ayarla, hücum kapalı → açık:
 
 | Senaryo | Zafer | Hücum/dövüş | Varış | Dağılan | En geç kalkış |
 |---|---|---|---|---|---|
-| duel | %66.7 → %66.0 | 0.56 | %100 | %0 | 1.75 sn |
-| 3v3 | %81.6 → %84.1 | 1.72 | %85.0 | %14.5 | **16.05 sn** |
-| veteran | %98.3 → **%96.1** | 0.81 | %100 | %0 | 1.75 sn |
-| 1v3 | %45.3 → %64.0 | 0.73 | %80.2 | %19.8 | 1.50 sn |
+| duel | %66.7 → %66.3 | 0.61 | %100 | %0 | 1.00 sn |
+| 3v3 | %81.6 → %84.4 | 1.88 | %86.7 | %13.3 | **13.80 sn** |
+| veteran | %98.3 → **%96.0** | 0.74 | %100 | %0 | 0.75 sn |
+| 1v3 | %45.3 → %63.0 | 0.74 | %100 | %0 | 0.75 sn |
+
+Tek düşmanlı senaryolarda hücum yeniden bir **açılış hamlesi**: karşında bir kişi varken
+fırsat bir kez doğar, o da dövüşün başında. Bu artık kuralın kendisinden okunuyor, ölçüm
+artığı değil — 3v3'te fırsat hatlar dağıldıkça yeniden doğuyor ve en geç kalkış 13.80 sn.
 
 Hücumun katkısı iki senaryoda **sıfır ya da eksi** — mekaniğin bir bedeli olduğunun
 ölçülebilir kanıtı bu satırlardır.
+
+### Fırsat başına tek zar — `Speed`'i canlandıran şey
+
+Hücum zarı önce **karar adımı başına** atılıyordu (0.2 sn'de bir). Bunun görünmeyen sonucu
+şuydu: hücum sıklığı, savaşçının fırsat penceresinde ne kadar **oyalandığına** bağlıydı —
+oyalanma süresi de mesafeyi kapatma hızıdır. Hızlı savaşçı pencereden çabuk geçtiği için
+daha seyrek hücum ediyordu: 3v3'te dövüş başına Hız 0'da **2.20**, Hız 100'de **1.20**.
+
+Bu, hasarın hıza bağlanmasını (§4 "Ödül") tam olarak götürüyordu. Hızlı savaşçı daha sert
+ama daha seyrek vuruyor, iki eğri birbirini yiyor ve `Speed` ekseni ölçümde **atıl**
+kalıyordu: zafer Hız 0'da %83.9, Hız 100'de %84.7 — gürültü kadar.
+
+Zar fırsat başına bir kez atılınca sıklık hızdan **tamamen** koptu ve eksen canlandı:
+
+| `Speed` | 0 | 25 | 50 | 75 | 100 |
+|---|---|---|---|---|---|
+| Zafer (3v3) | %83.6 | %83.6 | %84.5 | %85.0 | **%87.0** |
+| Hücum/dövüş | 1.87 | 1.87 | 1.87 | 1.88 | 1.88 |
+
+Kural olarak da doğrusu bu: fırsat gördüğünde bir kez karar verirsin, o fırsat sürdükçe
+saniyede beş kez zar atmazsın. Bedeli, Saldırganlık'ın ayırt etme gücünün daralması —
+band 0.12-0.45 (3.75 kat) yerine 0.35-1.00 (2.86 kat), çünkü aynı sıklığı daha az zarla
+üretmek gerekti. `Speed`'in dojo'da gerçek bir düğme olması bu takasa değer.
 
 **Bozulma ölçütü ölçümle değişti.** Önce "ağır darbe dağıtır" (§7'nin eşiği) denendi ve
 **%0.0** çıktı: taze bir savaşçıya inen darbeler o eşiğe hemen hiç ulaşmıyor, kural
