@@ -59,6 +59,16 @@ public sealed record WarriorBattleSummary(
     /// </remarks>
     public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
 
+    /// <summary>Bu dövüşte kaç kez sersemleyip donuldu.</summary>
+    /// <remarks>
+    /// Künt silahın karşılığı ancak bununla ölçülür: kesici uzuv kopmasıyla ödüllenir,
+    /// künt bu sayaçla (docs/GDD.md §7).
+    /// </remarks>
+    public int TimesStunned { get; init; }
+
+    /// <summary>Kaç düşman sersemletildi.</summary>
+    public int StunsInflicted { get; init; }
+
     /// <summary>Bu dövüşte kaç kez hücuma kalkıldı.</summary>
     /// <remarks>
     /// Hücumun sayıları ancak bu iki sayaçla ölçülebilir: eşik ve olasılık hücumun ne

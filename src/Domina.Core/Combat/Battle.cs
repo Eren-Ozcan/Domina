@@ -576,6 +576,18 @@ public sealed class Battle
                 AdvanceCharge(c);
                 break;
 
+            case CombatState.Stunned:
+                // Sersemleme bitti: savaşçı normal karar döngüsüne döner. Bu arada
+                // verilmiş kaçış komutu yutulmaz, burada işlenir.
+                if (c.RetreatRequested)
+                {
+                    BeginRetreat(c);
+                    return;
+                }
+
+                c.BeginState(CombatState.Idle, SpacingSeconds(c));
+                break;
+
             case CombatState.Retreating:
                 // Kaçış artık sayaçla değil mesafeyle biter: gerçekten arenayı
                 // terk etmesi gerekiyor.
@@ -1146,7 +1158,13 @@ public sealed class Battle
         }
 
         // Güç fırlatmaya karışmaz: kargıyı iten kol değil, atışın kendisi.
-        ApplyBlow(attacker, target, p.Weapon.Damage, p.Weapon.DismembermentFactor, BlowSource.Projectile);
+        ApplyBlow(
+            attacker,
+            target,
+            p.Weapon.Damage,
+            p.Weapon.DismembermentFactor,
+            p.Weapon.StunFactor,
+            BlowSource.Projectile);
     }
 
     // -------------------------------------------------------------- çözümleme
@@ -1215,7 +1233,13 @@ public sealed class Battle
                      * (flanking ? _tuning.FlankDamageMultiplier : 1.0)
                      * chargeMultiplier;
 
-        ApplyBlow(attacker, defender, raw, weapon.DismembermentFactor, BlowSource.Melee);
+        ApplyBlow(
+            attacker,
+            defender,
+            raw,
+            weapon.DismembermentFactor,
+            weapon.StunFactor,
+            BlowSource.Melee);
     }
 
     /// <summary>Darbenin kaynağı — yalnızca hangi olayın yayınlanacağını belirler.</summary>
@@ -1238,6 +1262,7 @@ public sealed class Battle
         Combatant defender,
         double rawDamage,
         double dismembermentFactor,
+        double stunFactor,
         BlowSource source)
     {
         WarriorStats defStats = defender.Warrior.EffectiveStats;
@@ -1281,15 +1306,81 @@ public sealed class Battle
         }
 
         // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
-        if (TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor))
+        bool grievous =
+            TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor);
+
+        if (!grievous && defender.Health <= 0)
+        {
+            Die(defender, DeathCause.Wounds);
+        }
+
+        // Sersemletme zarı en sonda: ayakta kalmayan savaşçının donacak bir şeyi yok.
+        // Kopma zarından SONRA atılır ki aynı ağır darbenin iki sonucu belirli bir
+        // sırada çözülsün — seed aynıysa dövüş de aynı kalır.
+        if (defender.IsActive && defender.Health > 0)
+        {
+            TryStun(attacker, defender, damage, defStats, location, struckPiece, stunFactor);
+        }
+    }
+
+    /// <summary>
+    /// Sersemletme zarını atar ve tuttuysa savaşçıyı dondurur.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kural künt silahın var oluş sebebidir: kesici uzuv koparır, künt savaşçıyı
+    /// donduran darbeyi indirir (docs/GDD.md §7). Direnç, kopmada olduğu gibi darbenin
+    /// <b>indiği</b> bölgenin zırhından okunur — ama tamamı değil, yalnızca bir payı
+    /// (<see cref="CombatTuning.ArmorStunResistanceShare"/>): plaka kesiği durdurduğu
+    /// kadar künt kuvveti durdurmaz.
+    /// </para>
+    /// <para>
+    /// <b>Çekilen savaşçı sersemlemez.</b> Sersemletme onu donduracağı için, künt silahlı
+    /// bir düşman oyuncunun tek müdahalesini (docs/GDD.md §5) tek zarla iptal edebilirdi;
+    /// "Kaç" tuşunun ölümü düşürme vaadi buna dayanamaz. Sersemleyen savaşçı zaten
+    /// savunmasız olduğundan üst üste sersemletme de yoktur — süre yenilenmez.
+    /// </para>
+    /// </remarks>
+    private void TryStun(
+        Combatant attacker,
+        Combatant defender,
+        double damage,
+        WarriorStats defStats,
+        HitLocation location,
+        ArmorPiece struckPiece,
+        double stunFactor)
+    {
+        if (defender.State is CombatState.Retreating or CombatState.Stunned
+            || defender.RetreatRequested)
         {
             return;
         }
 
-        if (defender.Health <= 0)
+        if (damage / defStats.MaxHealth < _tuning.StunSeverityThreshold)
         {
-            Die(defender, DeathCause.Wounds);
+            return;
         }
+
+        double resistance = struckPiece.DismembermentResistance * _tuning.ArmorStunResistanceShare;
+        double chance = _tuning.BaseStunChance
+                        * stunFactor
+                        * (location == HitLocation.Head ? _tuning.StunHeadMultiplier : 1.0)
+                        * (1 - resistance);
+
+        if (!_rng.Chance(Math.Clamp(chance, 0, 1)))
+        {
+            return;
+        }
+
+        // Sersemleyen savaşçı hücumunu da kaybeder: koşuysa yarıda kalır, birikmeyse
+        // dağılır. Sayaçlar BreakChargeWindup'ta değil burada tutulmaz — orası isabetin
+        // hücumu dağıtma kuralı, burası darbenin savaşçıyı dondurma kuralı.
+        defender.ClearCharge();
+
+        defender.TimesStunned++;
+        attacker.StunsInflicted++;
+        defender.BeginState(CombatState.Stunned, _tuning.StunSeconds);
+        Emit(new WarriorStunned(ElapsedSeconds, attacker.Id, defender.Id, _tuning.StunSeconds));
     }
 
     /// <summary>
@@ -1690,6 +1781,8 @@ public sealed class Battle
             c.LostLimb)
         {
             LostParts = _lostParts.GetValueOrDefault(c.Id),
+            TimesStunned = c.TimesStunned,
+            StunsInflicted = c.StunsInflicted,
             ChargesStarted = c.ChargesStarted,
             ChargesConnected = c.ChargesConnected,
             ChargeOpportunitiesTaken = c.ChargeOpportunitiesTaken,

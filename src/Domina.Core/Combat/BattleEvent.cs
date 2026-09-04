@@ -35,6 +35,13 @@ public sealed record AttackLanded(
     double Damage,
     double DefenderHealthRemaining) : BattleEvent(AtSeconds);
 
+/// <summary>Ağır darbe savaşçıyı sersemletti: <paramref name="Seconds"/> boyunca donar.</summary>
+public sealed record WarriorStunned(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    double Seconds) : BattleEvent(AtSeconds);
+
 /// <summary>
 /// Ağır darbe geldi ve savaşçı çekilmekte olduğu için <b>yaşadı ama uzvunu kaybetti</b>.
 /// Oyuncu zamanında müdahale etmeseydi bu olay <see cref="WarriorDied"/> olurdu.

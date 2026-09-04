@@ -37,6 +37,16 @@ public enum CombatState
     /// </summary>
     Charging,
 
+    /// <summary>
+    /// Ağır bir darbeyle sersemledi: yürüyemez, vuramaz, <b>kaçınamaz</b>.
+    /// </summary>
+    /// <remarks>
+    /// Künt silahın takasının diğer yarısı (docs/GDD.md §7). Kesilemez ama kendi süresi
+    /// bitince savaşçı normal karar döngüsüne döner; buffer'lanmış kaçış komutu da
+    /// orada işlenir — sersemletme komutu <b>yutmaz</b>, geciktirir.
+    /// </remarks>
+    Stunned,
+
     /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
     Retreating,
 
@@ -128,7 +138,7 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <b>Hücum savunmayı kapatmaz.</b> Koşan ya da güç toplayan savaşçı normal oranıyla
     /// kaçınır (docs/GDD.md §4). Sırtını dönüp kaçan dönmez — savunmasızlık kaçışa özgüdür.
     /// </remarks>
-    public bool CanDefend => State is not CombatState.Retreating;
+    public bool CanDefend => State is not (CombatState.Retreating or CombatState.Stunned);
 
     /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
     /// <remarks>
@@ -241,6 +251,12 @@ internal sealed class Combatant(Warrior warrior, int team)
     public double DamageTaken { get; set; }
 
     public bool LostLimb { get; set; }
+
+    /// <summary>Bu dövüşte kaç kez sersemledi.</summary>
+    public int TimesStunned { get; set; }
+
+    /// <summary>Kaç düşmanı sersemletti — künt silahın karşılığının ölçüldüğü sayaç.</summary>
+    public int StunsInflicted { get; set; }
 
     /// <summary>Bu dövüşte kaç kez hücuma kalktı.</summary>
     public int ChargesStarted { get; set; }

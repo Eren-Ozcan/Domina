@@ -297,6 +297,87 @@ public sealed record CombatTuning
     /// </remarks>
     public double ArmorAttackSlowdownAtFullWeight { get; init; } = 0.75;
 
+    // ---- Sersemletme ----
+
+    /// <summary>
+    /// Tek darbenin azami cana oranı bunu aşarsa sersemletme zarı atılır.
+    /// </summary>
+    /// <remarks>
+    /// Uzuv kopma eşiğiyle (<see cref="GrievousSeverityThreshold"/>) aynı yerden başlar
+    /// ama ayrı bir düğmedir: ikisi <b>aynı ağır darbenin</b> iki ayrı sonucudur ve
+    /// künt/kesici takasının nereden döndüğü ancak ayrı ayrı taranarak bulunur.
+    /// </remarks>
+    /// <remarks>
+    /// Tarandı (<c>blade</c>/<c>club</c>, 20.000 dövüş, <c>losing:0.7</c>): 0.20'de iki
+    /// sınıf başa baş (kesici %92.06, künt %92.08 zafer). 0.30'da sersemletme neredeyse
+    /// hiç ateşlenmiyor ve künt yine geriye düşüyor (%89.07'ye karşı %91.55) — kuralın
+    /// çözdüğü sorun aynen geri geliyor. 0.10'da <b>kesici silah da</b> sersemletmeye
+    /// başlıyor (savaşçı başına 0.26 yenen) ve iki taraf birden zayıflıyor.
+    /// </remarks>
+    public double StunSeverityThreshold { get; init; } = 0.20;
+
+    /// <summary>Ağır darbede taban sersemletme şansı; silah, bölge ve zırh bunu ölçekler.</summary>
+    /// <remarks>
+    /// <para>
+    /// 0.35, takasın <b>tam döndüğü</b> yer: künt silah kopma çarpanında kaybettiğini
+    /// (0.15'e karşı 1.0) burada geri alır. Ölçüldü (aynı savaşçı, aynı düşman, yalnızca
+    /// silah farklı — <c>blade</c>/<c>club</c>, 20.000 dövüş): kural yokken kesici %91.57,
+    /// künt %88.68 zafer alıyordu; künt silah <b>her eksende</b> kötüydü. 0.35'te ikisi
+    /// %92.06 / %92.08. 0.60'ta künt öne geçiyor (%93.83), 1.00'da düpedüz baskın (%95.67).
+    /// </para>
+    /// <para>
+    /// Bedeli oyuncu da öder: 3v3'te Oni'nin tetsubo'su artık ısırıyor, oyuncu zaferi
+    /// %69.31'den %65.20'ye iniyor. Mutlak denge Faz 9'un işi; buradaki sayı sınıflar
+    /// arası <b>oranı</b> tutuyor.
+    /// </para>
+    /// </remarks>
+    public double BaseStunChance { get; init; } = 0.35;
+
+    /// <summary>Sersemleyen savaşçının donduğu süre.</summary>
+    /// <remarks>
+    /// Sersemletme <b>hamleyi değil savaşçıyı</b> durdurur: yürümez, vurmaz, kaçınmaz.
+    /// Süre saldırı döngüsünden kısa tutulur — uzun süre, sersemleten tarafın bedava
+    /// bir infaz penceresi kazanması demek olurdu.
+    /// </remarks>
+    /// <remarks>
+    /// Ölçüm şaşırtıcı çıktı: 0.5 ile 0.9 arasında <b>hiçbir fark yok</b> (künt zaferi
+    /// %92.06 / %92.08). Sebep, sersemlemenin bu bantta çoğunlukla savaşçının zaten
+    /// beklemekte olduğu boşluğa denk gelmesi — kuralın ısıran tarafı kaybedilen hamle
+    /// değil, <b>kapanan kaçınma</b>. Diş 1.0 saniyenin üstünde çıkıyor: 1.4'te künt
+    /// %94.16'ya fırlıyor. 0.9, o eşiğin hemen altında ve ekranda okunacak kadar uzun
+    /// olduğu için seçildi.
+    /// </remarks>
+    public double StunSeconds { get; init; } = 0.9;
+
+    /// <summary>Kafaya inen darbenin sersemletme şansına uyguladığı çarpan.</summary>
+    /// <remarks>
+    /// Kabuto'nun dövüş içi karşılığı budur. Bölge ağırlıkları (§7) kafayı zaten nadir
+    /// yapıyor; nadir olanın ağır sonucu olmazsa miğfer yalnızca bir hasar sayısıdır.
+    /// </remarks>
+    /// <remarks>
+    /// Ölçüldü (3v3, 20.000 dövüş): çarpan 1.0'da savaşçı başına 0.35, 2.0'da 0.39,
+    /// 3.0'da 0.42 sersemleme. Eksen çalışıyor ama yumuşak — kafa isabet ağırlığı 10
+    /// olduğu için burada çok büyük bir sayı, nadir bir olayı büyütmekten öteye geçmez.
+    /// </remarks>
+    public double StunHeadMultiplier { get; init; } = 2.0;
+
+    /// <summary>
+    /// Zırhın uzuv kopmaya karşı direncinin ne kadarı sersemletmeye de sayılır.
+    /// </summary>
+    /// <remarks>
+    /// Plaka kesiği durdurduğu kadar darbeyi durdurmaz — künt kuvvet zırhın altından
+    /// geçer. Ayrı bir <c>ArmorPiece</c> alanı yerine tek bir pay kullanılmasının sebebi,
+    /// zırhın iki direnci arasındaki farkın <b>ölçülebilir tek sayı</b> kalması.
+    /// </remarks>
+    /// <remarks>
+    /// Ölçüldü (3v3, tam kuşam, 20.000 dövüş): pay 0'da savaşçı başına 0.51, 0.6'da 0.33,
+    /// 1.0'da 0.22 sersemleme. 0.6 seçildi çünkü 4-D'nin kademe takası ayakta kalıyor —
+    /// dō-maru her payda daha az ölüm veriyor (%43.78'e karşı %44.15), ō-yoroi uzvu
+    /// koruyor (%0.83'e karşı %3.43). Pay 1.0 zırhı künt silaha karşı fazla iyi yapardı
+    /// ve künt sınıfın tek kazancını en pahalı kuşamın önünde silerdi.
+    /// </remarks>
+    public double ArmorStunResistanceShare { get; init; } = 0.6;
+
     // ---- Uzuv kaybı ----
 
     /// <summary>

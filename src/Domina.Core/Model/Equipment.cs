@@ -36,6 +36,23 @@ public sealed record Weapon(
     };
 
     /// <summary>
+    /// Sersemletme riskine uygulanan çarpan.
+    /// </summary>
+    /// <remarks>
+    /// Künt sınıfın karşılığı budur. Kopma çarpanı 0.15 iken künt silah, uzuv kopmayı
+    /// oyunun imza mekaniği yapan her şeyden mahrumdu ve karşılığında hiçbir şey
+    /// almıyordu (docs/GDD.md §7 bunu "kod ile fark" olarak yazıyordu). Takas artık
+    /// gerçek: kesici uzuv koparır, künt savaşçıyı donduran ağır darbeyi indirir.
+    /// </remarks>
+    public double StunFactor => Class switch
+    {
+        WeaponClass.Blunt => 1.0,
+        WeaponClass.Cutting => 0.25,
+        WeaponClass.Piercing => 0.15,
+        _ => 0.25,
+    };
+
+    /// <summary>
     /// Vuruşun eriştiği mesafe (arena birimi). Savaşçı boyu 256 birimdir.
     /// </summary>
     /// <remarks>
@@ -100,6 +117,15 @@ public sealed record ThrownWeapon(
         WeaponClass.Piercing => 0.5,
         WeaponClass.Blunt => 0.15,
         _ => 1.0,
+    };
+
+    /// <inheritdoc cref="Weapon.StunFactor"/>
+    public double StunFactor => Class switch
+    {
+        WeaponClass.Blunt => 1.0,
+        WeaponClass.Cutting => 0.25,
+        WeaponClass.Piercing => 0.15,
+        _ => 0.25,
     };
 
     /// <summary>Hızlı, hafif, çok sayıda.</summary>
