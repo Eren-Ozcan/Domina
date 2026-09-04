@@ -13,6 +13,8 @@ Bu proje hakkında herhangi bir işe başlamadan önce oku:
 - **`docs/GDD.md`** — kilitlenmiş tasarım kararları. Sonundaki "Açık Kararlar" tablosu
   neyin hâlâ karara bağlanmadığını gösterir.
 - **`docs/ROADMAP.md`** — Faz 0-9 geliştirme planı, kabul kriterleri, riskler.
+- **`docs/DESIGN-REFERENCES.md`** — kararların dışarıdan doğrulanabilir dayanakları
+  (yerleşik tasarım pratiği, kaynak bağlantıları) ve kaynakların bizi çürüttüğü yerler.
 
 Tasarım kararlarını yeniden tartışmaya açma — kullanıcı bunları uzun bir oturumda
 madde madde kararlaştırdı. Değişiklik gerekiyorsa önce GDD'yi güncelle.
