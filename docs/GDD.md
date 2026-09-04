@@ -1,6 +1,7 @@
 # Tasarım Kararları (Karar Defteri)
 
 > Bu dosya **kilitlenmiş** tasarım kararlarını tutar. Yol haritası için `ROADMAP.md`.
+> Kararların dışarıdan doğrulanabilir dayanakları için `DESIGN-REFERENCES.md`.
 > Açık kalan kararlar en altta "Açık Kararlar" bölümünde.
 
 ## 1. Konsept
@@ -125,10 +126,13 @@ savunmasız bırakmaktır.
 
 | Kural | Karar |
 |---|---|
-| **Tetik** | `Idle` durumdaki savaşçı hedefine bir **mesafe eşiğinden** uzaksa, her karar anında seed'li bir **olasılıkla** hücuma kalkar. Eşiğin altında asla hücum edilmez — zaten menzile varılıyor. **Fırlatma önceliklidir:** atacak mermisi olan atar, hücuma kalkmaz |
+| **Tetik: fırsat, eşik değil** | Savaşçı sabit bir mesafeye bakmaz, **boşluğa** bakar: *"şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar vaktim var mı?"* Her düşman için sorulan şey, ona vurabilir hale gelmesinin ne kadar süreceği — `(mesafe − menzili) ÷ hızı`. Biri bunu birikme süresinden kısa sürede yapabiliyorsa fırsat yoktur. **Fırlatma önceliklidir:** atacak mermisi olan atar, hücuma kalkmaz |
+| **Karar savaşçının kendisidir** | Fırsat doğduğunda kullanılıp kullanılmayacağı **Saldırganlık**'la ölçeklenen bir zara bağlı: atılgan olan atlar, ölçülü olan mesafeyi yürüyerek kapatır |
+| **Birikme** | Koşu hemen başlamaz: savaşçı önce **yerinde durup güç toplar**. Bu sürede kıpırdamaz, kaçınamaz, bloklayamaz ve **yediği ilk isabetle hücum dağılır** — koşu hiç başlamaz, hasar çarpanı kazanılmaz. Hücumun asıl bedeli burada ödenir |
 | **Hız** | Hücum sırasında hareket hızı bir **çarpanla** artar (`Speed` stat'ının üstüne, `RetreatSpeedMultiplier` ile aynı yerden) |
 | **Ödül** | Varışta yapılan **ilk vuruş hasar çarpanı** kazanır (momentum). Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
-| **Bedel** | Savaşçı kaçınamaz, bloklayamaz; yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik |
+| **Bedel** | Taahhüt: birikirken savaşçı yerinden kıpırdamaz ve **yediği tek bir isabet** hamleyi harcatır. Ayrıca yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik. Ölçüldü: bu ikincisi pratikte az işliyor (hücum başına 0.35 vuruş), **kasıtlı olarak korunuyor** |
+| **Savunma açık kalır** | Hücum eden savaşçı **normal oranıyla kaçınmayı sürdürür**. Savunmasızlık kaçışa özgüdür (§5) — hücumun bedeli savunmanın kapanması değil, hamlenin açıkta olmasıdır |
 | **Iskalama** | Hedef ölür, sahadan çıkar ya da **kaçmaya başlarsa** hücum boşa gider: savaşçı `Idle`'a düşer, ödül alınmaz. Bir süre sınırı da vardır — o kadar sürede varılamayan hücum aynı şekilde boşa gider |
 | **Kaçana hücum yok** | Kaçmakta olan hedef hücum başlatmaz ve başlamış hücumu bitirir. Ölçüldü: aksi hâlde hızlanma kaçışın tek ayar düğmesini (`RetreatSpeedMultiplier`, §5) devre dışı bırakıyor |
 | **"Çek" komutu hücumu keser** | Hücum savaşçının **kendi kararlarına** karşı taahhütlüdür — ondan vazgeçip başka hamle seçemez — ama oyuncunun komutu ayrı bir eksendir ve hücumu anında keser. Bedeli ödenmiştir: yenen bedava vuruşlar geri gelmez, hasar çarpanı harcanmaz |
@@ -141,9 +145,107 @@ temasta basmayı geç basmaktan ölümcül** yapıp §5'in merdivenini ters çev
 (3v3, 2.000 dövüş: ilk temasta %18,9 ölü, 2. saniyede %13,2). Komut hücumu kesince
 merdiven yerine oturdu: **%1,0 → %13,2 → %36,6**.
 
-**Sayılar açık:** mesafe eşiği, olasılık, hız çarpanı, hasar çarpanı ve süre sınırı
-`CombatTuning` üzerinden ayarlanır ve **`Domina.Sim` ile ölçüldükten sonra** kilitlenir —
-önden seçilmez (Açık Karar #11).
+**Birikme ile mesafe eşiği aynı düğmenin iki ucudur.** Savaşçı birikirken düşman
+yürümeye devam eder; sana yetişmesi `(mesafe − düşmanın menzili) ÷ düşmanın hızı` kadar
+sürer. 320 birimden Tengu 0.73 sn'de, Kappa 0.88 sn'de, Oni 0.87 sn'de yetişiyor. Birikme
+bu sürelerden uzunsa hücum daha kalkmadan dağılabilir — **hız stat'ı böylece ilk kez
+"hücumu bozan şey" olarak iş görür**, ve fırlatma silahı mesafeden bağımsız olarak
+biriken savaşçıyı vurabildiği için menzilli yokai hücumun doğal karşıtı olur.
+
+### Neden sabit bir mesafe eşiği yok
+
+Önce vardı — elle 320'ye kilitlenmişti — ve iki şeyi birden bozuyordu.
+
+**Hücum bir açılış hamlesine hapsolmuştu.** İki hat 960 birim aradan başlar, birbirine
+yürür ve bir daha hiçbir şey araya mesafe koymaz; savaşçılar yalnızca yaklaşır. Ölçüldü:
+30.000 dövüşün hiçbirinde **1.75 sn'den sonra** hücuma kalkılmıyordu.
+
+**Ve eşik yanlış soruyu soruyordu.** Savaşçının bilmesi gereken şey "hedefim 320 birimden
+uzak mı" değil, *"birikmemi tamamlayacak vaktim var mı"*. Bu hesaplanabilir bir şeydir:
+
+> gereken mesafe = **düşmanın menzili + düşmanın hızı × birikme süresi**
+
+Mevcut kadroyla, birikme 0.75 sn: Kappa'ya **287**, Oni'ye **296**, Tengu'ya **327**. Elle
+kilitlenmiş 320, bu bandın tam ortasıydı — yani doğru sayıyı ölçümle bulmuşuz ama yanlış
+yerde tutuyormuşuz.
+
+Kural fırsat değerlendirmesine çevrilince **üç ayar sayısı birden düştü**: sabit eşik
+(türetiliyor), kalabalık kısıntısı (üç düşman yetişiyorsa zaten fırsat yok) ve yeniden
+tutuşma penceresi (hedefi devrilen savaşçının önünde boşluk kendiliğinden açılıyor). En geç
+hücum kalkışı **1.75 sn → 16.05 sn**.
+
+**Kasıtlı kör nokta:** hesap yalnızca yürüyerek gelen tehdidi görür. Mermisi olan düşman
+mesafeden bağımsız vurup birikmeyi bozabilir, ve savaşçının bunu önceden bilmesini
+istemiyoruz — **menzilli yokai'yi hücumun doğal karşıtı yapan şey budur.** Hızlanmış bir
+düşman hücumu da hesabın öngörmediği hızla gelir: hücumu bozan ikinci şey başka bir
+hücumdur.
+
+### Hücum sayıları — kilitlendi (2026-09-02)
+
+3v3 senaryosunda 10.000 dövüş, `--policy never`:
+
+Toplam **altı** sayı — mesafe eşiği, kalabalık çarpanı ve yeniden tutuşma eşiği kuralın
+kendisinden türediği için silindi.
+
+| Sayı | Değer | Ölçüm |
+|---|---|---|
+| Olasılık, Saldırganlık 0 | **0.12** | Fırsat doğduğunda kullanma eğilimi. Acemi (Sald. 40) 0.25, tengu (70) 0.35 |
+| Olasılık, Saldırganlık 100 | **0.45** | Tek sıklık düğmesi. 0.12-0.45 → 2.32 kalkış / **1.71 tamamlanmış hücum**; 0.30-1.00 → 2.80 kalkış ama hücumun 3v3 zaferine katkısı +%9'a fırlıyor |
+| Birikme | **0.75 sn** | Dağılma oranı 0.25 sn'de %5.7, 0.5'te %13.0, **0.75'te %23.6**, sonrası %23-24'te düzleşiyor. 0.75 eğrinin dizi: ötesi taahhüdü uzatır ama riski artırmaz |
+| Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi.** Zafer 1.0'da %86.5, 1.6'da %85.4, 3.0'da %83.7 — yüksek hız hafifçe aleyhte, çünkü erken varmak düşman hattına erken girmektir |
+| Hasar çarpanı | **1.5** | 1.25-1.5 bandı oyuncu ölümünü en aza indiriyor (%39.6); 2.0 ve üstü **aleyhe** dönüyor (%42.3), çünkü çarpan iki tarafa da işler ve varyans zayıf tarafa yarar |
+| Süre sınırı | **4.0 sn** | Hiç dolmuyor (mesafe ~0.6 sn'de kapanıyor). Sonsuz kovalamaya karşı emniyet supabı olarak duruyor |
+
+Kilitli ayarla, hücum kapalı → açık:
+
+| Senaryo | Zafer | Hücum/dövüş | Varış | Dağılan | En geç kalkış |
+|---|---|---|---|---|---|
+| duel | %66.7 → %66.0 | 0.56 | %100 | %0 | 1.75 sn |
+| 3v3 | %81.6 → %84.2 | 1.72 | %85.0 | %14.5 | **16.05 sn** |
+| veteran | %98.3 → **%96.1** | 0.81 | %100 | %0 | 1.75 sn |
+| 1v3 | %45.3 → %64.6 | 0.73 | %80.2 | %19.8 | 1.50 sn |
+
+Hücumun katkısı iki senaryoda **sıfır ya da eksi** — mekaniğin bir bedeli olduğunun
+ölçülebilir kanıtı bu satırlardır.
+
+**Bozulma ölçütü ölçümle değişti.** Önce "ağır darbe dağıtır" (§7'nin eşiği) denendi ve
+**%0.0** çıktı: taze bir savaşçıya inen darbeler o eşiğe hemen hiç ulaşmıyor, kural
+yazılıydı ama hiç işlemiyordu. **İsabet eden her darbe dağıtır** kuralıyla %23.6. Savaşçı
+zaten kaçınamadığı için bu tek cümleyle okunur ve yeni bir denge sayısı doğurmaz.
+
+**Bedelin ölçüsü kalabalığa göre değişiyor** ve bu kasıtlı: 3v3'te birikmelerin %23.6'sı,
+1v3'te %31.6'sı dağılıyor, **düelloda %0'ı** — tek düşman 0.75 sn'de yetişemiyor.
+Hücumu bozan şey kalabalıktır.
+
+### Neden hücum savunmayı kapatmıyor
+
+Bir süre kapatıyordu: hücum eden kaçınamıyor, bloklayamıyor ve üstüne isabet bonusu
+yiyordu. Ölçüm bu kuralın **beklenmedik bir yönde** çalıştığını gösterdi.
+
+`Domina.Sim`'in 1v3 kadrosunda yalnız veteranın zaferi, hücum kapalıyken %45.3, açıkken
+%73.3'e fırlıyordu. İlk okumamız "hücum sayıca az olana yarıyor" idi; **yanlıştı.** Yalnız
+savaşçının kendi hücumu fiilen sıfırlandığında bile zafer %68'de kalıyordu — yani farkı
+yaratan oyuncunun hücumu değildi. Değişen tek şeyin düşmanın hücumu olduğu koşumlar sebebi
+gösterdi:
+
+| Düşmanın hücumu | 1v3 zafer | Düşman ölümü |
+|---|---|---|
+| Hiç hücum yok | %45.3 | %70.0 |
+| Birikme 2.0 sn (hücumların %84.7'si dağılıyor) | %54.9 | %72.3 |
+| Birikme 0.75 sn | %68.1 | %80.9 |
+| Birikme 0 (hücumlar hep tamamlanıyor) | %79.0 | %90.6 |
+
+Düşmanın hücumu ne kadar iyi işlerse yalnız savaşçı o kadar çok kazanıyordu: üç zayıf yokai
+güçlü bir veterana **savunmasız** koşup ona kaçınılamaz bedava hasar hediye ediyordu.
+
+**Kural kaldırıldı ve teşhis doğrulandı.** Savunma normal oranına dönünce 1v3 zaferi
+%73.3'ten **%64.6'ya** indi — dokuz puan, tek bir kuralı kaldırmakla. Bedelin savunmanın
+kapanmasında olması, hücumu *kimin yaptığına* göre asimetrik bir ceza üretiyordu.
+
+**Asıl kazanç:** hücum artık her zaman doğru hamle değil. Kural kaldırılmadan önce
+`veteran` dışında her senaryoda oyuncuya yarıyordu; şimdi düelloda **nötr** (%66.7 → %66.0)
+ve donanımlı veteran için **zararlı** (%98.3 → %96.1). Bir hamlenin bedeli olduğunu
+söyleyebilmek için bazen yapılmaması gerekir.
 
 ### Dövüş çözümlemesi (tam otomatik, manuel nişan yok)
 Her vuruşma anı sırayla çözülür:
@@ -762,4 +864,4 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil |
 | ~~9~~ | ~~Kaçışta kısmi ödül~~ | **Düştü (2026-08-29).** Sefer tek dövüşse önceki odalarda toplanmış ganimet diye bir şey yok; çekilmek o dövüşün ödülünü siler, o kadar (§10) |
 | ~~10~~ | ~~Seferin peşin bedeli~~ | **Kapandı (2026-08-29).** Girmek **bir gün** yer (kaçılsa da), düşman kadrosu **kısmen** görünür — yalnızca tehdit işareti (§10) |
-| 11 | Hücum sayıları | Mesafe eşiği, tick başına hücum olasılığı, hız çarpanı, hasar çarpanı. Kural §4'te kilitli; sayılar `Domina.Sim` ölçümünden sonra (bkz. Açık Karar 8'in yöntemi) |
+| ~~11~~ | ~~Hücum sayıları~~ | **Kilitlendi (2026-09-02)** — tablo §4'te. Mesafe 320, olasılık 0.40, birikme 0.75 sn, hız 1.6, hasar 1.5. Ölçüm sırasında **birikme aşaması eklendi**: hücumun bedeli yalnızca yazılıydı, koşu 0.6 sn sürdüğü için hiç ölçülmüyordu. Ölçüm sırasında ayrıca **yeniden tutuşma** ve **statlar + kalabalık** kuralları eklendi; hücum artık açılış hamlesi değil ve karar savaşçının kimliğinden çıkıyor. **Takip eden iş:** yokai bestiary'sinde (#3) "kime hücum eder" bir karakter özelliği olarak kullanılabilir — düşüncesizce hücum eden yokai savunmasızlığın bedelini öder |
