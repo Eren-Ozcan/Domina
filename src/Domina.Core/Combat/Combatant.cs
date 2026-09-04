@@ -161,6 +161,17 @@ internal sealed class Combatant(Warrior warrior, int team)
     public double ChargeSeconds { get; set; }
 
     /// <summary>
+    /// Geçen karar adımında ortada hücuma elverişli bir açıklık var mıydı?
+    /// </summary>
+    /// <remarks>
+    /// Hücum kararı <b>açıklık doğduğu anda bir kez</b> verilir, açıklık sürdükçe her
+    /// 0.2 saniyede bir yeniden değil (docs/GDD.md §4). Bu bayrak o "doğduğu an"ı
+    /// yakalar. Yoksa hücum sıklığı, savaşçının açıklıkta ne kadar oyalandığına —
+    /// yani <b>ters orantılı olarak kendi hızına</b> — bağlı kalırdı.
+    /// </remarks>
+    public bool SawChargeOpening { get; set; }
+
+    /// <summary>
     /// Bu hücum boyunca hangi düşmanlar bedava vuruşunu kullandı.
     /// </summary>
     /// <remarks>

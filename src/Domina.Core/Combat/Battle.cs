@@ -609,6 +609,13 @@ public sealed class Battle
             return;
         }
 
+        // Açıklık her karar adımında tazelenir — menzilde olsa bile. Menzildeyken
+        // açıklık yoktur, dolayısıyla dövüşten çıkıp yeniden mesafe açıldığında
+        // bu yeni bir açıklık sayılır ve savaşçı kararını yeniden verir.
+        bool hadOpening = attacker.SawChargeOpening;
+        attacker.SawChargeOpening = HasRoomToGather(attacker);
+        bool openingIsNew = attacker.SawChargeOpening && !hadOpening;
+
         // Menzil dışındaysa yaklaşmaya devam eder — ama atacak bir şeyi varsa atar.
         // Fırlatmanın asıl işi bu boşluğu doldurmak: yaklaşma ve kaçış artık bedava değil.
         if (!InReach(attacker, target))
@@ -617,7 +624,7 @@ public sealed class Battle
             {
                 BeginThrow(attacker, target);
             }
-            else if (ShouldCharge(attacker, target))
+            else if (ShouldCharge(attacker, target, openingIsNew))
             {
                 BeginCharge(attacker, target);
             }
@@ -671,8 +678,17 @@ public sealed class Battle
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Yalnızca mesafe uygunsa ve zar tutarsa (docs/GDD.md §4). Kaçış komutu almış
-    /// savaşçı hücum etmez — kendini iki taahhüdün arasında bırakmak istemeyiz.
+    /// Yalnızca açıklık <b>yeni doğduysa</b> ve zar tutarsa (docs/GDD.md §4). Kaçış komutu
+    /// almış savaşçı hücum etmez — kendini iki taahhüdün arasında bırakmak istemeyiz.
+    /// </para>
+    /// <para>
+    /// <b>Zar açıklık başına atılır, saniye başına değil.</b> Açıklık sürdüğü sürece her
+    /// karar adımında yeniden atılsaydı, hücum sıklığı savaşçının açıklıkta ne kadar
+    /// oyalandığına bağlı olurdu; oyalanma süresi de mesafeyi kapatma hızıdır. Ölçüldü:
+    /// böyle bir savaşçı hızlandıkça <b>daha seyrek</b> hücum ediyordu (Hız 0'da dövüş
+    /// başına 2.20, Hız 100'de 1.20) ve bu düşüş, hıza bağlanan hasar artışını tam olarak
+    /// götürüyordu — <c>Speed</c> ekseni ölçümde atıl çıkıyordu. Fırsatı gördüğünde bir
+    /// kez karar vermek, hem daha inandırıcı hem de hızdan bağımsız.
     /// </para>
     /// <para>
     /// <b>Kaçan hedefe hücum edilmez</b> ve hedef hücum sırasında kaçmaya başlarsa hamle
@@ -687,10 +703,10 @@ public sealed class Battle
     /// uzaktan vuramayanın mesafeye verdiği cevaptır.
     /// </para>
     /// </remarks>
-    private bool ShouldCharge(Combatant c, Combatant target) =>
+    private bool ShouldCharge(Combatant c, Combatant target, bool openingIsNew) =>
         !c.RetreatRequested
         && target.State is not CombatState.Retreating
-        && HasRoomToGather(c)
+        && openingIsNew
         && _rng.Chance(ChargeChanceFor(c));
 
     /// <summary>
@@ -752,6 +768,12 @@ public sealed class Battle
     private void BeginCharge(Combatant c, Combatant target)
     {
         c.ClearCharge();
+
+        // Açıklık harcandı. Hücum bittiğinde ortada hâlâ boşluk varsa bu yeni bir
+        // açıklıktır ve savaşçı kararını yeniden verir — hedefini devirip önünde
+        // boşluk bulan savaşçının sıradakine kalkabilmesi buna bağlı.
+        c.SawChargeOpening = false;
+
         FaceToward(c, target);
         c.ChargeTarget = target.Id;
         c.ChargesStarted++;
