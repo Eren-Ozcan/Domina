@@ -94,7 +94,7 @@ public class RangedAndFlightTests
         Warrior lame = TestBuilders.Warrior(1, speed: 80);
         double before = lame.EffectiveStats.Speed;
 
-        lame.AddDisability(BodyPart.Leg);
+        lame.AddDisability(BodyPart.RightLeg);
 
         Assert.True(lame.EffectiveStats.Speed < before);
     }

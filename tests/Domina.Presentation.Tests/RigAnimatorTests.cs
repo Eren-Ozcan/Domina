@@ -28,10 +28,10 @@ public class RigAnimatorTests
     public void ALimbIsSeveredOnlyOnce()
     {
         var animator = new RigAnimator();
-        var loss = new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.Arm);
+        var loss = new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.SwordArm);
 
-        Assert.Equal(BodyPart.Arm, animator.React(loss));
-        Assert.True(animator.HasLost(BodyPart.Arm));
+        Assert.Equal(BodyPart.SwordArm, animator.React(loss));
+        Assert.True(animator.HasLost(BodyPart.SwordArm));
 
         // İkinci kez gelirse düğüm zaten sahnede değil: yeniden koparılamaz.
         Assert.Null(animator.React(loss));
@@ -134,7 +134,7 @@ public class RigAnimatorTests
     public void TheOneArmedFightWithWhatIsLeft()
     {
         var animator = new RigAnimator();
-        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.Arm));
+        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.SwordArm));
 
         RigPose maimed = Step(animator, CombatState.Idle);
         RigPose whole = Step(new RigAnimator(), CombatState.Idle);
@@ -153,7 +153,7 @@ public class RigAnimatorTests
     public void TheOneLeggedLimpWhileFleeingToo()
     {
         var animator = new RigAnimator();
-        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.Leg));
+        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.RightLeg));
 
         RigPose fleeing = Step(animator, CombatState.Retreating, frames: 12);
 
@@ -172,7 +172,7 @@ public class RigAnimatorTests
     public void TheOneLeggedStandUnevenlyWhileWaiting()
     {
         var animator = new RigAnimator();
-        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.Leg));
+        animator.React(new RigReaction(new WarriorId(1), RigReactionKind.Dismember, BodyPart.RightLeg));
 
         RigPose waiting = Step(animator, CombatState.Idle, frames: 12);
 

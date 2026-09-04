@@ -83,12 +83,12 @@ public class ReactionReaderTests
     public void DismembermentCarriesTheLostPart()
     {
         var reader = new ReactionReader();
-        var events = Stream(new WarriorDismembered(1, _defender, BodyPart.Leg));
+        var events = Stream(new WarriorDismembered(1, _defender, BodyPart.RightLeg));
 
         RigReaction reaction = Assert.Single(reader.Drain(events));
 
         Assert.Equal(RigReactionKind.Dismember, reaction.Kind);
-        Assert.Equal(BodyPart.Leg, reaction.Part);
+        Assert.Equal(BodyPart.RightLeg, reaction.Part);
     }
 
     /// <summary>

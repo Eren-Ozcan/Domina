@@ -202,8 +202,10 @@ public class DismembermentTests
         // sonra basar. Aksi hâlde tuş hiç açılmadan ölürdü ve dal ölçülmemiş olurdu.
         Warrior victim = TestBuilders.Warrior(
             1, "Kurban", health: 60, aggression: 100, weapon: Quick);
-        victim.AddDisability(BodyPart.Arm);
-        victim.AddDisability(BodyPart.Leg);
+        victim.AddDisability(BodyPart.SwordArm);
+        victim.AddDisability(BodyPart.OffArm);
+        victim.AddDisability(BodyPart.RightLeg);
+        victim.AddDisability(BodyPart.LeftLeg);
         victim.AddDisability(BodyPart.Eye);
 
         var setup = new BattleSetup(
@@ -293,7 +295,7 @@ public class DismembermentTests
     {
         // Zar 0.30 — keikogi'li gövde: 0.35 × 0.80 = 0.28 (kopmaz).
         //            Açık kol:         0.35 × 1.00 = 0.35 (kopar).
-        var toTheArm = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
+        var toTheArm = new Battle(AtRegion(HitLocation.SwordArm, Armor.Light()), new FixedRandom(0.30));
         PressAfterFirstBlood(toTheArm);
         toTheArm.Run();
 
@@ -309,12 +311,12 @@ public class DismembermentTests
     [Fact]
     public void KoteProtectsTheArmThatAKeikogiLeavesBare()
     {
-        var bareArms = new Battle(AtRegion(HitLocation.Arm, Armor.Light()), new FixedRandom(0.30));
+        var bareArms = new Battle(AtRegion(HitLocation.SwordArm, Armor.Light()), new FixedRandom(0.30));
         PressAfterFirstBlood(bareArms);
         bareArms.Run();
 
         // Dō-maru'nun kotesi: 0.35 × 0.70 = 0.245, zarın altında kalır.
-        var withKote = new Battle(AtRegion(HitLocation.Arm, Armor.Medium()), new FixedRandom(0.30));
+        var withKote = new Battle(AtRegion(HitLocation.SwordArm, Armor.Medium()), new FixedRandom(0.30));
         PressAfterFirstBlood(withKote);
         withKote.Run();
 
@@ -363,8 +365,8 @@ public class DismembermentTests
         CombatTuning tuning = TestBuilders.PointBlank with
         {
             TorsoHitWeight = location == HitLocation.Torso ? 100 : 0,
-            LegHitWeight = location == HitLocation.Leg ? 100 : 0,
-            ArmHitWeight = location == HitLocation.Arm ? 100 : 0,
+            LegHitWeight = location == HitLocation.RightLeg ? 100 : 0,
+            ArmHitWeight = location == HitLocation.SwordArm ? 100 : 0,
             HeadHitWeight = location == HitLocation.Head ? 100 : 0,
         };
 
@@ -375,7 +377,7 @@ public class DismembermentTests
     public void AlreadyLostPartsAreNotChosenAgain()
     {
         Warrior victim = TestBuilders.Warrior(1, health: 300, aggression: 0);
-        Assert.True(victim.AddDisability(BodyPart.Arm));
+        Assert.True(victim.AddDisability(BodyPart.SwordArm));
 
         var setup = new BattleSetup(
             [victim],
@@ -389,7 +391,7 @@ public class DismembermentTests
         battle.Run();
 
         WarriorDismembered lost = battle.Events.OfType<WarriorDismembered>().First();
-        Assert.NotEqual(BodyPart.Arm, lost.Part);
+        Assert.NotEqual(BodyPart.SwordArm, lost.Part);
     }
 
     /// <summary>
@@ -447,14 +449,15 @@ public class DismembermentTests
         Warrior warrior = TestBuilders.Warrior(1, weapon: Weapon.Nodachi());
         Assert.Equal(Weapon.Nodachi(), warrior.UsableWeapon);
 
-        warrior.AddDisability(BodyPart.Arm);
+        warrior.AddDisability(BodyPart.SwordArm);
 
         Assert.Equal(Weapon.Fists(), warrior.UsableWeapon);
     }
 
     [Theory]
-    [InlineData(BodyPart.Arm)]
-    [InlineData(BodyPart.Leg)]
+    [InlineData(BodyPart.SwordArm)]
+    [InlineData(BodyPart.OffArm)]
+    [InlineData(BodyPart.RightLeg)]
     [InlineData(BodyPart.Eye)]
     public void DisabilitiesArePermanentAndNotDuplicated(BodyPart part)
     {
@@ -472,10 +475,10 @@ public class DismembermentTests
         WarriorStats baseline = TestBuilders.Warrior(1, strength: 100, evasion: 100, accuracy: 100).BaseStats;
 
         Warrior armless = TestBuilders.Warrior(1, strength: 100, evasion: 100, accuracy: 100);
-        armless.AddDisability(BodyPart.Arm);
+        armless.AddDisability(BodyPart.SwordArm);
 
         Warrior lame = TestBuilders.Warrior(2, strength: 100, evasion: 100, accuracy: 100);
-        lame.AddDisability(BodyPart.Leg);
+        lame.AddDisability(BodyPart.RightLeg);
 
         Warrior halfBlind = TestBuilders.Warrior(3, strength: 100, evasion: 100, accuracy: 100);
         halfBlind.AddDisability(BodyPart.Eye);
