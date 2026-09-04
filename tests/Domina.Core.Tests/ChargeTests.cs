@@ -129,13 +129,60 @@ public class ChargeTests
         Assert.True(fast > slow, $"Hız varış vuruşuna yansımıyor: {fast:F2} <= {slow:F2}");
     }
 
-    private static double FirstBlowAfterCharge(double bonusAtFullSpeed, double speed = 50)
+    /// <summary>
+    /// <b>Cepheden karşılamak hücumu söndürür.</b> Hedefin karşı vuruşu tuttuğunda varış
+    /// vuruşu yapılır ama momentum çarpanını kazanmaz (docs/GDD.md §4).
+    /// </summary>
+    /// <remarks>
+    /// Karşı vuruşun değeri sıklığında değil sonucunda: hedef dörtte üç ihtimalle
+    /// karşılık veremez, verdiğinde ise hamleyi bitirir. Bu, yeni bir ayar sayısı
+    /// doğurmadan nadir karşılığa ağırlık kazandıran şey.
+    /// </remarks>
+    [Fact]
+    public void AParriedChargeArrivesWithoutMomentum()
+    {
+        double untouched = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, targetCounter: 0);
+        double parried = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, targetCounter: 1);
+
+        Assert.True(
+            parried < untouched,
+            $"Karşı vuruş momentumu söndürmüyor: {parried:F2} >= {untouched:F2}");
+    }
+
+    /// <summary>
+    /// Hücumun hedefi, yoldan geçilen düşmandan farklıdır: bedava vuruşu <b>kesin
+    /// değil</b>, zara bağlıdır.
+    /// </summary>
+    [Fact]
+    public void TheChargedTargetOnlySometimesCountersBack()
+    {
+        var battle = new Battle(
+            Duel(AlwaysCharges with { ChargeTargetCounterChance = 0 }),
+            new SeededRandom(11));
+
+        StepUntil(battle, b => b.Events.OfType<ChargeConnected>().Any());
+
+        Assert.DoesNotContain(
+            battle.Events.OfType<OpportunityAttack>(),
+            e => e.Defender == _fighter);
+    }
+
+    private static double FirstBlowAfterCharge(
+        double bonusAtFullSpeed,
+        double speed = 50,
+        double targetCounter = 0)
     {
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 400, speed: speed)],
             [TestBuilders.Warrior(101, health: 400)])
         {
-            Tuning = AlwaysCharges with { ChargeDamageAtFullSpeed = bonusAtFullSpeed },
+            // Ölçülen şey çarpan, karşı vuruş zarı değil: hedefin karşılığı tutarsa
+            // momentum söner ve varış vuruşu bonusunu hiç kazanmaz (docs/GDD.md §4).
+            Tuning = AlwaysCharges with
+            {
+                ChargeDamageAtFullSpeed = bonusAtFullSpeed,
+                ChargeTargetCounterChance = targetCounter,
+            },
         };
 
         var battle = new Battle(setup, new SeededRandom(11));
