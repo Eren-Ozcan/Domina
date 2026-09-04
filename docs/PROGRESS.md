@@ -1,6 +1,6 @@
 # Durum Kaydı
 
-Son güncelleme: 2026-08-13 (silah yeterliliği karara bağlandı, GDD'ye işlendi)
+Son güncelleme: 2026-09-02 (sersemletme çekirdeğe girdi, #4-B'nin ilk maddesi kilitlendi)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -389,6 +389,71 @@ her ayarda kırılırlardı. Toplam 180 test yeşil.
 karşılığı yok; tetsubo'nun kopma çarpanı 0.15 olduğu için ağır zırhlı savaşçıya karşı
 neredeyse hiçbir kalıcı etkisi olmuyor. B/D seçenekleri artık gereksiz — oranı
 yükseltmek için konmuşlardı.
+
+---
+
+## Sersemletme çekirdeğe girdi (2026-09-02)
+
+Açık Karar **#4-B'nin ilk maddesi kapandı**: künt silahın sersemletme etkisi artık
+çekirdekte. GDD §7'nin "kod ile fark" notu silindi, yerine kural ve sayı tablosu geldi.
+
+Kural: aynı ağır darbe iki zar attırır — uzuv kopma ve sersemletme. Sersemleyen savaşçı
+0.9 saniye donar; yürümez, vurmaz, **kaçınamaz**.
+
+### Ölçüm — takas nerede dönüyor
+
+İki yeni senaryo eklendi (`blade` / `club`): aynı savaşçı, aynı düşman, **yalnızca silah
+sınıfı farklı** (Nodachi 34/1.60 karşısında Tetsubo 30/1.55). Ayrım bu kadar dar olmasa
+"künt silah işe yaradı" cümlesi statlardan mı silahtan mı geliyor ayrışmazdı.
+
+| Taban şans | Kesici zafer | Künt zafer |
+| --- | --- | --- |
+| 0 (kural yok) | %91.57 | %88.68 |
+| 0.15 | %91.89 | %90.46 |
+| **0.35** | **%92.06** | **%92.08** |
+| 0.60 | %92.30 | %93.83 |
+| 1.00 | %92.70 | %95.67 |
+
+> Kural yokken künt silah **her eksende** kötüydü: kopma çarpanında kaybediyor
+> (0.15'e karşı 1.0), karşılığında hiçbir şey almıyordu. 0.35 iki sınıfı başa baş
+> getiriyor; ondan sonrası künt lehine bozuluyor.
+
+Eşik de tarandı ve 0.20'de bırakıldı: 0.30'da sersemletme neredeyse hiç ateşlenmiyor ve
+künt yine geriye düşüyor (%89.07'ye karşı %91.55) — yani sorun aynen geri geliyor.
+0.10'da **kesici silah da** sersemletmeye başlıyor ve iki taraf birden zayıflıyor.
+
+### Sürede beklenmedik sonuç
+
+0.5 ile 0.9 saniye arasında **hiçbir fark yok** (%92.06 / %92.08). Sebep: bu bantta
+sersemleme çoğunlukla savaşçının zaten beklemekte olduğu boşluğa denk geliyor. Kuralın
+ısıran tarafı kaybedilen hamle değil, **kapanan kaçınma**. Diş 1.0 saniyenin üstünde
+çıkıyor — 1.4'te künt %94.16'ya fırlıyor. 0.9 o eşiğin hemen altında ve ekranda
+okunacak kadar uzun olduğu için seçildi.
+
+### 4-D'nin kademe takası ayakta kaldı
+
+Zırh sersemletmeyi de damperliyor ama kopma direncinin tamamıyla değil, **0.6 payıyla**
+(künt kuvvet plakanın altından geçer). Ölçüldü (3v3, 20.000 dövüş): pay 0'da savaşçı
+başına 0.51, 0.6'da 0.33, 1.0'da 0.22 sersemleme. 0.6'da kademeler hâlâ bir şeyde en
+iyi: dō-maru daha az ölüm (%43.78'e karşı %44.15), ō-yoroi daha az uzuv kaybı
+(%0.83'e karşı %3.43).
+
+### Bedeli oyuncu da ödüyor
+
+3v3'te Oni'nin tetsubo'su artık ısırıyor: oyuncu zaferi %69.31'den **%65.20**'ye,
+savaşçı başına yenen sersemleme 0.39'a çıktı. Mutlak denge Faz 9'un işi; bu turda
+tutulan şey sınıflar arası **oran**.
+
+### İki koruma kuralı
+
+- **Çekilen savaşçı sersemlemez** — yoksa künt silahlı düşman §5'in tek müdahalesini
+  tek zarla iptal ederdi
+- **Sersemleyen tekrar sersemlemez**, süre yenilenmez. Süre bitince buffer'lanmış "Kaç"
+  komutu işlenir: sersemletme komutu **yutmaz**, geciktirir
+
+Yeni test dosyası: `StunTests` (9 test). Toplam 233 test yeşil.
+
+**4-B'de açık kalanlar:** zehir, jitte/sai ile kılıç yakalama, silah kırılması.
 
 ---
 

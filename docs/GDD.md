@@ -577,10 +577,49 @@ Tek darbenin **max HP'ye oranı** eşiği geçerse uzuv kaybı riski doğar.
 
 **Riski etkileyen faktörler:**
 - Darbe/maxHP oranı (sert vuruş = yüksek risk)
-- Silah tipi: kesici (kılıç/balta) → uzuv kaybı; künt (topuz) → kırık/sersemleme
-  (**kod ile fark:** künt silahın sersemletme etkisi çekirdekte henüz yok; künt/kesici
-  ayrımı yalnızca uzuv kaybı riskini değiştiriyor)
+- Silah tipi: kesici (kılıç/balta) → uzuv kaybı; künt (topuz) → sersemleme
+  (aşağıda "Sersemletme")
 - Zırh/savunma seviyesi riski **azaltır** (ekipmana yatırımı anlamlı kılar)
+
+### Sersemletme (kilitlendi 2026-09-02)
+
+Aynı **ağır darbe** iki ayrı zar attırır: uzuv kopma ve **sersemletme**. Hangi zarın
+tuttuğu silahın sınıfına bağlıdır — takas budur:
+
+| Sınıf | Uzuv kopma çarpanı | Sersemletme çarpanı |
+|---|---|---|
+| Kesici (katana, nodachi) | 1.0 | 0.25 |
+| Delici (yari) | 0.5 | 0.15 |
+| Künt (tetsubo, kanabō) | 0.15 | **1.0** |
+
+**Sersemleyen savaşçı 0.9 saniye donar:** yürümez, vurmaz ve **kaçınamaz**. Kaçınmanın
+kapanması kuralın asıl dişidir; ölçümde kaybedilen hamleden çok bu ısırıyor.
+
+| Sayı | Değer |
+|---|---|
+| Zarın atıldığı eşik (darbe/azami can) | 0.20 |
+| Taban şans | 0.35 |
+| Donma süresi | 0.9 sn |
+| Kafaya inen darbe çarpanı | 2.0 |
+| Zırhın kopma direncinin sayılan payı | 0.6 |
+
+**İki koruma kuralı:**
+
+- **Çekilen savaşçı sersemlemez.** Sersemletme onu dondurduğu için künt silahlı bir
+  düşman, oyuncunun tek müdahalesini (§5) tek zarla iptal edebilirdi
+- **Sersemleyen tekrar sersemlemez** — süre yenilenmez, kilitlenme yok. Süre bitince
+  savaşçı normal döngüsüne döner; bu arada basılan "Kaç" tuşu **yutulmaz**, beklemeye
+  alınır ve orada işlenir
+
+> **Neden bu kural yazıldı:** künt silah kopma çarpanında kesiciye kaybediyor
+> (0.15'e karşı 1.0) ve karşılığında hiçbir şey almıyordu. Ölçüldü (aynı savaşçı, aynı
+> düşman, yalnızca silah farklı; 20.000 dövüş): kural yokken kesici %91.57, künt %88.68
+> zafer alıyor — künt her eksende kötü. Taban şans 0.35'te ikisi %92.06 / %92.08 ile
+> başa baş. 0.60'ta künt öne geçiyor, 1.00'da baskın hâle geliyor.
+>
+> Bedelini oyuncu da öder: 3v3'te Oni'nin tetsubo'su artık ısırıyor ve oyuncu zaferi
+> %69.31'den %65.20'ye iniyor. Mutlak denge Faz 9'un işi; buradaki sayılar sınıflar
+> arası **oranı** tutar.
 
 ### Zırh yuva yuvadır
 
@@ -1007,7 +1046,7 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 | ~~2~~ | ~~Sefer/harita yapısı~~ | **Kapandı (2026-08-29).** Sefer tek oda/tek dövüş; günde **tek karşılaşma teklifi**, al ya da bırak; harita ekranı yok. **Boss yapısı kurulmuyor** — zorluk tek eğri üzerinde artar (§10) |
 | 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
-| 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
+| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Açık kalanlar:** zehir, jitte/sai ile kılıç yakalama, silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
 | ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
