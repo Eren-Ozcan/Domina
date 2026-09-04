@@ -217,6 +217,53 @@ internal static class SimArgs
                     tuning = tuning with { ArmorAttackSlowdownAtFullWeight = armorAttack };
                     break;
 
+                case "--stun-chance":
+                    if (!TryFraction(value, out double stunChance))
+                    {
+                        return ParsedArgs.Fail($"--stun-chance 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BaseStunChance = stunChance };
+                    break;
+
+                case "--stun-threshold":
+                    if (!TryFraction(value, out double stunThreshold))
+                    {
+                        return ParsedArgs.Fail($"--stun-threshold 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { StunSeverityThreshold = stunThreshold };
+                    break;
+
+                case "--stun-seconds":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double stunSeconds)
+                        || stunSeconds < 0)
+                    {
+                        return ParsedArgs.Fail($"--stun-seconds negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { StunSeconds = stunSeconds };
+                    break;
+
+                case "--stun-head":
+                    if (!TryMultiplier(value, out double stunHead))
+                    {
+                        return ParsedArgs.Fail($"--stun-head 1 veya üstü olmalı: {value}");
+                    }
+
+                    tuning = tuning with { StunHeadMultiplier = stunHead };
+                    break;
+
+                case "--stun-armor-share":
+                    if (!TryFraction(value, out double stunArmorShare))
+                    {
+                        return ParsedArgs.Fail($"--stun-armor-share 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ArmorStunResistanceShare = stunArmorShare };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -357,6 +404,9 @@ internal static class SimArgs
         writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=0>]");
         writer.WriteLine("             [--charge-windup <sn>] [--charge-counter <0-1>]");
         writer.WriteLine("             [--armor-attack-penalty <>=0>]");
+        writer.WriteLine("             [--stun-chance <0-1>] [--stun-threshold <0-1>]");
+        writer.WriteLine("             [--stun-seconds <sn>] [--stun-head <>=1>]");
+        writer.WriteLine("             [--stun-armor-share <0-1>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -380,6 +430,11 @@ internal static class SimArgs
         writer.WriteLine("  --charge-counter   Hücumun hedefinin karşı vuruş olasılığı");
         writer.WriteLine("  --armor-speed-penalty    Tam kuşamda yürüme hızından düşen oran");
         writer.WriteLine("  --armor-attack-penalty   Tam kuşamda saldırı döngüsünün uzama oranı");
+        writer.WriteLine("  --stun-chance      Ağır darbede taban sersemletme şansı");
+        writer.WriteLine("  --stun-threshold   Sersemletme zarının atıldığı darbe/azami can oranı");
+        writer.WriteLine("  --stun-seconds     Sersemleyen savaşçının donduğu süre");
+        writer.WriteLine("  --stun-head        Kafaya inen darbenin sersemletme çarpanı");
+        writer.WriteLine("  --stun-armor-share Zırhın kopma direncinin sersemletmeye sayılan payı");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

@@ -29,6 +29,8 @@ internal sealed class CsvReport(TextWriter writer)
         "player_hits",
         "player_damage_dealt",
         "player_damage_taken",
+        "stuns_taken",
+        "stuns_inflicted",
         "charges_started",
         "charges_connected",
         "charge_opportunities",
@@ -46,7 +48,7 @@ internal sealed class CsvReport(TextWriter writer)
 
         writer.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.LostArms},{row.LostLegs},{row.LostEyes},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1},{row.PlayerChargesStarted},{row.PlayerChargesConnected},{row.PlayerChargeOpportunitiesTaken},{row.PlayerChargesBroken}"));
+            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.LostArms},{row.LostLegs},{row.LostEyes},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1},{row.PlayerStunsTaken},{row.PlayerStunsInflicted},{row.PlayerChargesStarted},{row.PlayerChargesConnected},{row.PlayerChargeOpportunitiesTaken},{row.PlayerChargesBroken}"));
     }
 }
 
@@ -86,6 +88,7 @@ internal static class SummaryReport
         WriteCount(writer, "    · göz", report.LostEyes, report.LostEyeRate);
         writer.WriteLine($"  İsabet oranı              %{report.PlayerAccuracy * 100:F1}");
         writer.WriteLine($"  Hasar verilen/alınan      {report.PlayerDamageDealt:F0} / {report.PlayerDamageTaken:F0}");
+        writer.WriteLine($"  Sersemleme (savaşçı başına) yenen {report.StunsTakenPerWarrior:F2} / geçirilen {report.StunsInflictedPerWarrior:F2}");
         writer.WriteLine($"  Hücum (dövüş başına)      {report.ChargesPerBattle:F2}  varış %{report.ChargeConnectRate * 100:F1}  bedava vuruş/hücum {report.OpportunitiesPerCharge:F2}");
         writer.WriteLine($"    · birikmede dağılan     %{report.ChargeBreakRate * 100:F1}");
         writer.WriteLine(

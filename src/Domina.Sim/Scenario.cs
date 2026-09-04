@@ -25,6 +25,8 @@ internal static class Scenarios
         new("3v3", "dojo takımı vs yokai takımı (3v3)", ThreeVsThree),
         new("veteran", "donanımlı veteran vs oni (1v1)", Veteran),
         new("ambush", "veteran pusuya düşüyor (1v3)", Ambush),
+        new("blade", "kesici usta vs oni (1v1) — künt/kesici takasının kesici ucu", Blade),
+        new("club", "künt usta vs oni (1v1) — aynı dövüş, yalnızca silah sınıfı farklı", Club),
     ];
 
     public static Scenario? Find(string name) =>
@@ -89,6 +91,40 @@ internal static class Scenarios
         [
             Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
         ]);
+
+    /// <summary>
+    /// Künt/kesici takasının iki ucu. <see cref="Blade"/> ile <see cref="Club"/>
+    /// arasındaki <b>tek</b> fark savaşçının silahıdır — statlar, kuşam, düşman aynı.
+    /// </summary>
+    /// <remarks>
+    /// Açık Karar #4-B'nin ölçülebilir sorusu bu: künt silah, kaybettiği uzuv kopma
+    /// çarpanının karşılığını sersemletmeden alıyor mu? Nodachi (kesici 34/1.60) ile
+    /// Tetsubo (künt 30/1.55) oyunun gerçek çift el seçimi olduğu için karşılaştırma
+    /// yapay bir laboratuvar silahıyla değil bu ikisiyle yapılır.
+    /// </remarks>
+    private static BattleSetup Blade() => Trade(Weapon.Nodachi());
+
+    /// <inheritdoc cref="Blade"/>
+    private static BattleSetup Club() => Trade(Weapon.Tetsubo());
+
+    private static BattleSetup Trade(Weapon weapon) => new(
+        [
+            new Warrior(
+                new WarriorId(1),
+                "Usta",
+                WarriorStats.Recruit() with
+                {
+                    MaxHealth = 130,
+                    Aggression = 60,
+                    Defense = 45,
+                    Evasion = 40,
+                    Strength = 60,
+                    Accuracy = 68,
+                },
+                weapon,
+                Armor.Medium()),
+        ],
+        [Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25)]);
 
     private static BattleSetup Ambush()
     {

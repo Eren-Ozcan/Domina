@@ -25,6 +25,8 @@ internal sealed record BattleRow(
     int PlayerHits,
     double PlayerDamageDealt,
     double PlayerDamageTaken,
+    int PlayerStunsTaken,
+    int PlayerStunsInflicted,
     int PlayerChargesStarted,
     int PlayerChargesConnected,
     int PlayerChargeOpportunitiesTaken,
@@ -143,6 +145,8 @@ internal sealed class BatchRunner
         int playerHits = 0;
         double damageDealt = 0;
         double damageTaken = 0;
+        int stunsTaken = 0;
+        int stunsInflicted = 0;
         int chargesStarted = 0;
         int chargesConnected = 0;
         int chargeOpportunities = 0;
@@ -195,6 +199,8 @@ internal sealed class BatchRunner
                 }
             }
 
+            stunsTaken += s.TimesStunned;
+            stunsInflicted += s.StunsInflicted;
             chargesStarted += s.ChargesStarted;
             chargesConnected += s.ChargesConnected;
             chargeOpportunities += s.ChargeOpportunitiesTaken;
@@ -222,6 +228,8 @@ internal sealed class BatchRunner
             playerHits,
             damageDealt,
             damageTaken,
+            stunsTaken,
+            stunsInflicted,
             chargesStarted,
             chargesConnected,
             chargeOpportunities,
@@ -269,6 +277,17 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     public double PlayerDamageDealt { get; private set; }
 
     public double PlayerDamageTaken { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının yediği sersemletme sayısı.</summary>
+    /// <remarks>
+    /// Künt silahın karşılığı yalnızca burada görünür: kesici uzuv kaybı üretir, künt
+    /// bu sayıyı üretir. İkisi aynı ölçümde yan yana durmazsa takasın döndüğü yer
+    /// bulunamaz (docs/GDD.md Açık Karar #4-B).
+    /// </remarks>
+    public int PlayerStunsTaken { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının düşmana geçirdiği sersemletme sayısı.</summary>
+    public int PlayerStunsInflicted { get; private set; }
 
     public int PlayerChargesStarted { get; private set; }
 
@@ -333,6 +352,14 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         ? 0
         : (double)PlayerChargeOpportunitiesTaken / PlayerChargesStarted;
 
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yediği sersemletme.</summary>
+    public double StunsTakenPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerStunsTaken / PlayerAppearances;
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına geçirdiği sersemletme.</summary>
+    public double StunsInflictedPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerStunsInflicted / PlayerAppearances;
+
     public double AverageSeconds => Battles == 0 ? 0 : TotalSeconds / Battles;
 
     public void Add(BattleRow row)
@@ -370,6 +397,8 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         PlayerHits += row.PlayerHits;
         PlayerDamageDealt += row.PlayerDamageDealt;
         PlayerDamageTaken += row.PlayerDamageTaken;
+        PlayerStunsTaken += row.PlayerStunsTaken;
+        PlayerStunsInflicted += row.PlayerStunsInflicted;
         PlayerChargesStarted += row.PlayerChargesStarted;
         PlayerChargesConnected += row.PlayerChargesConnected;
         PlayerChargeOpportunitiesTaken += row.PlayerChargeOpportunitiesTaken;
