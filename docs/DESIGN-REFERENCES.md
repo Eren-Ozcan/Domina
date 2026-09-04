@@ -164,6 +164,18 @@ hedef, yalnızca koşulu sağlıyorsa), TW'nin doğrulanmış cephe kuralını a
 sayı doğurmaz** — mevcut menzil değerlerini kullanır. Ayrıca `Weapon.Reach`'e ikinci bir
 tasarım işi verir: uzun silah artık yalnızca "önce vurur" değil, "hücumu karşılar".
 
+**Karara bağlandı (2026-09-02) — ve iki kaynak da kısmen haklı çıktı.** Kullanıcının açı
+modeli alındı: hedef karşılık verebilir ama **kesin değil**, zara bağlı (0.6); yoldan
+geçilen düşman vuruşunu kesin alır. Silah menzilini ölçüt yapan TW kuralı **alınmadı** —
+onun yerine TW'nin asıl fikri, *bracing hücum bonusunu iptal eder*, olduğu gibi taşındı:
+hedefin karşılığı tuttuğunda **momentum söner**, varış vuruşu hasar çarpanını kazanmaz.
+Böylece nadir karşılığın ağırlığı olur ve yine **yeni bir sayı doğmaz**.
+
+Ölçüm bir de sürpriz verdi: bu oran hücumun bedelinden fazlasını taşıyor. Hedefin topladığı
+karşılıklar, **sayıca azalan tarafın başlıca geliri**; kısıldığında kalabalık tarafın
+avantajı katlanıyor ve §5'in kaçış vaadi çöküyor. 0.6, tüm kilitli vaatleri ayakta tutan en
+düşük değer olduğu için seçildi (tablo: GDD §4, "Hedefin karşılığı neyi taşıyor").
+
 **Dürüst not:** TW'nin 13 sn'lik charge bonus süresi ve %20'lik bracing bonusu bize
 taşınamaz — onlar dakikalarca süren birlik ölçekli savaşlar; bizim dövüşler 14 sn ve bonus
 tek bir vuruşa biniyor. Kalıbı alıyoruz, sayıyı değil. Kaynaklar topluluk wiki'si ve forum

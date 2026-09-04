@@ -131,7 +131,8 @@ savunmasız bırakmaktır.
 | **Birikme** | Koşu hemen başlamaz: savaşçı önce **yerinde durup güç toplar**. Bu sürede kıpırdamaz, kaçınamaz, bloklayamaz ve **yediği ilk isabetle hücum dağılır** — koşu hiç başlamaz, hasar çarpanı kazanılmaz. Hücumun asıl bedeli burada ödenir |
 | **Hız** | Hücum sırasında hareket hızı bir **çarpanla** artar (`Speed` stat'ının üstüne, `RetreatSpeedMultiplier` ile aynı yerden) |
 | **Ödül** | Varışta yapılan ilk vuruş **hasar çarpanı** kazanır, ve çarpan **varış anındaki gerçek hızdan** çıkar: `1 + (varış hızı ÷ azami yürüme hızı) × oran`. Momentum hızdır — ağır Oni'nin hücumu Tengu'nunki kadar sert olamaz. Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
-| **Bedel** | Taahhüt: birikirken savaşçı yerinden kıpırdamaz ve **yediği tek bir isabet** hamleyi harcatır. Ayrıca yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik. Ölçüldü: bu ikincisi pratikte az işliyor (hücum başına 0.35 vuruş), **kasıtlı olarak korunuyor** |
+| **Bedel** | Taahhüt: birikirken savaşçı yerinden kıpırdamaz ve **yediği tek bir isabet** hamleyi harcatır. Ayrıca yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik |
+| **Hedefin karşılığı ayrıdır** | Yoldan geçilen düşman vuruşunu **kesin** alır; hücumun **hedefi** ise bir zara bağlı karşılık verir. Cepheden gelen gövdeyi tam anında karşılamak, yanından koşarak geçene vurmaktan zordur. Karşılık **tuttuğunda hücumun momentumu söner**: varış vuruşu yapılır ama hasar çarpanını kazanmaz. Nadirlik değil **ağırlık** — ve yeni bir ayar sayısı doğurmuyor, mevcut çarpanı iptal ediyor |
 | **Savunma açık kalır** | Hücum eden savaşçı **normal oranıyla kaçınmayı sürdürür**. Savunmasızlık kaçışa özgüdür (§5) — hücumun bedeli savunmanın kapanması değil, hamlenin açıkta olmasıdır |
 | **Iskalama** | Hedef ölür, sahadan çıkar ya da **kaçmaya başlarsa** hücum boşa gider: savaşçı `Idle`'a düşer, ödül alınmaz. Bir süre sınırı da vardır — o kadar sürede varılamayan hücum aynı şekilde boşa gider |
 | **Kaçana hücum yok** | Kaçmakta olan hedef hücum başlatmaz ve başlamış hücumu bitirir. Ölçüldü: aksi hâlde hızlanma kaçışın tek ayar düğmesini (`RetreatSpeedMultiplier`, §5) devre dışı bırakıyor |
@@ -194,23 +195,46 @@ kendisinden türediği için silindi.
 | Birikme | **0.75 sn** | Dağılma oranı 0.25 sn'de %5.7, 0.5'te %13.0, **0.75'te %23.6**, sonrası %23-24'te düzleşiyor. 0.75 eğrinin dizi: ötesi taahhüdü uzatır ama riski artırmaz |
 | Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi** ve öyle kalıyor: zafer 1.0'da %84.8, 1.6'da %84.5, 2.5'te %84.4. İki tarafa birden işlediği için düz olması beklenir — canlanması gereken şey `Speed` stat'ıydı, bu çarpan değil |
 | Hasar oranı (azami hızda) | **0.43** | Speed 50'lik savaşçıya 1.6× hızla ~1.50 çarpan verir. 0.25-0.6 bandı düz; 0.9 ve üstü **aleyhe** dönüyor (ölüm %43.2), çünkü oran iki tarafa da işler ve varyans zayıf tarafa yarar |
+| Hedefin karşı vuruşu | **0.6** | **Tabanı hücum değil §5 koydu.** Hedefin topladığı karşılıklar, sayıca azalan tarafın başlıca geliri ve sayı üstünlüğünün çığa dönmesini engelleyen şey. 0.6'nın altında §5'in "çekmek ölümü azaltır" vaadi **tersine dönüyor** (0.25'te çeken %41.5, çekmeyen %40.0). 0.6'da çeken %39.6, çekmeyen %40.3 |
 | Süre sınırı | **4.0 sn** | Hiç dolmuyor (mesafe ~0.6 sn'de kapanıyor). Sonsuz kovalamaya karşı emniyet supabı olarak duruyor |
 
 Kilitli ayarla, hücum kapalı → açık:
 
 | Senaryo | Zafer | Hücum/dövüş | Varış | Dağılan | En geç kalkış |
 |---|---|---|---|---|---|
-| duel | %66.7 → %66.3 | 0.61 | %100 | %0 | 1.00 sn |
-| 3v3 | %81.6 → %84.4 | 1.88 | %86.7 | %13.3 | **13.80 sn** |
-| veteran | %98.3 → **%96.0** | 0.74 | %100 | %0 | 0.75 sn |
-| 1v3 | %45.3 → %63.0 | 0.74 | %100 | %0 | 0.75 sn |
+| duel | %66.4 → **%63.4** | 0.61 | %100 | %0 | 1.00 sn |
+| 3v3 | %81.8 → %83.2 | 1.89 | %86.7 | %13.3 | **13.80 sn** |
+| veteran | %98.4 → **%94.6** | 0.74 | %100 | %0 | 0.75 sn |
+| 1v3 | %46.1 → %55.9 | 0.74 | %100 | %0 | 0.75 sn |
 
 Tek düşmanlı senaryolarda hücum yeniden bir **açılış hamlesi**: karşında bir kişi varken
 fırsat bir kez doğar, o da dövüşün başında. Bu artık kuralın kendisinden okunuyor, ölçüm
 artığı değil — 3v3'te fırsat hatlar dağıldıkça yeniden doğuyor ve en geç kalkış 13.80 sn.
 
-Hücumun katkısı iki senaryoda **sıfır ya da eksi** — mekaniğin bir bedeli olduğunun
-ölçülebilir kanıtı bu satırlardır.
+Hücumun katkısı iki senaryoda **eksi** — mekaniğin bir bedeli olduğunun ölçülebilir kanıtı
+bu satırlardır. Teke tek dövüşte hücum artık açıkça kötü bir fikir: karşındaki tek kişi
+sensin diye bakan kişidir, ve cepheden karşılık verme şansı en yüksek olan odur.
+
+### Hedefin karşılığı neyi taşıyor
+
+Kural yazılırken beklenen şey hücumun bedelini ayarlamaktı. Ölçüm başka bir şey gösterdi:
+**hedefin karşı vuruşu, sayı üstünlüğünün çığa dönmesini engelleyen mekanizmadır.** Üç
+kişiye karşı duran savaşçının başlıca geliri, üstüne gelenlerden topladığı karşılıklardır;
+bu gelir kısılınca kalabalık tarafın avantajı katlanıyor ve **§5'in kaçış vaadi çöküyor** —
+çeken oyuncu, sahada bıraktığı arkadaşları daha hızlı eridiği için daha çok ölü veriyor.
+
+| Hedefin karşı vuruşu | 1v3 zafer | Çeken / çekmeyen ölüm (3v3) |
+|---|---|---|
+| 1.0 (kesin) | %63.8 | %38.1 / %40.2 |
+| 0.7 | %59.0 | %39.1 / %40.3 |
+| **0.6** | **%55.9** | **%39.6 / %40.3** |
+| 0.5 | %52.6 | %40.1 / %40.1 |
+| 0.35 | %47.7 | %41.0 / %40.2 ✗ |
+| 0.25 | %44.7 | %41.5 / %40.0 ✗ |
+
+0.6 bu yüzden zevkle değil **kısıtla** seçildi: tüm kilitli vaatleri ayakta tutan en düşük
+değer. Zorunlu zamanlı kaçış merdiveni (§5) her değerde sağlam duruyor — bozulan yalnızca
+"canın düşünce çek" davranışı, ki oyuncunun gerçekte yapacağı şey odur.
 
 ### Fırsat başına tek zar — `Speed`'i canlandıran şey
 
