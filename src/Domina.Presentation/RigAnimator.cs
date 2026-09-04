@@ -140,6 +140,7 @@ public sealed class RigAnimator
                 Windup(phase),
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
                 Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
+            CombatState.Stunned => Stagger(),
             CombatState.Retreating => Retreat(),
             CombatState.Charging => Charge(),
             _ => Idle(),
@@ -183,6 +184,34 @@ public sealed class RigAnimator
             FarHip = -0.10f - bob,
             FarKnee = 0.06f,
             Weapon = -0.35f,
+        };
+    }
+
+    /// <summary>Sersemleme: savaşçı ayakta ama savunmasız — silah düşük, gövde açık.</summary>
+    /// <remarks>
+    /// Duruşun tek işi bu: <b>şu an vurulabilir</b> demek. Bekleyen savaşçıdan ilk
+    /// bakışta ayrılmazsa oyuncu künt silahın kazandırdığı pencereyi göremez, ve
+    /// sersemletme yalnızca sayı tablosunda yaşayan bir kural olur.
+    /// </remarks>
+    private RigPose Stagger()
+    {
+        // Yavaş, düzensiz salınım: bekleyenin ritmik bobbing'inden kasıtlı olarak ayrı.
+        float sway = MathF.Sin((float)_clock * 1.7f) * 0.10f;
+
+        return new RigPose
+        {
+            Visible = true,
+            Torso = 0.26f + sway,
+            Head = 0.34f + (sway * 0.5f),
+            NearShoulder = 1.25f + sway,
+            NearElbow = -0.20f,
+            FarShoulder = 1.05f - sway,
+            FarElbow = -0.15f,
+            NearHip = 0.24f + sway,
+            NearKnee = 0.28f,
+            FarHip = -0.22f,
+            FarKnee = 0.20f,
+            Weapon = 0.35f,
         };
     }
 

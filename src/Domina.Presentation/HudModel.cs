@@ -133,6 +133,7 @@ public static class HudModel
             CombatState.AttackRecovery => "toparlanıyor",
             CombatState.ChargeWindup => "güç topluyor",
             CombatState.Charging => "hücumda",
+            CombatState.Stunned => "sersemledi",
             CombatState.Retreating => "çekiliyor",
             CombatState.Escaped => "kurtuldu",
             CombatState.Dead => "öldü",
