@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Sim;
 
 namespace Domina.Sim.Tests;
@@ -119,13 +119,16 @@ public class BatchRunnerTests
     /// Uzuv kaybı <b>yalnızca</b> müdahale edilen dövüşlerde oluşmaz — öldürmeyen ağır
     /// darbe tuşsuz da koparır (GDD §7). Bu yüzden test toplam sakat sayısını değil
     /// <b>ölüm farkını</b> bağlar: ölçümde çeken ve çekmeyen oyuncunun sakat sayısı
-    /// neredeyse aynı çıkıyor (%28.20'ye karşı %28.13), ölüm ise %39'dan %31'e düşüyor.
+    /// neredeyse aynı çıkıyor, ölüm ise ölçülebilir biçimde düşüyor.
     /// </remarks>
     [Fact]
     public void InterventionTradesDeathsForLostLimbs()
     {
-        BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 500);
-        BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3)).Run(1, 500);
+        // Örneklem kasıtlı olarak büyük: hücum savunmayı kapatmayı bıraktığından beri
+        // (GDD §4) çeken ile çekmeyen arasındaki ölüm farkı daraldı — 10.000 dövüşte
+        // %40.2'ye karşı %38.6 — ve küçük örneklemde gürültüye karışıyor.
+        BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 3000);
+        BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3)).Run(1, 3000);
 
         Assert.Equal(0, reckless.PlayerEscapes);
         Assert.True(careful.PlayerEscapes > 0);
