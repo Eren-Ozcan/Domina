@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Domina.Core.Combat;
 
 namespace Domina.Presentation;
@@ -131,6 +131,7 @@ public static class HudModel
             CombatState.Idle => "bekliyor",
             CombatState.AttackWindup => "saldırıyor",
             CombatState.AttackRecovery => "toparlanıyor",
+            CombatState.ChargeWindup => "güç topluyor",
             CombatState.Charging => "hücumda",
             CombatState.Retreating => "çekiliyor",
             CombatState.Escaped => "kurtuldu",

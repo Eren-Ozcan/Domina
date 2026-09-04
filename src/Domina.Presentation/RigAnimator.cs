@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation;
@@ -134,7 +134,10 @@ public sealed class RigAnimator
         {
             // Fırlatma da bir toplanma ve savurmadır; yordamsal duruşta yakın dövüşle
             // aynı eğrileri kullanır. Gerçek sanat geldiğinde ayrışacak yer burası.
-            CombatState.AttackWindup or CombatState.ThrowWindup => Windup(phase),
+            // Hücumun birikmesi de bir toplanmadır — kendi duruşunu kazanana kadar
+            // (bkz. docs/ROADMAP.md 2.2) saldırı toplanmasının eğrilerini ödünç alır.
+            CombatState.AttackWindup or CombatState.ThrowWindup or CombatState.ChargeWindup =>
+                Windup(phase),
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
                 Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
             CombatState.Retreating => Retreat(),
