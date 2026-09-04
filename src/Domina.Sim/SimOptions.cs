@@ -17,7 +17,8 @@ internal sealed record SimOptions(
     string? CsvPath,
     CombatTuning Tuning,
     Armor? PlayerArmor,
-    string ArmorLabel);
+    string ArmorLabel,
+    double? PlayerSpeed = null);
 
 /// <summary>Ayrıştırma sonucu: ayarlar, yardım isteği veya hata.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
@@ -47,6 +48,7 @@ internal static class SimArgs
         CombatTuning tuning = CombatTuning.Default;
         Armor? playerArmor = null;
         string armorLabel = "senaryodaki";
+        double? playerSpeed = null;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -133,6 +135,17 @@ internal static class SimArgs
                     };
                     break;
 
+                case "--speed":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double speedValue)
+                        || speedValue is < 0 or > 100)
+                    {
+                        return ParsedArgs.Fail($"--speed 0-100 arasında olmalı: {value}");
+                    }
+
+                    playerSpeed = speedValue;
+                    break;
+
                 case "--charge-chance-min":
                     if (!TryFraction(value, out double chanceMin))
                     {
@@ -172,12 +185,14 @@ internal static class SimArgs
                     break;
 
                 case "--charge-damage":
-                    if (!TryMultiplier(value, out double chargeDamage))
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeDamage)
+                        || chargeDamage < 0)
                     {
-                        return ParsedArgs.Fail($"--charge-damage 1 veya üstü olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-damage negatif olmayan bir sayı olmalı: {value}");
                     }
 
-                    tuning = tuning with { ChargeDamageMultiplier = chargeDamage };
+                    tuning = tuning with { ChargeDamageAtFullSpeed = chargeDamage };
                     break;
 
                 case "--armor":
@@ -210,7 +225,8 @@ internal static class SimArgs
         }
 
         return ParsedArgs.Ok(new SimOptions(
-            scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel));
+            scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel,
+            playerSpeed));
     }
 
     /// <summary>
@@ -314,9 +330,9 @@ internal static class SimArgs
         writer.WriteLine("             [--policy never|below:<oran>|losing:<oran>|at:<sn>]");
         writer.WriteLine("             [--out <dosya.csv>]");
         writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
-        writer.WriteLine("             [--armor none|light|medium|heavy]");
+        writer.WriteLine("             [--armor none|light|medium|heavy] [--speed <0-100>]");
         writer.WriteLine("             [--charge-chance <0-1>] [--charge-chance-min/-max <0-1>]");
-        writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=1>]");
+        writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=0>]");
         writer.WriteLine("             [--charge-windup <sn>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
@@ -332,11 +348,12 @@ internal static class SimArgs
         writer.WriteLine("  --grievous  Ağır darbe eşiği (darbe/azami can oranı)");
         writer.WriteLine("  --sever     Ağır darbede taban uzuv kopma şansı");
         writer.WriteLine("  --armor     Oyuncu tarafının kuşamını ezer (zırh eksenini izole eder)");
+        writer.WriteLine("  --speed     Oyuncu tarafının Hız stat'ını ezer (hız eksenini izole eder)");
         writer.WriteLine("  --charge-chance    Hücum olasılığını sabitler (Saldırganlık eğrisini bastırır)");
         writer.WriteLine("  --charge-chance-min/-max  Saldırganlık eğrisinin iki ucu");
         writer.WriteLine("  --charge-windup    Koşu öncesi birikme süresi (0 = birikme yok)");
         writer.WriteLine("  --charge-speed     Hücum sırasındaki hız çarpanı");
-        writer.WriteLine("  --charge-damage    Varış vuruşunun hasar çarpanı");
+        writer.WriteLine("  --charge-damage    Azami hızda varış vuruşuna eklenen hasar oranı");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

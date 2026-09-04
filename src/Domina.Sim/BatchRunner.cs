@@ -56,11 +56,17 @@ internal sealed class BatchRunner
     /// <b>tek başına</b> ölçmek için: senaryonun geri kalanı sabit kalır, yalnızca kuşam
     /// değişir, böylece uzuv kaybı farkı zırhtan mı yoksa statlardan mı geliyor ayrışır.
     /// </param>
+    /// <param name="playerSpeed">
+    /// Verilirse oyuncu tarafındaki herkesin <c>Speed</c>'ini bununla değiştirir. Zırhla
+    /// aynı gerekçe: hız artık varış vuruşunun sertliğine de işlediği için (docs/GDD.md §4)
+    /// "hızlı savaşçı daha iyi hücum eder" iddiası ancak diğer her şey sabitken ölçülebilir.
+    /// </param>
     public BatchRunner(
         Scenario scenario,
         IRetreatPolicy? retreatPolicy,
         CombatTuning? tuning = null,
-        Armor? playerArmor = null)
+        Armor? playerArmor = null,
+        double? playerSpeed = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
 
@@ -71,6 +77,14 @@ internal sealed class BatchRunner
             foreach (Warrior w in built.PlayerSide)
             {
                 w.Armor = playerArmor;
+            }
+        }
+
+        if (playerSpeed is double speed)
+        {
+            foreach (Warrior w in built.PlayerSide)
+            {
+                w.BaseStats = w.BaseStats with { Speed = speed };
             }
         }
 

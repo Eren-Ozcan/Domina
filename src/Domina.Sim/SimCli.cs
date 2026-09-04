@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace Domina.Sim;
 
@@ -32,7 +32,11 @@ internal static class SimCli
 
         SimOptions options = parsed.Options;
         var runner = new BatchRunner(
-            options.Scenario, options.RetreatPolicy, options.Tuning, options.PlayerArmor);
+            options.Scenario,
+            options.RetreatPolicy,
+            options.Tuning,
+            options.PlayerArmor,
+            options.PlayerSpeed);
 
         try
         {
