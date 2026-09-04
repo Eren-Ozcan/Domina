@@ -130,7 +130,7 @@ savunmasız bırakmaktır.
 | **Karar savaşçının kendisidir** | Fırsat doğduğunda kullanılıp kullanılmayacağı **Saldırganlık**'la ölçeklenen bir zara bağlı: atılgan olan atlar, ölçülü olan mesafeyi yürüyerek kapatır |
 | **Birikme** | Koşu hemen başlamaz: savaşçı önce **yerinde durup güç toplar**. Bu sürede kıpırdamaz, kaçınamaz, bloklayamaz ve **yediği ilk isabetle hücum dağılır** — koşu hiç başlamaz, hasar çarpanı kazanılmaz. Hücumun asıl bedeli burada ödenir |
 | **Hız** | Hücum sırasında hareket hızı bir **çarpanla** artar (`Speed` stat'ının üstüne, `RetreatSpeedMultiplier` ile aynı yerden) |
-| **Ödül** | Varışta yapılan **ilk vuruş hasar çarpanı** kazanır (momentum). Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
+| **Ödül** | Varışta yapılan ilk vuruş **hasar çarpanı** kazanır, ve çarpan **varış anındaki gerçek hızdan** çıkar: `1 + (varış hızı ÷ azami yürüme hızı) × oran`. Momentum hızdır — ağır Oni'nin hücumu Tengu'nunki kadar sert olamaz. Uzuv kaybı riski zaten hasar/maxHP oranından geldiği için (§7) sakatlanma olasılığı **kendiliğinden** artar — ayrı kural yazılmaz |
 | **Bedel** | Taahhüt: birikirken savaşçı yerinden kıpırdamaz ve **yediği tek bir isabet** hamleyi harcatır. Ayrıca yol boyunca **menzilinden geçtiği her düşman** ona bir kez **fırsat saldırısı** yapar — kaçış penceresiyle (§5) aynı mekanik. Ölçüldü: bu ikincisi pratikte az işliyor (hücum başına 0.35 vuruş), **kasıtlı olarak korunuyor** |
 | **Savunma açık kalır** | Hücum eden savaşçı **normal oranıyla kaçınmayı sürdürür**. Savunmasızlık kaçışa özgüdür (§5) — hücumun bedeli savunmanın kapanması değil, hamlenin açıkta olmasıdır |
 | **Iskalama** | Hedef ölür, sahadan çıkar ya da **kaçmaya başlarsa** hücum boşa gider: savaşçı `Idle`'a düşer, ödül alınmaz. Bir süre sınırı da vardır — o kadar sürede varılamayan hücum aynı şekilde boşa gider |
@@ -192,8 +192,8 @@ kendisinden türediği için silindi.
 | Olasılık, Saldırganlık 0 | **0.12** | Fırsat doğduğunda kullanma eğilimi. Acemi (Sald. 40) 0.25, tengu (70) 0.35 |
 | Olasılık, Saldırganlık 100 | **0.45** | Tek sıklık düğmesi. 0.12-0.45 → 2.32 kalkış / **1.71 tamamlanmış hücum**; 0.30-1.00 → 2.80 kalkış ama hücumun 3v3 zaferine katkısı +%9'a fırlıyor |
 | Birikme | **0.75 sn** | Dağılma oranı 0.25 sn'de %5.7, 0.5'te %13.0, **0.75'te %23.6**, sonrası %23-24'te düzleşiyor. 0.75 eğrinin dizi: ötesi taahhüdü uzatır ama riski artırmaz |
-| Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi.** Zafer 1.0'da %86.5, 1.6'da %85.4, 3.0'da %83.7 — yüksek hız hafifçe aleyhte, çünkü erken varmak düşman hattına erken girmektir |
-| Hasar çarpanı | **1.5** | 1.25-1.5 bandı oyuncu ölümünü en aza indiriyor (%39.6); 2.0 ve üstü **aleyhe** dönüyor (%42.3), çünkü çarpan iki tarafa da işler ve varyans zayıf tarafa yarar |
+| Hız çarpanı | **1.6** | **Denge düğmesi değil, sunum düğmesi.** Hasar hıza bağlandıktan sonra yeniden ölçüldü ve hâlâ atıl: zafer 1.0'da %84.5, 2.5'te %83.4 |
+| Hasar oranı (azami hızda) | **0.43** | Speed 50'lik savaşçıya 1.6× hızla ~1.50 çarpan verir. 0.25-0.6 bandı düz; 0.9 ve üstü **aleyhe** dönüyor (ölüm %43.2), çünkü oran iki tarafa da işler ve varyans zayıf tarafa yarar |
 | Süre sınırı | **4.0 sn** | Hiç dolmuyor (mesafe ~0.6 sn'de kapanıyor). Sonsuz kovalamaya karşı emniyet supabı olarak duruyor |
 
 Kilitli ayarla, hücum kapalı → açık:
@@ -201,9 +201,9 @@ Kilitli ayarla, hücum kapalı → açık:
 | Senaryo | Zafer | Hücum/dövüş | Varış | Dağılan | En geç kalkış |
 |---|---|---|---|---|---|
 | duel | %66.7 → %66.0 | 0.56 | %100 | %0 | 1.75 sn |
-| 3v3 | %81.6 → %84.2 | 1.72 | %85.0 | %14.5 | **16.05 sn** |
+| 3v3 | %81.6 → %84.1 | 1.72 | %85.0 | %14.5 | **16.05 sn** |
 | veteran | %98.3 → **%96.1** | 0.81 | %100 | %0 | 1.75 sn |
-| 1v3 | %45.3 → %64.6 | 0.73 | %80.2 | %19.8 | 1.50 sn |
+| 1v3 | %45.3 → %64.0 | 0.73 | %80.2 | %19.8 | 1.50 sn |
 
 Hücumun katkısı iki senaryoda **sıfır ya da eksi** — mekaniğin bir bedeli olduğunun
 ölçülebilir kanıtı bu satırlardır.
@@ -241,6 +241,30 @@ güçlü bir veterana **savunmasız** koşup ona kaçınılamaz bedava hasar hed
 **Kural kaldırıldı ve teşhis doğrulandı.** Savunma normal oranına dönünce 1v3 zaferi
 %73.3'ten **%64.6'ya** indi — dokuz puan, tek bir kuralı kaldırmakla. Bedelin savunmanın
 kapanmasında olması, hücumu *kimin yaptığına* göre asimetrik bir ceza üretiyordu.
+
+### Hız hasara bağlandı — ve beklenen dengeyi getirmedi
+
+Hasar çarpanı sabit 1.5 iken `ChargeSpeedMultiplier` ekseni ölçümde **atıldı**. Momentumu
+gerçek hıza bağlamak (Mount & Blade'in couched lance kalıbı) bunu düzeltir diye
+kuruldu — **düzeltmedi.**
+
+Mekanizma çalışıyor: hızlı savaşçının varış vuruşu ölçülebilir biçimde sert (birim testiyle
+bağlı). Ama denge düzeyinde etki yıkanıyor, çünkü **iki eğri ters yönde hareket ediyor.**
+Oyuncu tarafının `Speed`'i ezilerek ölçüldü (3v3, hücum açık eksi hücum kapalı):
+
+| Oyuncu tarafı Speed | Hücum/dövüş | Hücumun zafere katkısı |
+|---|---|---|
+| 0 | 2.19 | +3.4 puan |
+| 50 | 1.72 | +2.5 puan |
+| 100 | 1.20 | +2.6 puan |
+
+Hızlı savaşçı **daha sert ama daha seyrek** hücum ediyor: hızlı yaklaştığı için fırsat
+penceresi daha kısa açık kalıyor. İki etki birbirini götürüyor.
+
+**Değişiklik yine de duruyor**, çünkü sayıyı değil modeli düzeltiyor: momentum artık hızdan
+çıkıyor, Oni ile Tengu'nun hücumu aynı sertlikte değil, ve bir sabit yerine bir sabit
+geldi — ayar sayısı altıda kaldı. Ama `Speed`'i **dojo'da gerçek bir hücum kaldıracı**
+yapmak istiyorsak asıl engel burada yazılı: fırsat penceresi hıza ters çalışıyor.
 
 **Asıl kazanç:** hücum artık her zaman doğru hamle değil. Kural kaldırılmadan önce
 `veteran` dışında her senaryoda oyuncuya yarıyordu; şimdi düelloda **nötr** (%66.7 → %66.0)

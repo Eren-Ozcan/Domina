@@ -84,11 +84,16 @@ sebebi gösterdi: savunmasızlık, hücumu *kimin yaptığına* göre asimetrik 
 (GDD §4, "Neden hücum savunmayı kapatmıyor"). M&B'de bunu taşıyabilen şey, oyuncunun
 kontrolündeki tek bir vuruş olması; bizde hücum otomatik ve iki taraf da yapıyor.
 
-**Ne öneriyor — henüz bizde yok:** **hasarın hıza bağlanması.** Bizde hasar çarpanı sabit
-1.5 ve ölçümde `ChargeSpeedMultiplier` ekseni **atıl** çıktı (3v3 zaferi 1.0'da %86.5,
-3.0'da %83.7). M&B'nin çözümü, atıl ekseni canlıya çevirmenin doğrulanmış yolu: momentum
-= hız. Bu, `Speed` stat'ına dojo'da anlam kazandırır — şu an `Speed` çekirdekte yalnızca
-temel yürüme hızını belirliyor.
+**Uygulandı — ve kısmen tuttu.** M&B'nin "hasar hıza bağlıdır" kalıbı alındı: varış
+vuruşunun çarpanı artık `1 + (varış hızı ÷ azami yürüme hızı) × oran`. Model doğrulandı,
+**denge beklentisi doğrulanmadı.**
+
+Gerekçe şuydu: ölçümde atıl çıkan `ChargeSpeedMultiplier` ekseni böylece canlanır. Canlanmadı
+(zafer 1.0'da %84.5, 2.5'te %83.4). Sebep GDD §4'te yazılı — hızlı savaşçı daha sert ama
+**daha seyrek** hücum ediyor, çünkü fırsat penceresi hıza ters çalışıyor.
+
+Ders: kaynak bir **kalıbı** doğrular, o kalıbın senin sisteminde ne yapacağını değil. M&B'de
+hız hücumun tek değişkeni; bizde hücumun sıklığı da hıza bağlı ve ters işaretli.
 
 > [Couched lance damage (Mount & Blade Wiki)](https://mountandblade.fandom.com/wiki/Couched_lance_damage) ·
 > [Bannerlord couch lance rehberi](https://gamerempire.net/mount-blade-2-bannerlord-how-to-couch-lance/)
