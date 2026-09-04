@@ -584,19 +584,69 @@ Tek darbenin **max HP'ye oranı** eşiği geçerse uzuv kaybı riski doğar.
 
 ### Zırh yuva yuvadır
 
-Zırh tek bir sayı değil; **kafa / gövde / kol / bacak** için ayrı parçalardan oluşur.
-Hasar azaltımı ve uzuv kopma direnci, darbenin **indiği bölgenin** parçasından okunur.
+Zırh tek bir sayı değil; **kafa / gövde / kılıç kolu / boştaki kol / sağ bacak /
+sol bacak** için ayrı parçalardan oluşur — altı yuva. Hasar azaltımı ve uzuv kopma
+direnci, darbenin **indiği bölgenin** parçasından okunur.
 
-| Takım | Kafa | Gövde | Kol | Bacak |
-|---|---|---|---|---|
-| Hafif keikogi | — | keikogi | — | — |
-| Dō-maru | — | dō | kote | suneate |
-| Ō-yoroi | kabuto | ō-yoroi gövdeliği | ağır kote | ağır suneate |
+| Takım | Kafa | Gövde | Kılıç kolu | Boş kol | Sağ bacak | Sol bacak |
+|---|---|---|---|---|---|---|
+| Hafif keikogi | — | keikogi | — | — | — | — |
+| Dō-maru | — | dō | kote | kote | suneate | suneate |
+| Ō-yoroi | kabuto | ō-yoroi gövdeliği | ağır kote | ağır kote | ağır suneate | ağır suneate |
+
+> **Neden uzuv uzuv (2026-09-02):** tek bir "kol" yuvası iki kolluğu tek parça sayıyordu
+> ve kolunu kaybetmiş savaşçının kalan kolunu temsil edemiyordu. Ayrılınca hem tek kolu
+> zırhlamak mümkün olur hem de kaybın kendisi taraflanır: kılıç kolu ayrı, boştaki kol
+> ayrı bir kayıptır (aşağıda "Kalıcı cezalar").
 
 > **Neden yuva yuva:** direnç tek skaler kaldığı sürece "iyi zırh" tek eksende ilerler ve
 > ekipmanın asıl ilginç kararı — **ağır göğüslük, çıplak kollar**: ucuz ve hızlı, ama eve
 > kolsuz dönme ihtimali yüksek — hiç var olmaz. Ölçümde bu doğrudan görünüyor: dō-maru'nun
 > kafası açık olduğu için göz kaybı, kol ve bacak kaybının aksine ancak yarıya iniyor.
+
+### Zırhın ağırlığı — kilitlendi (2026-09-02)
+
+Zırhın dövüş içi bir bedeli olmadığı sürece kuşam bir **karar** değil, cüzdan kontrolüdür:
+ölçümde ō-yoroi zaferi %69'dan %92'ye çıkarıyor, ölümü %45.5'ten %21'e, uzuv kaybını
+%7.45'ten %0.61'e indiriyor ve karşılığında hiçbir şey ödemiyordu. Tek freni fiyattı, o da
+ekonomi sayıları (Açık Karar #5) gelene kadar yok.
+
+Ağırlık bunu sahaya taşır. Parça başına bir ağırlık vardır; takımın toplamı **saldırı
+döngüsünü uzatır**.
+
+| Parça | Ağırlık | | Takım | Toplam |
+|---|---|---|---|---|
+| Keikogi | 1 | | Zırhsız | 0 |
+| Dō-maru gövdeliği | 4 | | Hafif keikogi | 1 |
+| Ō-yoroi gövdeliği | 7 | | Dō-maru | 7 |
+| Kote / ağır kote | 1.5 / 3 | | Ō-yoroi | 16 |
+| Suneate / ağır suneate | 1.5 / 3 | | | |
+| Kabuto | 3 | | | |
+
+| Sayı | Değer | Ne yapar |
+|---|---|---|
+| `ArmorWeightAtFullPenalty` | 16 | Cezanın tamamının uygulandığı ağırlık — tam ō-yoroi |
+| `ArmorAttackSlowdownAtFullWeight` | 0.75 | Tam kuşamda saldırı döngüsünün uzama oranı |
+
+**0.75, takasın döndüğü eşiktir.** Üç kademe de bir şeyde en iyi olur: dō-maru dövüşü
+kazanır (%71.8 zafer, %40.3 ölüm), ō-yoroi sakat dönmemeyi alır (uzuv kaybı %0.82'ye karşı
+%3.38), hafif kuşam ucuz ve ağırlıksızdır. 0.60'ta ō-yoroi hâlâ her eksende önde
+(%76.3 zafer, %37.0 ölüm); 0.90'da ağır kuşam düpedüz kötü (%64.3 zafer).
+
+### Denenip düşen iki hat
+
+Ağırlık üç yerden ısırabilirdi; ikisi ölçümde düştü.
+
+- **Stamina toparlanması: ölçülen sıfır.** Tam kuşamda rejenden %90 kesmek 3v3 zaferini
+  %92.34'ten %92.33'e taşıdı. Stamina bu dövüşte zaten bağlayıcı değil; knob silindi.
+- **Yürüme hızı: kazancı ölçülemedi, bedeli §5'in vaadi.** Hız cezası zaferi hiç
+  kıpırdatmadı ama "Kaç" tuşunu işlevsiz bıraktı: kaçış sayaçla değil **mesafeyle** bittiği
+  için (§5) kuşanmış savaşçı arenayı terk edemeden yetişiliyor. Tuşun kazandırdığı ölüm
+  farkı %25 cezada 2.0 puandan **0.0 puana** indi (çeken %46.35, çekilmeyen %46.44; ceza
+  yokken %44.32'ye karşı %46.33). Bu yüzden ağırlık yürüyüşe dokunmaz.
+
+Kalan tek hat saldırı hızıdır ve sebebi ortak: **dövüş hasar alışverişiyle bitiyor**, o
+alışverişe dokunmayan hiçbir ceza ölçülmüyor.
 
 ### İsabet bölgesi
 
@@ -605,8 +655,8 @@ Her isabet bir bölgeye iner. Ağırlıklar kasıtlı olarak eşit değil:
 | Bölge | Ağırlık |
 |---|---|
 | Gövde | 45 |
-| Bacak | 25 |
-| Kol | 20 |
+| Bacak (her biri 12.5) | 25 |
+| Kol (her biri 10) | 20 |
 | Kafa | 10 |
 
 > **Neden gövde baskın:** bölgeler eşit olsaydı gövde zırhı dört parçadan yalnızca biri
@@ -659,14 +709,15 @@ Uzuv kaybı oyunun imza mekaniği; nadir bir sürpriz değil, **düzenli olarak 
 sonuç** olmalı. Oran **tek bir sayı değil, kuşamın fonksiyonu** — iyi zırhlı savaşçı eve
 sağlam döner, ucuz kuşamlı dönmez.
 
-Ölçüldü (3v3, 20.000 dövüş, `losing:0.7` oyuncu modeli). Denge hedefi bu tablodur:
+Ölçüldü (3v3, 20.000 dövüş, `losing:0.7` oyuncu modeli, ağırlık kilitli). Denge hedefi
+bu tablodur:
 
-| Kuşam | Açıkta kalan | Ölüm | **Uzuv kaybı** | Zafer |
-|---|---|---|---|---|
-| Zırhsız | hepsi | %41.6 | **%8.6** | %68 |
-| Hafif keikogi | kol, bacak, kafa | %38.8 | **%6.7** | %70 |
-| Dō-maru | kafa | %22.5 | **%2.9** | %89 |
-| Ō-yoroi | — | %16.3 | **%0.4** | %96 |
+| Kuşam | Açıkta kalan | Ağırlık | Ölüm | **Uzuv kaybı** | Zafer |
+|---|---|---|---|---|---|
+| Zırhsız | hepsi | 0 | %45.5 | **%7.45** | %69.1 |
+| Hafif keikogi | kol, bacak, kafa | 1 | %42.5 | **%6.04** | %71.3 |
+| Dō-maru | kafa | 7 | %40.3 | **%3.38** | %71.8 |
+| Ō-yoroi | — | 16 | %41.6 | **%0.82** | %71.5 |
 
 Karışık bir orta-oyun kadrosu (çoğu hafif/orta kuşamda) böylece kabaca **%5** civarında
 sakat üretir — ama bu bir sabit değil, oyuncunun ekipman harcamasının sonucu.
@@ -683,9 +734,15 @@ zaferlerin** de kaydı.
 ### Kalıcı cezalar
 | Kayıp | Etki |
 |---|---|
-| Kol | Saldırı gücü düşer, iki elli silah kullanamaz, tek elli animasyon setine geçer |
-| Bacak | Kaçınma/çeviklik düşer, topallama animasyonu |
-| Göz | İsabet oranı düşer |
+| Kılıç kolu | Saldırı gücü ×0.65, iki elli silah kullanamaz, tek elli animasyon setine geçer |
+| Boştaki kol | Saldırı gücü ×0.85, iki elli silah yine kullanamaz |
+| Bacak (her biri) | Kaçınma ×0.55, yürüme hızı ×0.60, topallama animasyonu |
+| Göz | İsabet oranı ×0.75 |
+
+Kayıplar birleşir: iki bacağını kaybeden savaşçının hızı ×0.36'ya iner. Kılıç kolu ile
+boştaki kolun ayrılmasının sebebi, birincisinin vuruşun kendisi, ikincisinin denge
+olması — ikisi de iki elli silahı bitirir ama tek elli dövüşen için boştaki kolun kaybı
+taşınabilir bir kayıptır.
 
 Savaşçı kullanılamaz hale gelmez — "zayıflamış ama görev yapabilir" ara durumda kalır.
 Oyuncuya **"emekliye ayır mı, kullanmaya devam mı"** kararı bırakır.
@@ -922,6 +979,26 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 
 ---
 
+## Fikir Defteri (karar değil)
+
+Burası kararlaştırılmamış, ama unutulmaması istenen fikirler içindir. Hiçbiri plana
+girmiş bir iş değildir; Açık Kararlar tablosuyla karıştırılmamalı.
+
+### Protez ve sakat savaşçı gereci
+
+Sakatlık şu an tek yönlü: savaşçı zayıflar, telafi yolu yoktur (§7 "Kalıcı cezalar").
+Bir gün telafi istenirse şekli şu olurdu — **protez yuvası**: tekagi (tek kollu için
+pençe), takma bacak, gözü giden için dürbünlü miğfer gibi parçalar sakatlığın çarpanını
+kısmen geri verir. Değerli tarafı, §7'nin bıraktığı "emekliye ayır mı, kullanmaya devam
+mı" kararını **"yatırım yap mı"**ya çevirmesi: sakat veteran, uğruna para harcanan bir
+karakter olur. Zenginleştirilmiş hâli her parçaya kendi bedelini de yükler (tekagi gücü
+geri verir ama blok yapamaz gibi).
+
+Şimdilik yazılmadı: 4-D'nin ölçülebilir yarısı (ağırlık, yuvalar) kilitlendi, bu ise
+yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
+
+---
+
 ## Açık Kararlar
 
 | # | Konu | Not |
@@ -932,7 +1009,7 @@ ayrılmıyor ve dört zırh kademesi monokromda okunmuyor.
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
 | 4-B | Ekipman — yeni kural gerektirenler | Sersemletme, zehir, jitte/sai ile kılıç yakalama, silah kırılması. Uzam gerekmez, çekirdeğe yeni kural gerekir. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
-| 4-D | Ekipman — zırh ve sakat savaşçı | Zırh kademeleri, tek-kollu savaşçıya özel ekipman kuralları |
+| ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
 | 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |

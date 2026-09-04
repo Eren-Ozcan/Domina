@@ -165,7 +165,8 @@ bir sistem, dengeli bir sistem değil.
 - [ ] Kesik yüzey varlıkları: omuz kütüğü, kalça kütüğü, kopan uzvun kesik ucu
 - [ ] Kamera, arena sahnesi, vuruş efektleri, ses
 - [ ] Ölüm/bitiriş (gore) animasyonları
-- [ ] Zırh kademelerinin görsel karşılığı (4 kademe × ~10 parça)
+- [ ] Zırh kademelerinin görsel karşılığı (4 kademe × 6 yuva: kafa, gövde, iki kol,
+      iki bacak — GDD §7)
 
 > **Varlık üretim kuralı:** varlıklar düz ve temiz çizilir (gradyan yok, pişmiş ışık
 > yok, şeffaf zemin, aynı yan izdüşüm, uçlarda bindirme payı); ahşap baskı dokusu
