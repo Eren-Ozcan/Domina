@@ -157,6 +157,15 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// <summary>Hücumun hedefe vardığı andaki hızı — varış vuruşunun sertliği buradan çıkar.</summary>
     public double ChargeImpactSpeed { get; set; }
 
+    /// <summary>
+    /// Hedefin karşı vuruşu tuttu: hücum varır ama <b>momentumunu kaybetmiş</b> olarak.
+    /// </summary>
+    /// <remarks>
+    /// Varış vuruşu yine yapılır, hasar çarpanı kazanılmaz (docs/GDD.md §4). Ayrı bir
+    /// bayrak gerekiyor çünkü karşı vuruş yolda, çarpanın kazanıldığı an ise varışta.
+    /// </remarks>
+    public bool ChargeMomentumBroken { get; set; }
+
     /// <summary>Mevcut hücumun başlangıcından bu yana geçen süre.</summary>
     public double ChargeSeconds { get; set; }
 
@@ -193,6 +202,7 @@ internal sealed class Combatant(Warrior warrior, int team)
     {
         ChargeBonusPending = false;
         ChargeImpactSpeed = 0;
+        ChargeMomentumBroken = false;
         ChargeSeconds = 0;
         ChargeTarget = null;
         ChargeOpportunists.Clear();

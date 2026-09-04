@@ -864,7 +864,7 @@ public sealed class Battle
         {
             c.ChargeSeconds = 0;
             c.ChargeOpportunists.Clear();
-            c.ChargeBonusPending = true;
+            c.ChargeBonusPending = !c.ChargeMomentumBroken;
 
             // Vuruş bir sonraki tick'lerde çözülüyor; o zaman savaşçı artık koşmuyor
             // olacak. Momentum bu yüzden çarpma anında yakalanır.
@@ -895,9 +895,18 @@ public sealed class Battle
     /// Hücum eden savaşçının yanından geçtiği düşmanların bedava vuruşu.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Kaçış penceresiyle (bkz. <see cref="BeginRetreat"/>) aynı mekanik: savunmayı
     /// bırakan savaşçı menziline girdiği herkese bir vuruş borçlanır. Hücum başına düşman
     /// başına <b>bir kez</b> — yoksa yanından geçilen düşman her tick'te vururdu.
+    /// </para>
+    /// <para>
+    /// <b>Hedef ayrıdır.</b> Yoldan geçilen düşman vuruşunu her zaman alır; hücumun
+    /// hedefi ise ancak <see cref="CombatTuning.ChargeTargetCounterChance"/> tutarsa
+    /// karşılık verebilir. Yandan geçen gövdeye vurmak kolay, üstüne gelen gövdeyi tam
+    /// anında karşılamak zordur (docs/GDD.md §4). Zar hücum başına bir kez atılır: kaçıran
+    /// hedef aynı koşuda ikinci bir şans bulmaz.
+    /// </para>
     /// </remarks>
     private void RollChargeOpportunities(Combatant c)
     {
@@ -907,6 +916,12 @@ public sealed class Battle
                 || !hunter.IsActive
                 || !InReach(hunter, c)
                 || !c.ChargeOpportunists.Add(hunter.Id))
+            {
+                continue;
+            }
+
+            // Cepheden karşılamak zor: hedefin karşı vuruşu seyrek, yoldan geçenlerinki değil.
+            if (hunter.Id == c.ChargeTarget && !_rng.Chance(_tuning.ChargeTargetCounterChance))
             {
                 continue;
             }
@@ -1246,6 +1261,14 @@ public sealed class Battle
         if (defender.State is CombatState.ChargeWindup)
         {
             BreakChargeWindup(defender);
+        }
+
+        // Koşmakta olan hücumu isabet dağıtmaz — ama cepheden karşılayan hedefin nadir
+        // karşı vuruşu MOMENTUMU söndürür: varış vuruşu sıradan bir vuruşa iner.
+        // Yoldan geçenin darbesi bunu yapamaz; zorluk da değeri de tam anında karşılamakta.
+        if (defender.State is CombatState.Charging && defender.ChargeTarget == attacker.Id)
+        {
+            defender.ChargeMomentumBroken = true;
         }
 
         // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)

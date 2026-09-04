@@ -171,6 +171,33 @@ public sealed record CombatTuning
     public double ChargeDamageAtFullSpeed { get; init; } = 0.43;
 
     /// <summary>
+    /// Hücumun <b>hedefinin</b> karşı vuruş yapma olasılığı. Yoldan geçilen diğer
+    /// düşmanlar bedava vuruşlarını her zaman alır; bu sayı yalnızca cepheden gelene
+    /// bakan savaşçı içindir.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Ayrımın sebebi zamanlamadır (docs/GDD.md §4): yanından koşarak geçen bir gövdeye
+    /// vurmak kolaydır, üstüne gelen bir gövdeyi tam anında karşılamak zordur. Bu yüzden
+    /// hedefin karşı vuruşu normal dövüş sekansındaki gibi kesin değil, <b>seyrek</b>.
+    /// </para>
+    /// <para>
+    /// Ölçüm bu sayıya bir <b>taban</b> koydu, ve tabanı koyan şey hücum değil kaçış
+    /// kuralı: hedefin topladığı karşı vuruşlar, sayıca azalan tarafın başlıca geliri
+    /// ve sayı üstünlüğünün çığa dönmesini engelleyen şey. Altına inildiğinde
+    /// docs/GDD.md §5'in "çekmek ölümü azaltır" vaadi <b>tersine dönüyor</b> (3v3,
+    /// 20.000 dövüş: 0.25'te çeken %41.5, çekmeyen %40.0). 0.6 bu tabanın kendisi —
+    /// zevkle değil kısıtla seçildi: çeken %39.6, çekmeyen %40.3.
+    /// </para>
+    /// <para>
+    /// Kurguyu taşıyan şey oran değil, karşı vuruşun <b>sonucu</b>: tuttuğunda hücumun
+    /// momentumu söner (bkz. <c>Combatant.ChargeMomentumBroken</c>). Nadirlik yerine
+    /// ağırlık — ve yeni bir ayar sayısı doğurmadan.
+    /// </para>
+    /// </remarks>
+    public double ChargeTargetCounterChance { get; init; } = 0.6;
+
+    /// <summary>
     /// Hücum bu kadar sürerse hedefe varılamamış sayılır ve hamle boşa gider.
     /// </summary>
     /// <remarks>
