@@ -206,6 +206,17 @@ internal static class SimArgs
                     tuning = tuning with { ChargeTargetCounterChance = chargeCounter };
                     break;
 
+                case "--armor-attack-penalty":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double armorAttack)
+                        || armorAttack < 0)
+                    {
+                        return ParsedArgs.Fail($"--armor-attack-penalty negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ArmorAttackSlowdownAtFullWeight = armorAttack };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -345,6 +356,7 @@ internal static class SimArgs
         writer.WriteLine("             [--charge-chance <0-1>] [--charge-chance-min/-max <0-1>]");
         writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=0>]");
         writer.WriteLine("             [--charge-windup <sn>] [--charge-counter <0-1>]");
+        writer.WriteLine("             [--armor-attack-penalty <>=0>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -366,6 +378,8 @@ internal static class SimArgs
         writer.WriteLine("  --charge-speed     Hücum sırasındaki hız çarpanı");
         writer.WriteLine("  --charge-damage    Azami hızda varış vuruşuna eklenen hasar oranı");
         writer.WriteLine("  --charge-counter   Hücumun hedefinin karşı vuruş olasılığı");
+        writer.WriteLine("  --armor-speed-penalty    Tam kuşamda yürüme hızından düşen oran");
+        writer.WriteLine("  --armor-attack-penalty   Tam kuşamda saldırı döngüsünün uzama oranı");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

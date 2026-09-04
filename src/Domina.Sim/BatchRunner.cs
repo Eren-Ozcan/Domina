@@ -180,19 +180,17 @@ internal sealed class BatchRunner
                 // uzvunu kaybedebilir, "sakat döndü" oranı bunu gizler.
                 foreach (BodyPart part in s.LostParts.Parts())
                 {
-                    switch (part)
+                    if (part.IsArm())
                     {
-                        case BodyPart.Arm:
-                            lostArms++;
-                            break;
-                        case BodyPart.Leg:
-                            lostLegs++;
-                            break;
-                        case BodyPart.Eye:
-                            lostEyes++;
-                            break;
-                        default:
-                            break;
+                        lostArms++;
+                    }
+                    else if (part.IsLeg())
+                    {
+                        lostLegs++;
+                    }
+                    else if (part == BodyPart.Eye)
+                    {
+                        lostEyes++;
                     }
                 }
             }
