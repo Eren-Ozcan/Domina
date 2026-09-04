@@ -1,4 +1,4 @@
-using Domina.Core.Model;
+﻿using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Combat;
@@ -435,10 +435,7 @@ public sealed class Battle
     /// </remarks>
     private double StepFor(Combatant c)
     {
-        double speed = Lerp(
-            _tuning.MoveSpeedAtZeroSpeed,
-            _tuning.MoveSpeedAtMaxSpeed,
-            Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
+        double speed = BaseMoveSpeed(c);
 
         if (c.State is CombatState.Retreating)
         {
@@ -571,6 +568,10 @@ public sealed class Battle
                 c.BeginState(CombatState.Idle, SpacingSeconds(c));
                 break;
 
+            case CombatState.ChargeWindup:
+                LaunchCharge(c);
+                break;
+
             case CombatState.Charging:
                 AdvanceCharge(c);
                 break;
@@ -689,15 +690,128 @@ public sealed class Battle
     private bool ShouldCharge(Combatant c, Combatant target) =>
         !c.RetreatRequested
         && target.State is not CombatState.Retreating
-        && c.Position.DistanceTo(target.Position) >= _tuning.ChargeMinDistance
-        && _rng.Chance(_tuning.ChargeChance);
+        && HasRoomToGather(c)
+        && _rng.Chance(ChargeChanceFor(c));
+
+    /// <summary>
+    /// Birikmeyi tamamlayacak kadar boşluk var mı?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Hücumun tetiği <b>sabit bir mesafe eşiği değil, bir fırsat değerlendirmesidir</b>
+    /// (docs/GDD.md §4): "şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar vaktim
+    /// var." Her aktif düşman için sorulan şey, ona vurabilir hale gelmesinin ne kadar
+    /// süreceği: <c>(mesafe − menzili) ÷ hızı</c>. Biri bunu birikme süresinden kısa
+    /// sürede yapabiliyorsa boşluk yoktur.
+    /// </para>
+    /// <para>
+    /// Gereken mesafe böylece <b>türetilir</b>: <c>menzil + hız × birikme</c>. Elle
+    /// seçilmiş bir eşik, bir de ayrı bir kalabalık kısıntısı gerekmez — üç düşman
+    /// yetişiyorsa zaten boşluk yoktur. Ölçüldü: eski elle kilitlenmiş 320, bu formülün
+    /// mevcut kadro için ürettiği 287-327 bandının ortasıydı.
+    /// </para>
+    /// <para>
+    /// <b>Kasıtlı kör nokta:</b> hesap yalnızca yürüyerek gelen tehdidi görür. Mermisi olan
+    /// düşman mesafeden bağımsız vurabildiği için birikmeyi bozabilir, ve savaşçının bunu
+    /// önceden bilmesini istemiyoruz — menzilli yokai'yi hücumun doğal karşıtı yapan şey bu.
+    /// </para>
+    /// </remarks>
+    private bool HasRoomToGather(Combatant c)
+    {
+        foreach (Combatant enemy in _combatants)
+        {
+            // Kaçmakta olan tehdit değildir: sana değil, çıkışa gidiyor.
+            if (enemy.Team == c.Team || !enemy.IsActive || enemy.State is CombatState.Retreating)
+            {
+                continue;
+            }
+
+            double gap = c.Position.DistanceTo(enemy.Position) - enemy.Warrior.UsableWeapon.Reach;
+
+            if (gap <= 0 || gap / BaseMoveSpeed(enemy) <= _tuning.ChargeWindupSeconds)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>Bu savaşçının durum çarpanları olmadan saniyedeki yol alışı.</summary>
+    private double BaseMoveSpeed(Combatant c) => Lerp(
+        _tuning.MoveSpeedAtZeroSpeed,
+        _tuning.MoveSpeedAtMaxSpeed,
+        Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
+
+    /// <summary>Bu savaşçının hücuma kalkma olasılığı — kimliğinden çıkar.</summary>
+    private double ChargeChanceFor(Combatant c) => Lerp(
+        _tuning.ChargeChanceAtZeroAggression,
+        _tuning.ChargeChanceAtMaxAggression,
+        Math.Clamp(c.Warrior.EffectiveStats.Aggression / 100.0, 0, 1));
 
     private void BeginCharge(Combatant c, Combatant target)
     {
         c.ClearCharge();
         FaceToward(c, target);
+        c.ChargeTarget = target.Id;
+        c.ChargesStarted++;
+        c.ChargeStartSecondsSum += ElapsedSeconds;
+        c.LastChargeStartSeconds = ElapsedSeconds;
+
+        if (_tuning.ChargeWindupSeconds > 0)
+        {
+            c.BeginState(CombatState.ChargeWindup, _tuning.ChargeWindupSeconds);
+            Emit(new ChargeStarted(ElapsedSeconds, c.Id, target.Id));
+            return;
+        }
+
         c.BeginState(CombatState.Charging, _tuning.TickSeconds);
         Emit(new ChargeStarted(ElapsedSeconds, c.Id, target.Id));
+        Emit(new ChargeLaunched(ElapsedSeconds, c.Id, target.Id));
+    }
+
+    /// <summary>
+    /// Birikme doldu: koşu başlar. Hedef bu arada elden gittiyse hamle boşa gider.
+    /// </summary>
+    private void LaunchCharge(Combatant c)
+    {
+        Combatant? target = ChargeTargetOf(c);
+
+        if (target is null || !target.IsActive || target.State is CombatState.Retreating)
+        {
+            EndCharge(c, connected: false);
+            return;
+        }
+
+        FaceToward(c, target);
+        c.BeginState(CombatState.Charging, _tuning.TickSeconds);
+        Emit(new ChargeLaunched(ElapsedSeconds, c.Id, target.Id));
+    }
+
+    /// <summary>
+    /// Ağır darbe birikmeyi dağıtır: koşu hiç başlamaz, hasar çarpanı kazanılmaz.
+    /// </summary>
+    /// <remarks>
+    /// <b>Eşik yok: isabet eden her darbe dağıtır.</b> Önce ağır darbe eşiği
+    /// (<see cref="CombatTuning.GrievousSeverityThreshold"/>) denendi ve ölçümde
+    /// <b>%0.0</b> çıktı — taze bir savaşçıya inen darbeler o eşiğe hemen hiç ulaşmıyor,
+    /// kural yazılı olup hiç işlemiyordu. İsabet ölçütüyle birikmenin %23.6'sı dağılıyor.
+    /// Savaşçı bu sırada zaten kaçınamıyor, yani "vuruldu mu, dağıldı" tek kuralla okunur
+    /// ve yeni bir denge sayısı doğurmaz.
+    /// </remarks>
+    private void BreakChargeWindup(Combatant c)
+    {
+        c.ClearCharge();
+        c.ChargesBroken++;
+        Emit(new ChargeBroken(ElapsedSeconds, c.Id));
+
+        if (c.RetreatRequested)
+        {
+            BeginRetreat(c);
+            return;
+        }
+
+        c.BeginState(CombatState.Idle, SpacingSeconds(c));
     }
 
     /// <summary>
@@ -716,9 +830,9 @@ public sealed class Battle
             return;
         }
 
-        Combatant? target = FindTarget(c);
+        Combatant? target = ChargeTargetOf(c);
 
-        if (target is null || target.State is CombatState.Retreating)
+        if (target is null || !target.IsActive || target.State is CombatState.Retreating)
         {
             EndCharge(c, connected: false);
             return;
@@ -729,6 +843,7 @@ public sealed class Battle
             c.ChargeSeconds = 0;
             c.ChargeOpportunists.Clear();
             c.ChargeBonusPending = true;
+            c.ChargesConnected++;
             Emit(new ChargeConnected(ElapsedSeconds, c.Id, target.Id));
 
             c.BeginState(
@@ -772,6 +887,7 @@ public sealed class Battle
 
             Emit(new OpportunityAttack(ElapsedSeconds, hunter.Id, c.Id));
             hunter.AttacksMade++;
+            c.ChargeOpportunitiesTaken++;
             ResolveStrike(hunter, c);
 
             if (!c.IsActive)
@@ -782,6 +898,25 @@ public sealed class Battle
     }
 
     /// <summary>Hücum hedefe varmadan bitti — bonus harcanmaz, savaşçı açıkta kalır.</summary>
+    /// <summary>Hücumun taahhüt ettiği hedef — ölmüşse de döner, ıskalamayı çağıran görsün.</summary>
+    private Combatant? ChargeTargetOf(Combatant c)
+    {
+        if (c.ChargeTarget is not WarriorId id)
+        {
+            return null;
+        }
+
+        foreach (Combatant other in _combatants)
+        {
+            if (other.Id == id)
+            {
+                return other;
+            }
+        }
+
+        return null;
+    }
+
     private void EndCharge(Combatant c, bool connected)
     {
         c.ClearCharge();
@@ -810,9 +945,9 @@ public sealed class Battle
     /// </remarks>
     private void BeginRetreat(Combatant c)
     {
-        if (c.State is CombatState.Charging)
+        if (c.State is CombatState.Charging or CombatState.ChargeWindup)
         {
-            // Koşu yarıda kesildi: bonus harcanmaz, yenen vuruşlar geri gelmez.
+            // Hamle yarıda kesildi: bonus harcanmaz, yenen vuruşlar geri gelmez.
             c.ClearCharge();
             Emit(new ChargeMissed(ElapsedSeconds, c.Id));
         }
@@ -830,6 +965,7 @@ public sealed class Battle
 
             Emit(new OpportunityAttack(ElapsedSeconds, hunter.Id, c.Id));
             hunter.AttacksMade++;
+            c.ChargeOpportunitiesTaken++;
             ResolveStrike(hunter, c);
 
             if (!c.IsActive)
@@ -1076,6 +1212,14 @@ public sealed class Battle
 
         // İlk isabet kaçış tuşunu açar; hangi taraf vurursa vursun.
         _contactMade = true;
+
+        // İsabet biriken hücumu dağıtır (docs/GDD.md §4). Uzuv kopma zarından önce
+        // bakılır: darbe öldürse de dağılma zaten gerçekleşmiştir, ve ölüm durumu
+        // buradaki Idle'ı ezer.
+        if (defender.State is CombatState.ChargeWindup)
+        {
+            BreakChargeWindup(defender);
+        }
 
         // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
         if (TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor))
@@ -1456,6 +1600,12 @@ public sealed class Battle
             c.LostLimb)
         {
             LostParts = _lostParts.GetValueOrDefault(c.Id),
+            ChargesStarted = c.ChargesStarted,
+            ChargesConnected = c.ChargesConnected,
+            ChargeOpportunitiesTaken = c.ChargeOpportunitiesTaken,
+            ChargesBroken = c.ChargesBroken,
+            ChargeStartSecondsSum = c.ChargeStartSecondsSum,
+            LastChargeStartSeconds = c.LastChargeStartSeconds,
         });
 
         Result = new BattleResult(outcome, ElapsedSeconds, summaries);

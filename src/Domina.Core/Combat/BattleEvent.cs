@@ -1,4 +1,4 @@
-using Domina.Core.Model;
+﻿using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
@@ -103,9 +103,22 @@ public sealed record ProjectileHit(
 public sealed record ProjectileMissed(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
-/// <summary>Savaşçı hücuma kalktı: hızlandı, savunmayı bıraktı.</summary>
+/// <summary>Savaşçı hücuma kalktı: yerinde güç topluyor, kıpırdamıyor.</summary>
 public sealed record ChargeStarted(double AtSeconds, WarriorId Warrior, WarriorId Target)
     : BattleEvent(AtSeconds);
+
+/// <summary>Birikme tamamlandı, koşu başladı.</summary>
+/// <remarks>
+/// Görselleştirme için ayrı duruyor: birikme ile koşu aynı hamlenin iki farklı anıdır ve
+/// ekranda aynı görünemezler.
+/// </remarks>
+public sealed record ChargeLaunched(double AtSeconds, WarriorId Warrior, WarriorId Target)
+    : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Birikme bir isabetle dağıldı — koşu hiç başlamadı, bonus alınmadı.
+/// </summary>
+public sealed record ChargeBroken(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
 /// <summary>
 /// Hücum hedefe vardı; bunu takip eden vuruş hasar çarpanı taşır.

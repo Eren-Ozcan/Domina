@@ -1,4 +1,4 @@
-using Domina.Core.Model;
+﻿using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
@@ -21,7 +21,19 @@ public enum CombatState
     ThrowRecovery,
 
     /// <summary>
-    /// Hedefe hücum ediyor: hızlanmış, taahhütlü. <b>Kesilemez</b>, kaçınamaz, bloklayamaz.
+    /// Hücum öncesi birikme: savaşçı yerinde durup güç toplar ve <b>yediği ilk isabetle
+    /// hücum dağılır</b>. Savunması normal oranıyla çalışmaya devam eder.
+    /// </summary>
+    /// <remarks>
+    /// Hücumun bedeli burada ödenir — savunmayı kapatarak değil, <b>taahhüdü açıkta
+    /// bırakarak</b>: savaşçı yerinden kıpırdamaz, ve yediği tek bir isabet hamleyi
+    /// harcatır. Kaçınma hakkı elinden alınmaz; kaçınamadığı darbe hücumunu götürür.
+    /// </remarks>
+    ChargeWindup,
+
+    /// <summary>
+    /// Hedefe hücum ediyor: hızlanmış, taahhütlü. <b>Kesilemez</b> — ama savunması
+    /// normal oranıyla sürer.
     /// </summary>
     Charging,
 
@@ -110,12 +122,13 @@ internal sealed class Combatant(Warrior warrior, int team)
     public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
 
     /// <summary>
-    /// Kaçınma ve blok yalnızca çekilmiyor <b>ve hücum etmiyorken</b> mümkündür.
+    /// Kaçınma/blok zarı atılabilir mi?
     /// </summary>
     /// <remarks>
-    /// Hücumun bedeli budur: hızın karşılığında savunmayı bırakırsın (docs/GDD.md §4).
+    /// <b>Hücum savunmayı kapatmaz.</b> Koşan ya da güç toplayan savaşçı normal oranıyla
+    /// kaçınır (docs/GDD.md §4). Sırtını dönüp kaçan dönmez — savunmasızlık kaçışa özgüdür.
     /// </remarks>
-    public bool CanDefend => State is not (CombatState.Retreating or CombatState.Charging);
+    public bool CanDefend => State is not CombatState.Retreating;
 
     /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
     /// <remarks>
@@ -131,7 +144,8 @@ internal sealed class Combatant(Warrior warrior, int team)
         State is CombatState.Idle
             or CombatState.AttackRecovery
             or CombatState.ThrowRecovery
-            or CombatState.Charging;
+            or CombatState.Charging
+            or CombatState.ChargeWindup;
 
     // ---- Hücum ----
 
@@ -152,11 +166,20 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// </remarks>
     public HashSet<WarriorId> ChargeOpportunists { get; } = [];
 
+    /// <summary>Hücumun kalktığı hedef.</summary>
+    /// <remarks>
+    /// Hücum <b>bu hedefe</b> taahhütlüdür (docs/GDD.md §4). Genel hedef seçiminden ayrı
+    /// tutulur: hedef ölürse savaşçı koşarken en yakındakine nişan alamaz, hücum boşa
+    /// gider. Aksi halde ıskalama dalı hiç işlemez ve hücum bedelsiz bir hamle olur.
+    /// </remarks>
+    public WarriorId? ChargeTarget { get; set; }
+
     /// <summary>Hücum sayaçlarını sıfırlar.</summary>
     public void ClearCharge()
     {
         ChargeBonusPending = false;
         ChargeSeconds = 0;
+        ChargeTarget = null;
         ChargeOpportunists.Clear();
     }
 
@@ -193,4 +216,27 @@ internal sealed class Combatant(Warrior warrior, int team)
     public double DamageTaken { get; set; }
 
     public bool LostLimb { get; set; }
+
+    /// <summary>Bu dövüşte kaç kez hücuma kalktı.</summary>
+    public int ChargesStarted { get; set; }
+
+    /// <summary>Kaç hücum hedefe vardı — başlayanların kaçının karşılığı alındı.</summary>
+    public int ChargesConnected { get; set; }
+
+    /// <summary>Hücumları sırasında yediği bedava vuruş sayısı — hücumun ödenen bedeli.</summary>
+    public int ChargeOpportunitiesTaken { get; set; }
+
+    /// <summary>Birikme aşamasında dağılan hücum sayısı.</summary>
+    public int ChargesBroken { get; set; }
+
+    /// <summary>Hücumların kalkış anlarının toplamı — ortalamayı çıkarmak için.</summary>
+    public double ChargeStartSecondsSum { get; set; }
+
+    /// <summary>Bu dövüşte en geç kalkılan hücumun anı.</summary>
+    /// <remarks>
+    /// Hücumun yalnızca açılış hamlesi mi olduğunu söyleyen sayı budur: dövüş 14 sn
+    /// sürerken en geç kalkış 1 sn'deyse mesafe eşiği dövüşün geri kalanında hiç
+    /// sağlanmıyor demektir.
+    /// </remarks>
+    public double LastChargeStartSeconds { get; set; }
 }

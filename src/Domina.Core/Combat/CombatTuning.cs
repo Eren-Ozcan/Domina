@@ -1,4 +1,4 @@
-namespace Domina.Core.Combat;
+﻿namespace Domina.Core.Combat;
 
 /// <summary>
 /// Dövüşün tüm ayarlanabilir sayıları tek yerde.
@@ -76,18 +76,65 @@ public sealed record CombatTuning
     // ---- Hücum ----
 
     /// <summary>
-    /// Hücumun düşünülebilmesi için hedefe olması gereken en az mesafe.
+    /// Mesafe uygunken hücuma kalkma olasılığı — <b>Saldırganlık 0 iken</b>.
     /// </summary>
     /// <remarks>
-    /// Bunun altında hücum yok: zaten menzile yürünüyor, koşmanın kazandıracağı bir şey
-    /// olmadığı gibi savunmayı bırakmanın da karşılığı olmazdı (docs/GDD.md §4).
+    /// Hücum kararı savaşçının kimliğinden çıkar: atılgan olan atılır, ölçülü olan
+    /// mesafeyi yürüyerek kapatır. Saldırganlık zaten saldırı sıklığını belirliyor
+    /// (<see cref="SpacingSecondsAtZeroAggression"/>); aynı stat'ın ikinci işi budur.
     /// </remarks>
-    public double ChargeMinDistance { get; init; } = 320;
+    public double ChargeChanceAtZeroAggression { get; init; } = 0.12;
 
-    /// <summary>Mesafe uygunken her <c>Idle</c> kararında hücuma kalkma olasılığı.</summary>
-    public double ChargeChance { get; init; } = 0.35;
+    /// <inheritdoc cref="ChargeChanceAtZeroAggression"/>
+    /// <remarks>
+    /// <para>
+    /// Fırsat değerlendirmesi <b>ne zaman</b> hücum edilebileceğini söyler; bu eğri
+    /// <b>hangi savaşçının</b> o fırsatı kullandığını. Boşluk açıldığında ölçülü savaşçı
+    /// çoğu zaman yürümeyi seçer, atılgan olan atlar.
+    /// </para>
+    /// <para>
+    /// Ölçüldü (3v3): 0.12-0.45 dövüş başına 2.32 kalkış / <b>1.71 tamamlanmış hücum</b>
+    /// veriyor. Eğri tek başına sıklık düğmesidir — 0.30-1.00'de 2.80 kalkışa çıkıyor ama
+    /// hücumun 3v3 zaferine katkısı +%9'a fırlıyor; 0.06-0.25'te 1.00'e iniyor.
+    /// </para>
+    /// </remarks>
+    public double ChargeChanceAtMaxAggression { get; init; } = 0.45;
+
+    /// <summary>
+    /// Koşu başlamadan önce yerinde geçirilen birikme süresi. Savaşçı bu sürede yerinden
+    /// kıpırdamaz ve <b>yediği ilk isabetle hücum dağılır</b> (docs/GDD.md §4).
+    /// Savunması normal oranıyla sürer — kaçınabildiği darbe hamlesini götürmez.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Bu süre, hücum için <b>gereken mesafeyi belirleyen şeydir</b>:
+    /// birikirken düşman yürümeye devam eder, ve sana yetişmesi
+    /// <c>(mesafe − düşmanın menzili) ÷ düşmanın hızı</c> kadar sürer. Süre bundan
+    /// uzunsa hücum daha kalkmadan dağılır.
+    /// </para>
+    /// <para>
+    /// Ölçüldü: 320 birimden Tengu 0.73 sn'de, Kappa 0.88 sn'de, Oni 0.87 sn'de yetişiyor.
+    /// 0.75 sn bu yüzden seçildi — <b>yalnızca hızlı düşman</b> eşikten kalkan bir hücumu
+    /// bozabilir, ve hız stat'ı ilk kez "hücumu bozan şey" olarak iş görür.
+    /// </para>
+    /// </remarks>
+    public double ChargeWindupSeconds { get; init; } = 0.75;
+
+    // Not: hücumun bir "en az mesafe" ayarı YOKTUR ve olmamalıdır. Savaşçı sabit bir eşiğe
+    // bakmaz, boşluğa bakar: "şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar
+    // vaktim var mı?" Gereken mesafe bundan türer —
+    //     düşmanın menzili + düşmanın hızı × ChargeWindupSeconds
+    // — yani her düşman için ayrı çıkar. Ölçüm bunu doğruladı: elle 320'ye kilitlenmiş olan
+    // eski sabit, bu formülün mevcut kadro için ürettiği 287-327 bandının tam ortasıydı.
+    // Aynı sebeple ayrı bir kalabalık kısıntısı da yok: üç düşman yetişiyorsa boşluk yoktur.
 
     /// <summary>Hücum sırasındaki hız çarpanı.</summary>
+    /// <remarks>
+    /// <b>Ölçüldü: bu eksen dengeye neredeyse hiç dokunmuyor</b> (3v3 zaferi 1.0'da
+    /// %86.5, 1.6'da %85.4, 3.0'da %83.7 — yüksek hız hafifçe aleyhte, çünkü daha erken
+    /// varmak düşman hattına daha erken girmek demek). Bu yüzden bir denge düğmesi değil
+    /// <b>sunum düğmesidir</b>: hücum ekranda hücum gibi görünsün diye 1.6.
+    /// </remarks>
     public double ChargeSpeedMultiplier { get; init; } = 1.6;
 
     /// <summary>
@@ -97,6 +144,11 @@ public sealed record CombatTuning
     /// Uzuv kaybı riski hasar/maxHP oranından geldiği için (docs/GDD.md §7) hücumun
     /// sakatlama olasılığını artırması buradan <b>kendiliğinden</b> çıkar; ayrı bir
     /// kopma çarpanı yoktur.
+    /// </remarks>
+    /// <remarks>
+    /// Ölçüldü: 1.25-1.5 bandı oyuncu ölümünü en aza indiriyor (%39.6). 2.0 ve üstü
+    /// <b>oyuncunun aleyhine</b> dönüyor (%42.3) — çarpan iki tarafa da işlediği için
+    /// varyansı büyütür ve varyans güçlü tarafa değil zayıf tarafa yarar.
     /// </remarks>
     public double ChargeDamageMultiplier { get; init; } = 1.5;
 

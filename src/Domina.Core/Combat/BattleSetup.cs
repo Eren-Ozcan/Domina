@@ -1,4 +1,4 @@
-using Domina.Core.Model;
+﻿using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
@@ -58,6 +58,29 @@ public sealed record WarriorBattleSummary(
     /// fırsat saldırısı yer (§5) ve her biri ayrı bir uzva mal olabilir.
     /// </remarks>
     public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
+
+    /// <summary>Bu dövüşte kaç kez hücuma kalkıldı.</summary>
+    /// <remarks>
+    /// Hücumun sayıları ancak bu iki sayaçla ölçülebilir: eşik ve olasılık hücumun ne
+    /// sıklıkla <b>başladığını</b>, varış oranı ise başlayanın karşılığının alınıp
+    /// alınmadığını söyler (docs/GDD.md Açık Karar 11).
+    /// </remarks>
+    public int ChargesStarted { get; init; }
+
+    /// <summary>Başlayan hücumların kaçı hedefe vardı.</summary>
+    public int ChargesConnected { get; init; }
+
+    /// <summary>Hücumları sırasında yediği bedava vuruş — hücumun §4'te vaat edilen bedeli.</summary>
+    public int ChargeOpportunitiesTaken { get; init; }
+
+    /// <summary>Birikme aşamasında isabet yiyip dağılan hücum sayısı.</summary>
+    public int ChargesBroken { get; init; }
+
+    /// <summary>Hücum kalkış anlarının toplamı — ortalama kalkış anını verir.</summary>
+    public double ChargeStartSecondsSum { get; init; }
+
+    /// <summary>Bu dövüşte en geç kalkılan hücumun anı.</summary>
+    public double LastChargeStartSeconds { get; init; }
 
     public bool Died => FinalState == CombatState.Dead;
 
