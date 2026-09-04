@@ -138,19 +138,28 @@ public sealed record CombatTuning
     public double ChargeSpeedMultiplier { get; init; } = 1.6;
 
     /// <summary>
-    /// Hücumla varılan ilk vuruşun hasar çarpanı — momentumun karşılığı.
+    /// Arenanın azami yürüme hızında koşan bir savaşçının varış vuruşuna eklenen hasar
+    /// oranı. Gerçek çarpan <c>1 + (varış hızı ÷ MoveSpeedAtMaxSpeed) × bu sayı</c>.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// <b>Momentum hızdır.</b> Çarpan sabit değil, savaşçının varış anındaki gerçek
+    /// hızından çıkar — yani hem <see cref="ChargeSpeedMultiplier"/> hem de savaşçının
+    /// <c>Speed</c> stat'ı hasara işler. Ağır Oni'nin hücumu, Tengu'nunki kadar sert
+    /// olamaz.
+    /// </para>
+    /// <para>
+    /// Bu, ölçümde <b>atıl</b> çıkmış olan hız eksenini canlıya çevirir ve <c>Speed</c>
+    /// stat'ına dojo'da ikinci bir iş verir: o güne kadar çekirdekte yalnızca temel yürüme
+    /// hızını belirliyordu. Kalıp Mount &amp; Blade'in couched lance'ından geliyor — orada
+    /// da hasar atın hızına bağlıdır (bkz. docs/DESIGN-REFERENCES.md §3).
+    /// </para>
+    /// <para>
     /// Uzuv kaybı riski hasar/maxHP oranından geldiği için (docs/GDD.md §7) hücumun
-    /// sakatlama olasılığını artırması buradan <b>kendiliğinden</b> çıkar; ayrı bir
-    /// kopma çarpanı yoktur.
+    /// sakatlama olasılığı buradan <b>kendiliğinden</b> çıkar; ayrı bir kopma çarpanı yok.
+    /// </para>
     /// </remarks>
-    /// <remarks>
-    /// Ölçüldü: 1.25-1.5 bandı oyuncu ölümünü en aza indiriyor (%39.6). 2.0 ve üstü
-    /// <b>oyuncunun aleyhine</b> dönüyor (%42.3) — çarpan iki tarafa da işlediği için
-    /// varyansı büyütür ve varyans güçlü tarafa değil zayıf tarafa yarar.
-    /// </remarks>
-    public double ChargeDamageMultiplier { get; init; } = 1.5;
+    public double ChargeDamageAtFullSpeed { get; init; } = 0.43;
 
     /// <summary>
     /// Hücum bu kadar sürerse hedefe varılamamış sayılır ve hamle boşa gider.

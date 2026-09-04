@@ -154,6 +154,9 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// </summary>
     public bool ChargeBonusPending { get; set; }
 
+    /// <summary>Hücumun hedefe vardığı andaki hızı — varış vuruşunun sertliği buradan çıkar.</summary>
+    public double ChargeImpactSpeed { get; set; }
+
     /// <summary>Mevcut hücumun başlangıcından bu yana geçen süre.</summary>
     public double ChargeSeconds { get; set; }
 
@@ -178,6 +181,7 @@ internal sealed class Combatant(Warrior warrior, int team)
     public void ClearCharge()
     {
         ChargeBonusPending = false;
+        ChargeImpactSpeed = 0;
         ChargeSeconds = 0;
         ChargeTarget = null;
         ChargeOpportunists.Clear();

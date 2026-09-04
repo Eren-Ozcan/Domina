@@ -843,6 +843,10 @@ public sealed class Battle
             c.ChargeSeconds = 0;
             c.ChargeOpportunists.Clear();
             c.ChargeBonusPending = true;
+
+            // Vuruş bir sonraki tick'lerde çözülüyor; o zaman savaşçı artık koşmuyor
+            // olacak. Momentum bu yüzden çarpma anında yakalanır.
+            c.ChargeImpactSpeed = BaseMoveSpeed(c) * _tuning.ChargeSpeedMultiplier;
             c.ChargesConnected++;
             Emit(new ChargeConnected(ElapsedSeconds, c.Id, target.Id));
 
@@ -1117,9 +1121,10 @@ public sealed class Battle
         // çarpmaktan gelir, sırtını dönene değil. Ölçüldü: bonus kaçana da işlerken
         // hücum, ilk temasta basılan tuşu geç basmaktan ölümcül yapıyor ve GDD §5'in
         // merdivenini ters çeviriyordu.
+        double impactSpeed = attacker.ChargeImpactSpeed;
         double chargeMultiplier =
             attacker.ConsumeChargeBonus() && defender.State is not CombatState.Retreating
-                ? _tuning.ChargeDamageMultiplier
+                ? 1 + (impactSpeed / _tuning.MoveSpeedAtMaxSpeed * _tuning.ChargeDamageAtFullSpeed)
                 : 1.0;
 
         // 1) İsabet
