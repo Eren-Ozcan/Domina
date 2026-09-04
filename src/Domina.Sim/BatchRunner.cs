@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -24,7 +24,13 @@ internal sealed record BattleRow(
     int PlayerAttacks,
     int PlayerHits,
     double PlayerDamageDealt,
-    double PlayerDamageTaken);
+    double PlayerDamageTaken,
+    int PlayerChargesStarted,
+    int PlayerChargesConnected,
+    int PlayerChargeOpportunitiesTaken,
+    int PlayerChargesBroken,
+    double PlayerChargeStartSecondsSum,
+    double PlayerLastChargeStartSeconds);
 
 /// <summary>
 /// Bir seed aralığındaki dövüşleri koşturur.
@@ -123,6 +129,12 @@ internal sealed class BatchRunner
         int playerHits = 0;
         double damageDealt = 0;
         double damageTaken = 0;
+        int chargesStarted = 0;
+        int chargesConnected = 0;
+        int chargeOpportunities = 0;
+        int chargesBroken = 0;
+        double chargeStartSum = 0;
+        double lastChargeStart = 0;
 
         foreach (WarriorBattleSummary s in result.Summaries)
         {
@@ -171,6 +183,12 @@ internal sealed class BatchRunner
                 }
             }
 
+            chargesStarted += s.ChargesStarted;
+            chargesConnected += s.ChargesConnected;
+            chargeOpportunities += s.ChargeOpportunitiesTaken;
+            chargesBroken += s.ChargesBroken;
+            chargeStartSum += s.ChargeStartSecondsSum;
+            lastChargeStart = Math.Max(lastChargeStart, s.LastChargeStartSeconds);
             playerAttacks += s.AttacksMade;
             playerHits += s.HitsLanded;
             damageDealt += s.DamageDealt;
@@ -191,7 +209,13 @@ internal sealed class BatchRunner
             playerAttacks,
             playerHits,
             damageDealt,
-            damageTaken);
+            damageTaken,
+            chargesStarted,
+            chargesConnected,
+            chargeOpportunities,
+            chargesBroken,
+            chargeStartSum,
+            lastChargeStart);
     }
 }
 
@@ -234,6 +258,19 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double PlayerDamageTaken { get; private set; }
 
+    public int PlayerChargesStarted { get; private set; }
+
+    public int PlayerChargesConnected { get; private set; }
+
+    public int PlayerChargeOpportunitiesTaken { get; private set; }
+
+    public int PlayerChargesBroken { get; private set; }
+
+    public double PlayerChargeStartSecondsSum { get; private set; }
+
+    /// <summary>Bütün koşumdaki en geç hücum kalkışı.</summary>
+    public double LatestChargeStart { get; private set; }
+
     /// <summary>Partide sahaya çıkan toplam oyuncu savaşçısı — oranların paydası.</summary>
     public int PlayerAppearances => Battles * playerSideSize;
 
@@ -264,6 +301,25 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     public double EnemyDeathRate => Rate(EnemyDeaths, EnemyAppearances);
 
     public double PlayerAccuracy => Rate(PlayerHits, PlayerAttacks);
+
+    /// <summary>Dövüş başına düşen hücum sayısı — eşik ve olasılığın birlikte çıktısı.</summary>
+    public double ChargesPerBattle => Battles == 0 ? 0 : (double)PlayerChargesStarted / Battles;
+
+    /// <summary>Başlayan hücumların hedefe varma oranı.</summary>
+    public double ChargeConnectRate => Rate(PlayerChargesConnected, PlayerChargesStarted);
+
+    /// <summary>Hücumun ortalama kalkış anı — dövüşün neresinde hücum ediliyor.</summary>
+    public double AverageChargeStart => PlayerChargesStarted == 0
+        ? 0
+        : PlayerChargeStartSecondsSum / PlayerChargesStarted;
+
+    /// <summary>Birikme aşamasında dağılan hücumların oranı.</summary>
+    public double ChargeBreakRate => Rate(PlayerChargesBroken, PlayerChargesStarted);
+
+    /// <summary>Hücum başına yenen bedava vuruş — §4'ün vaat ettiği bedelin ölçüsü.</summary>
+    public double OpportunitiesPerCharge => PlayerChargesStarted == 0
+        ? 0
+        : (double)PlayerChargeOpportunitiesTaken / PlayerChargesStarted;
 
     public double AverageSeconds => Battles == 0 ? 0 : TotalSeconds / Battles;
 
@@ -302,6 +358,12 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         PlayerHits += row.PlayerHits;
         PlayerDamageDealt += row.PlayerDamageDealt;
         PlayerDamageTaken += row.PlayerDamageTaken;
+        PlayerChargesStarted += row.PlayerChargesStarted;
+        PlayerChargesConnected += row.PlayerChargesConnected;
+        PlayerChargeOpportunitiesTaken += row.PlayerChargeOpportunitiesTaken;
+        PlayerChargesBroken += row.PlayerChargesBroken;
+        PlayerChargeStartSecondsSum += row.PlayerChargeStartSecondsSum;
+        LatestChargeStart = Math.Max(LatestChargeStart, row.PlayerLastChargeStartSeconds);
     }
 
     private static double Rate(int part, int total) => total == 0 ? 0 : (double)part / total;

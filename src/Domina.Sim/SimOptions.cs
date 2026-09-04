@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Domina.Core.Combat;
 using Domina.Core.Model;
 
@@ -118,6 +118,68 @@ internal static class SimArgs
                     tuning = tuning with { BaseDismembermentChance = sever };
                     break;
 
+                case "--charge-chance":
+                    if (!TryFraction(value, out double chargeChance))
+                    {
+                        return ParsedArgs.Fail($"--charge-chance 0-1 arasında olmalı: {value}");
+                    }
+
+                    // Eksen düz kalsın diye Saldırganlık eğrisini bastırır: iki uç da aynı
+                    // değere çekilince olasılık savaşçıdan bağımsız sabitlenir.
+                    tuning = tuning with
+                    {
+                        ChargeChanceAtZeroAggression = chargeChance,
+                        ChargeChanceAtMaxAggression = chargeChance,
+                    };
+                    break;
+
+                case "--charge-chance-min":
+                    if (!TryFraction(value, out double chanceMin))
+                    {
+                        return ParsedArgs.Fail($"--charge-chance-min 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ChargeChanceAtZeroAggression = chanceMin };
+                    break;
+
+                case "--charge-chance-max":
+                    if (!TryFraction(value, out double chanceMax))
+                    {
+                        return ParsedArgs.Fail($"--charge-chance-max 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ChargeChanceAtMaxAggression = chanceMax };
+                    break;
+
+                case "--charge-windup":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeWindup)
+                        || chargeWindup < 0)
+                    {
+                        return ParsedArgs.Fail($"--charge-windup negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ChargeWindupSeconds = chargeWindup };
+                    break;
+
+                case "--charge-speed":
+                    if (!TryMultiplier(value, out double chargeSpeed))
+                    {
+                        return ParsedArgs.Fail($"--charge-speed 1 veya üstü olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ChargeSpeedMultiplier = chargeSpeed };
+                    break;
+
+                case "--charge-damage":
+                    if (!TryMultiplier(value, out double chargeDamage))
+                    {
+                        return ParsedArgs.Fail($"--charge-damage 1 veya üstü olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ChargeDamageMultiplier = chargeDamage };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -171,6 +233,11 @@ internal static class SimArgs
 
         return armor is not null;
     }
+
+    /// <summary>Çarpan eksenleri: 1'in altı hücumu cezaya çevirirdi, oradan aşağısı yok.</summary>
+    private static bool TryMultiplier(string text, out double value) =>
+        double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
+        && value >= 1;
 
     private static bool TryFraction(string text, out double value) =>
         double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
@@ -248,6 +315,9 @@ internal static class SimArgs
         writer.WriteLine("             [--out <dosya.csv>]");
         writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
         writer.WriteLine("             [--armor none|light|medium|heavy]");
+        writer.WriteLine("             [--charge-chance <0-1>] [--charge-chance-min/-max <0-1>]");
+        writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=1>]");
+        writer.WriteLine("             [--charge-windup <sn>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -262,6 +332,11 @@ internal static class SimArgs
         writer.WriteLine("  --grievous  Ağır darbe eşiği (darbe/azami can oranı)");
         writer.WriteLine("  --sever     Ağır darbede taban uzuv kopma şansı");
         writer.WriteLine("  --armor     Oyuncu tarafının kuşamını ezer (zırh eksenini izole eder)");
+        writer.WriteLine("  --charge-chance    Hücum olasılığını sabitler (Saldırganlık eğrisini bastırır)");
+        writer.WriteLine("  --charge-chance-min/-max  Saldırganlık eğrisinin iki ucu");
+        writer.WriteLine("  --charge-windup    Koşu öncesi birikme süresi (0 = birikme yok)");
+        writer.WriteLine("  --charge-speed     Hücum sırasındaki hız çarpanı");
+        writer.WriteLine("  --charge-damage    Varış vuruşunun hasar çarpanı");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

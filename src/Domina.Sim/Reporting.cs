@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace Domina.Sim;
 
@@ -28,7 +28,11 @@ internal sealed class CsvReport(TextWriter writer)
         "player_attacks",
         "player_hits",
         "player_damage_dealt",
-        "player_damage_taken");
+        "player_damage_taken",
+        "charges_started",
+        "charges_connected",
+        "charge_opportunities",
+        "charges_broken");
 
     public void WriteHeader() => writer.WriteLine(_headerLine);
 
@@ -42,7 +46,7 @@ internal sealed class CsvReport(TextWriter writer)
 
         writer.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.LostArms},{row.LostLegs},{row.LostEyes},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1}"));
+            $"{row.Seed},{row.Outcome},{row.Seconds:F2},{row.PlayerDeaths},{row.PlayerEscapes},{row.PlayerLimbLosses},{row.LostArms},{row.LostLegs},{row.LostEyes},{row.EnemyDeaths},{row.PlayerAttacks},{row.PlayerHits},{row.PlayerDamageDealt:F1},{row.PlayerDamageTaken:F1},{row.PlayerChargesStarted},{row.PlayerChargesConnected},{row.PlayerChargeOpportunitiesTaken},{row.PlayerChargesBroken}"));
     }
 }
 
@@ -82,6 +86,10 @@ internal static class SummaryReport
         WriteCount(writer, "    · göz", report.LostEyes, report.LostEyeRate);
         writer.WriteLine($"  İsabet oranı              %{report.PlayerAccuracy * 100:F1}");
         writer.WriteLine($"  Hasar verilen/alınan      {report.PlayerDamageDealt:F0} / {report.PlayerDamageTaken:F0}");
+        writer.WriteLine($"  Hücum (dövüş başına)      {report.ChargesPerBattle:F2}  varış %{report.ChargeConnectRate * 100:F1}  bedava vuruş/hücum {report.OpportunitiesPerCharge:F2}");
+        writer.WriteLine($"    · birikmede dağılan     %{report.ChargeBreakRate * 100:F1}");
+        writer.WriteLine(
+            $"    · kalkış anı            ortalama {report.AverageChargeStart:F2} sn, en geç {report.LatestChargeStart:F2} sn");
         writer.WriteLine();
 
         writer.WriteLine($"Düşman tarafı ({report.EnemyAppearances} savaşçı-dövüş)");
