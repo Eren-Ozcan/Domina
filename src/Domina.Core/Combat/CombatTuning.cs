@@ -76,14 +76,16 @@ public sealed record CombatTuning
     // ---- Hücum ----
 
     /// <summary>
-    /// Mesafe uygunken hücuma kalkma olasılığı — <b>Saldırganlık 0 iken</b>.
+    /// Açıklık doğduğunda hücuma kalkma olasılığı — <b>Saldırganlık 0 iken</b>.
     /// </summary>
     /// <remarks>
     /// Hücum kararı savaşçının kimliğinden çıkar: atılgan olan atılır, ölçülü olan
     /// mesafeyi yürüyerek kapatır. Saldırganlık zaten saldırı sıklığını belirliyor
     /// (<see cref="SpacingSecondsAtZeroAggression"/>); aynı stat'ın ikinci işi budur.
+    /// Zar <b>açıklık başına bir kez</b> atılır (docs/GDD.md §4), o yüzden bu sayılar
+    /// "saniyede bir denenen şans" değil, <b>gördüğü fırsatların kaçını kullandığı</b>.
     /// </remarks>
-    public double ChargeChanceAtZeroAggression { get; init; } = 0.12;
+    public double ChargeChanceAtZeroAggression { get; init; } = 0.35;
 
     /// <inheritdoc cref="ChargeChanceAtZeroAggression"/>
     /// <remarks>
@@ -93,12 +95,19 @@ public sealed record CombatTuning
     /// çoğu zaman yürümeyi seçer, atılgan olan atlar.
     /// </para>
     /// <para>
-    /// Ölçüldü (3v3): 0.12-0.45 dövüş başına 2.32 kalkış / <b>1.71 tamamlanmış hücum</b>
-    /// veriyor. Eğri tek başına sıklık düğmesidir — 0.30-1.00'de 2.80 kalkışa çıkıyor ama
-    /// hücumun 3v3 zaferine katkısı +%9'a fırlıyor; 0.06-0.25'te 1.00'e iniyor.
+    /// Ölçüldü (3v3): 0.35-1.00 dövüş başına 1.88 kalkış / <b>1.66 tamamlanmış hücum</b>
+    /// veriyor — zar açıklık başına atıldığından bu, saniye başına atılan eski 0.12-0.45
+    /// bandının ürettiği sıklığın (1.71 tamamlanmış) yerini tutar. Eğri tek başına sıklık
+    /// düğmesidir: 0.12-0.45 aynı kuralla 0.78 kalkışa iner, 0.50-1.00 ise 2.15'e çıkar.
+    /// </para>
+    /// <para>
+    /// Üst uç <b>1.00</b>: en atılgan savaşçı gördüğü her açıklığı kullanır. Bandın alt ucu
+    /// da yükseldiği için Saldırganlık'ın ayırt etme gücü daraldı (eski oran 3.75 kat, yeni
+    /// 2.86 kat) — bunun karşılığında hücum sıklığı savaşçının hızından bağımsızlaştı ve
+    /// <c>Speed</c> ekseni ilk kez canlandı (3v3 zaferi Hız 0'da %83.8, Hız 100'de %87.1).
     /// </para>
     /// </remarks>
-    public double ChargeChanceAtMaxAggression { get; init; } = 0.45;
+    public double ChargeChanceAtMaxAggression { get; init; } = 1.00;
 
     /// <summary>
     /// Koşu başlamadan önce yerinde geçirilen birikme süresi. Savaşçı bu sürede yerinden
