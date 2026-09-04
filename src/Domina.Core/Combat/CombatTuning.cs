@@ -262,6 +262,41 @@ public sealed record CombatTuning
     public double LowStaminaThreshold { get; init; } = 0.3;
     public double LowStaminaPenalty { get; init; } = 0.65;
 
+    // ---- Zırh ağırlığı ----
+
+    /// <summary>
+    /// Cezaların tamamının uygulandığı toplam kuşam ağırlığı. Tam ō-yoroi budur;
+    /// daha hafif kuşamlar cezayı oranla alır.
+    /// </summary>
+    /// <remarks>
+    /// Zırhın dövüş içi bedeli yoktu ve ō-yoroi her eksende üstündü: zafer %68 → %96,
+    /// ölüm %41.6 → %16.3, uzuv kaybı %8.6 → %0.4, karşılığında sıfır. Tek fren fiyattı,
+    /// o da ekonomi sayıları gelene kadar yok. Ağırlık, §7'nin vaat ettiği "ağır
+    /// göğüslük, çıplak kollar" kararının sahadaki karşılığıdır.
+    /// </remarks>
+    public double ArmorWeightAtFullPenalty { get; init; } = 16;
+
+    /// <summary>Tam ağırlıkta saldırı döngüsünün uzama oranı.</summary>
+    /// <remarks>
+    /// <para>
+    /// Ağırlığın <b>tek</b> hattı budur, ve öyle olması ölçümle geldi. Denenip düşen iki
+    /// hat: stamina toparlanmasına yazılan ceza <b>hiç</b> ölçülmedi (%90 kesintide zafer
+    /// %92.34 → %92.33), yürüme hızına yazılan ceza ise zaferi kıpırdatmadığı hâlde §5'in
+    /// vaadini sildi — kuşanmış savaşçı arenayı terk edemeden yetişildiği için "Kaç" tuşu
+    /// ölümü düşürmez oldu (çeken %46.35, çekilmeyen %46.44; ceza yokken %44.32'ye karşı
+    /// %46.33). Sebep: dövüş hasar alışverişiyle bitiyor ve iki hat da o alışverişe
+    /// dokunmuyordu. Kılıcın yavaşlaması doğrudan hasar çıktısına iner.
+    /// </para>
+    /// <para>
+    /// 0.75 seçildi çünkü takasın döndüğü eşik orası (3v3, 20.000 dövüş,
+    /// <c>losing:0.7</c>): dō-maru dövüşü kazanır (%71.8 zafer, %40.3 ölüm), ō-yoroi
+    /// sakat dönmemeyi alır (uzuv kaybı %0.82'ye karşı %3.38). Üç kademe de bir şeyde
+    /// en iyi olur. 0.60'ta ō-yoroi hâlâ her eksende önde (%76.3 / %37.0), 0.90'da
+    /// ağır kuşam düpedüz kötü (%64.3 zafer).
+    /// </para>
+    /// </remarks>
+    public double ArmorAttackSlowdownAtFullWeight { get; init; } = 0.75;
+
     // ---- Uzuv kaybı ----
 
     /// <summary>
@@ -309,11 +344,13 @@ public sealed record CombatTuning
     /// </remarks>
     public double TorsoHitWeight { get; init; } = 45;
 
+    /// <summary>Ağırlık <b>bacak başına</b>dır; iki bacak birlikte 25 eder.</summary>
     /// <inheritdoc cref="TorsoHitWeight"/>
-    public double LegHitWeight { get; init; } = 25;
+    public double LegHitWeight { get; init; } = 12.5;
 
+    /// <summary>Ağırlık <b>kol başına</b>dır; iki kol birlikte 20 eder.</summary>
     /// <inheritdoc cref="TorsoHitWeight"/>
-    public double ArmHitWeight { get; init; } = 20;
+    public double ArmHitWeight { get; init; } = 10;
 
     /// <inheritdoc cref="TorsoHitWeight"/>
     public double HeadHitWeight { get; init; } = 10;

@@ -638,7 +638,7 @@ public sealed class Battle
 
         attacker.BeginState(
             CombatState.AttackWindup,
-            attacker.Warrior.UsableWeapon.AttackSeconds * _tuning.WindupFraction);
+            AttackCycleSeconds(attacker) * _tuning.WindupFraction);
 
         Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
     }
@@ -667,7 +667,7 @@ public sealed class Battle
         {
             attacker.BeginState(
                 CombatState.AttackRecovery,
-                attacker.Warrior.UsableWeapon.AttackSeconds * (1 - _tuning.WindupFraction));
+                AttackCycleSeconds(attacker) * (1 - _tuning.WindupFraction));
         }
     }
 
@@ -758,6 +758,15 @@ public sealed class Battle
         _tuning.MoveSpeedAtZeroSpeed,
         _tuning.MoveSpeedAtMaxSpeed,
         Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
+
+    /// <summary>Kuşamın ağırlığıyla uzamış saldırı döngüsü.</summary>
+    private double AttackCycleSeconds(Combatant c) => c.Warrior.UsableWeapon.AttackSeconds
+        * (1 + (ArmorLoad(c) * _tuning.ArmorAttackSlowdownAtFullWeight));
+
+    /// <summary>Kuşamın tam ağırlığa oranı (0-1). Cezaların tamamı buradan okunur.</summary>
+    private double ArmorLoad(Combatant c) => _tuning.ArmorWeightAtFullPenalty <= 0
+        ? 0
+        : Math.Clamp(c.Warrior.Armor.Weight / _tuning.ArmorWeightAtFullPenalty, 0, 1);
 
     /// <summary>Bu savaşçının hücuma kalkma olasılığı — kimliğinden çıkar.</summary>
     private double ChargeChanceFor(Combatant c) => Lerp(
@@ -874,7 +883,7 @@ public sealed class Battle
 
             c.BeginState(
                 CombatState.AttackWindup,
-                c.Warrior.UsableWeapon.AttackSeconds * _tuning.WindupFraction);
+                AttackCycleSeconds(c) * _tuning.WindupFraction);
 
             Emit(new AttackStarted(ElapsedSeconds, c.Id, target.Id));
             return;
@@ -1377,8 +1386,10 @@ public sealed class Battle
     {
         BodyPart? direct = location switch
         {
-            HitLocation.Arm => BodyPart.Arm,
-            HitLocation.Leg => BodyPart.Leg,
+            HitLocation.SwordArm => BodyPart.SwordArm,
+            HitLocation.OffArm => BodyPart.OffArm,
+            HitLocation.RightLeg => BodyPart.RightLeg,
+            HitLocation.LeftLeg => BodyPart.LeftLeg,
             HitLocation.Head => BodyPart.Eye,
             _ => null,
         };
@@ -1389,10 +1400,20 @@ public sealed class Battle
         }
 
         // Gövdeye indi ya da o uzuv zaten yok: kalanlardan ağırlıklı seçim.
-        double arm = AlreadyLost(defender, BodyPart.Arm) ? 0 : _tuning.ArmHitWeight;
-        double leg = AlreadyLost(defender, BodyPart.Leg) ? 0 : _tuning.LegHitWeight;
-        double eye = AlreadyLost(defender, BodyPart.Eye) ? 0 : _tuning.HeadHitWeight;
-        double total = arm + leg + eye;
+        Span<double> weights =
+        [
+            Weight(BodyPart.SwordArm, _tuning.ArmHitWeight),
+            Weight(BodyPart.OffArm, _tuning.ArmHitWeight),
+            Weight(BodyPart.RightLeg, _tuning.LegHitWeight),
+            Weight(BodyPart.LeftLeg, _tuning.LegHitWeight),
+            Weight(BodyPart.Eye, _tuning.HeadHitWeight),
+        ];
+
+        double total = 0;
+        foreach (double w in weights)
+        {
+            total += w;
+        }
 
         if (total <= 0)
         {
@@ -1400,12 +1421,19 @@ public sealed class Battle
         }
 
         double roll = _rng.NextDouble() * total;
-        if (roll < arm)
+        double running = 0;
+        for (int i = 0; i < weights.Length; i++)
         {
-            return BodyPart.Arm;
+            running += weights[i];
+            if (roll < running)
+            {
+                return (BodyPart)i;
+            }
         }
 
-        return roll < arm + leg ? BodyPart.Leg : BodyPart.Eye;
+        return BodyPart.Eye;
+
+        double Weight(BodyPart part, double weight) => AlreadyLost(defender, part) ? 0 : weight;
     }
 
     private bool AlreadyLost(Combatant defender, BodyPart part) =>
@@ -1416,9 +1444,11 @@ public sealed class Battle
     private HitLocation RollHitLocation()
     {
         double torso = _tuning.TorsoHitWeight;
-        double leg = torso + _tuning.LegHitWeight;
-        double arm = leg + _tuning.ArmHitWeight;
-        double total = arm + _tuning.HeadHitWeight;
+        double rightLeg = torso + _tuning.LegHitWeight;
+        double leftLeg = rightLeg + _tuning.LegHitWeight;
+        double swordArm = leftLeg + _tuning.ArmHitWeight;
+        double offArm = swordArm + _tuning.ArmHitWeight;
+        double total = offArm + _tuning.HeadHitWeight;
 
         double roll = _rng.NextDouble() * total;
         if (roll < torso)
@@ -1426,12 +1456,22 @@ public sealed class Battle
             return HitLocation.Torso;
         }
 
-        if (roll < leg)
+        if (roll < rightLeg)
         {
-            return HitLocation.Leg;
+            return HitLocation.RightLeg;
         }
 
-        return roll < arm ? HitLocation.Arm : HitLocation.Head;
+        if (roll < leftLeg)
+        {
+            return HitLocation.LeftLeg;
+        }
+
+        if (roll < swordArm)
+        {
+            return HitLocation.SwordArm;
+        }
+
+        return roll < offArm ? HitLocation.OffArm : HitLocation.Head;
     }
 
     private void Die(Combatant c, DeathCause cause)

@@ -1,4 +1,4 @@
-namespace Domina.Core.Model;
+﻿namespace Domina.Core.Model;
 
 /// <summary>Silahın yaralanma karakteri.</summary>
 public enum WeaponClass
@@ -118,30 +118,45 @@ public sealed record ThrownWeapon(
 /// O bölgeye inen ağır darbede uzuv kopma riskini azaltan oran
 /// (0 = korumasız, 1 = tam bağışık).
 /// </param>
-public sealed record ArmorPiece(string Name, double DamageReduction, double DismembermentResistance)
+/// <param name="Weight">
+/// Parçanın ağırlığı. Takımın toplamı saldırı döngüsünü uzatır
+/// (bkz. <c>CombatTuning.ArmorWeightAtFullPenalty</c>).
+/// </param>
+/// <remarks>
+/// Ağırlık, zırhı bir <b>karar</b> yapan şeydir. Bedelsizken ō-yoroi her eksende
+/// üstündü — zafer %68'den %96'ya, ölüm %41.6'dan %16.3'e, uzuv kaybı %8.6'dan %0.4'e
+/// iniyor ve karşılığında hiçbir şey ödenmiyordu; tek fren fiyattı, o da ekonomi
+/// sayıları gelene kadar yok. Ağırlık bedeli sahaya taşır: ağır kuşanan savaşçının
+/// yaklaşır ve kılıcı geç iner.
+/// </remarks>
+public sealed record ArmorPiece(
+    string Name,
+    double DamageReduction,
+    double DismembermentResistance,
+    double Weight)
 {
     /// <summary>Örtüsüz bölge.</summary>
-    public static ArmorPiece Bare { get; } = new("Çıplak", 0, 0);
+    public static ArmorPiece Bare { get; } = new("Çıplak", 0, 0, 0);
 
-    public static ArmorPiece Keikogi { get; } = new("Keikogi", 4, 0.20);
+    public static ArmorPiece Keikogi { get; } = new("Keikogi", 4, 0.20, 1);
 
-    public static ArmorPiece DoMaru { get; } = new("Dō-maru gövdeliği", 9, 0.45);
+    public static ArmorPiece DoMaru { get; } = new("Dō-maru gövdeliği", 9, 0.45, 4);
 
-    public static ArmorPiece OYoroiCuirass { get; } = new("Ō-yoroi gövdeliği", 14, 0.65);
+    public static ArmorPiece OYoroiCuirass { get; } = new("Ō-yoroi gövdeliği", 14, 0.65, 7);
 
-    /// <summary>Kol zırhı. Kolu koruyan tek parça budur.</summary>
-    public static ArmorPiece Kote { get; } = new("Kote", 4, 0.30);
+    /// <summary>Kol zırhı — <b>tek</b> kolu örter; iki kol iki parça ister.</summary>
+    public static ArmorPiece Kote { get; } = new("Kote", 4, 0.30, 0.75);
 
     /// <inheritdoc cref="Kote"/>
-    public static ArmorPiece HeavyKote { get; } = new("Ağır kote", 6, 0.45);
+    public static ArmorPiece HeavyKote { get; } = new("Ağır kote", 6, 0.45, 1.5);
 
-    /// <summary>Baldır zırhı.</summary>
-    public static ArmorPiece Suneate { get; } = new("Suneate", 4, 0.25);
+    /// <summary>Baldır zırhı — <b>tek</b> bacağı örter.</summary>
+    public static ArmorPiece Suneate { get; } = new("Suneate", 4, 0.25, 0.75);
 
     /// <inheritdoc cref="Suneate"/>
-    public static ArmorPiece HeavySuneate { get; } = new("Ağır suneate", 6, 0.40);
+    public static ArmorPiece HeavySuneate { get; } = new("Ağır suneate", 6, 0.40, 1.5);
 
-    public static ArmorPiece Kabuto { get; } = new("Kabuto", 8, 0.55);
+    public static ArmorPiece Kabuto { get; } = new("Kabuto", 8, 0.55, 3);
 }
 
 /// <summary>
@@ -158,52 +173,72 @@ public sealed record ArmorPiece(string Name, double DamageReduction, double Dism
 /// asıl ilginç kararı — <b>ağır göğüslük, çıplak kollar</b>: ucuz ve hızlı, ama eve
 /// kolsuz dönme ihtimali yüksek — hiç var olmaz.
 /// </para>
+/// <para>
+/// Yuvalar uzuv uzuvdur: kılıç kolu, boştaki kol, sağ bacak, sol bacak ayrı ayrı
+/// kuşanılır. Tek bir "kol" yuvası hem iki kolluğu tek parça sayıyordu hem de kolunu
+/// kaybetmiş savaşçının kalan kolunu temsil edemiyordu.
+/// </para>
 /// </remarks>
 /// <param name="Name">Takımın görünen adı.</param>
 public sealed record Armor(
     string Name,
     ArmorPiece Head,
     ArmorPiece Torso,
-    ArmorPiece Arms,
-    ArmorPiece Legs)
+    ArmorPiece SwordArm,
+    ArmorPiece OffArm,
+    ArmorPiece RightLeg,
+    ArmorPiece LeftLeg)
 {
+    /// <summary>Takımın toplam ağırlığı. Boş yuva ağırlık taşımaz.</summary>
+    public double Weight =>
+        Head.Weight + Torso.Weight + SwordArm.Weight + OffArm.Weight
+        + RightLeg.Weight + LeftLeg.Weight;
+
     /// <summary>Verilen bölgeyi örten parça.</summary>
     public ArmorPiece At(HitLocation location) => location switch
     {
         HitLocation.Head => Head,
         HitLocation.Torso => Torso,
-        HitLocation.Arm => Arms,
-        HitLocation.Leg => Legs,
+        HitLocation.SwordArm => SwordArm,
+        HitLocation.OffArm => OffArm,
+        HitLocation.RightLeg => RightLeg,
+        HitLocation.LeftLeg => LeftLeg,
         _ => ArmorPiece.Bare,
     };
 
     /// <summary>Tüm bölgeleri aynı parçayla örten takım.</summary>
     public static Armor Uniform(string name, ArmorPiece piece) =>
-        new(name, piece, piece, piece, piece);
+        new(name, piece, piece, piece, piece, piece, piece);
 
     public static Armor None() => Uniform("Yok", ArmorPiece.Bare);
 
-    /// <summary>Yalnızca gövdeyi örten kumaş. Kol, bacak ve kafa açıkta.</summary>
+    /// <summary>Yalnızca gövdeyi örten kumaş. Kollar, bacaklar ve kafa açıkta.</summary>
     public static Armor Light() => new(
         "Hafif keikogi",
         Head: ArmorPiece.Bare,
         Torso: ArmorPiece.Keikogi,
-        Arms: ArmorPiece.Bare,
-        Legs: ArmorPiece.Bare);
+        SwordArm: ArmorPiece.Bare,
+        OffArm: ArmorPiece.Bare,
+        RightLeg: ArmorPiece.Bare,
+        LeftLeg: ArmorPiece.Bare);
 
-    /// <summary>Gövde, kol ve bacak örtülü; kafa açık.</summary>
+    /// <summary>Gövde, iki kol ve iki bacak örtülü; kafa açık.</summary>
     public static Armor Medium() => new(
         "Dō-maru",
         Head: ArmorPiece.Bare,
         Torso: ArmorPiece.DoMaru,
-        Arms: ArmorPiece.Kote,
-        Legs: ArmorPiece.Suneate);
+        SwordArm: ArmorPiece.Kote,
+        OffArm: ArmorPiece.Kote,
+        RightLeg: ArmorPiece.Suneate,
+        LeftLeg: ArmorPiece.Suneate);
 
     /// <summary>Tam takım.</summary>
     public static Armor Heavy() => new(
         "Ō-yoroi",
         Head: ArmorPiece.Kabuto,
         Torso: ArmorPiece.OYoroiCuirass,
-        Arms: ArmorPiece.HeavyKote,
-        Legs: ArmorPiece.HeavySuneate);
+        SwordArm: ArmorPiece.HeavyKote,
+        OffArm: ArmorPiece.HeavyKote,
+        RightLeg: ArmorPiece.HeavySuneate,
+        LeftLeg: ArmorPiece.HeavySuneate);
 }
