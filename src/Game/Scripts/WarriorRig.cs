@@ -17,8 +17,8 @@ namespace Domina.Game;
 /// ucuz bir iş değildir.
 /// </para>
 /// <para>
-/// Kopma noktaları <b>omuz</b> ve <b>kalça</b>: <see cref="BodyPart.Arm"/> geldiğinde
-/// üst kol düğümü, <see cref="BodyPart.Leg"/> geldiğinde uyluk düğümü ayrılır ve
+/// Kopma noktaları <b>omuz</b> ve <b>kalça</b>: bir kol geldiğinde üst kol düğümü,
+/// bir bacak geldiğinde uyluk düğümü ayrılır ve
 /// altındaki her şey onunla birlikte gider. GDD §2'nin "uzuv kopması = çalışma anında
 /// bir node'u ayırmak" cümlesinin karşılığı budur; yeni sanat varlığı gerekmez.
 /// </para>
@@ -157,26 +157,23 @@ public sealed partial class WarriorRig : Node2D
     /// </remarks>
     private void Sever(BodyPart part)
     {
-        switch (part)
+        if (part.IsArm())
         {
-            case BodyPart.Arm:
-                DropLimb(_armNear);
-                _armNear = null;
-                _weapon = null;
-                break;
-
-            case BodyPart.Leg:
-                DropLimb(_legNear);
-                _legNear = null;
-                break;
-
-            case BodyPart.Eye:
-            default:
-                _headShape.Color = new Color(0.75f, 0.15f, 0.15f);
-                break;
+            DropLimb(_armNear);
+            _armNear = null;
+            _weapon = null;
+        }
+        else if (part.IsLeg())
+        {
+            DropLimb(_legNear);
+            _legNear = null;
+        }
+        else
+        {
+            _headShape.Color = new Color(0.75f, 0.15f, 0.15f);
         }
 
-        Splatter(part == BodyPart.Leg ? _hip : _torso);
+        Splatter(part.IsLeg() ? _hip : _torso);
     }
 
     // ------------------------------------------------------------- rig kurulumu

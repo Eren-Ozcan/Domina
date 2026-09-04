@@ -322,7 +322,7 @@ public sealed class RigAnimator
     /// <summary>Kalıcı sakatlıkların duruşa etkisi.</summary>
     private RigPose Injuries(RigPose pose, CombatState state)
     {
-        if (_lost.Contains(BodyPart.Arm))
+        if (_lost.Any(p => p.IsArm()))
         {
             // Kolunu kaybeden savaşçı kalan koluyla tek elli dövüşür: gövde sağlam
             // tarafa döner, kalan kol daha öne çıkar.
@@ -334,7 +334,7 @@ public sealed class RigAnimator
             };
         }
 
-        return _lost.Contains(BodyPart.Leg) ? OneLegged(pose, state) : pose;
+        return _lost.Any(p => p.IsLeg()) ? OneLegged(pose, state) : pose;
     }
 
     /// <summary>
