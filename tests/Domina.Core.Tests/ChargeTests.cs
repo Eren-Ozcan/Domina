@@ -105,17 +105,40 @@ public class ChargeTests
     [Fact]
     public void ArrivingWithMomentumHitsHarder()
     {
-        double plain = FirstBlowAfterCharge(1.0);
-        double heavy = FirstBlowAfterCharge(2.0);
+        double plain = FirstBlowAfterCharge(bonusAtFullSpeed: 0.0);
+        double heavy = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0);
 
         Assert.True(heavy > plain, $"Hücum bonusu hasara yansımıyor: {heavy:F2} <= {plain:F2}");
     }
 
-    private static double FirstBlowAfterCharge(double multiplier)
+    /// <summary>
+    /// <b>Momentum hızdır:</b> aynı bonus ayarıyla hızlı savaşçının varış vuruşu, yavaş
+    /// olanınkinden serttir. Ağır Oni'nin hücumu Tengu'nunki kadar sert olamaz.
+    /// </summary>
+    /// <remarks>
+    /// Çarpan varış anındaki gerçek hızdan çıkar; bu yüzden hem <c>Speed</c> stat'ı hem de
+    /// <see cref="CombatTuning.ChargeSpeedMultiplier"/> hasara işler. İkincisi, ölçümde atıl
+    /// çıkmış olan hız eksenini canlı tutan şeydir.
+    /// </remarks>
+    [Fact]
+    public void AFasterWarriorChargesHarder()
     {
-        var battle = new Battle(
-            Duel(AlwaysCharges with { ChargeDamageMultiplier = multiplier }),
-            new SeededRandom(11));
+        double slow = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, speed: 0);
+        double fast = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, speed: 100);
+
+        Assert.True(fast > slow, $"Hız varış vuruşuna yansımıyor: {fast:F2} <= {slow:F2}");
+    }
+
+    private static double FirstBlowAfterCharge(double bonusAtFullSpeed, double speed = 50)
+    {
+        var setup = new BattleSetup(
+            [TestBuilders.Warrior(1, health: 400, speed: speed)],
+            [TestBuilders.Warrior(101, health: 400)])
+        {
+            Tuning = AlwaysCharges with { ChargeDamageAtFullSpeed = bonusAtFullSpeed },
+        };
+
+        var battle = new Battle(setup, new SeededRandom(11));
 
         Assert.True(StepUntil(battle, b => b.Events.OfType<ChargeConnected>().Any()));
 
