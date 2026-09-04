@@ -471,6 +471,66 @@ public class ChargeTests
             "Hedefi devrilen savaşçı sıradakine hiç hücum etmedi.");
     }
 
+    /// <summary>
+    /// Hücum zarı <b>açıklık başına bir kez</b> atılır, açıklık sürdükçe her karar
+    /// adımında yeniden değil.
+    /// </summary>
+    /// <remarks>
+    /// Kuralın denge sebebi budur (docs/GDD.md §4): adım başına atılan zarda hücum
+    /// sıklığı, savaşçının açıklıkta ne kadar oyalandığına — yani kendi hızına ters
+    /// orantılı olarak — bağlıydı. Hızlanan savaşçı daha sert ama daha seyrek hücum
+    /// ettiği için <c>Speed</c> ekseni ölçümde atıl çıkıyordu.
+    /// </remarks>
+    [Fact]
+    public void TheChargeIsJudgedOncePerOpening()
+    {
+        // Başka hiçbir olasılıkla karışmayan bir değer: zar sayacı yalnızca bunu sayar.
+        const double chargeChance = 0.371;
+
+        BattleSetup setup = Duel(CombatTuning.Default with
+        {
+            ChargeChanceAtZeroAggression = chargeChance,
+            ChargeChanceAtMaxAggression = chargeChance,
+            StartSpacingY = 900,
+        });
+
+        var rng = new ChargeRollCounter(chargeChance);
+        var battle = new Battle(setup, rng);
+
+        // Açıklık kapanana kadar koştur: taraflar yaklaştıkça bir noktada boşluk biter.
+        // Aradaki 900 birim, adım başına zar atılsaydı onlarca atışa yeterdi.
+        StepUntil(battle, _ => false, maxSteps: 200);
+
+        // Sahada iki savaşçı var ve ikisi de aynı açıklığı görüyor: adam başına tek zar.
+        Assert.Equal(2, rng.ChargeRolls);
+    }
+
+    /// <summary>
+    /// Verilen olasılığa yapılan zar atışlarını sayan, o zarı hep reddeden kaynak.
+    /// Diğer olasılıklar gerçek seed'li kaynağa gider ki dövüş normal işlesin.
+    /// </summary>
+    private sealed class ChargeRollCounter(double counted) : IRandomSource
+    {
+        private readonly SeededRandom _inner = new(11);
+
+        public int ChargeRolls { get; private set; }
+
+        public double NextDouble() => _inner.NextDouble();
+
+        public int NextInt(int exclusiveMax) => _inner.NextInt(exclusiveMax);
+
+        public bool Chance(double probability)
+        {
+            if (probability == counted)
+            {
+                ChargeRolls++;
+                return false;
+            }
+
+            return _inner.Chance(probability);
+        }
+    }
+
     private static double Gap(Battle battle) =>
         battle.SnapshotOf(_fighter).Position.DistanceTo(battle.SnapshotOf(_enemy).Position);
 }
