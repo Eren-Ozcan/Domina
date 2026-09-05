@@ -54,7 +54,13 @@ public static class DojoSaveFile
         }
 
         return new DojoSnapshot(
-            DojoSnapshot.CurrentVersion, state.Day, state.Resources, warriors, state.Seed);
+            DojoSnapshot.CurrentVersion,
+            state.Day,
+            state.Resources,
+            warriors,
+            state.Seed,
+            state.AcceptedBountyDay,
+            state.ClaimedBountyDay);
     }
 
     public static string Write(DojoState state) =>
@@ -110,6 +116,7 @@ public static class DojoSaveFile
 
         state.RestoreDay(Math.Max(1, snapshot.Day));
         state.RestoreSeed(snapshot.Seed);
+        state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
 
         foreach (WarriorSnapshot record in snapshot.Warriors ?? [])
         {

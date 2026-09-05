@@ -30,7 +30,9 @@ public sealed record DojoSnapshot(
     int Day,
     Resources Resources,
     IReadOnlyList<WarriorSnapshot> Warriors,
-    ulong Seed = 1)
+    ulong Seed = 1,
+    int? AcceptedBountyDay = null,
+    int? ClaimedBountyDay = null)
 {
     /// <summary>
     /// Yazılan dosyaların sürümü. Biçim <b>bozucu</b> şekilde değiştiğinde artar;
