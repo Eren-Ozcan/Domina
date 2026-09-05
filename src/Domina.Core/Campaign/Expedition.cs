@@ -96,7 +96,100 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         DayReport day = state.AdvanceDay();
         return new ExpeditionResult(battle, aftermath, reward, day);
     }
+
+    /// <summary>
+    /// Ekibi kelle avı sözleşmesinin üstüne gönderir.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Sıradan seferden ayrılan üç kalem burada: ödül sözleşmenin <b>söz verdiği</b>
+    /// rakamdır (dövüşün canından değil), sözleşme tamamlanınca ekip onur kazanır, ve
+    /// dönülemezse söz kırılır. Dövüşün kendisi aynı yoldan geçer — hedef tek bir düşman
+    /// olarak sefer katmanına verilir, çünkü dövüşe giden ikinci bir kapı açmak
+    /// çözümleyiciyi ikiye bölerdi.
+    /// </para>
+    /// <para>
+    /// Kabul edilmemiş sözleşmeye de girilebilir: tahtadan işi görüp aynı gün gitmek
+    /// meşru. Kabul, gün kazandırmaz — <b>süre</b> satın alır.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Sözleşme bugün açık değilse ya da ekip sefere uygun değilse.
+    /// </exception>
+    public BountyResult SendToBounty(
+        DojoState state,
+        BountyContract contract,
+        IReadOnlyList<RosterEntry> party,
+        Rng.IRandomSource random,
+        CombatTuning? tuning = null,
+        IRetreatPolicy? retreat = null,
+        bool collectEvents = false)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(contract);
+        ArgumentNullException.ThrowIfNull(random);
+
+        if (!contract.IsOpenOn(state.Day))
+        {
+            throw new InvalidOperationException("Sözleşme bugün açık değil.");
+        }
+
+        EncounterOffer offer = contract.AsOffer(state.Day);
+        if (Refuse(state, offer, party) is ExpeditionRefusal refusal)
+        {
+            throw new InvalidOperationException($"Ekip sefere gönderilemez: {refusal}.");
+        }
+
+        BattleSetup setup = new([.. party.Select(e => e.Warrior)], offer.Enemies)
+        {
+            Tuning = tuning ?? CombatTuning.Default,
+            RetreatPolicy = retreat,
+            CollectEvents = collectEvents,
+        };
+
+        BattleResult battle = new Battle(setup, random).Run();
+        AftermathReport aftermath = _aftermath.Apply(state, battle);
+
+        bool claimed = battle.Outcome == BattleOutcome.PlayerVictory;
+        int reward = claimed ? contract.Reward : state.Quartermaster.Economy.LostBattleGold;
+        state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
+
+        if (claimed)
+        {
+            // Onur sefere <b>giden</b> ekibe yazılır, kadronun tamamına değil: kelleyi
+            // getiren onlar. Kırılan sözün cezası ise tüm kadroya yazılıyor, çünkü sözü
+            // dojo veriyor — kazanç kişisel, borç ortak.
+            foreach (RosterEntry entry in party)
+            {
+                if (state.Roster.Find(entry.Id) is RosterEntry alive && alive.Warrior.IsAlive)
+                {
+                    alive.Warrior.Honor =
+                        HonorScale.Clamp(alive.Warrior.Honor + contract.HonorReward);
+                }
+            }
+
+            state.CloseBounty(contract.PostedDay);
+        }
+
+        DayReport day = state.AdvanceDay();
+        return new BountyResult(contract, battle, aftermath, reward, claimed, day);
+    }
 }
+
+/// <summary>Bir kelle avının dojo'ya dönmüş hâli.</summary>
+/// <param name="Contract">Girilen sözleşme.</param>
+/// <param name="Battle">Dövüşün ham sonucu.</param>
+/// <param name="Aftermath">Kadroya yazılanlar.</param>
+/// <param name="Reward">Kasaya giren altın.</param>
+/// <param name="Claimed">Kelle alındı mı — sözleşme tamamlandı mı.</param>
+/// <param name="Day">Seferin yediği günün özeti.</param>
+public sealed record BountyResult(
+    BountyContract Contract,
+    BattleResult Battle,
+    AftermathReport Aftermath,
+    int Reward,
+    bool Claimed,
+    DayReport Day);
 
 /// <summary>Bir seferin dojo'ya dönmüş hâli.</summary>
 /// <param name="Battle">Dövüşün ham sonucu.</param>
