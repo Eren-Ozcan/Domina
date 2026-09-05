@@ -1,4 +1,4 @@
-using Domina.Core.Model;
+﻿using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
@@ -29,6 +29,15 @@ namespace Domina.Core.Combat;
 /// vurur, kaçınır; bu yüzden <see cref="CombatState"/> içinde temsil edilemez, ayrı bir
 /// bayrak olarak taşınır.
 /// </param>
+/// <param name="Disarmed">
+/// Silahı kırıldı mı? Zehir gibi bu da bir <b>durum</b> değil, durumun üstüne binen bir
+/// işaret: silahsız savaşçı dövüşmeye devam eder — yalnızca yumrukla.
+/// </param>
+/// <param name="DestroyedArmor">
+/// Dağılmış zırh yuvaları. Görselleştirme kuşamı buradan söker — plakası giden bölge
+/// ekranda da çıplak görünmeli, yoksa savaşçı korunduğunu sandığı bir zırhla dövüşüyor
+/// gibi durur (docs/GDD.md §12).
+/// </param>
 /// <param name="TargetId">
 /// Vurmaya çalıştığı düşman; hedefi yoksa <c>null</c>. Hedef seçimi rastgele olduğu için
 /// görselleştirme bunu <b>kendi başına türetemez</b> — hamlenin nereye gideceği buradan
@@ -49,7 +58,9 @@ public readonly record struct CombatantSnapshot(
     ArenaPoint Position = default,
     int Facing = 1,
     double Speed = 0,
-    bool Poisoned = false)
+    bool Poisoned = false,
+    bool Disarmed = false,
+    HitLocationSet DestroyedArmor = HitLocationSet.None)
 {
     public double HealthFraction => MaxHealth <= 0 ? 0 : Health / MaxHealth;
 

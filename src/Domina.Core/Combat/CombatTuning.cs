@@ -252,6 +252,84 @@ public sealed record CombatTuning
 
     public double MinimumDamage { get; init; } = 1;
 
+    // ---- Hedef seçimi ----
+
+    /// <summary>Hedefe yürünecek her arena biriminin puan cezası.</summary>
+    /// <remarks>
+    /// Tek başına bırakıldığında kural eski hâline iner: en yakını seç. Diğer ağırlıklar
+    /// bunun karşısında tartılır — 100 birim yol, tam açık bir bölgeye bedeldir.
+    /// </remarks>
+    public double TargetDistanceWeight { get; init; } = 1.0;
+
+    /// <summary>
+    /// Yara ve açık bölge kazançlarının sıfıra indiği mesafe (menzil dışı, arena birimi).
+    /// </summary>
+    /// <remarks>
+    /// Fırsat penceresi: savaşçı önündeki yaralıyı bitirir, arenanın öbür ucundakine
+    /// yürümez. Sınırsız bırakıldığında ölçüm kuralı zorluk artışına çeviriyordu.
+    /// </remarks>
+    public double TargetOpportunityRange { get; init; } = 200;
+
+    /// <summary>Canı tamamen bitmiş bir düşmanın puan kazancı (oranla ölçeklenir).</summary>
+    public double TargetWoundedWeight { get; init; } = 120;
+
+    /// <summary>Kuşamı tamamen dağılmış bir düşmanın puan kazancı (açık bölge oranıyla ölçeklenir).</summary>
+    public double TargetExposedWeight { get; init; } = 90;
+
+    /// <summary>Aynı hedefe kilitlenmiş her takım arkadaşının puan cezası.</summary>
+    public double TargetCrowdPenalty { get; init; } = 60;
+
+    /// <summary>Hâlihazırdaki hedefin puan avantajı — yön değiştirmenin bedeli.</summary>
+    public double TargetStickiness { get; init; } = 80;
+
+    // ---- Blok ----
+
+    /// <summary>Savunma 100 iken menzildeki savaşçının blok duruşuna geçme olasılığı.</summary>
+    /// <remarks>
+    /// <para>
+    /// Kaçınmayla (<see cref="MaxEvasionChance"/>) aynı şekilde kurulur, hücumla
+    /// (<see cref="ChargeChanceAtZeroAggression"/>) aynı şekilde <b>değil</b>: taban yok,
+    /// yani Savunma 0 olan savaşçı hiç bloklamaz. Gerekçe iki katlı — Savunma statı artık
+    /// yalnızca pasif bir hasar azaltımı değil, ekranda görünen bir <b>hamle</b> satın
+    /// alıyor; ve tabansız eşik, kuralı sınamayan testlerin statı sıfırlayarak bloğu
+    /// kapatabilmesini sağlıyor (hücumun aksine).
+    /// </para>
+    /// </remarks>
+    public double MaxBlockChance { get; init; } = 0.45;
+
+    /// <summary>
+    /// Blok duruşunun süresi — bu sürede savaşçı vurmaz.
+    /// </summary>
+    /// <remarks>
+    /// Bloğun bedeli budur ve kasıtlı olarak <b>kaçınmadan pahalıdır</b>: kaçınma tek bir
+    /// darbeyi siler ve savaşçıyı saldırı döngüsünde bırakır, blok bir <b>süre</b> satın
+    /// alır. Süre kısa olsaydı blok bedava ikinci bir kaçınma olurdu; uzun olsaydı savunmacı
+    /// savaşçı hiç vurmazdı.
+    /// </remarks>
+    public double BlockSeconds { get; init; } = 0.8;
+
+    /// <summary>Blokla karşılanan darbenin silinen hasar oranı (silahın blok kalitesiyle ölçeklenir).</summary>
+    public double BlockDamageReduction { get; init; } = 0.70;
+
+    /// <summary>Blokla karşılanan darbenin uzuv koparma riskinden kalan pay.</summary>
+    /// <remarks>
+    /// Sıfır: bloklanan darbe uzuv koparmaz. Bloğun kaçınmadan ayrıldığı yer burasıdır —
+    /// kaçınma bir zar, blok bir <b>garanti</b>: duruşa geçen savaşçı o darbede kolunu
+    /// kaybetmez. Oyunun imza cezasına karşı Savunma statının verdiği tek kesin söz bu.
+    /// </remarks>
+    public double BlockDismembermentShare { get; init; }
+
+    /// <summary>Blokla karşılanan darbenin sersemletme riskinden kalan pay.</summary>
+    /// <remarks>
+    /// Künt sınıfın bloğa karşı kazancı. Pay yüksek tutuldu çünkü blok, kesiciyi tamamen
+    /// keserken künte de aynı şeyi yapsaydı künt silahın tek karşılığı savunmacı savaşçının
+    /// önünde silinirdi. Duruş çelikten korur, sarsıntıdan korumaz.
+    /// </remarks>
+    public double BlockStunShare { get; init; } = 0.75;
+
+    /// <summary>Blokla karşılanan her darbenin stamina bedeli.</summary>
+    public double BlockStaminaCost { get; init; } = 5;
+
     // ---- Stamina ----
 
     public double AttackStaminaCost { get; init; } = 6;
@@ -424,6 +502,80 @@ public sealed record CombatTuning
     /// stat kararının kopyası olurdu.
     /// </remarks>
     public double CatchAccuracyBonusAtMax { get; init; } = 0.5;
+
+    // ---- Silahın elden düşmesi ----
+
+    /// <summary>
+    /// Zırha inen vuruşta silahın elden düşme taban şansı; silahın elden çıkma eğilimi
+    /// ve vurulan parçanın sertliği bunu ölçekler.
+    /// </summary>
+    /// <remarks>
+    /// Zırhın <b>ikinci</b> cevabıdır. Birincisi hasarı düşürmek; ama ölçüm zehirle
+    /// birlikte zırhın işaretinin ters dönebildiğini gösterdi (docs/GDD.md §7). Düşürme,
+    /// plakayı yalnızca bir hasar sayısı olmaktan çıkarır: çeliğe vuran savaşçı
+    /// <b>silahını</b> harcar. Kırılma değil düşme: dövüş biterken silah geri gelir,
+    /// bedeli kalan dövüştür.
+    /// </remarks>
+    public double BaseDisarmChance { get; init; } = 0.05;
+
+    /// <summary>
+    /// Silahı yakalandığında elden çıkma şansı; silahın elden çıkma eğilimi bunu ölçekler.
+    /// </summary>
+    /// <remarks>
+    /// Jitte'nin tarihsel işi budur: çengel yalnızca tutmaz, kaldıraç yapıp silahı
+    /// avuçtan söker. Zar tek başına sertlikle çarpılmaz (yakalanan namlu zaten
+    /// çengeldedir), yani olay başına zırha vuruştan <b>güçlüdür</b>; karşılığında
+    /// yakalama seyrektir.
+    /// </remarks>
+    /// <remarks>
+    /// Tarandı (<c>jitte</c>/<c>sai</c>/<c>katana</c>, 20.000 dövüş, <c>losing:0.7</c>).
+    /// Kural 0'da jitte %74.87, katana %75.02 — yakalama aleti eskisi gibi hasarda öder,
+    /// silah düşürmekle hiçbir şey kazanmaz. 0.05'te jitte %78.00 / sai %78.88 ile öne
+    /// geçer ama iki freni de ayakta kalır: nodachi taşıyan düşmanın önünde hâlâ yanlış
+    /// seçim (%35.22'ye karşı katana %37.84) ve zırhlı düşmanın önünde düpedüz kötü
+    /// (%41.38'e karşı %60.32). 0.10'da birinci fren kırılıyor (jitte-heavy %38.27,
+    /// katana %37.84): yakalama aleti ağır silahın da cevabı olur ve
+    /// <c>CatchTwoHandedFactor</c> anlamsızlaşır.
+    /// </remarks>
+    public double CatchDisarmChance { get; init; } = 0.05;
+
+    /// <summary>
+    /// Vurulan parçanın kopma direncinin ne kadarı <b>sertlik</b> olarak okunur.
+    /// </summary>
+    /// <remarks>
+    /// Sersemletmedeki payla (<see cref="ArmorStunResistanceShare"/>) aynı gerekçe: zırhın
+    /// ayrı bir "sertlik" alanı olsaydı her parça iki yerde bakım isterdi. Çıplak bölgeye
+    /// inen vuruş <b>hiç</b> düşürmez — kavrayışı bozan şey et değil, plakadır.
+    /// </remarks>
+    public double ArmorHardnessShare { get; init; } = 1.0;
+
+    /// <summary>
+    /// Düşen silahın savaşçıdan ne kadar uzağa savrulduğu.
+    /// </summary>
+    /// <remarks>
+    /// Kuralın gerçek bedeli bu mesafedir. Silah ayağın dibine düşseydi savaşçı onu bir
+    /// sonraki adımda alır ve düşürme hiçbir şeye mal olmazdı; uzağa savrulunca bedel
+    /// <b>yürüyüşe</b> dönüşür — o süre boyunca savaşçının elinde yumruktan başka bir
+    /// şey yok ve yürüdüğü yön dövüşten uzaktır.
+    /// </remarks>
+    public double WeaponDropDistance { get; init; } = 220;
+
+    /// <summary>Yerde duran silahın alınabildiği mesafe.</summary>
+    /// <remarks>
+    /// Silahsız savaşçı silaha <b>yürür</b>; bu yarıçap yalnızca "vardı mı" sorusunun
+    /// cevabıdır. Kişisel alandan (<see cref="PersonalSpace"/>) küçük tutulur ki eğilip
+    /// alma anı savaşçının durduğu yerle aynı yer olsun.
+    /// </remarks>
+    public double WeaponPickupRadius { get; init; } = 60;
+
+    /// <summary>
+    /// Zırh parçasının dayanıklılık havuzunun ölçeği. 0 = zırh hiç yıpranmaz.
+    /// </summary>
+    /// <remarks>
+    /// Parçaların kendi dayanıklılığı <see cref="Model.ArmorPiece.Durability"/>'de; bu
+    /// çarpan hepsini birden ölçekler, yani denge çalışmasının tek düğmesi olur.
+    /// </remarks>
+    public double ArmorDurabilityScale { get; init; } = 1.0;
 
     // ---- Zehir ----
 

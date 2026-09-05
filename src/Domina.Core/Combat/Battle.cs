@@ -39,6 +39,15 @@ public sealed class Battle
     private readonly Dictionary<WarriorId, BodyPartSet> _lostParts = [];
 
     /// <summary>
+    /// Dövüş boyunca dağılan zırh parçaları — savaşçı başına.
+    /// </summary>
+    /// <remarks>
+    /// Uzuv kaybıyla aynı yoldan taşınır: çekirdek kalıcı hali değiştirmez, ne olduğunu
+    /// dövüş özetine yazar; kuşamı defterden düşmek dojo katmanının işi.
+    /// </remarks>
+    private readonly Dictionary<WarriorId, HitLocationSet> _destroyedArmor = [];
+
+    /// <summary>
     /// Havadaki mermiler. Atıldıkları sırada durur, sırayla çözülür.
     /// </summary>
     /// <remarks>
@@ -46,6 +55,15 @@ public sealed class Battle
     /// çözüleceği sabit olmalı, yoksa aynı seed aynı dövüşü vermez.
     /// </remarks>
     private readonly List<Projectile> _projectiles = [];
+
+    /// <summary>
+    /// Elden düşüp arenada duran silahlar.
+    /// </summary>
+    /// <remarks>
+    /// Düşen silah dövüşten çıkmaz, yalnızca <b>sahibinden</b> çıkar; silahsız kalan
+    /// herkes ona yürüyebilir (bkz. <see cref="GroundWeapon"/>).
+    /// </remarks>
+    private readonly List<GroundWeapon> _dropped = [];
 
     /// <summary>
     /// İlk isabet düştü mü? Kaçış tuşunu açan eşik budur.
@@ -151,7 +169,9 @@ public sealed class Battle
         c.Position,
         c.Facing,
         c.SpeedThisTick,
-        c.IsPoisoned);
+        c.IsPoisoned,
+        c.Disarmed,
+        c.DestroyedArmor);
 
     /// <summary>
     /// Oyuncunun "çek" tuşu — <b>tüm ekibi</b> çeker.
@@ -355,11 +375,23 @@ public sealed class Battle
 
                 c.Position = c.Position.MovedToward(new ArenaPoint(exitX, c.Position.Y), step);
             }
+            else if (c.Unarmed && !c.RetreatRequested && NearestDropped(c) is GroundWeapon dropped)
+            {
+                // Eli boş savaşçının ilk işi silah bulmak: yumrukla dövüşmek yerine
+                // yerdeki namluya yürür. Yürürken savunmasız değildir ama vurmaz da —
+                // bedelin ödendiği yer bu yürüyüş.
+                if (c.State is CombatState.Idle)
+                {
+                    c.Position = c.Position.MovedToward(dropped.Position, step);
+                }
+
+                TryPickUp(c);
+            }
             else if (FindTarget(c) is Combatant target && CanAdvanceOn(c, target))
             {
                 FaceToward(c, target);
 
-                double reach = c.Warrior.UsableWeapon.Reach * _tuning.PreferredReachFraction;
+                double reach = c.Weapon.Reach * _tuning.PreferredReachFraction;
                 double gap = c.Position.DistanceTo(target.Position);
 
                 if (gap > reach)
@@ -440,6 +472,97 @@ public sealed class Battle
     private static bool CanAdvanceOn(Combatant c, Combatant target) =>
         c.State is CombatState.Idle or CombatState.Charging
         || (target.State is CombatState.Retreating && c.State is CombatState.AttackWindup);
+
+    /// <summary>
+    /// Bu savaşçının alabileceği en yakın silah; yoksa <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// <b>Elinde silah olan aramaz.</b> Çağıran taraf zaten silahsızlığı kontrol eder;
+    /// buradaki tek eleme, kolunu kaybetmiş savaşçının çift el silahı alamamasıdır —
+    /// alsaydı yerden aldığı silah elinde yumruğa dönerdi ve yürüyüş boşa giderdi.
+    /// </remarks>
+    private GroundWeapon? NearestDropped(Combatant c)
+    {
+        GroundWeapon? best = null;
+        double bestDistance = double.MaxValue;
+
+        foreach (GroundWeapon g in _dropped)
+        {
+            if (!CanWield(c, g.Weapon))
+            {
+                continue;
+            }
+
+            double distance = c.Position.SquaredDistanceTo(g.Position);
+            if (distance < bestDistance)
+            {
+                best = g;
+                bestDistance = distance;
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>Bu savaşçı bu silahı kullanabilir mi?</summary>
+    private static bool CanWield(Combatant c, Weapon weapon) =>
+        !weapon.TwoHanded || !c.Warrior.Disabilities.Any(d => d.BlocksTwoHandedWeapons);
+
+    /// <summary>
+    /// Düşen silahın nereye savrulduğu: karşıdakinin <b>arkasına</b>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Yön ölçümde belirlendi ve kuralın bedelini <b>tek başına</b> o taşıyor. Silah
+    /// sahibinin gerisine düşerse yerden alma yürüyüşü savaşçıyı dövüşten geri çeker ve
+    /// yavaş bir düşmanın önünde düşürme bedava bir nefes molası olur — ölçüldü, mesafe
+    /// arttıkça oyuncunun zaferi <b>yükseliyordu</b> (%94.30 → %94.55; kural yokken
+    /// %94.25). Yana savrulunca da aynı kapıya çıkıyor (%94.4): yavaş düşman hattı terk
+    /// eden savaşçıyı cezalandıramıyor.
+    /// </para>
+    /// <para>
+    /// Karşıdakinin arkasına düşünce bedel gerçek: silaha gitmek düşmanın içinden geçmek
+    /// demek ve kişisel alan buna izin vermez. Teke tekte silah pratikte gider (yerden
+    /// alma %7), kalabalıkta hedef bölündüğü için geri alınabilir (%41) — kuralın
+    /// ısırdığı yer tam olarak burası.
+    /// </para>
+    /// </remarks>
+    private ArenaPoint DropPoint(Combatant owner, Combatant past) =>
+        past.Position.MovedAwayFrom(owner.Position, _tuning.WeaponDropDistance);
+
+    /// <summary>Arena sınırlarının içine çeker — silah sahanın dışına düşmez.</summary>
+    private ArenaPoint Clamped(ArenaPoint point) => new(
+        Math.Clamp(point.X, 0, _tuning.ArenaWidth),
+        Math.Clamp(point.Y, 0, _tuning.ArenaDepth));
+
+    /// <summary>Ayağının dibindeki silahı alır.</summary>
+    /// <remarks>
+    /// Alma anının kendi süresi yoktur: bedel zaten ödendi — savaşçı silaha <b>yürüdü</b>,
+    /// o süre boyunca yumruktan başka bir şeyi yoktu. Eğilme anına ayrıca bir pencere
+    /// koymak aynı bedeli ikinci kez almak olurdu.
+    /// </remarks>
+    private void TryPickUp(Combatant c)
+    {
+        for (int i = 0; i < _dropped.Count; i++)
+        {
+            GroundWeapon g = _dropped[i];
+
+            if (!CanWield(c, g.Weapon)
+                || c.Position.DistanceTo(g.Position) > _tuning.WeaponPickupRadius)
+            {
+                continue;
+            }
+
+            _dropped.RemoveAt(i);
+
+            c.HeldWeapon = g.Weapon;
+            c.Disarmed = false;
+            c.WeaponsPickedUp++;
+
+            Emit(new WeaponPickedUp(ElapsedSeconds, c.Id, g.Weapon.Name));
+            return;
+        }
+    }
 
     /// <summary>
     /// Bir savaşçının bu tick'te kat edeceği mesafe.
@@ -530,7 +653,7 @@ public sealed class Battle
 
     /// <summary>Savaşçı hedefine vurabilecek kadar yakın mı?</summary>
     private static bool InReach(Combatant attacker, Combatant target) =>
-        attacker.Position.DistanceTo(target.Position) <= attacker.Warrior.UsableWeapon.Reach;
+        attacker.Position.DistanceTo(target.Position) <= attacker.Weapon.Reach;
 
     /// <summary>
     /// Kaçan savaşçı arenayı gerçekten terk etti mi? Kadrajın kenarı yetmez — ekranda
@@ -583,6 +706,18 @@ public sealed class Battle
                 c.BeginState(CombatState.Idle, SpacingSeconds(c));
                 break;
 
+            case CombatState.Blocking:
+                // Duruş bitti: savaşçı karar döngüsüne döner ve yeniden seçer — bloğu
+                // sürdürmek de bir seçenek, ama her seferinde zar yeniden atılır.
+                if (c.RetreatRequested)
+                {
+                    BeginRetreat(c);
+                    return;
+                }
+
+                StartAttack(c);
+                break;
+
             case CombatState.ChargeWindup:
                 LaunchCharge(c);
                 break;
@@ -629,7 +764,9 @@ public sealed class Battle
 
     private void StartAttack(Combatant attacker)
     {
-        Combatant? target = FindTarget(attacker);
+        // Karar adımı: hedef burada yeniden tartılır. Yaralanan, kuşamı dağılan ya da
+        // takım arkadaşlarının üstüne yığıldığı düşman ancak burada fark edilir.
+        Combatant? target = ChooseTarget(attacker);
 
         if (target is null)
         {
@@ -664,12 +801,79 @@ public sealed class Battle
             return;
         }
 
+        // Menzildeki savaşçının üçüncü seçeneği: vurmak yerine beklemek. Karar Savunma
+        // statından çıkar — hücumun Saldırganlık'tan çıkması gibi (docs/GDD.md §5).
+        if (ShouldBlock(attacker))
+        {
+            attacker.JustBlocked = true;
+            attacker.BeginState(CombatState.Blocking, _tuning.BlockSeconds);
+            Emit(new BlockRaised(ElapsedSeconds, attacker.Id));
+            return;
+        }
+
+        attacker.JustBlocked = false;
+
         attacker.BeginState(
             CombatState.AttackWindup,
             AttackCycleSeconds(attacker) * _tuning.WindupFraction);
 
         Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
     }
+
+    /// <summary>Savaşçı bu karar adımında blok duruşuna geçer mi?</summary>
+    /// <remarks>
+    /// <para>
+    /// Duruşa geçmenin şartı tehdit değil <b>okunan hamledir</b>: menzilde bir düşmanın
+    /// bulunması yetmez, o düşmanın kılıcı toplanmış olmalı. Şart yalnızca yakınlık
+    /// olsaydı duruş körlemesine alınırdı — ölçüldü, savaşçı başına yalnızca 0.20 darbe
+    /// karşılıyordu; geri kalan duruşlar hiçbir şey durdurmadan saldırı döngüsünü yiyordu.
+    /// Blok o hâliyle Savunma statının cezasıydı, karşılığı değil.
+    /// </para>
+    /// <para>
+    /// Şart kendi menzilinden okunmaz, <b>ikisinin büyüğünden</b>: uzun saplı düşmanın
+    /// karşısında duran kısa bıçaklı savaşçı da tehdit altındadır, ve asıl bloklaması
+    /// gereken odur. Koşan hücum da toplanma sayılır — varış darbesi de bir vuruştur.
+    /// </para>
+    /// <para>
+    /// Çekilmek isteyen savaşçı bloklamaz: tuş bir çıkış emridir, duruşa geçmek onu
+    /// geciktirirdi (docs/GDD.md §5 kesme tablosu).
+    /// </para>
+    /// </remarks>
+    private bool ShouldBlock(Combatant c)
+    {
+        if (c.RetreatRequested || c.JustBlocked)
+        {
+            return false;
+        }
+
+        bool swingIncoming = false;
+
+        foreach (Combatant enemy in _combatants)
+        {
+            if (enemy.Team == c.Team || !enemy.IsActive || enemy.State is CombatState.Retreating)
+            {
+                continue;
+            }
+
+            // Okunan şey toplanma penceresi: kılıç geriye gitti ve henüz inmedi.
+            if (enemy.State is not (CombatState.AttackWindup or CombatState.Charging))
+            {
+                continue;
+            }
+
+            if (c.Position.DistanceTo(enemy.Position) <= Math.Max(c.Weapon.Reach, enemy.Weapon.Reach))
+            {
+                swingIncoming = true;
+                break;
+            }
+        }
+
+        return swingIncoming && _rng.Chance(BlockChanceFor(c));
+    }
+
+    /// <summary>Bu savaşçının blok duruşuna geçme olasılığı — kimliğinden çıkar.</summary>
+    private double BlockChanceFor(Combatant c) =>
+        Math.Clamp(c.Warrior.EffectiveStats.Defense / 100.0, 0, 1) * _tuning.MaxBlockChance;
 
     private void ResolveWindupEnd(Combatant attacker)
     {
@@ -770,7 +974,7 @@ public sealed class Battle
                 continue;
             }
 
-            double gap = c.Position.DistanceTo(enemy.Position) - enemy.Warrior.UsableWeapon.Reach;
+            double gap = c.Position.DistanceTo(enemy.Position) - enemy.Weapon.Reach;
 
             if (gap <= 0 || gap / BaseMoveSpeed(enemy) <= _tuning.ChargeWindupSeconds)
             {
@@ -788,13 +992,13 @@ public sealed class Battle
         Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
 
     /// <summary>Kuşamın ağırlığıyla uzamış saldırı döngüsü.</summary>
-    private double AttackCycleSeconds(Combatant c) => c.Warrior.UsableWeapon.AttackSeconds
+    private double AttackCycleSeconds(Combatant c) => c.Weapon.AttackSeconds
         * (1 + (ArmorLoad(c) * _tuning.ArmorAttackSlowdownAtFullWeight));
 
     /// <summary>Kuşamın tam ağırlığa oranı (0-1). Cezaların tamamı buradan okunur.</summary>
     private double ArmorLoad(Combatant c) => _tuning.ArmorWeightAtFullPenalty <= 0
         ? 0
-        : Math.Clamp(c.Warrior.Armor.Weight / _tuning.ArmorWeightAtFullPenalty, 0, 1);
+        : Math.Clamp(c.ArmorWeight / _tuning.ArmorWeightAtFullPenalty, 0, 1);
 
     /// <summary>Bu savaşçının hücuma kalkma olasılığı — kimliğinden çıkar.</summary>
     private double ChargeChanceFor(Combatant c) => Lerp(
@@ -1238,8 +1442,14 @@ public sealed class Battle
             return;
         }
 
-        // 3) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
-        if (!flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
+        // 3) Blok — duruşta olan savaşçı kaçınmaz, karşılar. Kaçınmadan ÖNCE gelir çünkü
+        // blok bir zar değil bir taahhüttür: savaşçı hamlesini çoktan seçmiştir. Sonrasına
+        // konsaydı bloğun tuttuğu darbelerin bir kısmını kaçınma zaten silmiş olurdu ve
+        // duruşun ölçülen değeri kendi bedelinin altında kalırdı.
+        bool blocking = !flanking && defender.State is CombatState.Blocking;
+
+        // 4) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
+        if (!blocking && !flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
         {
             double evasionChance = defStats.Evasion / 100.0 * _tuning.MaxEvasionChance;
             if (_rng.Chance(evasionChance))
@@ -1251,22 +1461,40 @@ public sealed class Battle
             }
         }
 
-        // 4) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
-        Weapon weapon = attacker.Warrior.UsableWeapon;
+        // 5) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
+        Weapon weapon = attacker.Weapon;
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
                      * staminaFactor
                      * (flanking ? _tuning.FlankDamageMultiplier : 1.0)
                      * chargeMultiplier;
 
+        // Duruşun ne kadar tuttuğu savaşçının elindeki silahtan okunur: uzun sap darbeyi
+        // gövdesiyle karşılar, yumruk hemen hiç karşılamaz.
+        double dismemberment = weapon.DismembermentFactor;
+        double stun = weapon.StunFactor;
+
+        if (blocking)
+        {
+            double quality = _tuning.BlockDamageReduction * defender.Weapon.BlockFactor;
+
+            raw *= 1 - Math.Clamp(quality, 0, 1);
+            dismemberment *= _tuning.BlockDismembermentShare;
+            stun *= _tuning.BlockStunShare;
+
+            defender.Stamina = Math.Max(0, defender.Stamina - _tuning.BlockStaminaCost);
+            defender.BlocksPerformed++;
+        }
+
         ApplyBlow(
             attacker,
             defender,
             raw,
-            weapon.DismembermentFactor,
-            weapon.StunFactor,
+            dismemberment,
+            stun,
             weapon.Poison,
-            BlowSource.Melee);
+            BlowSource.Melee,
+            blocking);
     }
 
     /// <summary>
@@ -1297,13 +1525,13 @@ public sealed class Battle
             return false;
         }
 
-        Weapon catcher = defender.Warrior.UsableWeapon;
+        Weapon catcher = defender.Weapon;
         if (!catcher.CanCatch || defender.Stamina < _tuning.CatchStaminaCost)
         {
             return false;
         }
 
-        Weapon caught = attacker.Warrior.UsableWeapon;
+        Weapon caught = attacker.Weapon;
         double accuracyBonus =
             defender.Warrior.EffectiveStats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
 
@@ -1324,6 +1552,18 @@ public sealed class Battle
 
         // Yakalanan savaşçı hücumunu da kaybeder — kenetlenen kol momentum taşımaz.
         attacker.ClearCharge();
+
+        // Çengel yalnızca tutmaz: kaldıraç yapıp silahı avuçtan söker. Düşürme kilidin
+        // ÜSTÜNE binmez, YERİNE geçer — elden çıkan silahla birlikte kenetlenme de
+        // çözülür, saldıran serbest kalır ama silahsız. Üst üste binseydi yakalama aleti
+        // tek zarda hem pencereyi hem silahı alır, hasarda kaybettiğinin karşılığı
+        // fazlasıyla ödenirdi.
+        double disarmChance = _tuning.CatchDisarmChance * caught.DisarmFactor;
+        if (disarmChance > 0 && _rng.Chance(Math.Clamp(disarmChance, 0, 1)))
+        {
+            DropWeapon(attacker, defender, past: defender);
+            return true;
+        }
 
         attacker.BeginState(CombatState.WeaponBound, _tuning.CatchBindSeconds);
         Emit(new AttackCaught(
@@ -1354,17 +1594,22 @@ public sealed class Battle
         double dismembermentFactor,
         double stunFactor,
         double poison,
-        BlowSource source)
+        BlowSource source,
+        bool blocked = false)
     {
         WarriorStats defStats = defender.Warrior.EffectiveStats;
         HitLocation location = RollHitLocation();
-        ArmorPiece struckPiece = defender.Warrior.Armor.At(location);
+        ArmorPiece struckPiece = defender.ArmorAt(location);
 
         double afterDefense =
             rawDamage * (1 - (defStats.Defense / 100.0 * _tuning.MaxDefenseReduction));
         double damage = Math.Max(
             _tuning.MinimumDamage,
             afterDefense - struckPiece.DamageReduction);
+
+        // Parça durdurduğu kadar yıpranır. Zar yok: emdiği her puan havuzundan düşer ve
+        // havuz bitince parça dağılıp KALICI olarak gider (docs/GDD.md §7).
+        WearArmor(defender, location, struckPiece, afterDefense - damage);
 
         defender.Health -= damage;
         defender.TimesHit++;
@@ -1373,9 +1618,14 @@ public sealed class Battle
         attacker.DamageDealt += damage;
 
         double remaining = Math.Max(0, defender.Health);
-        Emit(source == BlowSource.Melee
-            ? new AttackLanded(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining)
-            : new ProjectileHit(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining));
+
+        // Bloklanan darbe ayrı bir olaydır, "isabet" değil: sunum katmanı sarsılan duruşu
+        // kanlı isabetten ayırmak zorunda. Sayaçlar yine de artar — darbe indi.
+        Emit(blocked
+            ? new AttackBlocked(ElapsedSeconds, attacker.Id, defender.Id, damage)
+            : source == BlowSource.Melee
+                ? new AttackLanded(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining)
+                : new ProjectileHit(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining));
 
         // İlk isabet kaçış tuşunu açar; hangi taraf vurursa vursun.
         _contactMade = true;
@@ -1419,6 +1669,112 @@ public sealed class Battle
         {
             TryStun(attacker, defender, damage, defStats, location, struckPiece, stunFactor);
         }
+
+        // Düşürme zarı en sonda ve yalnızca yakın dövüşte: kavrayışı bozan şey silahın
+        // plakaya çarpıp geri tepmesidir. Mermi zaten elden çıkmıştır.
+        if (source == BlowSource.Melee)
+        {
+            TryDisarmOnArmor(attacker, defender, struckPiece);
+        }
+    }
+
+    /// <summary>
+    /// Vurulan parçayı yıpratır; havuzu bitmişse parçayı dağıtır.
+    /// </summary>
+    /// <remarks>
+    /// Silahla arasındaki fark bilinçli: düşen silah dövüş sonunda geri gelir, dağılan
+    /// zırh parçası gelmez. Zırh oyunun sarf malzemesidir — ve en çok emen kuşam en
+    /// çabuk tükenendir.
+    /// </remarks>
+    private void WearArmor(
+        Combatant defender,
+        HitLocation location,
+        ArmorPiece struckPiece,
+        double absorbed)
+    {
+        if (!defender.WearArmor(location, absorbed, _tuning.ArmorDurabilityScale))
+        {
+            return;
+        }
+
+        _destroyedArmor[defender.Id] = _destroyedArmor.GetValueOrDefault(defender.Id)
+                                       | location.AsFlag();
+
+        Emit(new ArmorDestroyed(ElapsedSeconds, defender.Id, location, struckPiece.Name));
+    }
+
+    /// <summary>
+    /// Zırha inen vuruşta saldıranın kendi silahının elden düşme zarını atar.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Zırhın ikinci cevabı budur. Çıplak bölgeye inen vuruş <b>hiç</b> düşürmez: sertlik,
+    /// vurulan parçanın kopma direncinden okunur (<see cref="CombatTuning.ArmorHardnessShare"/>),
+    /// ve çıplak bölgenin direnci sıfırdır. Kural böylece kendi kendini sınırlar —
+    /// zırhsız düşmanla dövüşen savaşçı silahını asla elinden kaçırmaz.
+    /// </para>
+    /// <para>
+    /// Zar <b>saldıranın</b> silahına atılır, savunanınkine değil: kavrayışı bozan şey
+    /// plakadan dönen darbedir. Künt sınıfın üçüncü kazancı burada — geri tepen sopa
+    /// avuçta kalır.
+    /// </para>
+    /// </remarks>
+    private void TryDisarmOnArmor(Combatant attacker, Combatant defender, ArmorPiece struckPiece)
+    {
+        if (!attacker.IsActive || attacker.Disarmed)
+        {
+            return;
+        }
+
+        double hardness = struckPiece.DismembermentResistance * _tuning.ArmorHardnessShare;
+        double chance = _tuning.BaseDisarmChance * attacker.Weapon.DisarmFactor * hardness;
+
+        if (chance <= 0 || !_rng.Chance(Math.Clamp(chance, 0, 1)))
+        {
+            return;
+        }
+
+        DropWeapon(attacker, disarmer: null, past: defender);
+    }
+
+    /// <summary>
+    /// Silahı elden düşürür: savaşçı dövüşün geri kalanını yumrukla geçirir.
+    /// </summary>
+    /// <remarks>
+    /// Yumruğa düşmek yalnızca hasar kaybı değildir — menzil 150/130'dan 100'e iner,
+    /// saldırı döngüsü kısalır, yumruk yakalanamaz. Kaybın büyüklüğü bu yüzden silahtan
+    /// silaha değişir: nodachi'sini düşüren savaşçı mesafesini de kaybeder. Kayıp kalıcı
+    /// değil: silah yerde durur ve savaşçı ona yürüyebilir (bkz. <see cref="TryPickUp"/>).
+    /// </remarks>
+    /// <param name="past">
+    /// Silahın üzerinden savrulduğu savaşçı — silah <b>onun arkasına</b> düşer.
+    /// </param>
+    /// <remarks>
+    /// Yönün önemi ölçümde ortaya çıktı: silah sahibinin gerisine düşerse yerden alma
+    /// yürüyüşü savaşçıyı dövüşten <b>geri</b> çeker ve yavaş bir düşmanın önünde
+    /// düşürme bir bedel değil, bedava bir nefes molası olur (ölçüldü: mesafe arttıkça
+    /// oyuncunun zaferi <b>yükseliyordu</b>). Karşıdakinin arkasına düşünce bedel gerçek:
+    /// silahına gitmek düşmanın içinden geçmek demek.
+    /// </remarks>
+    private void DropWeapon(Combatant owner, Combatant? disarmer, Combatant past)
+    {
+        Weapon lost = owner.Weapon;
+        string name = lost.Name;
+
+        // Silah yok olmaz, yere düşer: silahsız kalan herkes — düşüren, takım arkadaşı,
+        // düşman — ona yürüyebilir. Kırılma yerine düşme seçilmesinin karşılığı bu.
+        _dropped.Add(new GroundWeapon(lost, Clamped(DropPoint(owner, past))));
+
+        owner.HeldWeapon = null;
+        owner.Disarmed = true;
+        owner.TimesDisarmed++;
+
+        if (disarmer is not null)
+        {
+            disarmer.DisarmsInflicted++;
+        }
+
+        Emit(new WeaponDropped(ElapsedSeconds, owner.Id, name, disarmer?.Id));
     }
 
     /// <summary>
@@ -1852,15 +2208,23 @@ public sealed class Battle
     /// erişebileceği en yakın düşman.
     /// </para>
     /// </remarks>
-    private Combatant? FindTarget(Combatant attacker)
-    {
-        if (attacker.Target is { IsActive: true } current)
-        {
-            return current;
-        }
+    /// <summary>
+    /// Savaşçının şu anki hedefi; yoksa yeniden seçtirir.
+    /// </summary>
+    /// <remarks>
+    /// Hedef <b>karar adımlarında</b> seçilir (<see cref="ChooseTarget"/>), her tikte
+    /// değil. Yürüyüş döngüsü de burayı okur ve seçimi olduğu gibi devralır: puanlama
+    /// tik başına koşsaydı hem seçim her karede oynardı hem de maliyeti savaşçı sayısının
+    /// karesiyle büyürdü — ölçüldü, 10.000 dövüş bütçenin iki katına çıkıyordu.
+    /// </remarks>
+    private Combatant? FindTarget(Combatant attacker) =>
+        attacker.Target is { IsActive: true } current ? current : ChooseTarget(attacker);
 
-        Combatant? nearest = null;
-        double best = double.MaxValue;
+    /// <inheritdoc cref="TargetScore"/>
+    private Combatant? ChooseTarget(Combatant attacker)
+    {
+        Combatant? best = null;
+        double bestScore = double.NegativeInfinity;
 
         foreach (Combatant c in _combatants)
         {
@@ -1869,16 +2233,86 @@ public sealed class Battle
                 continue;
             }
 
-            double distance = attacker.Position.SquaredDistanceTo(c.Position);
-            if (distance < best)
+            double score = TargetScore(attacker, c);
+
+            if (score > bestScore)
             {
-                best = distance;
-                nearest = c;
+                bestScore = score;
+                best = c;
             }
         }
 
-        attacker.Target = nearest;
-        return nearest;
+        attacker.Target = best;
+        return best;
+    }
+
+    /// <summary>
+    /// Bir düşmanın bu savaşçı için çekiciliği. Yüksek olan seçilir.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kural, "en yakını seç ve ölene kadar ona sadık kal"ın yerini alır. Eski hâl bir
+    /// karar değildi: yaralı düşman fark edilmiyor, zırhı dağılmış açık bölge fark
+    /// edilmiyor, üç savaşçı aynı hedefe yığılıp yığılmadıklarını bilmiyordu.
+    /// </para>
+    /// <para>
+    /// Zar yok — puanlama <b>deterministik</b>. Rastgelelik kararın kendisinde değil,
+    /// savaşçının kimliğinde: aynı sahada duran iki savaşçı farklı statlarla farklı
+    /// hedefler seçer. Zar atılsaydı seçim her tikte titrer ve ölçüm gürültüye boğulurdu.
+    /// </para>
+    /// <para>
+    /// <b>Yapışkanlık şart:</b> mevcut hedef fazladan puan alır. Almasaydı iki düşman
+    /// arasında kalan savaşçı her karar adımında yön değiştirir, hiçbirine varamazdı —
+    /// hedef değiştirmenin bedeli, gidilen yolun boşa gitmesidir.
+    /// </para>
+    /// </remarks>
+    private double TargetScore(Combatant attacker, Combatant enemy)
+    {
+        WarriorStats stats = enemy.Warrior.EffectiveStats;
+
+        // 1) Mesafe — tek başına eski kuralın kendisi. Menzil içindeki düşman ceza almaz;
+        // ceza yalnızca yürünecek yol için ödenir.
+        double gap = Math.Max(0, attacker.Position.DistanceTo(enemy.Position) - attacker.Weapon.Reach);
+        double score = -gap * _tuning.TargetDistanceWeight;
+
+        // Fırsat yalnızca ulaşılabildiği kadar fırsattır: yara da açık bölge de savaşçının
+        // önündeyken sayılır, arenanın öbür ucundayken sayılmaz. Sınır olmadan ölçüm
+        // kuralı düpedüz zorluk artışına çeviriyordu — savaşçı yanındaki sağlam düşmanı
+        // bırakıp uzaktaki yaralıya yürüyor ve yol boyunca bedava vuruş yiyordu.
+        double opportunity = _tuning.TargetOpportunityRange <= 0
+            ? 0
+            : 1 - Math.Clamp(gap / _tuning.TargetOpportunityRange, 0, 1);
+
+        // 2) Yara — bitirilmeye yakın düşman önce bitirilir. Sayıca üstünlük dövüşün
+        // kendisini çözer: bir düşmanı devirmek, üçünü birden yaralamaktan iyidir.
+        double missing = stats.MaxHealth <= 0 ? 0 : 1 - Math.Clamp(enemy.Health / stats.MaxHealth, 0, 1);
+        score += missing * opportunity * _tuning.TargetWoundedWeight;
+
+        // 3) Açık bölge — kuşamı dağılmış düşman daha yumuşaktır ve savaşçı bunu görür.
+        // Zırh yıpranmasının dövüş içi karşılığı burada kapanır (docs/GDD.md §7).
+        score += enemy.DestroyedArmor.Count() / 6.0 * opportunity * _tuning.TargetExposedWeight;
+
+        // 4) Kalabalık — aynı hedefe yığılmak ilk üç maddenin doğal sonucu, ama sınırsız
+        // bırakılırsa takım tek düşmanı kovalarken diğer ikisi bedava vurur.
+        int engaged = 0;
+
+        foreach (Combatant mate in _combatants)
+        {
+            if (mate.Team == attacker.Team && mate.Id != attacker.Id && mate.Target == enemy)
+            {
+                engaged++;
+            }
+        }
+
+        score -= engaged * _tuning.TargetCrowdPenalty;
+
+        // 5) Yapışkanlık — yön değiştirmenin bedeli.
+        if (attacker.Target == enemy)
+        {
+            score += _tuning.TargetStickiness;
+        }
+
+        return score;
     }
 
     /// <summary>Karşı taraftaki ayakta savaşçılardan rastgele biri; yoksa <c>null</c>.</summary>
@@ -1988,6 +2422,9 @@ public sealed class Battle
             c.LostLimb)
         {
             LostParts = _lostParts.GetValueOrDefault(c.Id),
+            DestroyedArmor = _destroyedArmor.GetValueOrDefault(c.Id),
+            ArmorWear = c.ArmorWear,
+            BlocksPerformed = c.BlocksPerformed,
             TimesStunned = c.TimesStunned,
             StunsInflicted = c.StunsInflicted,
             DeathCause = c.DeathCause,
@@ -1997,6 +2434,10 @@ public sealed class Battle
             PoisonDamageDealt = c.PoisonDamageDealt,
             CatchesMade = c.CatchesMade,
             TimesCaught = c.TimesCaught,
+            Disarmed = c.Disarmed,
+            TimesDisarmed = c.TimesDisarmed,
+            DisarmsInflicted = c.DisarmsInflicted,
+            WeaponsPickedUp = c.WeaponsPickedUp,
             ChargesStarted = c.ChargesStarted,
             ChargesConnected = c.ChargesConnected,
             ChargeOpportunitiesTaken = c.ChargeOpportunitiesTaken,

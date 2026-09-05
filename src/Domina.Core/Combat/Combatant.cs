@@ -38,6 +38,26 @@ public enum CombatState
     Charging,
 
     /// <summary>
+    /// Blok duruşunda: silahını gelen darbenin önüne koymuş, kendisi vurmuyor.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Kaçınmadan ayrı bir eksendir. Kaçınma darbeyi <b>ıskalatır</b> ve savaşçıyı olduğu
+    /// yerde bırakır; blok darbeyi <b>karşılar</b> — hasar düşer, uzuv kopmaz, ama darbe
+    /// gelmiştir. Bedeli saldırı döngüsüdür: blokta geçen süre vurulmayan vuruştur.
+    /// </para>
+    /// <para>
+    /// Künt silah bloğun içinden geçer: sersemletme payı blokta da işler
+    /// (<see cref="CombatTuning.BlockStunShare"/>). Kalkan yokken künt sınıfın
+    /// dördüncü kazancı budur — duruş çelikten korur, sarsıntıdan korumaz.
+    /// </para>
+    /// <para>
+    /// Kaçış komutu bu durumu <b>anında</b> keser (docs/GDD.md §5 kesme tablosu).
+    /// </para>
+    /// </remarks>
+    Blocking,
+
+    /// <summary>
     /// Ağır bir darbeyle sersemledi: yürüyemez, vuramaz, <b>kaçınamaz</b>.
     /// </summary>
     /// <remarks>
@@ -82,6 +102,143 @@ internal sealed class Combatant(Warrior warrior, int team)
     public int Team { get; } = team;
 
     public WarriorId Id => Warrior.Id;
+
+    /// <summary>Bu dövüşte dağılan zırh parçaları.</summary>
+    /// <remarks>
+    /// Dağılan parça o bölgeyi <b>çıplak</b> bırakır: hasar azaltımı, kopma direnci ve
+    /// sertlik birden gider — yani zırhı biten savaşçı hem daha çok hasar yer hem uzuv
+    /// kaybetmeye başlar hem de vurduğu düşmanın silahını artık düşürmez.
+    /// </remarks>
+    public HitLocationSet DestroyedArmor { get; private set; }
+
+    /// <summary>Yuvaların kalan dayanıklılığı; ilk yıpranmada kurulur.</summary>
+    /// <remarks>
+    /// Havuz <b>kalıcı</b> yıpranmanın üstüne kurulur: savaşçı dövüşe geçmiş seferlerden
+    /// kalan zırhıyla girer (<see cref="Model.Warrior.ArmorWear"/>).
+    /// </remarks>
+    private double[]? _durability;
+
+    /// <summary>Bu dövüşte kuşamın emdiği hasar — yuva yuva.</summary>
+    /// <remarks>
+    /// Dojo katmanı bunu savaşçının kalıcı yıpranmasına ekler; çekirdek kalıcı hale
+    /// dokunmaz.
+    /// </remarks>
+    public ArmorWearSet ArmorWear { get; private set; }
+
+    /// <summary>Bu bölgeyi <b>şu an</b> örten parça.</summary>
+    /// <remarks>
+    /// Dövüşün tamamı bunu okur, <c>Warrior.Armor.At</c>'ı değil — tıpkı silahta olduğu
+    /// gibi: dağılan parça ekranda gidip mekanikte kalamaz.
+    /// </remarks>
+    public ArmorPiece ArmorAt(HitLocation location) =>
+        DestroyedArmor.Has(location) ? ArmorPiece.Bare : Warrior.Armor.At(location);
+
+    /// <summary>Üstünde kalan kuşamın ağırlığı — dağılan parça artık yavaşlatmaz.</summary>
+    public double ArmorWeight
+    {
+        get
+        {
+            double total = 0;
+            foreach (HitLocation location in Enum.GetValues<HitLocation>())
+            {
+                total += ArmorAt(location).Weight;
+            }
+
+            return total;
+        }
+    }
+
+    /// <summary>
+    /// Bir parçanın emdiği hasarı dayanıklılığından düşer.
+    /// </summary>
+    /// <returns>Parça bu darbede dağıldıysa true.</returns>
+    /// <remarks>
+    /// Havuz <b>emilen</b> hasardan düşer, gelenden değil: parçayı yıpratan şey
+    /// durdurduğu darbedir (docs/GDD.md §7).
+    /// </remarks>
+    public bool WearArmor(HitLocation location, double absorbed, double scale)
+    {
+        ArmorPiece piece = ArmorAt(location);
+
+        if (absorbed <= 0 || piece.Durability <= 0 || scale <= 0)
+        {
+            return false;
+        }
+
+        _durability ??= BuildDurability(scale);
+
+        ArmorWear = ArmorWear.With(location, ArmorWear.At(location) + absorbed);
+
+        int slot = (int)location;
+        _durability[slot] -= absorbed;
+
+        if (_durability[slot] > 0)
+        {
+            return false;
+        }
+
+        DestroyedArmor |= location.AsFlag();
+        return true;
+    }
+
+    private double[] BuildDurability(double scale)
+    {
+        HitLocation[] slots = Enum.GetValues<HitLocation>();
+        var pools = new double[slots.Length];
+
+        foreach (HitLocation location in slots)
+        {
+            pools[(int)location] = (Warrior.Armor.At(location).Durability * scale)
+                                   - Warrior.ArmorWear.At(location);
+        }
+
+        return pools;
+    }
+
+    /// <summary>Silahı bu dövüşte elinden düştü mü?</summary>
+    /// <remarks>
+    /// Kayıp <b>dövüşe</b> aittir: <see cref="Model.Warrior"/> kalıcı hali tutar ve dövüş
+    /// ona dokunmaz (toplu simülasyon aynı kadroyu on binlerce kez koşturur). Düşen silah
+    /// dövüş bitince savaşçıya geri döner; bedel kalan dövüştür
+    /// (<see cref="WeaponDropped"/>).
+    /// </remarks>
+    public bool Disarmed { get; set; }
+
+    /// <summary>
+    /// Şu an elindeki silah. Düştüyse yumruk.
+    /// </summary>
+    /// <remarks>
+    /// Dövüşün tamamı bunu okur, <c>Warrior.UsableWeapon</c>'ı değil: menzil, hız, hasar,
+    /// yakalanabilirlik — hepsi silah elden çıkınca değişir. Tek bir yerde bile kalıcı
+    /// silah okunsaydı düşen silah ekranda yerde, mekanikte elde kalırdı.
+    /// </remarks>
+    public Weapon Weapon => Disarmed ? _fists : HeldWeapon ?? Warrior.UsableWeapon;
+
+    /// <summary>Tek bir yumruk örneği — dövüş döngüsü bunu tick başına defalarca okur.</summary>
+    /// <remarks>
+    /// Her okumada yeni bir kayıt üretmek dövüş başına yüz kilobayta yakın ayırma demekti
+    /// (<c>ThroughputTests</c> yakaladı); silah değişmeyen bir değer olduğu için tek örnek
+    /// yeter.
+    /// </remarks>
+    private static readonly Weapon _fists = Model.Weapon.Fists();
+
+    /// <summary>
+    /// Yerden alınmış silah. <c>null</c> ise savaşçı kendi silahını taşıyor.
+    /// </summary>
+    /// <remarks>
+    /// Yerden alınan silah <b>düşmanın</b> silahı da olabilir: arenada duran namlunun
+    /// kimin olduğu sorulmaz. Kalıcı hale yazılmaz — dövüş bitince herkes kendi
+    /// kuşamına döner.
+    /// </remarks>
+    public Weapon? HeldWeapon { get; set; }
+
+    /// <summary>Eli boş mu — yani yerdeki bir silaha yürür mü?</summary>
+    /// <remarks>
+    /// Ölçü silahın <b>yumruk olması</b>, "düşürdü mü" değil: kolunu kaybettiği için çift
+    /// el silahını kullanamayan savaşçı da eli boştur ve yerdeki tek el silahı alabilir.
+    /// Elinde silah olan ne alır ne arar (docs/GDD.md §7).
+    /// </remarks>
+    public bool Unarmed => Weapon == _fists;
 
     public double Health { get; set; } = warrior.EffectiveStats.MaxHealth;
 
@@ -174,7 +331,8 @@ internal sealed class Combatant(Warrior warrior, int team)
             or CombatState.AttackRecovery
             or CombatState.ThrowRecovery
             or CombatState.Charging
-            or CombatState.ChargeWindup;
+            or CombatState.ChargeWindup
+            or CombatState.Blocking;
 
     // ---- Hücum ----
 
@@ -306,6 +464,20 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public int DodgesPerformed { get; set; }
 
+    /// <summary>Kaç darbeyi blokla karşıladı.</summary>
+    public int BlocksPerformed { get; set; }
+
+    /// <summary>
+    /// Son karar adımı blok duruşuydu — sıradaki adımda tekrar bloklayamaz.
+    /// </summary>
+    /// <remarks>
+    /// Blok bir <b>duruş</b>tur, bir kabuk değil. Zar her karar adımında yeniden atılsaydı
+    /// savunması yüksek savaşçı arka arkaya bloklayıp hiç vurmayabilirdi: dövüş kilitlenir,
+    /// ve savunma statı bedelini ödemeden en iyi hamle olurdu. Kural, duruşu bir <b>ritme</b>
+    /// bağlar — karşıla, sonra karşılık ver.
+    /// </remarks>
+    public bool JustBlocked { get; set; }
+
     public double DamageDealt { get; set; }
 
     public double DamageTaken { get; set; }
@@ -323,6 +495,28 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     /// <summary>Kaç kez kendi silahı yakalanıp açıkta kaldı.</summary>
     public int TimesCaught { get; set; }
+
+    /// <summary>Bu dövüşte kaç kez silahı elinden düştü.</summary>
+    /// <remarks>
+    /// Dövüş sonundaki <see cref="Disarmed"/> bayrağı yetmez: silahını düşürüp geri alan
+    /// savaşçı orada silahlı görünür, oysa bedeli ödemiştir. Kural ancak olay sayılırsa
+    /// ölçülebilir.
+    /// </remarks>
+    public int TimesDisarmed { get; set; }
+
+    /// <summary>Kaç kez yerden silah aldı.</summary>
+    /// <remarks>
+    /// Düşürmenin bedelinin gerçekte ne kadar sürdüğünü söyleyen sayı budur: silahsız
+    /// geçen dövüş mü, yoksa birkaç saniyelik bir yürüyüş mü.
+    /// </remarks>
+    public int WeaponsPickedUp { get; set; }
+
+    /// <summary>Kaç düşmanın silahını düşürdü.</summary>
+    /// <remarks>
+    /// Yakalama aletinin ikinci karşılığı buradan okunur — düşürülen silah ne hasarda ne
+    /// uzuv kaybında görünür.
+    /// </remarks>
+    public int DisarmsInflicted { get; set; }
 
     /// <summary>Kaç kez zehirli bir vuruş yedi.</summary>
     /// <remarks>

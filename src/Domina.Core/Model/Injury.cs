@@ -1,4 +1,6 @@
-﻿namespace Domina.Core.Model;
+﻿using System.Numerics;
+
+namespace Domina.Core.Model;
 
 /// <summary>Kalıcı olarak kaybedilebilecek uzuvlar.</summary>
 /// <remarks>
@@ -78,6 +80,59 @@ public static class BodyPartSetExtensions
             }
         }
     }
+}
+
+/// <summary>Zırh yuvalarının kümesi — hangi parçaların dağıldığını taşır.</summary>
+/// <remarks>
+/// <see cref="BodyPartSet"/>'in eşi ama ayrı: kaybedilen uzuvla dağılan zırh parçası
+/// aynı şey değildir (gövdelik dağılabilir, gövde kopmaz) ve ikisi ayrı ayrı sayılır.
+/// </remarks>
+public enum HitLocationSet
+{
+    None = 0,
+    Head = 1 << 0,
+    Torso = 1 << 1,
+    SwordArm = 1 << 2,
+    OffArm = 1 << 3,
+    RightLeg = 1 << 4,
+    LeftLeg = 1 << 5,
+}
+
+public static class HitLocationSetExtensions
+{
+    public static HitLocationSet AsFlag(this HitLocation location) => location switch
+    {
+        HitLocation.Head => HitLocationSet.Head,
+        HitLocation.Torso => HitLocationSet.Torso,
+        HitLocation.SwordArm => HitLocationSet.SwordArm,
+        HitLocation.OffArm => HitLocationSet.OffArm,
+        HitLocation.RightLeg => HitLocationSet.RightLeg,
+        HitLocation.LeftLeg => HitLocationSet.LeftLeg,
+        _ => HitLocationSet.None,
+    };
+
+    public static bool Has(this HitLocationSet set, HitLocation location) =>
+        (set & location.AsFlag()) != 0;
+
+    /// <summary>Kümedeki yuvalar, <see cref="HitLocation"/> sırasıyla.</summary>
+    public static IEnumerable<HitLocation> Slots(this HitLocationSet set)
+    {
+        foreach (HitLocation location in Enum.GetValues<HitLocation>())
+        {
+            if (set.Has(location))
+            {
+                yield return location;
+            }
+        }
+    }
+
+    /// <summary>Kümedeki yuva sayısı.</summary>
+    /// <remarks>
+    /// Bit sayımıyla yapılır, <see cref="Slots"/> üzerinden değil: hedef seçimi bunu
+    /// karar adımı başına okuyor ve iterator ile <c>Enum.GetValues</c> dövüş başına
+    /// kilobaytlarca ayırma demekti (<c>ThroughputTests</c> yakaladı).
+    /// </remarks>
+    public static int Count(this HitLocationSet set) => BitOperations.PopCount((uint)set);
 }
 
 /// <summary>Darbenin indiği bölge.</summary>

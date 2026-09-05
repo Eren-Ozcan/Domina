@@ -63,6 +63,17 @@ public sealed class Warrior
     /// <summary>0-100. Ekonomiyi ve seppuku eşiğini besler (bkz. docs/GDD.md §6).</summary>
     public double Honor { get; set; }
 
+    /// <summary>
+    /// Antrenmandan ne kadar hızlı faydalandığı (1.0 = ortalama).
+    /// </summary>
+    /// <remarks>
+    /// Savaşçının doğuştan getirdiği, değişmeyen payı. Alım kararının ikinci ekseni budur:
+    /// aynı statlarla gelen iki aday aynı hızda gelişmez, yani ucuz ve ham bir aday uzun
+    /// vadede pahalı ve hazır olandan iyi çıkabilir. <b>Dövüş bunu okumaz</b> — yalnızca
+    /// antrenman okur (Faz 3'ün açık maddesi); şimdilik taşınır ve gösterilir.
+    /// </remarks>
+    public double Talent { get; set; } = 1.0;
+
     public bool IsAlive { get; private set; } = true;
 
     /// <summary>Kalıcı sakatlıklar. Geri alınamaz.</summary>
@@ -111,6 +122,17 @@ public sealed class Warrior
         _disabilities.Add(new Disability(part));
         return true;
     }
+
+    /// <summary>
+    /// Kuşamın <b>bugüne kadar</b> emdiği hasar — yuva yuva.
+    /// </summary>
+    /// <remarks>
+    /// Dayanıklılık dövüşe değil <b>savaşçıya</b> aittir: bir parça tek bir dövüşte
+    /// tükenmez, seferler boyunca yıpranır ve bir gün ortada dağılır. Dövüş bu sayacı
+    /// okur ama yazmaz (toplu simülasyon aynı kadroyu on binlerce kez koşturur);
+    /// dövüşün ürettiği yıpranmayı savaşçıya işlemek dojo katmanının işi.
+    /// </remarks>
+    public ArmorWearSet ArmorWear { get; set; }
 
     /// <summary>Kalıcı ölüm. Geri dönüşü yoktur.</summary>
     public void Kill() => IsAlive = false;

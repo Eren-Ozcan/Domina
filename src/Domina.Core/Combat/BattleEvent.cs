@@ -36,6 +36,29 @@ public sealed record AttackLanded(
     double DefenderHealthRemaining) : BattleEvent(AtSeconds);
 
 /// <summary>
+/// Darbe blok duruşuna geldi: hasarın çoğu silindi, uzuv kopmadı — ama darbe indi.
+/// </summary>
+/// <remarks>
+/// Kaçınmadan ve yakalamadan ayrı bir olaydır çünkü üçü ekranda ayrı şeyler anlatır:
+/// kaçınan savaşçı çekilir, yakalayan kenetlenir, bloklayan <b>yerinde sarsılır</b>.
+/// <paramref name="Damage"/> bloktan sonra kalan hasardır — sıfır değildir, ve fark
+/// sunum katmanının bloğu "işe yaradı ama bedavaya değil" diye gösterebilmesi için var.
+/// </remarks>
+/// <summary>Savaşçı blok duruşuna geçti — bu sürede vurmuyor.</summary>
+/// <remarks>
+/// Duruşun kendisi ekranda görünmek zorunda: oyuncu, savaşçısının neden vurmadığını
+/// görebilmeli. <see cref="AttackBlocked"/> duruşun <b>işe yaradığı</b> andır; bu olay
+/// duruşun <b>alındığı</b> an.
+/// </remarks>
+public sealed record BlockRaised(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
+
+public sealed record AttackBlocked(
+    double AtSeconds,
+    WarriorId Attacker,
+    WarriorId Defender,
+    double Damage) : BattleEvent(AtSeconds);
+
+/// <summary>
 /// Savunan, gelen silahı yakaladı: hasar yok ve saldıran <paramref name="BindSeconds"/>
 /// boyunca kilitli kalır.
 /// </summary>
@@ -49,6 +72,55 @@ public sealed record AttackCaught(
     WarriorId Attacker,
     WarriorId Defender,
     double BindSeconds) : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Silah elden düştü: savaşçı dövüşün geri kalanını <b>yumrukla</b> geçirir.
+/// </summary>
+/// <remarks>
+/// <para>
+/// İki yerden gelebilir: zırha inen vuruşun geri tepmesi kavrayışı bozar, ya da
+/// yakalanan silah çengelde avuçtan sökülür. <paramref name="Disarmer"/> ikincisinde
+/// silahı düşüren savaşçıdır; plakaya vurup kendi silahını elinden kaçıranda
+/// <c>null</c>'dır — ortada düşüren kimse yok.
+/// </para>
+/// <para>
+/// Kayıp <b>dövüşe</b> aittir, kalıcı değildir: silah yerde kalır ve dövüş bitince
+/// savaşçıya geri döner. Kırılma yerine düşme seçildi ki ekipmanın bedeli ayrı bir
+/// envanter ve onarım defteri açmasın — bedel kalan dövüştür.
+/// </para>
+/// </remarks>
+public sealed record WeaponDropped(
+    double AtSeconds,
+    WarriorId Warrior,
+    string Weapon,
+    WarriorId? Disarmer) : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Zırh parçası dağıldı: o bölge dövüşün geri kalanında <b>çıplak</b>, ve parça
+/// kalıcı olarak gitti.
+/// </summary>
+/// <remarks>
+/// Silahtan farkı buradadır: düşen silah dövüş sonunda geri gelir, dağılan parça
+/// gelmez. Zırh oyunun sarf malzemesidir — en çok emen kuşam en çabuk tükenendir.
+/// Kalıcı sonucu çekirdek uygulamaz; uzuv kaybında olduğu gibi olayı ve dövüş özetini
+/// üretir, kuşamı defterden düşmek dojo katmanının işidir.
+/// </remarks>
+public sealed record ArmorDestroyed(
+    double AtSeconds,
+    WarriorId Warrior,
+    HitLocation Slot,
+    string Piece) : BattleEvent(AtSeconds);
+
+/// <summary>
+/// Savaşçı yerden bir silah aldı.
+/// </summary>
+/// <remarks>
+/// Yalnızca <b>eli boş</b> savaşçı alır — silahı olan ne alır ne de arar; yerdeki
+/// namluya doğru bir adım bile atmaz. Bu sınır olmasaydı herkes sürekli daha iyi silah
+/// toplar, dövüş bir yağma turuna dönerdi.
+/// </remarks>
+public sealed record WeaponPickedUp(double AtSeconds, WarriorId Warrior, string Weapon)
+    : BattleEvent(AtSeconds);
 
 /// <summary>Ağır darbe savaşçıyı sersemletti: <paramref name="Seconds"/> boyunca donar.</summary>
 public sealed record WarriorStunned(

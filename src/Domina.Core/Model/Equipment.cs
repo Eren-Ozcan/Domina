@@ -1,4 +1,4 @@
-﻿namespace Domina.Core.Model;
+namespace Domina.Core.Model;
 
 /// <summary>Silahın yaralanma karakteri.</summary>
 public enum WeaponClass
@@ -79,6 +79,48 @@ public sealed record Weapon(
 
     /// <summary>Silah zehirli mi?</summary>
     public bool IsPoisoned => Poison > 0;
+
+    /// <summary>
+    /// Silahın <b>elden çıkma eğilimi</b> — sert bir temasta kavrayışın bozulma payı.
+    /// 0 = düşmez.
+    /// </summary>
+    /// <remarks>
+    /// Zırhın kesiciye karşı ikinci cevabı budur: plakaya saplanan ağız burkulur ve
+    /// silahı avuçtan çıkarır; delici uç kayar, künt sopa geri teper ama elde kalır.
+    /// Sınıfın kendi değeri <see cref="DisarmFactor"/>'de; bu alan tek tek silahların
+    /// sınıflarından ayrılmasına izin verir — şimdilik hiçbiri ayrılmıyor, çünkü kural
+    /// önce sınıf ekseninde ölçüldü.
+    /// </remarks>
+    public double? DisarmFactorOverride { get; init; }
+
+    /// <inheritdoc cref="DisarmFactorOverride"/>
+    public double DisarmFactor => DisarmFactorOverride ?? (!Catchable ? 0 : Class switch
+    {
+        WeaponClass.Cutting => 1.0,
+        WeaponClass.Piercing => 0.6,
+        WeaponClass.Blunt => 0.2,
+        _ => 1.0,
+    });
+
+    /// <summary>
+    /// Silahın <b>blok kalitesi</b> — duruşa geçen savaşçının darbeyi ne kadar karşıladığı.
+    /// </summary>
+    /// <remarks>
+    /// Bloğun ikinci ekseni budur: duruşa geçme kararı savaşçının Savunma statından çıkar,
+    /// duruşun ne kadar tuttuğu <b>elindeki silahtan</b>. Çift el tutulan uzun sap darbeyi
+    /// gövdesiyle karşılar; tek elli kısa ağız yalnızca yönünü değiştirir. Yumruk hiçbir
+    /// şey karşılamaz — silahını düşüren savaşçı bloğunu da kaybeder.
+    /// </remarks>
+    public double? BlockFactorOverride { get; init; }
+
+    /// <inheritdoc cref="BlockFactorOverride"/>
+    public double BlockFactor => BlockFactorOverride ?? (TwoHanded ? 1.0 : Class switch
+    {
+        WeaponClass.Blunt => 0.85,
+        WeaponClass.Cutting => 0.80,
+        WeaponClass.Piercing => 0.70,
+        _ => 0.80,
+    });
 
     /// <summary>Uzuv kopma riskine uygulanan çarpan.</summary>
     public double DismembermentFactor => Class switch
@@ -196,6 +238,7 @@ public sealed record Weapon(
     public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80)
     {
         Catchable = false,
+        BlockFactorOverride = 0.30,
     };
 }
 
@@ -273,6 +316,49 @@ public sealed record ThrownWeapon(
         new("Ucu sivri kargı", WeaponClass.Piercing, 26, 520, 900, 2, 1.1);
 }
 
+/// <summary>
+/// Yuva yuva zırh yıpranması — bir kuşamın her parçasının emdiği toplam hasar.
+/// </summary>
+/// <remarks>
+/// Sözlük yerine değer türü: dövüş özeti savaşçı başına üretilir ve toplu simülasyon
+/// bunu on binlerce kez yapar; her seferinde altı elemanlı bir sözlük ayırmak ölçümün
+/// kendisini yavaşlatırdı.
+/// </remarks>
+public readonly record struct ArmorWearSet(
+    double Head = 0,
+    double Torso = 0,
+    double SwordArm = 0,
+    double OffArm = 0,
+    double RightLeg = 0,
+    double LeftLeg = 0)
+{
+    public double At(HitLocation location) => location switch
+    {
+        HitLocation.Head => Head,
+        HitLocation.Torso => Torso,
+        HitLocation.SwordArm => SwordArm,
+        HitLocation.OffArm => OffArm,
+        HitLocation.RightLeg => RightLeg,
+        HitLocation.LeftLeg => LeftLeg,
+        _ => 0,
+    };
+
+    /// <summary>Verilen yuvaya yıpranma ekler.</summary>
+    public ArmorWearSet With(HitLocation location, double amount) => location switch
+    {
+        HitLocation.Head => this with { Head = amount },
+        HitLocation.Torso => this with { Torso = amount },
+        HitLocation.SwordArm => this with { SwordArm = amount },
+        HitLocation.OffArm => this with { OffArm = amount },
+        HitLocation.RightLeg => this with { RightLeg = amount },
+        HitLocation.LeftLeg => this with { LeftLeg = amount },
+        _ => this,
+    };
+
+    /// <summary>Bütün yuvaların toplamı.</summary>
+    public double Total => Head + Torso + SwordArm + OffArm + RightLeg + LeftLeg;
+}
+
 /// <summary>Tek bir bölgeyi örten zırh parçası.</summary>
 /// <param name="Name">Görünen ad.</param>
 /// <param name="DamageReduction">O bölgeye inen isabette düşülen sabit hasar.</param>
@@ -284,6 +370,23 @@ public sealed record ThrownWeapon(
 /// Parçanın ağırlığı. Takımın toplamı saldırı döngüsünü uzatır
 /// (bkz. <c>CombatTuning.ArmorWeightAtFullPenalty</c>).
 /// </param>
+/// <param name="Durability">
+/// Parçanın <b>ne kadar darbe emebileceği</b>. Emdiği hasar bu havuzdan düşer; havuz
+/// bitince parça dağılır ve <b>kalıcı olarak gider</b>.
+/// </param>
+/// <remarks>
+/// <para>
+/// Dayanıklılık, zırhı bir <b>sarf malzemesi</b> yapar. Ağırlık zırhın sahadaki bedelini
+/// yazıyordu; dayanıklılık dojo'daki bedelini yazar: en iyi kuşam en çok emen kuşamdır,
+/// en çok emen de en çabuk tükenendir. Silahtan farkı kasıtlı — düşen silah dövüş
+/// sonunda geri gelir, dağılan zırh parçası gelmez.
+/// </para>
+/// <para>
+/// Havuz <b>emilen</b> hasardan düşer, gelen hasardan değil: parçayı yıpratan şey
+/// durdurduğu darbedir. Gelen hasardan düşseydi kalın plaka ince kumaşla aynı hızda
+/// tükenir, kademe farkı yalnızca sayıda kalırdı.
+/// </para>
+/// </remarks>
 /// <remarks>
 /// Ağırlık, zırhı bir <b>karar</b> yapan şeydir. Bedelsizken ō-yoroi her eksende
 /// üstündü — zafer %68'den %96'ya, ölüm %41.6'dan %16.3'e, uzuv kaybı %8.6'dan %0.4'e
@@ -295,30 +398,35 @@ public sealed record ArmorPiece(
     string Name,
     double DamageReduction,
     double DismembermentResistance,
-    double Weight)
+    double Weight,
+    double Durability = 0)
 {
+    /// <summary>Bu yuvada gerçekten bir parça var mı?</summary>
+    public bool IsWorn => DamageReduction > 0 || DismembermentResistance > 0;
+
     /// <summary>Örtüsüz bölge.</summary>
     public static ArmorPiece Bare { get; } = new("Çıplak", 0, 0, 0);
 
-    public static ArmorPiece Keikogi { get; } = new("Keikogi", 4, 0.20, 1);
+    public static ArmorPiece Keikogi { get; } = new("Keikogi", 4, 0.20, 1, Durability: 40);
 
-    public static ArmorPiece DoMaru { get; } = new("Dō-maru gövdeliği", 9, 0.45, 4);
+    public static ArmorPiece DoMaru { get; } = new("Dō-maru gövdeliği", 9, 0.45, 4, Durability: 110);
 
-    public static ArmorPiece OYoroiCuirass { get; } = new("Ō-yoroi gövdeliği", 14, 0.65, 7);
+    public static ArmorPiece OYoroiCuirass { get; } =
+        new("Ō-yoroi gövdeliği", 14, 0.65, 7, Durability: 180);
 
     /// <summary>Kol zırhı — <b>tek</b> kolu örter; iki kol iki parça ister.</summary>
-    public static ArmorPiece Kote { get; } = new("Kote", 4, 0.30, 0.75);
+    public static ArmorPiece Kote { get; } = new("Kote", 4, 0.30, 0.75, Durability: 45);
 
     /// <inheritdoc cref="Kote"/>
-    public static ArmorPiece HeavyKote { get; } = new("Ağır kote", 6, 0.45, 1.5);
+    public static ArmorPiece HeavyKote { get; } = new("Ağır kote", 6, 0.45, 1.5, Durability: 75);
 
     /// <summary>Baldır zırhı — <b>tek</b> bacağı örter.</summary>
-    public static ArmorPiece Suneate { get; } = new("Suneate", 4, 0.25, 0.75);
+    public static ArmorPiece Suneate { get; } = new("Suneate", 4, 0.25, 0.75, Durability: 45);
 
     /// <inheritdoc cref="Suneate"/>
-    public static ArmorPiece HeavySuneate { get; } = new("Ağır suneate", 6, 0.40, 1.5);
+    public static ArmorPiece HeavySuneate { get; } = new("Ağır suneate", 6, 0.40, 1.5, Durability: 75);
 
-    public static ArmorPiece Kabuto { get; } = new("Kabuto", 8, 0.55, 3);
+    public static ArmorPiece Kabuto { get; } = new("Kabuto", 8, 0.55, 3, Durability: 90);
 }
 
 /// <summary>
@@ -366,6 +474,18 @@ public sealed record Armor(
         HitLocation.RightLeg => RightLeg,
         HitLocation.LeftLeg => LeftLeg,
         _ => ArmorPiece.Bare,
+    };
+
+    /// <summary>Verilen yuvaya başka bir parça takılmış hâli.</summary>
+    public Armor With(HitLocation location, ArmorPiece piece) => location switch
+    {
+        HitLocation.Head => this with { Head = piece },
+        HitLocation.Torso => this with { Torso = piece },
+        HitLocation.SwordArm => this with { SwordArm = piece },
+        HitLocation.OffArm => this with { OffArm = piece },
+        HitLocation.RightLeg => this with { RightLeg = piece },
+        HitLocation.LeftLeg => this with { LeftLeg = piece },
+        _ => this,
     };
 
     /// <summary>Tüm bölgeleri aynı parçayla örten takım.</summary>

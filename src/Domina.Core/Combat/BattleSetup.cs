@@ -59,6 +59,13 @@ public sealed record WarriorBattleSummary(
     /// </remarks>
     public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
 
+    /// <summary>Kaç darbe blokla karşılandı.</summary>
+    /// <remarks>
+    /// Kaçınma sayacından ayrı durur: kaçınma darbeyi siler, blok darbeyi <b>alır</b>.
+    /// Savunma statının karşılığı ancak bu ikisi ayrı sayıldığında ölçülebilir.
+    /// </remarks>
+    public int BlocksPerformed { get; init; }
+
     /// <summary>Bu dövüşte kaç kez sersemleyip donuldu.</summary>
     /// <remarks>
     /// Künt silahın karşılığı ancak bununla ölçülür: kesici uzuv kopmasıyla ödüllenir,
@@ -103,6 +110,46 @@ public sealed record WarriorBattleSummary(
 
     /// <summary>Kaç kez kendi silahı yakalanıp açıkta kalındı.</summary>
     public int TimesCaught { get; init; }
+
+    /// <summary>Silahı bu dövüşte elinden düştü mü?</summary>
+    /// <remarks>
+    /// Düşürmenin karşılığı ne hasarda ne uzuv kaybında görünür: silahını kaybeden
+    /// savaşçı dövüşü yumrukla bitirir — menzili, hasarı ve yakalama hakkı birden gider
+    /// (docs/GDD.md §7).
+    /// </remarks>
+    public bool Disarmed { get; init; }
+
+    /// <summary>Bu dövüşte kuşamın emdiği hasar — dojo bunu kalıcı yıpranmaya ekler.</summary>
+    /// <remarks>
+    /// Zırh tek bir dövüşte tükenmez; seferler boyunca yıpranır. Kuşamın kaç dövüş
+    /// dayandığı ancak bu sayı ile parçanın dayanıklılığı yan yana konunca bilinir.
+    /// </remarks>
+    public ArmorWearSet ArmorWear { get; init; }
+
+    /// <summary>Bu dövüşte dağılan zırh parçaları — <b>kalıcı</b> kayıp.</summary>
+    /// <remarks>
+    /// Uzuv kaybıyla aynı yoldan raporlanır (<see cref="LostParts"/>): çekirdek kalıcı
+    /// hale dokunmaz, ne olduğunu söyler. Zırhın gerçek fiyatı ancak burada görünür —
+    /// kazanılan dövüş bile kuşamdan bir parça götürebilir.
+    /// </remarks>
+    public HitLocationSet DestroyedArmor { get; init; } = HitLocationSet.None;
+
+    /// <summary>Bu dövüşte kaç kez silah elden düştü.</summary>
+    /// <remarks>
+    /// <see cref="Disarmed"/> dövüşün <b>sonundaki</b> hali söyler; kuralın kaç kez
+    /// ısırdığını yalnızca bu sayaç söyler.
+    /// </remarks>
+    public int TimesDisarmed { get; init; }
+
+    /// <summary>Kaç kez yerden silah alındı.</summary>
+    /// <remarks>
+    /// <see cref="Disarmed"/> ile birlikte okunur: biri bedelin doğduğunu, bu sayaç
+    /// bedelin kapanıp kapanmadığını söyler.
+    /// </remarks>
+    public int WeaponsPickedUp { get; init; }
+
+    /// <summary>Kaç düşmanın silahı düşürüldü — zırhın ve yakalama aletinin sayacı.</summary>
+    public int DisarmsInflicted { get; init; }
 
     /// <summary>Bu dövüşte kaç kez hücuma kalkıldı.</summary>
     /// <remarks>

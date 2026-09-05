@@ -1,4 +1,4 @@
-namespace Domina.Core.Combat;
+﻿namespace Domina.Core.Combat;
 
 /// <summary>
 /// Arena düzlemindeki bir nokta. <b>X</b> hat boyunca (soldan sağa), <b>Y</b> derinlik.
@@ -55,6 +55,23 @@ public readonly record struct ArenaPoint(double X, double Y)
     }
 
     /// <summary>Hedeften uzağa doğru ilerler.</summary>
-    public ArenaPoint MovedAwayFrom(ArenaPoint source, double distance) =>
-        MovedToward(new ArenaPoint(X + (X - source.X), Y + (Y - source.Y)), distance);
+    /// <remarks>
+    /// Mesafe <b>her zaman</b> istenen kadardır: aradaki uzaklıkla sınırlanmaz. Yön
+    /// birim vektöre indirgenmeden hesaplansaydı, kaynağa yakınken atılan adım kısalır
+    /// ve "şu kadar uzağa" isteği sessizce kırpılırdı.
+    /// </remarks>
+    public ArenaPoint MovedAwayFrom(ArenaPoint source, double distance)
+    {
+        double dx = X - source.X;
+        double dy = Y - source.Y;
+        double length = Math.Sqrt((dx * dx) + (dy * dy));
+
+        if (length <= double.Epsilon || distance <= 0)
+        {
+            return this;
+        }
+
+        double scale = distance / length;
+        return new ArenaPoint(X + (dx * scale), Y + (dy * scale));
+    }
 }
