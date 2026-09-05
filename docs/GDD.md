@@ -1377,6 +1377,29 @@ pazarından birebir alındı:
   satın alınabilirdi (antrenmanın anlamı kalmazdı), ya da geç oyunda pazar anlamsızlaşırdı.
   Kadro tamamen ölse bile pazar **acemi seviyesine** düşer, sıfıra değil — yoksa çöken
   dojo'nun toparlanma yolu kalmazdı.
+- **Pazar kadronun en iyisini geçemez** (`BestFollowCeiling` 0.75). Takip, pazarın nereye
+  *oturduğunu* söyler ama nereye kadar *çıkabileceğini* söylemez: oynama payı üstten
+  vurduğunda tek bir aday kadronun en iyisini aşabiliyordu. Tavan onu keser — satın alınan
+  savaşçı, dojoda yetiştirilmiş en iyi savaşçının skorunun %75'ini geçemez.
+
+  Referans **ortalama değil en iyi savaşçıdır**: ortalamaya bağlansaydı iki ucuz acemi alıp
+  ortalamayı düşürerek pazar sömürülebilirdi. En iyi savaşçı düşürülemez, yalnızca ölerek
+  kaybedilir — ölünce tavanın da düşmesi doğrudur.
+
+  Tavanın altında bir **taban** var: tavan hiçbir zaman acemi skorunun altına inmez. Bu
+  taban olmadan tavan daha ilk günden ısırıyor ve pazar acemi kadroya acemiden zayıf adam
+  satıyordu; ölçüldü, 400 dojonun **tamamı** kasayı sıfırladı ve boş gün oranı %93.7'ye
+  çıktı. Yani tavan ancak en iyi savaşçı acemiyi belirgin şekilde geçtikten sonra devreye
+  girer.
+
+  Tavana dayanan aday **kırpılmaz, oranlanır**: statların hepsi aynı katsayıyla küçülür.
+  Tek tek kırpmak tavana dayanan her adayı aynı düz profile çevirirdi ve "kimi alayım"
+  sorusu kaybolurdu; oranlama adayın şeklini korur, yalnızca ağırlığını düşürür.
+
+  Gerekçe: yetiştirilen savaşçı oyuncunun **eseri** olmalı. Pazar onu kopyalayabiliyorsa
+  antrenmanın anlamı kalmaz. Pazar **yerine koyma** aracıdır, **ilerleme** aracı değil —
+  ilerleme yolu ham adayı alıp eğitmekten geçer ve pazarın tam güçle satabildiği tek şey
+  `Talent` olarak kalır.
 - **Yetenek (`Talent`) ikinci eksen:** savaşçının antrenmandan ne kadar hızlı
   faydalanacağı, doğuştan gelen ve değişmeyen payı (0.6-1.4). Aynı statlarla gelen iki
   aday aynı hızda gelişmez. Fiyata girer ama statlardan daha az ağırlıkla: yetenek bir
@@ -1400,6 +1423,18 @@ veteran kalitesinde savaşçı geliyordu, pazar bunu gerçekçi fiyata çekince 
 çünkü ham aday gelişmiyor: antrenmanın stat etkisi henüz yazılmadı (ROADMAP Faz 3). İki
 stratejinin rakip olması tasarımın hedefi; aradaki fark (354'e karşı 705 altın) antrenman
 sisteminin kapatması gereken boşluğun ölçüsüdür.
+
+**Tavanın ölçüsü (aynı kurulum):** tavan eklendikten sonra aynı iki strateji 147 (%9.8
+sermayesini koruyan, %18.8 kapanan) ve 204 altına (%13.0, %13.2) düşüyor; ölüm 5.93'ten
+7.08'e çıkıyor. Mekanizma açık — yerine konan savaşçı daha zayıf olduğu için daha çok
+ölünüyor. Bu bir denge bozulması değil, tavanın **fiyatı**: dünkü 354-705 boşluğu gibi bu
+da antrenmanın kapatacağı açığın parçası.
+
+Oran **0.75'te kilitlendi**. `patrol` kadrosunda 0.75, 0.85 ve 0.90 aynı sonucu veriyor
+çünkü acemi tabanı baskın (en iyi savaşçının skoru 387, taban 355): tavan ancak en iyi
+savaşçının skoru ~473'ü geçtiğinde konuşmaya başlar, ki oraya ancak antrenmanla çıkılır.
+Yani bugün ölçülen bedel oranın değil **tavanın kendisinin** bedeli; oran, antrenman
+yazıldıktan sonra yeniden ölçülmesi gereken sayılardan biri.
 
 ### Rastgele olaylar (2026-09-04)
 
