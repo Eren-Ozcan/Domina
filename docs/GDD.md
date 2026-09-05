@@ -1,4 +1,4 @@
-# Tasarım Kararları (Karar Defteri)
+﻿# Tasarım Kararları (Karar Defteri)
 
 > Bu dosya **kilitlenmiş** tasarım kararlarını tutar. Yol haritası için `ROADMAP.md`.
 > Kararların dışarıdan doğrulanabilir dayanakları için `DESIGN-REFERENCES.md`.
@@ -330,6 +330,47 @@ Her vuruşma anı sırayla çözülür:
 4. Kalan hasar HP'den düşer
 5. Vuruş yönü/açısı görsel çeşitlilik içindir, **mekanik sonucu etkilemez**
 
+### Hedef seçimi (kilitlendi 2026-09-03)
+
+"Kim kime vurur" bir sıralama değil, **savaşçının kendi kararıdır**. Eski kural bir karar
+değildi: en yakını seç, ölene kadar ona sadık kal. Yaralı düşman fark edilmiyor, kuşamı
+dağılmış açık bölge fark edilmiyor, üç savaşçı aynı hedefe yığılıp yığılmadıklarını
+bilmiyordu.
+
+Savaşçı her **karar adımında** (yeni bir hamleye başlarken, her tikte değil) düşmanları
+puanlar; en yüksek puanlıyı seçer.
+
+| Kalem | Ağırlık | Ne der |
+|---|---|---|
+| Mesafe | −1 puan / birim | Yürünecek yol. Menzil içindeki düşman ceza almaz |
+| Yara | +120 × eksik can oranı | Bir düşmanı devirmek, üçünü birden yaralamaktan iyidir |
+| Açık bölge | +90 × dağılmış parça oranı | Zırh yıpranmasının dövüş içi karşılığı (§7) |
+| Kalabalık | −60 / aynı hedefteki takım arkadaşı | Takım tek düşmanı kovalarken diğerleri bedava vurmasın |
+| Yapışkanlık | +80 (mevcut hedefe) | Yön değiştirmenin bedeli: gidilen yol boşa gider |
+| **Fırsat penceresi** | 200 birim | Yara ve açık bölge kazançları bu mesafede sıfıra iner |
+
+**Zar yok — puanlama deterministik.** Rastgelelik kararın kendisinde değil savaşçının
+kimliğinde. Zar atılsaydı seçim her adımda titrer ve ölçüm gürültüye boğulurdu.
+
+**Ölçüldü (3v3, 20.000 dövüş, `never`):** eski kural (yalnız mesafe) %72.28 zafer /
+%49.11 ölüm; yeni kural **%72.17 / %50.30**. Zafer aynı, ölüm artıyor — odaklanan takım
+daha çok öldürüyor, dövüş daha keskin bitiyor. Tam kuşamlı düşmana karşı (`3v3-armored`)
+yeni kural açık ara iyi: %71.84 → **%72.68**.
+
+> **Fırsat penceresi sonradan eklendi.** Sınırsız yara ağırlığı kuralı düpedüz bir
+> zorluk artışına çeviriyordu: savaşçı yanındaki sağlam düşmanı bırakıp arenanın
+> öbür ucundaki yaralıya yürüyor, yol boyunca bedava vuruş yiyordu (ağırlık 0'da %72.29,
+> 120'de %71.77, 200'de %70.74 — tek yönlü aşağı). Pencere eklenince eğri düzeldi.
+
+> **Açık bölge ağırlığı şimdilik uykuda.** Varsayılan dayanıklılıkta tek dövüşte parça
+> dağılmadığı için (§7) kuralın ısırdığı yer sefer boyunca yıpranmış kuşamdır. Yıpranmış
+> kuşamla ölçüldüğünde etkisi küçük ve oyuncu aleyhine (%70.06 → %69.91): açık bölgeyi
+> düşman da görüyor.
+
+> **Bestiary'nin (#3) girdisi burası.** Yokai'lerin davranış farkı ayrı bir davranış
+> kodu değil, bu ağırlıkların yokai'ye göre farklı ayarlanmış hâli olacak: yaralıya
+> saldıran çakal, kalabalığı umursamayan oni, yapışkanlığı yüksek takipçi.
+
 ### Sınıf yok
 Temel sürümde **tek karakter sınıfı: samuray**. Büyücü vb. varyasyonlar sonraya
 (DLC/genişleme) bırakıldı. Savaşçılar sınıfla değil **silah yeterliliğiyle** ayrışır.
@@ -418,9 +459,41 @@ arayüz yazar:
 | Saldırı vuruşuna kilitli an | Komut **buffer'lanır**, mevcut hareket bitince kaçış başlar |
 | Blok duruşu | Neredeyse anında kaçışa geçer |
 
-> **Kod ile fark (açık):** blok burada ayrı bir durum sayılıyor, çekirdekte değil —
-> şu an Savunma (Defense) statının içinde eriyor. Ayrı bir durum olarak gerekiyor mu,
-> yoksa bu tablo mu güncellenmeli: Faz 9'a kadar karara bağlanacak.
+### Blok (kilitlendi 2026-09-03)
+
+Blok artık çekirdekte **ayrı bir durum** (`CombatState.Blocking`) — eskiden Savunma
+statının içinde eriyordu, bu tablo da onu ayrı sayıyordu. Fark kapandı.
+
+| Kalem | Kural |
+|---|---|
+| **Karar** | Savaşçının kendisi verir: şans = `Savunma ÷ 100 × 0.45`. Taban yok — Savunma 0 olan savaşçı hiç bloklamaz (kaçınmayla aynı şekil, hücumla değil) |
+| **Şart** | Yakınlık değil **okunan hamle**: menzil içindeki bir düşmanın kılıcı toplanmış olmalı (`AttackWindup` ya da koşan hücum). Menzil ikisinin büyüğünden okunur — uzun saplının karşısındaki kısa bıçaklı da tehdit altındadır |
+| **Süre** | 0.8 sn, bu sürede savaşçı **vurmaz**. Bloğun bedeli budur ve kaçınmadan pahalıdır: kaçınma bir darbeyi siler, blok bir süre satın alır |
+| **Ritim** | Blok arkasına blok gelmez. Zar her adımda yeniden atılsaydı savunması yüksek savaşçı hiç vurmadan dövüşü kilitlerdi |
+| **Tuttuğu** | Hasarın %70'i × silahın blok kalitesi. Kalite: çift el 1.0, künt 0.85, kesici 0.80, delici 0.70, **yumruk 0.30** — silahını düşüren savaşçı bloğunu da kaybeder |
+| **Uzuv** | Bloklanan darbe uzuv **koparmaz**. Savunma statının imza cezasına karşı verdiği tek kesin söz |
+| **Sarsıntı** | Künt silahın payı duruşa rağmen %75 işler. Kalkan yokken künt sınıfın dördüncü kazancı: duruş çelikten korur, sarsıntıdan korumaz |
+| **Yan/arka** | Kuşatılan bloklayamaz — arkadan gelen vuruş duruşu görmez |
+| **Kaçış** | Komut duruşu **anında** keser (yukarıdaki tablo) |
+
+**Ölçüldü (3v3, 20.000 dövüş, `never`):** kural kapalıyken zafer %71.21 / ölüm %50.44 /
+uzuv kaybı %5.19; açıkken **%72.39 / %49.19 / %4.96**. Savaşçı başına 0.20 darbe
+karşılanıyor.
+
+> **İlk hâli işe yaramıyordu.** Duruş yalnızca "menzilde düşman var mı" diye alınınca
+> körlemesine alınıyordu: savaşçı başına yine 0.20 darbe karşılıyor ama zaferi
+> **düşürüyordu** (%71.21 → %70.50), çünkü boşa alınan duruşlar saldırı döngüsünü
+> yiyordu. Şartı "gelen vuruşu oku"ya çevirmek kuralın işaretini ters çevirdi.
+
+> **Freni yok, dayanağı stat.** `MaxBlockChance` büyüdükçe oyuncu tek yönlü kazanıyor
+> (0.25'te %71.61, 0.45'te %72.39, 1.0'da %74.08) — kuralın kendi içinde bir freni yok.
+> Freni Savunma statının dojo'da başka statlarla yarışması sağlıyor. Sayı Faz 9'da
+> yeniden bakılacak.
+
+> **Yakalama aletine blok kayrılmadı.** Jitte/sai'ye çift el silah kadar blok kalitesi
+> verilince ölçüm kilitli bir freni kırdı: ağır silah taşıyan düşmanın önünde jitte
+> yanlış seçim olmaktan çıkıyordu (jitte-heavy %35.38 > katana-heavy %34.96). Override
+> kaldırıldı; ikisi de tek elli künt aletin kalitesini (0.85) taşıyor.
 
 ### Kaçışın bedeli bir merdivendir
 
@@ -687,6 +760,13 @@ dövüş başına 3.71, jitte 2.75 yakalar.
 > (tavan `--catch-chance 1.0` ile ölçüldü). 0.6 sn, ekranda okunacak kadar uzun ve
 > takasın döndüğü yerin altında olduğu için seçildi.
 >
+> **Silahın elden düşmesi bu tabloyu da değiştirdi (2026-09-03).** Yukarıdaki üç sayı
+> kural gelmeden önce ölçüldü. Kuralla birlikte katana %75.02 / jitte %78.00 / sai %78.88:
+> yakalama aletleri kılıç taşıyan düşmanın önünde artık zaferde de önde, çünkü
+> yakaladıkları silahı avuçtan söküyorlar. Katana'nın "bir şeyde en iyi" olduğu yer
+> değişti — zafer değil, **zırhlı düşman** (%60.81'e karşı jitte %34.14). Kaldıraç freni
+> de ayakta: nodachi'ye karşı jitte %35.22, katana %37.84.
+>
 > **Stamina bedeli yakalamayı seyrekleştirerek değil, yorarak ısırıyor.** Bedel 0'da
 > zafer %76.85, 16'da %72.63 — ama yakalama sayısı ikisinde de aynı (2.72 / 2.75).
 > 8'de hiç bağlamıyor (%76.85), 30'da yıkıcı (%41.07).
@@ -744,10 +824,121 @@ baştan kurulur.
 > hızıdır (0.5 sn'de %94.93, 2 sn'de %30.40); 1 sn, dozun ömrüne bölününce zehri
 > **sayılabilir** yapıyor — altı vuruş.
 >
+> **Silahın elden düşmesi bu tabloyu değiştirdi (2026-09-03).** Yukarıdaki sayılar kural
+> gelmeden önce ölçüldü; kuralla birlikte zehirli bıçak da ō-yoroi'ye vururken elden
+> düşüyor (%20.18) ve tablo şöyle oluyor: katana %75.02 / %60.81, zehirli tantō %74.26 /
+> **%69.39**. Zehrin iddiası ayakta — zırhın önünde hâlâ tek gerçek cevap o — ama
+> **"zehirlinin karşısında ağır kuşanmak zarardır" artık doğru değil**: düşürme zırha
+> kaybettiği payı geri verdi, plaka zehirli bıçağın önünde 5 puan (kılıcın önünde 14)
+> kazandırıyor.
+>
 > **Zehir oyuncunun üstüne döndüğünde** (3v3, tengu zehirli shuriken atıyor; kontrol aynı
 > kadro): zafer %65.20'den %60.35'e, kaçış %8.10'dan %6.86'ya iniyor, ölüm %45.45'ten
 > %50.44'e çıkıyor ve ölümlerin %1.3'ü doğrudan zehirden. §5'in merdiveni ayakta — kaçış
 > hâlâ çalışıyor, yalnızca daha pahalı.
+
+### Silahın elden düşmesi (kilitlendi 2026-09-03)
+
+Zehir zırhın etrafından dolaşıyordu; düşürme zırhın **karşılığını** yazar. Plaka artık
+yalnızca hasarı düşürmez, ona vuranın **kavrayışını da bozar**.
+
+**Kural.** İki yerden gelir:
+
+1. **Zırha inen vuruş** saldıranın kendi silahını elinden düşürebilir. Zar, silahın elden
+   çıkma eğilimi ile **vurulan parçanın** sertliğinden çıkar; sertlik parçanın kopma
+   direncinden okunur. Çıplak bölgeye inen vuruş **hiç** düşürmez — kavrayışı bozan şey
+   et değil, plakadan dönen darbedir
+2. **Yakalanan silah** çengelde avuçtan sökülebilir. Bu zar kilidin **üstüne binmez,
+   yerine geçer**: elden çıkan silahla birlikte kenetlenme de çözülür, saldıran serbest
+   kalır ama silahsız
+
+Silah **kırılmaz, düşer**: arenada bir noktada durur ve dövüş bitince sahibine döner.
+Bunun sebebi bilinçli — kırılma envanter, onarım ve yedek silah defteri açardı; oyunun
+sorusu ekipman bakımı değil, **o dövüşün** nasıl gittiği.
+
+**Yerden alma.** Düşen silahı **eli boş olan herkes** alabilir: düşüren, takım arkadaşı,
+düşman. İki sınır var:
+
+- **Elinde silah olan ne alır ne arar.** Yerdeki namluya bir adım bile atmaz; yoksa dövüş
+  bir yağma turuna dönerdi
+- **Kullanamayacağı silahı almaz**: kolunu kaybeden savaşçı yerdeki çift el silahı geçer
+
+Silahsız savaşçı dövüşmeye devam eder — yumrukla (8 hasar, menzil 100). Kaybın büyüklüğü
+silahtan silaha değişir: nodachi'sini düşüren savaşçı 34 hasarı ve 150 menzili birden
+bırakır.
+
+| Sınıf | Elden çıkma eğilimi | Gerekçe |
+|---|---|---|
+| Kesici | 1.0 | Plakaya saplanan ağız burkulur |
+| Delici | 0.6 | Uç kayar, sap avuçta kalır |
+| Künt | 0.2 | Geri tepen sopa avuçtan çıkmaz |
+| Yumruk | 0 | Düşecek bir şey yok |
+
+| Sayı | Değer |
+|---|---|
+| Zırha inen vuruşta taban şans | 0.05 |
+| Yakalanan silahın düşme şansı | 0.05 |
+| Sertlik payı (parçanın kopma direncinden) | 1.0 |
+| Savrulma mesafesi | 250 birim, **karşıdakinin arkasına** |
+| Alma mesafesi | 60 birim |
+
+**Üç sınır kuralı:**
+
+- **Mermi kimsenin silahını düşürmez** — fırlatılan şey zaten elden çıkmıştır
+- **Düşürme kalıcı hale dokunmaz.** Çekirdek yalnızca olayı üretir (`WeaponDropped`,
+  `WeaponPickedUp`); savaşçı dövüşten kendi kuşamıyla çıkar
+- **Zar saldıranın silahına atılır**, savunanınkine değil
+
+> **Ölçüm (1v1, 20.000 dövüş, `losing:0.7`, düşman ō-yoroi kuşanmış):**
+>
+> | Silah | Kural yok | Kural var | Düşürme | Yerden alınan |
+> |---|---|---|---|---|
+> | Nodachi (kesici) | %94.25 | %87.53 | %11.76 | %7.3 |
+> | Tetsubo (künt) | %90.55 | **%89.20** | %2.73 | %4.8 |
+> | Yari (delici) | %79.69 | %75.48 | %9.86 | %8.4 |
+>
+> **Takas plakanın önünde dönüyor.** Kural yokken kesici zırhlı düşmanın karşısında da
+> önde (%94.25'e karşı %90.55); kuralla künt öne geçiyor. Künt sınıfın üçüncü kazancı
+> budur ve tam olarak zırhın en kalın olduğu yerde ortaya çıkar.
+>
+> **Taban şans tarandı** (kesici / künt zaferi): 0.02'de %91.50 / %89.77 — kesici hâlâ
+> önde, kural hiçbir şeyi çevirmiyor. 0.05 takasın döndüğü yer. 0.08'de %84.09 / %88.78,
+> 0.20'de %72.93 / %86.83: kesici silah zırhlı düşmanın önünde taşınamaz hale geliyor.
+>
+> **Bedeli taşıyan şey mesafe değil, yön.** Silah sahibinin gerisine düşerse yerden alma
+> yürüyüşü savaşçıyı dövüşten geri çeker ve **yavaş** bir düşmanın önünde düşürme bedava
+> bir nefes molası olur — ölçüldü, savrulma mesafesi arttıkça oyuncunun zaferi
+> *yükseliyordu* (%94.30 → %94.55, kural yokken %94.25). Yana savrulmak da aynı kapıya
+> çıkıyor (%94.4). Karşıdakinin arkasına düşünce bedel gerçek oluyor, çünkü silaha gitmek
+> düşmanın içinden geçmek demek. Mesafenin kendisi bundan sonra bir düğme değil: 150, 250
+> ve 400 birim aynı sonucu veriyor (%87.43 / %87.45 / %87.48).
+>
+> **Yerden alma teke tekte çalışmaz, kalabalıkta çalışır:** 1v1'de düşen silahların
+> %7.3'ü geri alınıyor, 3v3'te %40.4'ü. Hedef bölündüğü için kalabalıkta silahın başına
+> gidilebiliyor — yani kuralın bedeli dövüşün şekline göre değişiyor, sabit bir ceza değil.
+>
+> **Yakalamanın düşürme şansı ayrı tarandı** (`jitte`/`sai`/`katana`, düşman kılıçlı ve
+> zırhsız): 0'da %74.87 / %75.22 / %75.02 — yakalama aleti silah düşürmekle hiçbir şey
+> kazanmaz. 0.05'te %78.00 / %78.88 / %75.02. **0.10'da fren kırılıyor** — jitte
+> nodachi'ye karşı da doğru seçim olup (%38.27'ye karşı katana %37.84)
+> `CatchTwoHandedFactor` anlamsızlaşıyor.
+>
+> **Kural yakalamayı üstün silah yapmıyor**, çünkü iki freni ayakta:
+>
+> | Eşleşme | Jitte | Katana |
+> |---|---|---|
+> | Kılıçlı, zırhsız oni | **%78.00** | %75.02 |
+> | Çift el nodachi taşıyan oni | %35.22 | **%37.84** |
+> | Ō-yoroi kuşanmış oni | %34.14 | **%60.81** |
+>
+> Her seçenek hâlâ bir şeyde en iyi: jitte kılıcın, katana zırhın, sai uzuv korumasının
+> (%0.48) karşısında.
+>
+> **Takım bedeli** (3v3): yokai'lerin hepsi tam kuşam kuşandığında zafer %67.32'den
+> **%65.35**'e iniyor ve oyuncu savaşçılarının %9.32'si dövüş içinde silahını düşürüyor.
+> Kural olmadan düşmanı zırhlandırmak oyuncunun **işine yarıyordu** (%65.20 → %67.32;
+> ağır kuşam vuruşu geciktirir); kural bunu tersine çeviriyor. Kalabalıkta düşen silahın
+> %40'ı geri alındığı için duvar teke tekteki kadar sert değil.
 
 ### Zırh yuva yuvadır
 
@@ -799,6 +990,61 @@ döngüsünü uzatır**.
 kazanır (%71.8 zafer, %40.3 ölüm), ō-yoroi sakat dönmemeyi alır (uzuv kaybı %0.82'ye karşı
 %3.38), hafif kuşam ucuz ve ağırlıksızdır. 0.60'ta ō-yoroi hâlâ her eksende önde
 (%76.3 zafer, %37.0 ölüm); 0.90'da ağır kuşam düpedüz kötü (%64.3 zafer).
+
+### Zırhın yıpranması ve dağılması (kilitlendi 2026-09-03)
+
+Zırhın iki bedeli vardı: fiyat ve ağırlık. Üçüncüsü bu — **zırh bir sarf malzemesidir.**
+
+**Kural.** Bir parça durdurduğu hasar kadar yıpranır: emdiği her puan kendi dayanıklılık
+havuzundan düşer. Havuz bitince parça **ortada dağılır** ve o bölge dövüşün geri kalanında
+çıplak kalır; dağılan parça **kalıcı olarak gider**. Silahla arasındaki fark kasıtlı —
+düşen silah dövüş sonunda geri gelir, dağılan plaka gelmez.
+
+**Yıpranma dövüşe değil savaşçıya aittir.** Bir parça tek dövüşte tükenmez; seferler
+boyunca aşınır ve bir gün, kimsenin beklemediği bir dövüşün ortasında dağılır. Çekirdek
+kalıcı hale dokunmaz: yıpranmayı ve dağılan yuvaları dövüş özetine yazar
+(`ArmorDestroyed`), defteri dojo tutar — uzuv kaybındaki yolun aynısı.
+
+**Havuz emilen hasardan düşer, gelenden değil.** Parçayı yıpratan şey durdurduğu darbedir.
+Gelen hasardan düşseydi ince kumaş ile kalın plaka aynı hızda tükenir, kademe farkı
+yalnızca sayıda kalırdı.
+
+| Parça | Azaltım | Dayanıklılık |
+|---|---|---|
+| Keikogi | 4 | 40 |
+| Dō-maru gövdeliği | 9 | 110 |
+| Ō-yoroi gövdeliği | 14 | 180 |
+| Kote / ağır kote | 4 / 6 | 45 / 75 |
+| Suneate / ağır suneate | 4 / 6 | 45 / 75 |
+| Kabuto | 8 | 90 |
+
+Dağılan parça **ağırlığını da bırakır**: koruması giden savaşçı hızını geri alır. Aynı
+şekilde sertliğini de bırakır — çıplak kalan bölge artık düşmanın silahını elinden
+düşürmez.
+
+> **Ölçüm (3v3, 20.000 dövüş, `losing:0.7`):**
+>
+> | Kuşam | Dövüş başına yıpranma | Takımın toplam dayanıklılığı | Ömür |
+> |---|---|---|---|
+> | Hafif keikogi | 5.4 | 40 | ~7 dövüş |
+> | Dō-maru | 20.2 | 290 | ~14 dövüş |
+> | Ō-yoroi | 38.7 | 570 | ~15 dövüş |
+>
+> Sayılar kuralın asıl iddiasını doğruluyor: **en çok emen kuşam en çok yıpranandır.**
+> Ō-yoroi hafif kuşamın yedi katı hasar emiyor ve karşılığında yedi katından biraz fazla
+> dayanıklılık taşıyor — yani pahalı kuşam korumayı satın alır, bedavaya değil.
+>
+> **Tek bir dövüşte parça dağılmaz** (varsayılan havuzlarda 20.000 dövüşte sıfır);
+> dağılma anı, yıpranmış bir kuşamla sahaya çıkıldığında gelir. Havuz ölçeği düşürülerek
+> o an ölçüldü: 0.25'te savaşçı başına 0.12 parça dağılıyor (zafer %69.92, uzuv kaybı
+> %0.94), 0.1'de 0.89 parça (zafer %67.55, uzuv kaybı **%1.93**). Yani yıpranmış zırhla
+> dövüşe girmek yalnızca daha çok hasar yemek değil, **uzuv kaybının iki katına çıkması**
+> demek — kuşamı yenilememenin bedeli roster'da görünüyor.
+>
+> **Zincirin ucu:** zırhı dağılan düşman artık kimsenin silahını düşürmüyor. Yokai'lerin
+> hepsi tam kuşamken oyuncunun silahını düşürme oranı %1.81; kuşam yıpranmış girdiğinde
+> %1.41'e iniyor (zafer %65.35 → %63.83). Zırh gittikçe dövüş **daha ölümcül ama daha
+> temiz** hale geliyor: daha çok kesik, daha az elden düşen silah.
 
 ### Denenip düşen iki hat
 
@@ -1002,6 +1248,53 @@ Sonuç: single-player, yayın moduyla **mekanik olarak eşdeğer**. Hiçbir sist
 > olması birlikte keşif döngüsünü kapatır: bakmak için girmek bir gün ve bir dövüş
 > göze almak demektir.
 
+### Günün teklifi nasıl üretilir (2026-09-04)
+
+Teklif **gün ile seferin tohumunun saf bir fonksiyonudur**: aynı gün, aynı tohum, daima
+aynı teklif. Bu yüzden teklif kayıt dosyasına yazılmaz — dosyada gün ve tohum durur,
+teklif yüklerken yeniden hesaplanır. Kaydı yükleyip beğenilmeyen teklifi yeniden yükleyerek
+değiştirmek de bu sayede işe yaramaz.
+
+- **Güç** tek bir eğri: 1. gün `StartingPower`, her gün `PowerPerDay` kadar artar, üstüne
+  o güne düşen bir dalgalanma biner. Dalgalanma şart — eğri düz bir çizgi olsaydı her gün
+  aynı teklif gelirdi ve "bırak" kararının anlamı kalmazdı; bırakmanın anlamı yarının
+  farklı olabilmesi.
+- **Kadro büyüklüğü** güçle açılır (ikinci düşman, sonra üçüncü) ama üst sınıra yapışmaz:
+  aynı güç bazen tek ağır düşman, bazen üç düşman demek. İkisi aynı dövüş değil — biri
+  hedef seçimini, diğeri dayanmayı sınar.
+- **Kalabalık gücü bölmez:** üç düşman üç kat düşmandır. Bölseydi kalabalık teklif aynı
+  tehdidi daha az canla taşırdı, yani aynı riski daha az ödülle satardı — ödül düşman
+  canına bağlı (§11).
+- **Yokai türleri eğride yer tutar:** kappa ve kitsune baştan, tengu 1.2, oni 1.5,
+  jorōgumo 1.8 gücünden sonra sahaya çıkar.
+- **Düello:** tekliflerin bir kısmı tam bir savaşçı dayatır (§10'un "encounter kendi
+  kuralını yazar" maddesi). Ölçümde en pahalı kalem bu — tek savaşçının yanında hasarı
+  paylaşacak kimse yok.
+
+Güç, can ve hasarı **doğrudan**; isabet, savunma ve kaçınmayı **karekökle** büyütür.
+Doğrusal büyütmede eğri bir yerde duvara dönüşüyor: düşman ıskalanmaz olurken oyuncu
+ıskalar hâle geliyor ve zorluk artışı iki kere sayılıyor.
+
+**Sayılar kilitli değil** (eğrinin dikliği, dalgalanma payı, düello oranı). Aşağıdaki
+ölçüm neyin ölçüldüğünü söylüyor, hangi eğrinin doğru olduğunu değil.
+
+### "Al ya da bırak" ölçüldü (2026-09-04)
+
+500 dojo × 120 gün, üretilen tekliflerle. Tek fark politikanın teklifi eleme hakkı:
+
+| Politika | Kapanan dojo | Ayakta kalınan gün (ortanca) | Ölüm / savaşçı-dövüş | Aç gün | Geri çevrilen |
+|---|---|---|---|---|---|
+| Her teklife girer | %99.2 | 54 | %9.2 | %7.1 | %0 |
+| Kadro eksikken ağır teklifi çevirir | %0.4 | 120 (hepsi) | %7.1 | %50.8 | %67.7 |
+
+İki başarısızlık birbirinin zıddı: **hiç reddetmeyen dojo kadrosunu, her ağırı reddeden
+dojo kasasını kaybediyor** (ikincisinin bitiş kasası 0 ve günlerinin yarısı aç geçiyor).
+Tuşun kendisi böylece kanıtlanmış oluyor — reddetmek bir kaçış değil, gün ile savaşçı
+arasında yapılan bir takas.
+
+> Ölçümün ikinci sonucu ekonomi turunun sınırını doğruluyor (§11): savaşçı-dövüş başına
+> ölüm %9'a çıktığında hiçbir fiyat ayarı dojo'yu ayakta tutmuyor.
+
 ### Zorluk eğrisi — boss yok (2026-08-29)
 
 Sefer zinciri olmadığı için boss ritmi diye ayrı bir yapı **kurulmuyor**. Karşılaşmalar
@@ -1028,6 +1321,161 @@ Domina'nın modeli referans alınır:
 - Gider: ekipman, kaynak (yiyecek/su), **ilaç/tedavi**, savaşçı alımı
 - Rastgele olaylar kaynak eksiltebilir → tampon tutma baskısı
 - İsteğe bağlı riskli maçlar **reddedilebilir** (Domina'daki gibi risk opsiyonel)
+
+### Tek para birimi: altın (kilitlendi 2026-09-04)
+
+Yiyecek, su ve ilaç ambarda sayılabilir stok olarak durur ama piyasadan **altınla**
+alınır. Sebep: ekonominin kıt kaynağı bölünmezse "bugün neye harcayayım" kararı tek bir
+sayıya bakar. Kasa **eksiye düşmez** — borç diye bir kalem yoktur; parası yetmeyen
+alışveriş yapılmaz.
+
+### Fiyatlar (kilitlendi 2026-09-04)
+
+| Kalem | Sayı | Neyle ölçeklenir |
+|---|---|---|
+| Zafer ödülü | **0.45 altın / düşman canı** | Karşılaşmanın kendisi — aynı düşman aynı parayı öder |
+| Çekilme / bozgun ödülü | **0** | §10: pes etmek o seferin ödülünü siler |
+| Zırh parçası | **1.50 altın / dayanıklılık puanı** | Keikogi 60, dō-maru 165, ō-yoroi gövdeliği 270 |
+| Onarım | **0.90 altın / yıpranma puanı** | Parçanın havuzundan fazlası ödenmez |
+| Yiyecek / su | **2 / 1 altın**, savaşçı başına günde 1'er | Kadro büyüklüğü |
+| İlaç | **12 altın**, revirdeki savaşçı başına günde 1 | Yaralı sayısı |
+| Savaşçı alımı | **150 altın** | — |
+| Başlangıç sermayesi | **600 altın** | — |
+
+**Onarım daima yenilemeden ucuzdur** (0.90 < 1.50). Eşit ya da pahalı olsaydı onarım
+diye bir karar kalmazdı: herkes parçayı dağılana kadar kullanıp yenisini alırdı. Aradaki
+fark, "erken onar mı, sonuna kadar kullan mı" kararının tamamıdır — ölçümde iki uç
+neredeyse başa baş çıkıyor (60 gün, erken onaran 959 altınla, sonuna kadar kullanan 1012
+altınla bitiriyor), ama sonuna kadar kullanan dojo dövüş başına 3.36 parçayı **dövüşün
+ortasında** kaybediyor. Altın eşitken riski taşıyan tarafı seçmek oyuncunun kararıdır.
+
+### İlaç zorunlu vergi değil, hızlandırıcı
+
+İlaçsız gün de bir revir günü eritir; ilaçlı gün iki. İlaç bu yüzden ekonominin en büyük
+kalemi: günlük 34.5 altınlık tüketimin üçte ikisi ilaçtan gelir ve fiyatı doğrudan
+takvimi belirler — bedava ilaçla boş gün oranı %28.3, 12 altında %33.8, 24 altında %59.1.
+Yani "bugün sefere mi, revire mi" baskısını yaratan kalem ilacın fiyatıdır.
+
+### Kıtlığın bedeli zaman, ölüm değil
+
+Ambar yetmezse **revirdekiler önce** doyar. Aç kalan savaşçı o gün ne iyileşir ne
+antrenman yapar; kimse açlıktan ölmez. Sıra keyfî olamazdı: yaralıyı aç bırakmak kıtlığı
+telafisi olmayan bir cezaya çevirirdi.
+
+### Savaşçı pazarı (2026-09-04)
+
+Savaşçı almak bir **seçim**, bir düğme değil. Sabit statlı sabit fiyatlı savaşçıda "kimi
+alayım" diye bir soru yoktur; para varsa alınır, yoksa alınmaz. Model Domina'nın köle
+pazarından birebir alındı:
+
+- **Adaylar farklı statlarla gelir ve statlar alım öncesi görünür.** Pazarlıkta gizli bir
+  şey yok; karar, görünen statlarla fiyat arasında yapılır.
+- **Fiyat statın kendisinden çıkar** — adayın taban savaşçıya göre ne kadar iyi olduğu
+  fiyatı belirler. Sabit fiyat iyi adayı bedava, kötü adayı soygun yapardı.
+- **Pazar kadronun seviyesini takip eder** (`RosterFollow` 0.7): erken oyunda usta savaşçı
+  satışa çıkmaz, kadro geliştikçe pazar da gelişir. Takip olmasaydı ya baştan her şey
+  satın alınabilirdi (antrenmanın anlamı kalmazdı), ya da geç oyunda pazar anlamsızlaşırdı.
+  Kadro tamamen ölse bile pazar **acemi seviyesine** düşer, sıfıra değil — yoksa çöken
+  dojo'nun toparlanma yolu kalmazdı.
+- **Yetenek (`Talent`) ikinci eksen:** savaşçının antrenmandan ne kadar hızlı
+  faydalanacağı, doğuştan gelen ve değişmeyen payı (0.6-1.4). Aynı statlarla gelen iki
+  aday aynı hızda gelişmez. Fiyata girer ama statlardan daha az ağırlıkla: yetenek bir
+  **vaat**, stat ise elde olan. **Dövüş bunu okumaz**, yalnızca antrenman okuyacak.
+- **Liste birkaç günde bir yenilenir** (`RefreshDays` 2) ve **gün içinde donar**. Her gün
+  yenilenseydi beğenilmeyen kadro bir gün beklenerek düzeltilir, seçim ertelenirdi. Gün
+  içinde donmasaydı — pazar kadro ortalamasını takip ettiği için — bir aday satın almak
+  kalan adayları değiştirir, liste istenildiği kadar çevrilebilirdi.
+
+**Ölçüm (400 dojo × 60 gün, `patrol`):** iki alım stratejisi karşılaştırıldı.
+
+| Alım politikası | Bitiş kasası | Sermayesini koruyan | Ölüm (dojo başına) | Kapanan dojo |
+|---|---|---|---|---|
+| Sabit fiyat, sabit stat (eski) | 815 | %60.8 | 6.21 | %1.5 |
+| Pazardan **altın başına en çok stat** | 354 | %26.5 | 7.16 | %11.8 |
+| Pazardan **parası yeten en iyisi** | 705 | %52.2 | 5.93 | %4.8 |
+
+İki şey görünüyor. Birincisi, eski model **yerine koymayı sübvanse ediyormuş**: 150 altına
+veteran kalitesinde savaşçı geliyordu, pazar bunu gerçekçi fiyata çekince dojo zorlanıyor.
+İkincisi ve daha önemlisi, **"ucuz ham aday al" stratejisi şu an açıkça kaybediyor** —
+çünkü ham aday gelişmiyor: antrenmanın stat etkisi henüz yazılmadı (ROADMAP Faz 3). İki
+stratejinin rakip olması tasarımın hedefi; aradaki fark (354'e karşı 705 altın) antrenman
+sisteminin kapatması gereken boşluğun ölçüsüdür.
+
+### Rastgele olaylar (2026-09-04)
+
+Günde **%15** olasılıkla bir aksilik çıkar. Beş tür var. Hepsi eksiltir — bağış, hazine, iyi haber yok:
+§11 olayları tampon baskısı olarak tarif ediyor, çift yönlü bir tablo baskıyı ortadan
+kaldırırdı.
+
+| Olay | Etkisi |
+|---|---|
+| Hırsızlık | Kasanın **en fazla %12'si** gider; boş kasadan bir şey alınmaz |
+| Erzak bozulması | O günün yiyeceği **en fazla iki katına** çıkar |
+| Kuyunun bulanması | O günün suyu **en fazla iki katına** çıkar |
+| İlacın küflenmesi | O gün revirdekiler ilaçsız kalır — iyileşme doğal hıza düşer |
+| Hastalık | Sağlam bir savaşçı dövüşmeden **1-3 gün** revire düşer |
+
+**Şiddet sabit değil, her seferinde sıfır ile üst sınır arasında çekilir.** Sabit oran
+aksiliği hesaplanabilir bir vergiye çevirirdi: oyuncu kaybı baştan bilirse tampon tutmak
+bir karar değil, aritmetik olurdu.
+
+**Boş kasada hırsızlığın boşa düşmesi kasıtlı (karar 2026-09-04).** Kasanın boş olması
+kalıcı bir hâl değil: oyuncu zırha, onarıma ya da yeni savaşçıya para biriktirdiği anda
+kasa dolar — hırsızlık tam o anda ısırır. Yani olay, biriktirme kararının bedeli olarak
+çalışır. Boş kasaya karşılık üretmek (erzağa el atmak gibi) bu bağı koparır ve batmakta
+olan dojo'yu ikinci kez cezalandırırdı.
+
+**Etki ambara değil, kasaya ve takvime vurur.** Günlük alışveriş ambarı tam ihtiyaç kadar
+doldurduğu için (stok biriktirilmiyor) çalınan erzağın karşılığı sıfır olurdu; bu yüzden
+olaylar ya altını götürüyor, ya o günün ihtiyacını büyütüyor, ya da bir savaşçının gününü
+alıyor. Aksilik **upkeep'ten önce** işlenir: bozulan erzak o günün alışverişini
+pahalılaştırmalı, ertesi güne ötelenmemeli.
+
+Olay da teklif gibi gün ile tohumun **saf** fonksiyonudur (kayda yazılmaz, yeniden
+yüklenerek değiştirilemez) ama **ayrı bir tuzla** üretilir: aynı tuz kullanılsaydı ağır
+teklifin geldiği gün daima hırsızlık da olurdu ve iki sistem tek bir sisteme dönüşürdü.
+
+**Ölçüm** (400 dojo × 60 gün, `patrol`): aksilik oranı tamponu yiyor ama oyunu tek başına
+bitirmiyor.
+
+| Günlük olay olasılığı | Bitiş kasası | Sermayesini koruyan | Aç gün | Kapanan dojo |
+|---|---|---|---|---|
+| %0 | 945 | %66.2 | %4.8 | %1.2 |
+| **%15 (seçilen)** | **815** | **%60.8** | **%6.1** | **%1.5** |
+| %30 | 562 | %44.8 | %9.4 | %3.0 |
+
+%15'te tamponun yaklaşık yedide biri aksiliklere gidiyor — baskı hissediliyor, ama kasayı
+belirleyen kalem hâlâ ilaç ve savaşçı. (Sayılar şiddetin rastgeleleştirilmiş hâline aittir;
+sabit oranlı ilk ölçümde kayıp daha büyüktü: 766 altın, %58.5.) Sayı **kilitli değil**; oran ve şiddet Faz 9'da
+diğer sayılarla birlikte kapanacak.
+
+### Ölçüm (1000 dojo × 60 gün, `patrol` senaryosu)
+
+Ekonomi ayrı bir senaryoda ölçüldü. Diğer senaryolar birer **denge sondası**dır ve kasten
+ağır kurulmuşlardır — savaşçı-dövüş başına ölüm oranları %38-49 bandında. Böyle bir dövüş
+her gün yapılamaz; o kadroyla ölçülen fiyat aslında savaşçı fiyatını ölçerdi. `patrol`
+sıradan günün karşılaşmasıdır: zafer %98.6, savaşçı-dövüş başına ölüm %7.
+
+| Ölçü | Sonuç |
+|---|---|
+| Dövüş başına gelir / kuşam gideri / net | 114.5 / 31.1 / **31.3 altın** |
+| Günlük tüketim | 34.5 altın |
+| 60 günde dövüş | 39.4 (dojo başına) |
+| Boş gün (kadro sefere yetmiyor) | %33.8 |
+| Aç gün | %4.4 |
+| Ölüm / alınan savaşçı (dojo başına) | 6.48 / 5.90 |
+| Sermayesini koruyan dojo | %66.4 |
+| Kapanan dojo | %1.2 |
+
+Ödül eğrisi dar: 0.35'te dojoların yalnızca %14.3'ü sermayesini koruyor ve %10.4 gün aç
+geçiyor; 0.70'te kasa 3719 altına çıkıp para kısıt olmaktan çıkıyor. 0.45 ikisinin
+arasındaki dizdir — dojo ayakta kalır ama zenginleşmez, ve günlerin üçte biri revir
+bekleyerek geçer.
+
+> **Ölçümün söylediği asıl şey:** ekonominin bağlayıcı kısıtı altın değil, **kadro**.
+> Karşılaşma zorluğu savaşçı-dövüş başına %20'nin üstüne çıktığında hiçbir fiyat ayarı
+> dojo'yu ayakta tutmuyor — gelir savaşçı yerine koymaya gidiyor ve kadro erimeye başlıyor.
+> Zorluk eğrisi (§10) bu yüzden ekonominin de eğrisidir.
 
 ---
 
@@ -1172,14 +1620,15 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 |---|---|---|
 | ~~1~~ | ~~Parti boyutu~~ | **Kilitlendi (2026-08-29).** Üst sınır **4**, sayı oyuncunun kararı; düello/baskın gibi encounter'lar tam sayı dayatabilir (§10). Çekirdek zaten N savaşçı destekliyor. **Takip eden iş:** dört savaşçılık arena 2.2'de kamera ve okunurluk sorunu çıkarır |
 | ~~2~~ | ~~Sefer/harita yapısı~~ | **Kapandı (2026-08-29).** Sefer tek oda/tek dövüş; günde **tek karşılaşma teklifi**, al ya da bırak; harita ekranı yok. **Boss yapısı kurulmuyor** — zorluk tek eğri üzerinde artar (§10) |
-| 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı |
+| 3 | Yokai bestiary detayı | Hangi yokai'ler, her birinin özel dövüş davranışı. **Girdisi hazır (2026-09-03):** davranış farkı ayrı kod değil, §4'teki hedef seçimi ağırlıklarının yokai'ye göre ayarlanmış hâli olacak. **Sayı tarafı yazıldı (2026-09-04):** `Domina.Core/Campaign/Bestiary.cs` — kappa, kitsune, tengu, oni, jorōgumo tek bir güç eğrisiyle ölçekleniyor ve eğride yer tutuyor (§10). Nue ve boss adayları yok: §10 boss yapısı kurmuyor. **Açık kalan yalnızca davranış** — o alan kalıba eklendiğinde encounter üretimi değişmez |
 | 4-A | Ekipman — yakın dövüş silahları | **Kilitlendi.** Mevcut `Weapon` modeline sığar (fabrika + denge sayısı): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. Kavrayış hatları §4'te |
-| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Zehir kilitlendi (2026-09-03)** — doz zırhın etrafından dolaşır: tik başına 2.5, tik 1.0 sn, ömür 6.0 sn, azami doz 3.0; zehirli tantō açık dövüşte katana ile başa baş (%72.19'a karşı %73.09), zırhlı düşmanın önünde önde (%77.19'a karşı %68.62). Zehir uzuv koparmaz, sersemletmez ve çekilende de durmaz. **Açık kalan:** silah kırılması. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
+| 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Zehir kilitlendi (2026-09-03)** — doz zırhın etrafından dolaşır: tik başına 2.5, tik 1.0 sn, ömür 6.0 sn, azami doz 3.0; zehirli tantō açık dövüşte katana ile başa baş (%72.19'a karşı %73.09), zırhlı düşmanın önünde önde (%77.19'a karşı %68.62). Zehir uzuv koparmaz, sersemletmez ve çekilende de durmaz. **Silahın elden düşmesi kilitlendi (2026-09-03)** — zırhın karşılığı: zırha inen vuruşta taban şans 0.05, yakalanan silahta 0.05, elden çıkma eğilimi kesici 1.0 / delici 0.6 / künt 0.2. Silah kırılmaz, karşıdakinin arkasına 250 birim savrulur; eli boş olan herkes (düşüren, takım arkadaşı, düşman) alabilir, elinde silah olan ne alır ne arar. Ō-yoroi kuşanmış düşmanın önünde takas dönüyor (nodachi %87.53, tetsubo %89.20); yerden alma teke tekte %7.3, 3v3'te %40.4. **Madde kapandı** — kural ve sayılar §7'de. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
-| ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
-| 5 | Ekonomi sayıları | Kaynak türleri, fiyatlar, gün döngüsü uzunluğu |
+| ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Zırh yıpranması eklendi (2026-09-03):** parça durdurduğu hasar kadar aşınır, havuzu bitince ortada dağılır ve **kalıcı olarak gider**; yıpranma savaşçıda birikir, tek dövüşte tükenmez (ō-yoroi ~15 dövüş, keikogi ~7). Kural ve sayılar §7'de. **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
+| ~~5~~ | ~~Ekonomi sayıları~~ | **Kilitlendi (2026-09-04).** Tek para birimi altın; fiyatlar ve günlük tüketim §11'de tabloyla. Zafer ödülü düşman canı başına 0.45, zırh 1.50/dayanıklılık, onarım 0.90/yıpranma, ilaç 12, savaşçı 150, başlangıç 600. Ölçüm 1000 dojo × 60 gün (`patrol` senaryosu): dövüş başına net 31.3 altın, boş gün %33.8, kapanan dojo %1.2. **Ölçümün ortaya çıkardığı kısıt:** bağlayıcı kaynak altın değil kadro — karşılaşma zorluğu savaşçı-dövüş başına %20 ölümün üstüne çıkınca hiçbir fiyat dojo'yu ayakta tutmuyor. **Rastgele olaylar da eklendi (2026-09-04):** günde %15, beş tür, hepsi eksiltir; ölçüm §11'de (tamponun ~beşte biri). **Açık kalan:** isteğe bağlı riskli maçlar (§11) |
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
+| ~~12~~ | ~~Blok ayrı bir durum mu~~ | **Kilitlendi (2026-09-03).** Ayrı durum: `CombatState.Blocking`. Karar Savunma statından (`Savunma ÷ 100 × 0.45`), şart gelen vuruşu okumak, süre 0.8 sn, tuttuğu hasarın %70'i × silahın blok kalitesi. Bloklanan darbe uzuv koparmaz, künt sarsıntı %75 geçer. Ölçüldü: zafer %71.21 → %72.39, uzuv kaybı %5.19 → %4.96. Kural ve sayılar §5'te. **Kuralın kendi freni yok** — `MaxBlockChance` büyüdükçe tek yönlü kazanç; freni statın dojo'da yarışması, sayı Faz 9'da |
 | 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil |
 | ~~9~~ | ~~Kaçışta kısmi ödül~~ | **Düştü (2026-08-29).** Sefer tek dövüşse önceki odalarda toplanmış ganimet diye bir şey yok; çekilmek o dövüşün ödülünü siler, o kadar (§10) |
 | ~~10~~ | ~~Seferin peşin bedeli~~ | **Kapandı (2026-08-29).** Girmek **bir gün** yer (kaçılsa da), düşman kadrosu **kısmen** görünür — yalnızca tehdit işareti (§10) |

@@ -1,6 +1,6 @@
-# Durum Kaydı
+﻿# Durum Kaydı
 
-Son güncelleme: 2026-09-03 (zehir çekirdeğe girdi; #4-B'de yalnızca silah kırılması kaldı)
+Son güncelleme: 2026-09-04 (Faz 3 başladı — kadro, gün döngüsü, kayıt sistemi ve dövüş sonrası muhasebe)
 
 Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
 kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
@@ -15,9 +15,10 @@ kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık 
 | Faz 1 — Simülasyon çekirdeği | ✅ Tamam (kabul kriterleri ölçüldü) |
 | Faz 2.1 — Görselleştirme omurgası | ✅ Tamam (kabul kriteri testle bağlandı) |
 | Faz 2.2 — Sanat ve cila | ⬜ Görsel stil kararına bağlı |
-| Faz 3+ | ⬜ Başlanmadı |
+| Faz 3 — Dojo / meta katman | 🟨 Başladı (kadro + gün döngüsü + kayıt + dövüş sonrası muhasebe; ekonomi ve antrenman etkisi bekliyor) |
+| Faz 4+ | ⬜ Başlanmadı |
 
-Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test -c Release` → 245/245 yeşil.
+Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test` → 336/336 yeşil.
 Godot projesi ayrı derleniyor: `dotnet build src/Game/Domina.Game.csproj`.
 
 > `dotnet format --verify-no-changes` **temiz değil**: 6 adet IDE1006 (`_` öneki)
@@ -780,3 +781,623 @@ Kod tarafında henüz **hiçbir şey yok** — yeterlilik Faz 3 (meta katman) il
 - Sanat geldiğinde değişecek yer bellidir: `WarriorRig.Limb` (kemiğe asılı çizim) ve
   `RigAnimator`'daki duruş sayıları. `RigPose`'un alanları ve `BattleArena` değişmez —
   yordamsal duruşun yerini AnimationPlayer alsa bile arayüz aynı kalır.
+
+---
+
+## Silahın elden düşmesi çekirdeğe girdi (2026-09-03)
+
+Açık Karar **#4-B'nin son maddesi kapandı; madde tamamen kapandı.** Kural ve sayı
+tablosu GDD §7'de.
+
+Kural iki yerden gelir. **Zırha inen vuruş** saldıranın kavrayışını bozar: zar, silahın
+elden çıkma eğilimi ile vurulan parçanın sertliğinden çıkar ve sertlik parçanın kopma
+direncinden okunur — yani **çıplak bölgeye inen vuruş hiç düşürmez**. **Yakalanan silah**
+çengelde avuçtan sökülebilir; bu zar kilidin üstüne binmez, **yerine geçer**.
+
+Silah **kırılmaz, düşer**. İlk kurulum kırılmaydı; bakım defteri (envanter, onarım, yedek
+silah) açtığı için düşmeye çevrildi. Düşen silah arenada durur, dövüş bitince sahibine
+döner ve **eli boş olan herkes** alabilir: düşüren, takım arkadaşı, düşman. Elinde silah
+olan ne alır ne arar — yerdeki namluya bir adım bile atmaz; kolunu kaybeden savaşçı da
+yerdeki çift el silahı geçer.
+
+Kilitlenen sayılar: zırha inen vuruşta taban şans 0.05, yakalanan silahta 0.05, sertlik
+payı 1.0, savrulma mesafesi 250 birim, alma mesafesi 60 birim; elden çıkma eğilimi kesici
+1.0 / delici 0.6 / künt 0.2 / yumruk 0.
+
+### Takas plakanın önünde dönüyor
+
+Zırhlı düşmana karşı üç sınıf (20.000 dövüş, `losing:0.7`):
+
+| Silah | Kural yok | Kural var | Düşürme | Yerden alınan |
+| --- | --- | --- | --- | --- |
+| Nodachi (kesici) | %94.25 | %87.53 | %11.76 | %7.3 |
+| Tetsubo (künt) | %90.55 | **%89.20** | %2.73 | %4.8 |
+| Yari (delici) | %79.69 | %75.48 | %9.86 | %8.4 |
+
+Künt sınıf, kesicinin plakanın önünde de üstün olduğu son yeri böyle kaybediyor. Taban
+şans tarandı: 0.02'de hiçbir şey dönmüyor (%91.50 / %89.77), 0.05 takasın döndüğü yer,
+0.08'den sonra kesici silah zırhlı düşmanın önünde taşınamaz oluyor (0.20'de %72.93).
+Sertlik payı fazladan bir düğme değil, taban şansın kopyası çıktı (0.5'te düşürme
+%11.71 → %6.04); 1.0'da bırakıldı.
+
+### Bedeli taşıyan şey mesafe değil, yön
+
+Silahın nereye savrulduğu üç kez ölçüldü ve kuralın tamamı buna bakıyor:
+
+- **Sahibinin gerisine** düşerse yerden alma yürüyüşü savaşçıyı dövüşten geri çeker ve
+  yavaş bir düşmanın önünde düşürme **bedava** olur: mesafe arttıkça oyuncunun zaferi
+  yükseliyor (%94.30 → %94.55; kural yokken %94.25). Yani kural hiçbir şeye mal olmuyor
+- **Yana** savrulmak da aynı kapıya çıkıyor (%94.4): yavaş düşman hattı terk eden
+  savaşçıyı cezalandıramıyor
+- **Karşıdakinin arkasına** düşünce bedel gerçek: silaha gitmek düşmanın içinden geçmek
+  demek, kişisel alan buna izin vermiyor. Takas ancak burada dönüyor
+
+Yön oturunca mesafe bir düğme olmaktan çıkıyor: 150 / 250 / 400 birim %87.43 / %87.45 /
+%87.48 veriyor. 250 seçildi (savaşçı boyuna yakın, ekranda okunur).
+
+### Yerden alma teke tekte çalışmaz, kalabalıkta çalışır
+
+Düşen silahların 1v1'de %7.3'ü, 3v3'te %40.4'ü geri alınıyor. Kalabalıkta hedef
+bölündüğü için silahın başına gidilebiliyor — kuralın bedeli sabit bir ceza değil,
+dövüşün şekline bağlı.
+
+### Yakalamanın düşürme şansı: 0.10'da fren kırılıyor
+
+0'da yakalama aleti silah düşürmekle hiçbir şey kazanmıyor (jitte %74.87, katana %75.02).
+0.05'te jitte %78.00 / sai %78.88 ile kılıç taşıyan düşmanın önünde öne geçiyor.
+**0.10'da jitte nodachi'ye karşı da doğru seçim oluyor** (%38.27'ye karşı katana %37.84)
+ve `CatchTwoHandedFactor` anlamsızlaşıyor — 0.05 bu yüzden.
+
+Kural yakalamayı üstün silah yapmıyor, çünkü iki freni de duruyor: nodachi'ye karşı jitte
+%35.22 / katana %37.84, ō-yoroi kuşanmış düşmana karşı jitte %34.14 / katana %60.81.
+"Her seçenek bir şeyde en iyi" deseni ayakta — yalnızca katana'nın en iyi olduğu yer
+değişti: zafer değil, **zırhlı düşman**.
+
+### Zırh ilk kez gerçek bir duvar
+
+3v3'te yokai'lerin hepsini tam kuşam yapmak kural olmadan oyuncunun **işine yarıyordu**
+(%65.20 → %67.32; ağır kuşam vuruşu geciktirir). Kuralla birlikte %65.35'e iniyor ve
+oyuncu savaşçılarının %9.32'si dövüş içinde silahını düşürüyor.
+
+### Kural iki kilitli tabloyu bozdu
+
+Düşürme zırhla dövüşen **herkesi** etkilediği için daha önce kilitlenen ölçümler kaydı —
+kural kapatıldığında (`--disarm-chance 0 --disarm-catch 0`) eski sayılar birebir geri
+geliyor (3v3 %65.20), yani kayan tek şey bu kural.
+
+- **Zehir:** zehirli tantō da ō-yoroi'ye vururken silahını düşürüyor (%20.18). Yeni tablo
+  katana %75.02 / %60.81, zehirli tantō %74.26 / **%69.39**. Zehrin iddiası ayakta, ama
+  **"zehirlinin karşısında ağır kuşanmak zarardır" artık doğru değil**
+- **Yakalama:** katana %75.02 / jitte %78.00 / sai %78.88. Yakalama aletleri kılıçlı
+  düşmanın önünde artık zaferde de önde
+
+GDD §7'nin ilgili iki bölümüne bu düzeltmeler işlendi.
+
+### Ölçümü besleyen yeni araçlar
+
+Beş senaryo (`blade-armored`, `club-armored`, `spear-armored`, `jitte-armored`,
+`3v3-armored`), beş düğme (`--disarm-chance`, `--disarm-catch`, `--disarm-armor-share`,
+`--drop-distance`, `--pickup-radius`) ve üç sayaç: silahını düşürme oranı, düşenlerin
+yerden alınma oranı ve **düşmanın** düşürme oranı. Sonuncusu ayrı duruyor çünkü plakaya
+vurup silahını elinden kaçıran düşmanı kimse düşürmemiştir — düşüreni olmayan tek olay bu.
+
+Yeni durum: `CombatState` değişmedi (silahsızlık bir durum değil, bir işaret),
+`CombatantSnapshot.Disarmed` (HUD "· silahsız" yazar), `RigReactionKind.WeaponLost`,
+`GroundWeapon`. Yeni test dosyası: `DisarmTests` (12 test). Toplam 271 test yeşil.
+
+> **Yol boyunca çıkan iki hata:** `ArenaPoint.MovedAwayFrom` istenen mesafeyi kaynağa
+> olan uzaklıkla kırpıyordu (yön birim vektöre indirgenmemişti), o yüzden savrulma
+> mesafesi ilk ölçümlerde hiçbir şey yapmıyor gibi göründü. `Combatant.Weapon` her
+> okumada yeni bir `Weapon.Fists()` üretiyordu; dövüş başına ~109 KB ayırma demekti ve
+> `ThroughputTests` yakaladı — tek bir statik örneğe indirildi.
+
+**#4-B'de açık kalan yok.** Ekipmanın kalıcı bedeli (yedek silah, onarım) bilinçli olarak
+**yok**: düşen silah dövüş sonunda geri geliyor.
+
+---
+
+## Zırh yıpranıyor ve dağılıyor (2026-09-03)
+
+Ekipmanın son ucu kapandı: silah düşer ve geri alınır, **zırh yıpranır ve gider**.
+
+Kural: bir parça durdurduğu hasar kadar aşınır — emdiği her puan kendi dayanıklılık
+havuzundan düşer. Havuz bitince parça dövüşün ortasında dağılır, o bölge çıplak kalır ve
+parça **kalıcı olarak gider**. Yıpranma dövüşe değil **savaşçıya** aittir: tek dövüşte
+tükenmez, seferler boyunca birikir (`Warrior.ArmorWear`), dövüş onu okur ama yazmaz —
+kalıcı hale işlemek dojo katmanının işi, uzuv kaybındaki yolun aynısı.
+
+Dayanıklılıklar: keikogi 40, dō-maru 110, ō-yoroi gövdeliği 180, kote 45 / ağır kote 75,
+suneate 45 / ağır suneate 75, kabuto 90. Tek denge düğmesi `ArmorDurabilityScale`.
+
+### En çok emen kuşam en çok yıpranan kuşam
+
+3v3, 20.000 dövüş, `losing:0.7`:
+
+| Kuşam | Dövüş başına yıpranma | Takımın dayanıklılığı | Ömür |
+| --- | --- | --- | --- |
+| Hafif keikogi | 5.4 | 40 | ~7 dövüş |
+| Dō-maru | 20.2 | 290 | ~14 dövüş |
+| Ō-yoroi | 38.7 | 570 | ~15 dövüş |
+
+Ō-yoroi hafif kuşamın yedi katı hasar emiyor ve yedi katından biraz fazla dayanıklılık
+taşıyor: pahalı kuşam korumayı satın alıyor, bedavaya almıyor.
+
+### Dağılma anı: uzuv kaybı ikiye katlanıyor
+
+Varsayılan havuzlarda tek bir dövüşte parça dağılmıyor (20.000 dövüşte sıfır) — dağılma,
+**yıpranmış kuşamla** sahaya çıkıldığında geliyor. Havuz ölçeği düşürülerek ölçüldü:
+
+| Ölçek | Dağılan parça (savaşçı başına) | Zafer | Uzuv kaybı |
+| --- | --- | --- | --- |
+| 1.0 | 0.00 | %70.27 | %0.83 |
+| 0.25 | 0.12 | %69.92 | %0.94 |
+| 0.1 | 0.89 | %67.55 | **%1.93** |
+
+Yıpranmış zırhla dövüşe girmek yalnızca daha çok hasar yemek değil; plakası dağılan
+savaşçının uzuv kaybı iki katına çıkıyor. Kuşamı yenilememenin bedeli roster'da görünüyor.
+
+### Zincirin ucu: gitmiş zırh silah da düşürmez
+
+Dağılan parça ağırlığını da sertliğini de bırakıyor. Yokai'ler tam kuşamken oyuncunun
+silahını düşürme oranı %1.81, kuşam yıpranmış girdiğinde %1.41 (zafer %65.35 → %63.83):
+zırh gittikçe dövüş daha ölümcül ama daha temiz hale geliyor — daha çok kesik, daha az
+elden düşen silah.
+
+### Yeni durum ve araçlar
+
+`ArmorPiece.Durability`, `ArmorWearSet` (değer türü — özet savaşçı başına üretiliyor,
+sözlük ayırmak ölçümü yavaşlatırdı), `Warrior.ArmorWear`, `HitLocationSet`,
+`ArmorDestroyed` olayı, `CombatantSnapshot.DestroyedArmor` (rig kuşamı buradan söker),
+`RigReactionKind.ArmorShattered`, `--armor-durability` düğmesi ve iki sayaç (dövüş başına
+yıpranma, dağılan parça oranı). Yeni test dosyası: `ArmorDurabilityTests` (7 test).
+Toplam 278 test yeşil.
+
+
+---
+
+## Blok ayrı bir durum oldu (2026-09-03)
+
+Açık Karar **#12 kapandı.** Blok GDD §5'te ayrı bir durum sayılıyordu ama çekirdekte
+Savunma statının içinde eriyordu; doküman bunu "kod ile fark (açık)" diye taşıyordu.
+Fark kapandı: `CombatState.Blocking` gerçek bir hamle.
+
+Kural ve sayı tablosu GDD §5'te. Özet: karar Savunma statından çıkar (taban yok —
+Savunma 0 hiç bloklamaz), şart gelen vuruşu okumaktır, duruş 0.8 sn sürer ve o sürede
+savaşçı vurmaz, hasarın %70'i × silahın blok kalitesi silinir, uzuv kopmaz, künt
+sarsıntının %75'i geçer.
+
+### İlk hâli kuralı ters çalıştırıyordu
+
+Duruş yalnızca "menzilde düşman var mı" diye alınınca körlemesine alınıyordu: savaşçı
+başına yine 0.20 darbe karşılıyor ama **zaferi düşürüyordu** (%71.21 → %70.50). Boşa
+alınan her duruş saldırı döngüsünden yeniyordu; blok, Savunma statının karşılığı değil
+cezasıydı. Şart "gelen vuruşu oku"ya (`AttackWindup` ya da koşan hücum) çevrilince
+işaret döndü: **%72.39 zafer, ölüm %50.44 → %49.19, uzuv kaybı %5.19 → %4.96.**
+
+### Zincirleme blok dövüşü kilitliyordu
+
+Zar her karar adımında yeniden atılınca savunması yüksek savaşçı arka arkaya bloklayıp
+hiç vurmuyordu — sabit zarla koşan 47 test bunu anında yakaladı. Kural: blok arkasına
+blok gelmez. Duruş bir ritme bağlandı — karşıla, sonra karşılık ver.
+
+### Kuralın kendi freni yok
+
+`MaxBlockChance` büyüdükçe oyuncu tek yönlü kazanıyor: 0.25'te %71.61, 0.45'te %72.39,
+0.70'te %73.05, 1.0'da %74.08. İçeride bir fren yok; freni Savunma statının dojo'da
+başka statlarla yarışması sağlıyor. Sayı Faz 9'a bırakıldı.
+
+### Yakalama aletine blok kayrılmadı
+
+Jitte/sai'ye çift el silah kadar blok kalitesi verilmişti; ölçüm bunun **kilitli bir
+freni kırdığını** gösterdi — ağır silah taşıyan düşmanın önünde jitte yanlış seçim
+olmaktan çıkıyordu (jitte-heavy %35.38 > katana-heavy %34.96). Override kaldırıldı.
+
+---
+
+## Hedef seçimi bir karar oldu (2026-09-03)
+
+`FindTarget` tek satırlık bir sıralamaydı: en yakını seç, ölene kadar ona sadık kal.
+Artık savaşçı her karar adımında düşmanları puanlıyor — mesafe, yara, açık bölge,
+takım arkadaşlarının yığılması, ve yön değiştirmenin bedeli. Ağırlıklar `CombatTuning`'de,
+puanlama **deterministik** (zar yok): rastgelelik kararın kendisinde değil savaşçının
+kimliğinde.
+
+Tablo GDD §4'te.
+
+### Fırsat penceresi olmadan kural düz bir zorluk artışıydı
+
+Sınırsız yara ağırlığı savaşçıyı yanındaki sağlam düşmanı bırakıp arenanın öbür ucundaki
+yaralıya yürütüyor, yol boyunca bedava vuruş yediriyordu. Tek yönlü aşağı: ağırlık 0'da
+%72.29, 40'ta %72.28, 80'de %72.03, 120'de %71.77, 200'de %70.74. Yara ve açık bölge
+kazançları 200 birimde sıfıra inen bir pencereye bağlanınca eğri düzeldi: **%72.17**
+(eski kural %72.28) ve tam kuşamlı düşmana karşı yeni kural açık ara iyi — `3v3-armored`
+%71.84 → **%72.68**.
+
+Ölüm oranı yine de artıyor (%49.11 → %50.30): odaklanan takım daha çok öldürüyor, dövüş
+daha keskin bitiyor.
+
+### Açık bölge ağırlığı şimdilik uykuda
+
+Varsayılan dayanıklılıkta tek dövüşte parça dağılmıyor, dolayısıyla ağırlığın ısırdığı
+yer sefer boyunca yıpranmış kuşam. Yıpranmış kuşamla ölçüldüğünde etkisi küçük ve oyuncu
+aleyhine (%70.06 → %69.91) — açık bölgeyi düşman da görüyor.
+
+### Ölçüm bir performans borcunu ödetti
+
+Puanlama tik başına koşarken 10.000 dövüş bütçenin iki katına çıktı (19.86 sn / 10 sn) ve
+dövüş başına ayırma 350 KB'ye fırladı. İki düzeltme: hedef yalnızca karar adımlarında
+seçiliyor (yürüyüş döngüsü seçimi devralıyor), ve `HitLocationSet.Count()` artık iterator
+yerine bit sayımı kullanıyor.
+
+### Kilitli tablolar korundu — ama payları inceldi
+
+| Karşılaştırma | Önce | Sonra |
+|---|---|---|
+| kesici / künt (blade / club) | %92.52 / %92.51 | %92.25 / %92.90 |
+| jitte / katana | %78.00 / %75.02 | %78.70 / %78.28 |
+| sai | %78.88 | %80.55 |
+| jitte-heavy / katana-heavy (fren) | %35.22 / %37.84 | %34.72 / %34.96 |
+| jitte-armored / katana-armored (fren) | %41.38 / %60.32 | %35.44 / %60.77 |
+| zehirli / katana, zırhlı düşmana | %77.19 / %68.62 | %71.85 / %60.77 |
+
+Yönler duruyor: künt kesiciyle başa baş, jitte katanayı geçiyor, iki fren de ayakta,
+zehir zırhın önünde hâlâ tek doğru cevap. Ama **jitte'nin payı 2.98 puandan 0.42'ye,
+ağır silah freni 2.62 puandan 0.24'e indi** — blok, yakalama aletinin yaptığı işin bir
+kısmını herkese dağıtıyor. Açık dövüşte zehirli bıçak katananın 0.90 puan gerisindeyken
+şimdi 2.04 puan geride. Bu üç sayı Faz 9'da yeniden bakılmalı.
+
+### Yeni durum ve araçlar
+
+`CombatState.Blocking`, `BlockRaised` / `AttackBlocked` olayları, `Weapon.BlockFactor`,
+`WarriorBattleSummary.BlocksPerformed`, `RigReactionKind.Block` + `Guard()` duruşu,
+altı yeni ayar düğmesi (`MaxBlockChance`, `BlockSeconds`, `BlockDamageReduction`,
+`BlockDismembermentShare`, `BlockStunShare`, `BlockStaminaCost`) ve beş hedef seçimi
+ağırlığı (`TargetDistanceWeight`, `TargetWoundedWeight`, `TargetExposedWeight`,
+`TargetCrowdPenalty`, `TargetStickiness`, `TargetOpportunityRange`). Sim tarafında
+`--block-chance`, `--block-seconds`, `--block-reduction`, `--target-wounded`,
+`--target-exposed`, `--target-crowd`, `--target-sticky` ve savaşçı başına blok sayacı.
+
+Yeni test dosyaları: `BlockTests` (8 test), `TargetSelectionTests` (6 test).
+Toplam 292 test yeşil, 0 uyarı.
+
+---
+
+## Dojo çekirdeğe girdi (2026-09-04)
+
+Faz 3'ün ilk parçası: **kadro, gün döngüsü ve kayıt sistemi**. Üçü de
+`Domina.Core/Dojo` altında ve motora bağımlı değil — arayüz yok, Godot yok.
+
+### Kadro, dövüşün bilmediği hâli taşıyor
+
+`Warrior` dövüşün okuduğu kalıcı hâl olarak kaldı; yanına `RosterEntry` geldi ve meta
+durumu o taşıyor: kalan revir günü, o günkü uğraş, tamamlanmış antrenman günü. Ayrı
+tutulmasının sebebi mimari kural — dövüş çözümleyicisi takvimi bilmez ve toplu
+simülasyon aynı savaşçıyı on binlerce kez koşturur, orada "gün" diye bir şey yoktur.
+
+`Roster` iki kuralı zorluyor:
+
+- **Ölen silinmez.** Permadeath kalıcı, ama savaşçının adı, onuru ve sakatlıkları
+  kayıtta durur. Canlılık `Warrior.IsAlive`'dan okunur.
+- **İsim eşsizliği yalnızca canlılar arasında.** GDD §6'nın kuralı: X ölünce adı havuza
+  döner, ileride yeni bir X gelebilir. Chat komutunun (`!ronin-<isim>`) tek bir hedefe
+  çözülmesini sağlayan şey bu.
+
+### Gün döngüsü deterministik
+
+`DojoState.AdvanceDay()` bir günü kapatır: antrenman sayaçları işler, revir günleri erir,
+onur nötre doğru bir adım kayar. Rastgelelik **yok** — aynı durum aynı çağrılarla aynı
+sonucu verir. Karşılaşmaya girmek de tam bir gün yer (GDD §10), yani sefer katmanı da
+dövüş bitince aynı çağrıyı yapacak; gün başına iki kez çağrılmaz.
+
+Onur decay'i eşiğin öbür tarafına **sarkmıyor**: nötre olan mesafe adımdan küçükse
+savaşçı tam 50'ye oturur. Aksi hâlde onur nötrün etrafında salınırdı.
+
+Kapanan gün bir `DayReport` döndürüyor (revirden çıkanlar, antrenman görenler) — "bugün
+ne oldu" ekranının girdisi.
+
+### Kayıt: dosya dengeyi taşımıyor
+
+Kayıt ayrı bir tip ailesi (`DojoSnapshot` ve arkadaşları), canlı modelin serileştirilmiş
+hâli değil. Sebep ölçülebilir bir tehlike: canlı model doğrudan yazılsaydı her denge
+alanı (menzil, uzuv kopma çarpanı, blok kalitesi, zırh dayanıklılığı) dosyaya girer ve
+**eski kayıt yeni dengeyi geri getirirdi** — oyuncu bir sonraki yamada düzeltilen sayıyı
+kaydından geri yüklerdi. Dosyaya yalnızca oyuncunun ürettiği şey yazılıyor: kim, hangi
+adla, hangi statlarla, ne kuşanmış, ne kaybetmiş.
+
+GDD §2'nin üç kuralı da testle bağlandı:
+
+| Kural | Karşılığı |
+|---|---|
+| Versiyonlu | `DojoSnapshot.CurrentVersion`; daha yeni sürümden gelen dosya yükleniyor ama uyarı bırakıyor |
+| Merge-on-load | Eksik alan varsayılanıyla, tanınmayan alan yok sayılarak yükleniyor |
+| try/catch | `Load` **hiçbir koşulda fırlatmıyor**; bozuk metin başarısız bir `LoadResult` döndürüyor |
+
+Bozuk tek bir savaşçı kaydı kadronun geri kalanını götürmüyor: çakışan kimlik atlanıyor,
+adsız kayda ad veriliyor, aynı adı taşıyan ikinci canlı yeniden adlandırılıyor — hepsi
+uyarı listesine yazılarak. Merge-on-load'ın bedeli dosyanın sessizce eksik yüklenmesidir;
+uyarılar tam olarak bunu görünür kılmak için taşınıyor.
+
+### Kasıtlı olarak yazılmayanlar
+
+- **Antrenman statlara dokunmuyor.** Yalnızca gün sayıyor. Etkisi ölçülüp kilitlenmeden
+  bir sayı uydurmak, sonradan sökülmesi zor bir denge borcu olurdu.
+- ~~**İlaçla iyileşme hızlandırma yok.**~~ 2026-09-04'te yazıldı — aşağıya bakın.
+- **Karşılaşma teklifi yok.** Faz 4'ün işi; gün döngüsü onu bekleyecek şekilde duruyor.
+
+### Dövüşün bilançosu kadroya yazılıyor
+
+`BattleAftermath` dövüş sonucunu alıp kalıcı hale çeviren **tek yer**. Çekirdek hâlâ
+kalıcı hale dokunmuyor — ölüm, uzuv kaybı, dağılan zırh ve emilen yıpranma dövüş
+özetinde birer rapor; geri dönüşsüz hale gelmeleri burada oluyor. Ayrım mimari kuralın
+gereği: toplu simülasyon aynı kadroyu on binlerce kez koşturuyor ve hiçbirinde savaşçının
+kalıcı hali bozulmamalı.
+
+| Girdi | Kadroya etkisi |
+|---|---|
+| `Died` | `Roster.Kill` — permadeath; revir günü ve onur işlenmez |
+| `LostParts` | Kalıcı sakatlık; aynı uzuv ikinci kez kaybedilmez |
+| `ArmorWear` | Savaşçının yıpranma defterine **eklenir** (seferler boyunca birikir) |
+| `DestroyedArmor` | Parça kuşamdan çıkar ve o yuvanın yıpranması **sıfırlanır** |
+| Kalan can + uzuv sayısı | Revir günü |
+| İsabet oranı, kaçış | `HonorEngine` üzerinden onur |
+
+Dağılan yuvanın sayacının sıfırlanması gerekiyordu: yıpranma **parçaya** ait, yuvaya
+değil. Sayaç kalsaydı yerine takılan yepyeni parça dağılanın defterini devralır ve ilk
+darbede dağılırdı.
+
+Takım filtresi de kural: yokai'ler kendi kimliklerini taşıyor ve bu kimlikler
+kadrodakilerle **çakışabilir**. Filtre olmasaydı düşmanın kaybettiği kol dojo'daki bir
+savaşçıya yazılabilirdi.
+
+Revir günü sayıları (`RecoveryDaysAtFullDamage` 6, `RecoveryDaysPerLostLimb` 5,
+`RecoveryFreeDamageShare` 0.25) **kilitli değil** — GDD §7 yalnızca "yara ağırlığına
+göre" diyor. Bedava hasar payı olmadan her dövüş bir gün revir demek olurdu ve gün
+döngüsünün asıl kararı (bugün sefere mi, antrenmana mı) kendiliğinden ortadan kalkardı.
+
+Yeni test dosyaları: `DojoTests` (15 test), `DojoSaveTests` (13 test),
+`DojoAftermathTests` (16 test). Toplam 336 test yeşil, 0 uyarı.
+
+
+## 2026-09-04 — Ekonomi sayıları ölçüldü ve kilitlendi (Açık Karar #5)
+
+Kasa katmanı girdi ve fiyatlar ölçümle kapandı. Yeni dosyalar:
+`Domina.Core/Dojo/EconomyTuning.cs` (bütün sayılar tek yerde),
+`Domina.Core/Dojo/Quartermaster.cs` (fiyat sorusu ile alışverişi ayıran tek kapı),
+`Domina.Sim/CampaignRunner.cs` (dojo'yu gün gün oynatan ölçüm aracı).
+
+### Neden dövüş değil, sefer dizisi ölçüldü
+
+Ekonomi tek dövüşe bakarak kilitlenemiyor: zırhın bedeli seferler boyunca birikiyor,
+revir günü geliri değil **zamanı** yiyor, ölen savaşçının yerine alınan da kasadan
+çıkıyor. Ölçüm birimi bu yüzden dövüş değil dojo ömrü oldu —
+`Domina.Sim --mode campaign` aynı kadroyu günlerce oynatıp kasanın eğrisine bakıyor.
+Oyuncunun yerine sabit bir politika oynuyor (onar, yenile, adam al, sefere çık);
+politikanın akıllı olması değil, **aynı** olması gerekiyor.
+
+### Ölçüm ayrı bir senaryoda yapıldı: `patrol`
+
+Mevcut senaryoların hepsi birer denge sondası — bir kuralın ucunu görebilmek için kasten
+ağır kurulmuşlar ve savaşçı-dövüş başına ölüm oranları %38-49 bandında. Böyle bir dövüş
+her gün yapılamıyor: kadro günde bir cenaze kaldıramıyor ve o kadroyla ölçülen fiyat
+aslında savaşçı fiyatını ölçüyor, zırhın ya da ilacın fiyatını değil. `patrol` sıradan
+günün karşılaşması: zafer %98.6, savaşçı-dövüş başına ölüm %7.
+
+### Kilitlenen sayılar (1000 dojo × 60 gün)
+
+| Kalem | Sayı |
+|---|---|
+| Zafer ödülü | 0.45 altın / düşman canı (çekilme ve bozgun: 0) |
+| Zırh parçası | 1.50 altın / dayanıklılık puanı |
+| Onarım | 0.90 altın / yıpranma puanı |
+| Yiyecek / su | 2 / 1 altın, savaşçı başına günde 1'er |
+| İlaç | 12 altın, revirdeki savaşçı başına günde 1 |
+| Savaşçı alımı / başlangıç sermayesi | 150 / 600 altın |
+
+Sonuç: dövüş başına net **31.3 altın**, günlük tüketim 34.5, boş gün %33.8, aç gün %4.4,
+sermayesini koruyan dojo %66.4, kapanan dojo %1.2.
+
+### Ölçümün ortaya çıkardığı üç şey
+
+1. **Bağlayıcı kısıt altın değil, kadro.** Karşılaşma zorluğu savaşçı-dövüş başına %20
+   ölümün üstüne çıktığında hiçbir fiyat ayarı dojo'yu ayakta tutmuyor — gelirin tamamı
+   savaşçı yerine koymaya gidiyor. Zorluk eğrisi (GDD §10) aynı zamanda ekonominin eğrisi.
+2. **Takvimi ilacın fiyatı belirliyor.** Günlük tüketimin üçte ikisi ilaç. Bedava ilaçla
+   boş gün %28.3, 12 altında %33.8, 24 altında %59.1 — "bugün sefere mi, revire mi"
+   baskısını yaratan kalem bu.
+3. **Ödül eğrisi dar.** 0.35'te dojoların %14.3'ü sermayesini koruyor, 0.70'te kasa 3719
+   altına çıkıp para kısıt olmaktan çıkıyor. 0.45 ikisinin arasındaki diz.
+
+### İki kural, ölçümden çıktı
+
+- **Onarım daima yenilemeden ucuz** (0.90 < 1.50). Eşit ya da pahalı olsaydı onarım diye
+  bir karar kalmazdı. Ölçümde iki uç neredeyse başa baş (erken onaran 959, sonuna kadar
+  kullanan 1012 altınla bitiriyor) — ama sonuna kadar kullanan, parçayı **dövüşün
+  ortasında** kaybediyor. Altın eşitken riski seçmek oyuncunun kararı.
+- **Kıtlığın bedeli zaman, ölüm değil.** Ambar yetmezse revirdekiler önce doyuyor; aç
+  savaşçı o gün ne iyileşiyor ne antrenman yapıyor, ama kimse açlıktan ölmüyor. Sıra
+  keyfî olamazdı: yaralıyı aç bırakmak kıtlığı telafisi olmayan bir cezaya çevirirdi.
+
+### İlaç artık gerçekten iyileştiriyor
+
+İlaçsız gün bir revir günü eritiyor, ilaçlı gün iki. İlaç bu yüzden zorunlu bir vergi
+değil, hızlandırıcı — Faz 3'ün "revir/hekim" maddesi bununla kapandı.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 353/353 yeşil (+17:
+`EconomyTests` 12, `CampaignRunnerTests` 5). Yeni dosyalarda `dotnet format` temiz.
+
+
+## 2026-09-04 (ikinci tur) — Günün karşılaşma teklifi (Faz 4 girişi)
+
+Yeni klasör `Domina.Core/Campaign`: `Bestiary` (ölçeklenebilir yokai kalıpları),
+`EncounterGenerator` + `EncounterTuning` (günün teklifi ve zorluk eğrisi), `EncounterOffer`
+(tehdit bandı, kaba tanım, dayatılan ekip sayısı), `Expedition` (teklifi dövüşe çeviren
+tek köprü).
+
+### Teklif kayıtta durmuyor
+
+Üretim gün ile seferin tohumunun **saf** bir fonksiyonu. Kazandığı iki şey var: kayıt
+dosyası bestiary'yi taşımıyor (eski kayıt yeni dengeyi geri getiremez, GDD §2) ve oyuncu
+beğenmediği teklifi kaydı yeniden yükleyerek değiştiremiyor. `DojoSnapshot` yalnızca bir
+`Seed` alanı kazandı — biçim bozulmadı, eksik alan varsayılanla yükleniyor.
+
+### Köprü tek yerde
+
+`DojoState` dövüşü kurmuyor, `Battle` günü kapatmıyor. `Expedition.Send` üçünü sırayla
+yapıyor: dövüşü koşturur, sonucu kadroya yazar (`BattleAftermath`), ödülü öder ve **günü
+kendi kapatır**. Sefer bir gün yiyor, kaçılsa da (GDD §10) — "gir-bak-kaç" döngüsünü
+kapatan kalem bu. `Expedition.Refuse` ekibi gerekçesiyle geri çeviriyor: boş ekip, dünün
+teklifi, yanlış ekip sayısı (düello tam bir savaşçı ister), kadroda olmayan savaşçı,
+revirdeki savaşçı.
+
+### Ölçüm: "al ya da bırak" gerçekten bir karar mı
+
+`Domina.Sim --mode campaign --offers on` artık sabit senaryo yerine üretilen teklifleri
+oynatıyor. 500 dojo × 120 gün, tek fark politikanın teklifi eleme hakkı:
+
+| Politika | Kapanan dojo | Ayakta kalınan gün (ortanca) | Ölüm / savaşçı-dövüş | Aç gün | Geri çevrilen |
+|---|---|---|---|---|---|
+| Her teklife girer | %99.2 | 54 | %9.2 | %7.1 | %0 |
+| Kadro eksikken ağır teklifi çevirir | %0.4 | 120 (hepsi) | %7.1 | %50.8 | %67.7 |
+
+İki başarısızlık birbirinin zıddı: hiç reddetmeyen dojo **kadrosunu**, her ağırı reddeden
+dojo **kasasını** kaybediyor. Reddetmek bir kaçış değil, gün ile savaşçı arasında takas.
+
+### Ölçüm sırasında düzeltilen kural
+
+İlk hâlde kalabalık teklifin gücü düşmanlara **bölünüyordu** (`power / √sayı`). Sonuç:
+aynı tehdit daha az canla taşınıyor, ödül düşman canına bağlı olduğu için (§11) kalabalık
+teklif aynı riski yarı fiyata satıyordu — ölçümde dojo'lar %99 oranında kapanıyordu.
+Kalabalık artık gücü bölmüyor: üç düşman üç kat düşman, üç kat ödül.
+
+### Kasıtlı olarak yazılmayanlar
+
+- **Eğrinin sayıları kilitlenmedi.** Ölçüm neyin ölçüldüğünü söylüyor, hangi eğrinin doğru
+  olduğunu değil; eğri Faz 9'un denge turunda kapanacak.
+- **Yokai davranışı yok.** Bestiary'de yalnızca sayılar var (Açık Karar #3'ün açık kalan
+  yarısı davranış). Kalıba bir alan eklendiğinde encounter üretimi değişmeyecek.
+- **Rastgele olaylar yok** (GDD §11) — ekonominin açık kalan tek kalemi.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 368/368 yeşil (+15:
+`EncounterTests` 12, `CampaignRunnerTests` +3). Yeni dosyalarda `dotnet format` temiz.
+
+
+## 2026-09-04 (üçüncü tur) — Rastgele olaylar (GDD §11'in son kalemi)
+
+`Domina.Core/Dojo/RandomEvents.cs`: günde %15 olasılıkla bir aksilik. Beş tür —
+hırsızlık, erzak bozulması, kuyunun bulanması, ilacın küflenmesi, hastalık.
+Hepsi eksiltir; bağış ya da hazine yok, çünkü §11 olayları **tampon baskısı** olarak
+tarif ediyor ve çift yönlü bir tablo baskıyı ortadan kaldırırdı.
+
+### Etkinin ambara vurmaması gerekiyordu
+
+İlk akla gelen olay "erzak çalındı" ama günlük alışveriş ambarı tam ihtiyaç kadar
+dolduruyor (`Quartermaster.Restock`), yani stok neredeyse hep sıfır — çalınan erzağın
+karşılığı da sıfır olurdu. Bu yüzden olaylar üç yerden birine vuruyor: **kasa** (hırsızlık),
+**o günün faturası** (bozulan erzak, bulanan kuyu, küflenen ilaç) ya da **takvim**
+(hastalık).
+
+Aksilik `AdvanceDay` içinde upkeep'ten **önce** işleniyor: bozulan erzak o günün
+alışverişini pahalılaştırmalı, ertesi güne ötelenmemeli.
+
+### Ayrı tuz
+
+Olay da teklif gibi gün ile tohumun saf fonksiyonu, ama karıştırma sabiti ayrı. Aynı tuz
+kullanılsaydı ağır teklifin geldiği gün daima hırsızlık da olurdu ve iki sistem tek bir
+sisteme dönüşürdü. Test bunu tutuyor: olay günleri ağır teklif günlerinin alt kümesi değil.
+
+### Ölçüm (400 dojo × 60 gün, `patrol`)
+
+| Günlük olay olasılığı | Bitiş kasası | Sermayesini koruyan | Aç gün | Kapanan dojo |
+|---|---|---|---|---|
+| %0 | 945 | %66.2 | %4.8 | %1.2 |
+| **%15 (seçilen)** | **766** | **%58.5** | **%6.7** | **%2.2** |
+| %30 | 562 | %44.8 | %9.4 | %3.0 |
+
+%15'te tamponun yaklaşık beşte biri aksiliklere gidiyor. Baskı hissediliyor ama kasayı
+belirleyen kalem hâlâ ilaç ve savaşçı — olaylar oyunu tek başına bitirmiyor.
+
+Ölçüm sırasında bir şey daha görüldü: teklif kipinde (dojo zaten kasası boş yaşarken)
+aksiliklerin etkisi neredeyse yok — boş kasadan çalınacak bir şey yok. Yani olay tablosu
+**varlıklı** dojo'yu cezalandırıyor, batmakta olanı değil. Tampon baskısı tam olarak bu
+demek.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 378/378 yeşil
+(+10: `DayEventTests`). Yeni dosyada `dotnet format` temiz.
+
+
+### Ek (aynı gün) — şiddet rastgeleleşti, pas düştü
+
+İki düzeltme geldi:
+
+- **Pas olayı kaldırıldı.** Kuşamın yıpranması zaten dövüşten geliyor; ikinci bir kaynak
+  gerekmiyordu.
+- **Oranlar sabit değil.** Yazılı sayılar artık **üst sınır**: hırsızlık kasanın en fazla
+  %12'sini, bozulma ve bulanan kuyu o günün faturasının en fazla iki katını, hastalık en
+  fazla 3 günü alır; gerçek miktar her seferinde sıfır ile üst sınır arasında çekilir.
+  Gerekçe: sabit oran aksiliği hesaplanabilir bir vergiye çevirir, oyuncu kaybı baştan
+  bilirse tampon tutmak karar değil aritmetik olur.
+
+Ölçüm (400 dojo × 60 gün, `patrol`, %15): bitiş kasası 815 altın, sermayesini koruyan
+%60.8, aç gün %6.1, kapanan dojo %1.5 — beklendiği gibi sabit oranlı hâlden (766 / %58.5)
+biraz daha hafif, çünkü kayıp artık ortalamada üst sınırın yarısı.
+
+Test sayısı 378 (`DayEventTests` 10 test; pas testi düştü, şiddetin sabit olmadığını
+tutan test eklendi).
+
+
+### Karar: boş kasada hırsızlık boşa düşsün (2026-09-04)
+
+Ölçümde "kasası boş dojo hırsızlıktan etkilenmiyor" diye not düşülmüştü; bunun bir eksik
+değil **karar** olduğu netleşti. Kasanın boş olması kalıcı bir hâl değil — oyuncu zırh,
+onarım ya da yeni savaşçı için para biriktirdiğinde kasa dolar ve hırsızlık tam o anda
+ısırır. Olay böylece biriktirme kararının bedeli oluyor.
+
+Değerlendirilip **reddedilen** iki alternatif:
+
+- Boş kasada hırsızın erzağa el atması (o günün faturasını artırması): batmakta olan
+  dojo'yu ikinci kez cezalandırırdı ve olayın "biriktirdiğin şeye vurur" anlamını silerdi.
+- Toplu alım + ambar kapasitesi ile gerçek bir stok tamponu kurmak: fikir olarak duruyor
+  ama ekonomiye yeni bir karar ekler, bu yüzden kendi ölçüm turunu ister — bugünkü
+  kilitli fiyatlarla karıştırılmadı.
+
+
+## 2026-09-04 (dördüncü tur) — Savaşçı pazarı
+
+Domina'nın köle pazarı araştırıldı ve modeli birebir alındı (kaynak: Steam tartışmaları ve
+oyuncu rehberleri). Oradaki üç kural: adaylar rastgele statlarla gelir ve statlar alım
+öncesi görünür, pazarın kalitesi oyuncunun mevcut kadrosunu takip eder, ve seviye başına
+gelişim hızı savaşçıya göre değişir.
+
+Yeni dosya `Domina.Core/Dojo/RecruitMarket.cs`; `Warrior` bir `Talent` alanı kazandı
+(kayda giriyor, dövüş okumuyor — antrenman okuyacak).
+
+### Üç kural koda geçti
+
+- **Fiyat stattan çıkıyor.** Adayın taban savaşçıya göre skoru fiyatı belirliyor; yetenek
+  de fiyata giriyor ama yarım ağırlıkla (yetenek bir vaat, stat elde olan).
+- **Pazar kadroyu takip ediyor** (%70). Kadro tamamen ölürse pazar acemi seviyesine
+  düşüyor, sıfıra değil — çöken dojo'nun toparlanma yolu kapanmasın diye.
+- **Liste iki günde bir yenileniyor ve gün içinde donuyor.** Donmasaydı, pazar kadro
+  ortalamasını takip ettiği için bir aday almak kalan adayları değiştirirdi: oyuncu ucuz
+  birini alıp listeyi istediği kadar çevirebilirdi. Test bunu tutuyor.
+
+### Ölçüm iki şeyi ortaya çıkardı (400 dojo × 60 gün, `patrol`)
+
+| Alım politikası | Bitiş kasası | Sermayesini koruyan | Ölüm (dojo başına) | Kapanan dojo |
+|---|---|---|---|---|
+| Sabit fiyat, sabit stat (eski) | 815 | %60.8 | 6.21 | %1.5 |
+| Pazardan altın başına en çok stat | 354 | %26.5 | 7.16 | %11.8 |
+| Pazardan parası yeten en iyisi | 705 | %52.2 | 5.93 | %4.8 |
+
+1. **Eski model yerine koymayı sübvanse ediyormuş:** 150 altına veteran kalitesinde
+   savaşçı geliyordu. Pazar bunu gerçek fiyata çekince dojo zorlanıyor — bu bir denge
+   bozulması değil, gizli bir sübvansiyonun görünür olması.
+2. **"Ucuz ham al, eğit" stratejisi şu an kaybediyor** çünkü ham aday gelişmiyor:
+   antrenmanın stat etkisi yazılmadı. İki stratejinin rakip olması tasarımın hedefi;
+   354'e karşı 705 altınlık fark, antrenman sisteminin kapatması gereken boşluğun ölçüsü.
+   Sıradaki iş bu.
+
+`Domina.Sim` iki yeni düğme kazandı: `--market on|off` ve `--market-pick value|best`.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 388/388 yeşil
+(+10: `RecruitMarketTests`). Yeni dosyalarda `dotnet format` temiz.

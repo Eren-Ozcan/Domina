@@ -1,4 +1,4 @@
-# Geliştirme Yol Haritası
+﻿# Geliştirme Yol Haritası
 
 > Tasarım kararları için `GDD.md`. Bu dosya **nasıl inşa edileceğini** anlatır.
 > Efor tahminleri **görecelidir** (S/M/L/XL), takvim değil.
@@ -195,16 +195,36 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 **Hedef:** Dövüşler arası oyun.
 
 - [ ] Roster ekranı: savaşçılar, statlar, yaralar, onur, isim düzenleme
-- [ ] **İsim düzenleme** (chat'ten gelen veya üretilen ismi değiştirme — GDD §8)
+      — **kadro modeli hazır** (`Domina.Core/Dojo/Roster.cs`), ekran yok
+- [x] **İsim düzenleme** (chat'ten gelen veya üretilen ismi değiştirme — GDD §8)
+      — `Roster.Rename`; isim eşsizliği yalnızca canlılar arasında zorlanıyor
 - [ ] Antrenman alanları + antrenman süresi/etkisi
+      — **gün sayacı var** (`RosterEntry.TrainingDays`) ve **yetenek alanı hazır**
+      (`Warrior.Talent`), etkisi ölçülmeden yazılmadı. Pazar ölçümü boşluğu sayıyla
+      gösterdi: ham aday gelişmediği için "ucuz al, eğit" stratejisi şu an kaybediyor
+      (GDD §11)
 - [ ] **Savaşçı skill tree'si (basit)**
 - [ ] **Okul + Eğitmen skill tree'si (derin)** — antrenman hızı, tesis kilitleri,
       ekonomi bonusları, revir iyileştirmeleri
-- [ ] Revir/hekim: iyileşme süresi, ilaç kaynağıyla hızlandırma
-- [ ] Ekonomi: altın, yiyecek/su, ilaç; alım-satım; rastgele olaylar
-- [ ] Gün döngüsü
-- [ ] Recruit akışı (isim havuzu bağlantısı Faz 5'te takılacak — şimdilik yerel havuz)
-- [ ] **Kayıt sistemi:** versiyonlu, merge-on-load, try/catch (GDD §2)
+- [x] **Revir/hekim: iyileşme süresi, ilaç kaynağıyla hızlandırma**
+      — ilaçsız gün bir revir günü eritir, ilaçlı gün iki (`DojoState.AdvanceDay`);
+      ambar yetmezse revirdekiler önce doyar, aç savaşçı o gün iyileşmez
+- [x] **Dövüş sonrası muhasebe** — `BattleAftermath`: ölüm, uzuv kaybı, zırh yıpranması
+      ve dağılması, revir günü ve onur kadroya buradan yazılır
+- [x] **Ekonomi: altın, yiyecek/su, ilaç; alım-satım** — `EconomyTuning` +
+      `Quartermaster` (fiyat, onarım, yenileme, stok, savaşçı alımı, sefer ödülü);
+      sayılar `Domina.Sim --mode campaign` ile 1000 dojo × 60 gün ölçülüp GDD §11'de
+      kilitlendi
+- [x] **Ekonomi: rastgele olaylar** — `Dojo/RandomEvents.cs`: günde %15, beş tür (hırsızlık, erzak bozulması, kuyunun bulanması, ilacın küflenmesi, hastalık); hepsi eksiltir, etkisi kasaya ve takvime vurur, ölçüm GDD §11'de
+- [x] Gün döngüsü — `DojoState.AdvanceDay()`: deterministik, rastgelelik içermez;
+      revir günlerini eritir, onuru nötre çeker, kapanan günün özetini döndürür
+- [x] **Recruit akışı — savaşçı pazarı** (`Dojo/RecruitMarket.cs`): adaylar farklı
+      statlarla gelir, statlar alım öncesi görünür, fiyat stattan çıkar, pazar kadronun
+      seviyesini takip eder ve iki günde bir yenilenir; `Warrior.Talent` antrenmanın
+      okuyacağı ikinci eksen. İsim havuzu hâlâ yerel — chat bağlantısı Faz 5'te
+- [x] **Kayıt sistemi:** versiyonlu, merge-on-load, try/catch (GDD §2)
+      — `Domina.Core/Dojo/Save`; kayıt ayrı bir tip ailesidir, denge sayıları dosyaya
+      girmez (eski kayıt yeni dengeyi geri getirmesin diye)
 
 **Kabul:** Bir savaşçı işe alınıp eğitilebiliyor, yaralanıp iyileşebiliyor, oyun
 kapatılıp açıldığında her şey yerinde.
@@ -215,14 +235,21 @@ kapatılıp açıldığında her şey yerinde.
 
 **Hedef:** Faz-faz ilerleyen seferler ve yokai düşmanlar.
 
-- [ ] Sefer yapısı: faz zinciri, zorluk eğrisi, ödül dağılımı
-- [ ] **Pes etme seferi bitirir** (GDD §5, §10): "kaç" denen odadan sonrası iptal,
-      ekip dojo'ya döner, o seferin ödülü alınmaz. Önceki odalarda toplanan
-      ganimetin akıbeti hâlâ açık (GDD Açık Karar #9)
-- [ ] Harita/ilerleme ekranı (Açık Karar #2: düz mü node-map mi)
-- [ ] Parti seçimi: 1-3 savaşçı (Açık Karar #1)
-- [ ] Yokai davranış/AI profilleri — her yokai farklı dövüş kalıbı
-- [ ] Boss encounter'ları
+- [x] **Günlük karşılaşma teklifi** — `Domina.Core/Campaign`: teklif gün ile tohumun saf
+      bir fonksiyonu (kayıtta durmaz, yeniden yüklenerek değiştirilemez), tehdit bandı ve
+      kaba tanım girmeden okunur, tam kadro görünmez
+- [x] **Zorluk eğrisi** — tek eğri artı günlük dalgalanma (`EncounterTuning`); sayılar
+      kilitli değil, ölçüm GDD §10'da
+- [x] **Sefer bir gün yer** — `Expedition.Send` dövüşü koşturur, kadroya yazar, ödülü öder
+      ve günü kendi kapatır; `DojoState.Decline()` girilmeyen günü kapatır
+- [x] **Pes etme seferi bitirir** (GDD §5, §10) — çekilmenin ödülü 0 (`Quartermaster`),
+      Açık Karar #9 zaten düşmüştü (tek dövüşlük seferde önceki oda yok)
+- [x] **Parti seçimi: 1-4 savaşçı** — `EncounterOffer.Accepts`; düello teklifi tam bir
+      savaşçı dayatır, `Expedition.Refuse` uygun olmayan ekibi gerekçesiyle geri çevirir
+- [ ] ~~Harita/ilerleme ekranı~~ — **düştü** (Açık Karar #2 kapandı: harita ekranı yok)
+- [ ] Yokai davranış/AI profilleri — her yokai farklı dövüş kalıbı (Açık Karar #3'ün
+      açık kalan yarısı; sayı tarafı `Bestiary` ile yazıldı)
+- [ ] ~~Boss encounter'ları~~ — **kurulmuyor** (GDD §10: zorluk tek eğri üzerinde artar)
 
 ### Bestiary adayları
 | Yokai | Rol / karakter |
