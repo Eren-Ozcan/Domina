@@ -71,6 +71,14 @@ public sealed record TrainingTuning
     /// </remarks>
     public double SkillCeiling { get; init; } = 90;
 
+    /// <summary>Savaşçının yolunu seçebilmesi için gereken antrenman günü.</summary>
+    /// <remarks>
+    /// Seçim <b>ücretsiz</b> ama bedava değil: bedeli, o güne kadar harcanan antrenman
+    /// günleri. Gün şartı olmasaydı yol alım anında seçilirdi ve pazardan alınan savaşçı
+    /// hazır uzmanlaşmış gelirdi — okulun yerine pazar yetiştirmiş olurdu.
+    /// </remarks>
+    public int PathTrainingDays { get; init; } = 20;
+
     /// <summary>Can ve staminanın yaklaşabildiği tavan.</summary>
     /// <remarks>
     /// Ayrı tutulur çünkü ölçeği ayrı: acemi 100 canla gelir, yüzdelik statları 35-55

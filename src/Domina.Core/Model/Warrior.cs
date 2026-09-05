@@ -74,6 +74,18 @@ public sealed class Warrior
     /// </remarks>
     public double Talent { get; set; } = 1.0;
 
+    /// <summary>
+    /// Savaşçının seçtiği yol — bir kez seçilir, geri alınmaz.
+    /// </summary>
+    /// <remarks>
+    /// Savaşçı tarafındaki ilerleme kasten <b>sığ</b>: tek bir seçim, üç seçenek (GDD §10
+    /// "Skill tree derinliği"). Asıl uzun vadeli yatırım okuldadır; savaşçıya derin bir
+    /// ağaç bağlansaydı permadeath koca bir yatırım kaybına dönerdi ve oyuncu savaşçısını
+    /// sahaya sürmekten kaçınırdı. Seçimin kilidi dojo'da açılır (antrenman günü);
+    /// <b>dövüş yalnızca sonucunu okur</b> — çarpanlar <see cref="EffectiveStats"/>'a girer.
+    /// </remarks>
+    public WarriorPath Path { get; set; } = WarriorPath.None;
+
     public bool IsAlive { get; private set; } = true;
 
     /// <summary>Kalıcı sakatlıklar. Geri alınamaz.</summary>
@@ -84,7 +96,7 @@ public sealed class Warrior
     {
         get
         {
-            WarriorStats s = BaseStats;
+            WarriorStats s = PathScale.Apply(BaseStats, Path);
             foreach (Disability d in _disabilities)
             {
                 s = s with
@@ -136,6 +148,55 @@ public sealed class Warrior
 
     /// <summary>Kalıcı ölüm. Geri dönüşü yoktur.</summary>
     public void Kill() => IsAlive = false;
+}
+
+/// <summary>Savaşçının seçebileceği yollar.</summary>
+/// <remarks>
+/// Üçü de aynı büyüklükte değil ama aynı <b>ağırlıkta</b>: her yol iki statı büyütür,
+/// biri belirgin biri hafif. Tek statlı bir yol "hangisi daha iyi" sorusunu tek sayıya
+/// indirirdi; iki stat, yolu savaşçının şekline bağlar.
+/// </remarks>
+public enum WarriorPath
+{
+    /// <summary>Henüz seçilmedi.</summary>
+    None,
+
+    /// <summary>Kılıç yolu — İsabet ve Güç.</summary>
+    Blade,
+
+    /// <summary>Kaya yolu — Savunma ve Can.</summary>
+    Stone,
+
+    /// <summary>Gölge yolu — Kaçınma ve Hız.</summary>
+    Shadow,
+}
+
+/// <summary>Yolun statlara uyguladığı çarpanlar.</summary>
+/// <remarks>
+/// Sakatlık çarpanlarının <b>altında</b> uygulanır: yol ham statı büyütür, sakatlık onu
+/// keser. Sıra tersine çevrilseydi yol, kaybedilen uzvun cezasını da büyütürdü.
+/// </remarks>
+public static class PathScale
+{
+    public static WarriorStats Apply(WarriorStats stats, WarriorPath path) => path switch
+    {
+        WarriorPath.Blade => stats with
+        {
+            Accuracy = stats.Accuracy * 1.10,
+            Strength = stats.Strength * 1.10,
+        },
+        WarriorPath.Stone => stats with
+        {
+            Defense = stats.Defense * 1.15,
+            MaxHealth = stats.MaxHealth * 1.05,
+        },
+        WarriorPath.Shadow => stats with
+        {
+            Evasion = stats.Evasion * 1.15,
+            Speed = stats.Speed * 1.10,
+        },
+        _ => stats,
+    };
 }
 
 /// <summary>Savaşçının kalıcı, benzersiz kimliği.</summary>
