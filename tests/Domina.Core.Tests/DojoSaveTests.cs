@@ -90,6 +90,49 @@ public class DojoSaveTests
         Assert.Equal(Drill.Footwork, after.Roster.Find(source.Id)!.Drill);
     }
 
+    /// <summary>
+    /// Okul ve yol kayda girer: ikisi de oyuncunun geri alınamaz kararı. Bonusların
+    /// büyüklüğü girmez — denge sayısı dosyadan değil koddan gelir (GDD §2).
+    /// </summary>
+    [Fact]
+    public void ARoundTripKeepsTheSchoolAndTheChosenPath()
+    {
+        DojoState before = Populated();
+        before.Resources = before.Resources with { Gold = 5000 };
+        before.BuySchoolNode(SchoolNodeId.TrainingGround);
+        before.BuySchoolNode(SchoolNodeId.FormsMaster);
+
+        RosterEntry source = before.Roster.FindLiving("Hana")!;
+        for (int day = 0; day < before.Tuning.Training.PathTrainingDays; day++)
+        {
+            source.Train(Drill.Guard);
+            before.AdvanceDay();
+        }
+
+        Assert.True(before.ChoosePath(source.Id, WarriorPath.Stone));
+
+        DojoState after = DojoSaveFile.Load(DojoSaveFile.Write(before)).State!;
+
+        Assert.True(after.School.Has(SchoolNodeId.TrainingGround));
+        Assert.True(after.School.Has(SchoolNodeId.FormsMaster));
+        Assert.Equal(before.Tuning.Training.GapClosedPerDay, after.Tuning.Training.GapClosedPerDay, 9);
+        Assert.Equal(WarriorPath.Stone, after.Roster.Find(source.Id)!.Warrior.Path);
+    }
+
+    /// <summary>Bozuk kayıt kolun sırasını atlayamaz: ustası olan bir talimhane yoksa düşer.</summary>
+    [Fact]
+    public void ASaveCannotSkipAStepInASchoolBranch()
+    {
+        DojoSnapshot snapshot = DojoSnapshot.Empty with
+        {
+            School = [SchoolNodeId.FormsMaster],
+        };
+
+        DojoState state = DojoSaveFile.Restore(snapshot).State!;
+
+        Assert.Empty(state.School.Owned);
+    }
+
     [Fact]
     public void TheDeadStayDeadThroughASave()
     {
