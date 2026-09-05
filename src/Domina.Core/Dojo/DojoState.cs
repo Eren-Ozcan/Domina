@@ -116,6 +116,16 @@ public sealed class DojoState
             if (entry.Activity == DojoActivity.Training && fed)
             {
                 entry.TrainingDays++;
+
+                // Antrenman <b>ham</b> statı yazar, etkin statı değil: sakatlığın çarpanı
+                // kalıcıdır ve eğitimle geri alınmaz (GDD §7). Kolunu kaybeden savaşçı
+                // çalışarak toparlanır, ama kaybettiği kolu geri kazanmaz.
+                entry.Warrior.BaseStats = TrainingGround.After(
+                    entry.Warrior.BaseStats,
+                    entry.Drill,
+                    entry.Warrior.Talent,
+                    Tuning.Training);
+
                 trained.Add(entry.Id);
             }
 

@@ -8,6 +8,9 @@ namespace Domina.Core.Dojo;
 /// </remarks>
 public sealed record DojoTuning
 {
+    /// <summary>Antrenman gününün stat karşılığı.</summary>
+    public TrainingTuning Training { get; init; } = new();
+
     /// <summary>Bir günde eriyen revir günü sayısı.</summary>
     public int NaturalRecoveryPerDay { get; init; } = 1;
 

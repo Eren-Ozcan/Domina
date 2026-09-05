@@ -36,12 +36,14 @@ public sealed class RosterEntry
     public DojoActivity Activity { get; internal set; } = DojoActivity.Resting;
 
     /// <summary>Bugüne kadar tamamlanmış antrenman günü.</summary>
-    /// <remarks>
-    /// Statlara <b>henüz dokunmuyor</b>: antrenmanın etkisi ölçülüp kilitlenmeden
-    /// (ROADMAP Faz 3, "Antrenman alanları + antrenman süresi/etkisi") sayıyı uydurmak,
-    /// sonradan sökülmesi zor bir denge borcu olurdu. Şimdilik yalnızca sayaç.
-    /// </remarks>
     public int TrainingDays { get; internal set; }
+
+    /// <summary>Antrenman gününün konusu.</summary>
+    /// <remarks>
+    /// Uğraştan ayrı bir alan: savaşçı revire yatıp çıktığında talimi unutulmasın, ve
+    /// oyuncu talimi <b>önceden</b> seçebilsin — gün kapanınca uygulanan şey budur.
+    /// </remarks>
+    public Drill Drill { get; internal set; } = Drill.Strikes;
 
     /// <summary>Sefere gönderilebilir mi?</summary>
     public bool IsFitForCampaign => Warrior.IsAlive && RecoveryDaysRemaining == 0;
@@ -63,11 +65,20 @@ public sealed class RosterEntry
     }
 
     /// <summary>Bugün antrenmana yazar. Revirdeki savaşçı kabul edilmez.</summary>
-    public bool Train()
+    /// <remarks>
+    /// Talim verilmezse en son seçilen sürer. Kazanç gün kapanırken işlenir
+    /// (<see cref="DojoState.AdvanceDay"/>): aç kalan savaşçı o gün ilerlemez.
+    /// </remarks>
+    public bool Train(Drill? drill = null)
     {
         if (!IsFitForCampaign)
         {
             return false;
+        }
+
+        if (drill is Drill wanted)
+        {
+            Drill = wanted;
         }
 
         Activity = DojoActivity.Training;
