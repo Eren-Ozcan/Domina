@@ -14,6 +14,8 @@ namespace Domina.Core.Dojo;
 /// </remarks>
 public sealed class DojoState
 {
+    private readonly DojoTuning _baseTuning;
+    private readonly EconomyTuning _baseEconomy;
     private EncounterOffer? _offer;
     private IReadOnlyList<RecruitOffer>? _recruits;
     private BountyContract? _bounty;
@@ -26,21 +28,36 @@ public sealed class DojoState
         EncounterTuning? encounters = null,
         EventTuning? events = null,
         MarketTuning? market = null,
-        BountyTuning? bounties = null)
+        BountyTuning? bounties = null,
+        SchoolTuning? school = null)
     {
-        Tuning = tuning ?? new DojoTuning();
-        Quartermaster = new Quartermaster(economy);
+        _baseTuning = tuning ?? new DojoTuning();
+        _baseEconomy = economy ?? new EconomyTuning();
+        School = new School(school);
         Encounters = new EncounterGenerator(encounters);
         Events = new DayEventTable(events);
         Market = new RecruitMarket(market);
         Bounties = new BountyBoard(bounties, encounters);
         Seed = seed;
+        Tuning = _baseTuning;
+        Quartermaster = new Quartermaster(_baseEconomy);
+        ApplySchool();
     }
 
-    public DojoTuning Tuning { get; }
+    /// <summary>
+    /// Gün döngüsünün ayarları — <b>okul işlenmiş hâliyle</b>.
+    /// </summary>
+    /// <remarks>
+    /// Okumaların hepsi buradan geçer; ham ayar dışarıya verilmez. Aksi hâlde bir yer
+    /// tesisli, bir yer tesissiz sayı okur ve bonus sessizce yarım işlerdi.
+    /// </remarks>
+    public DojoTuning Tuning { get; private set; }
 
     /// <summary>Fiyatlar ve alışveriş. Ekonomi sayıları buradan okunur.</summary>
-    public Quartermaster Quartermaster { get; }
+    public Quartermaster Quartermaster { get; private set; }
+
+    /// <summary>Dojo'nun tesisleri — ölmeyen yatırım (GDD §10).</summary>
+    public School School { get; }
 
     public EconomyTuning Economy => Quartermaster.Economy;
 
@@ -354,6 +371,66 @@ public sealed class DojoState
     /// tek çağrıda birleşseydi çekirdek dövüş çözümleyicisine bağlanırdı.
     /// </remarks>
     public DayReport Decline() => AdvanceDay();
+
+    /// <summary>
+    /// Okuldan bir tesis satın alır.
+    /// </summary>
+    /// <remarks>
+    /// Tesisin bedeli <b>peşin</b>dir ve geri satılmaz: okul kalıcı bir yatırımdır, geri
+    /// alınabilseydi oyuncu her sefer öncesi ağacı yeniden dizerdi. Sırası gelmemiş ya da
+    /// parası yetmeyen düğüm alınmaz; kasa eksiye düşmez.
+    /// </remarks>
+    /// <returns>Alındıysa <c>true</c>.</returns>
+    public bool BuySchoolNode(SchoolNodeId id)
+    {
+        SchoolNode node = SchoolTree.Find(id);
+        if (School.Has(id) || node.Cost > Resources.Gold || !School.Add(id))
+        {
+            return false;
+        }
+
+        Resources = Resources with { Gold = Resources.Gold - node.Cost };
+        ApplySchool();
+        return true;
+    }
+
+    /// <summary>
+    /// Savaşçının yolunu seçer — bir kez, geri dönüşsüz.
+    /// </summary>
+    /// <remarks>
+    /// Kilidi açan şey antrenman günüdür (<see cref="TrainingTuning.PathTrainingDays"/>):
+    /// yol, satın alınan değil <b>çalışılarak kazanılan</b> bir şey olmalı.
+    /// </remarks>
+    /// <returns>Seçilebildiyse <c>true</c>.</returns>
+    public bool ChoosePath(WarriorId id, WarriorPath path)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        if (entry is null
+            || path == WarriorPath.None
+            || !entry.Warrior.IsAlive
+            || entry.Warrior.Path != WarriorPath.None
+            || entry.TrainingDays < Tuning.Training.PathTrainingDays)
+        {
+            return false;
+        }
+
+        entry.Warrior.Path = path;
+        return true;
+    }
+
+    /// <summary>Kayıttan gelen tesisleri yerine koyar.</summary>
+    internal void RestoreSchool(IEnumerable<SchoolNodeId> owned)
+    {
+        School.Restore(owned);
+        ApplySchool();
+    }
+
+    /// <summary>Tesisleri ayarlara işler — satın alma ve kayıt yükleme sonrası.</summary>
+    private void ApplySchool()
+    {
+        Tuning = School.Apply(_baseTuning);
+        Quartermaster = new Quartermaster(School.Apply(_baseEconomy));
+    }
 
     /// <summary>Kayıttan gelen gün sayacını yerine koyar.</summary>
     internal void RestoreDay(int day)
