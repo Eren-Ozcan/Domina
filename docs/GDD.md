@@ -1436,6 +1436,58 @@ savaşçının skoru ~473'ü geçtiğinde konuşmaya başlar, ki oraya ancak ant
 Yani bugün ölçülen bedel oranın değil **tavanın kendisinin** bedeli; oran, antrenman
 yazıldıktan sonra yeniden ölçülmesi gereken sayılardan biri.
 
+### Kelle avı sözleşmeleri (2026-09-04)
+
+Günlük teklif (§10) tek başına jeneriktir: her gün aynı biçimde bir iş gelir, tür ve bant
+değişir, karar hep "bugün gireyim mi" olur. **İsimli hedef** o kararı değiştirir.
+
+Sözleşme günlük teklifin **yerine geçmez, yanında durur**. Gün yine tek iş yer; hangi işi
+yapacağın karardır.
+
+- **Hedef isimlidir ve tektir.** Bestiary'den gelen tür, üstüne bir lakap ("Kaburga
+  Kıran") ve sözleşmeyi veren bir taraf ("köy muhtarı"). Tek düşman olduğu için ekip
+  büyüklüğü dayatılmaz: kaç kişiyle gideceğin sözleşmenin asıl kararıdır — bir kişi
+  göndermek riski, dördünü yığmak o gün dojo'yu savunmasız bırakmayı seçmektir.
+- **Süresi vardır** (`PostingDays` 4 günde bir asılır, `OpenDays` 3 gün açık kalır). Süre,
+  kampanyaya bugüne kadar olmayan tek şeyi verir: **planlanabilir gelecek**. "Bugün ucuz
+  işe gitmeyeyim, iki gün sonraki büyük iş için kadroyu taze tutayım." Süresiz sözleşme
+  bir karar değil bir depo olurdu. İki sayı ayrı olduğu için **sözleşmesiz günler** vardır;
+  sözleşme her gün asılı olsaydı sıradan teklif anlamsızlaşırdı.
+- **Kabul etmek bir sözdür.** Kabul günü yemez, **süre** satın alır: son güne kadar
+  dönülmezse kadronun **tamamı** onur kaybeder (`BrokenHonorPenalty` 10). Ceza sefere
+  gidecek olana değil kadroya yazılır, çünkü sözü dojo verdi — tek kişiye yazılsaydı
+  oyuncu cezayı zaten gözden çıkardığı savaşçının üstüne yıkardı. Kaçmanın bedeli de aynı
+  sebeple tüm ekibe yazılıyor (§5).
+- **Kelleyi getiren ekip onur kazanır** (`HonorReward` 6). Kazanç sefere gidene, borç
+  kadroya: biri emeğin karşılığı, diğeri sözün.
+- **Kellesi alınan sözleşme tahtadan iner.** Tahta saf olduğu için sözleşme süresi dolana
+  kadar her gün yeniden üretilir; bu kayıt olmadan aynı hedef ertesi gün yeniden asılı
+  görünür ve aynı kelle iki kez satılırdı (ölçüldü: dojo başına 60 günde 12.7 kelle avı).
+- **Üretim saftır**, teklif ve pazar gibi: aynı tohum ve aynı gün daima aynı sözleşmeyi
+  verir. Sözleşme kayda yazılmaz; yazılan tek şey **söz verilip verilmediği** ve **kellenin
+  alınıp alınmadığı**. Aksi hâlde oyuncu kaydı yeniden yükleyerek verdiği sözden kurtulurdu.
+
+**Ölçüm (400 dojo × 60 gün, `patrol`, teklif kipi, pazar açık):** sözleşme, bandına
+bakmadan her açık sözleşmeye giren dojo ile hiç girmeyen dojo karşılaştırıldı.
+
+| Kabul sınırı | Kelle avı | Bitiş kasası | Sermayesini koruyan | Ölüm | Kapanan dojo |
+|---|---|---|---|---|---|
+| `dire` (her şeye gir), avsız | 0.00 | 4 | %0.0 | 8.37 | %75.5 |
+| `dire`, av açık | 7.44 | 1 | %0.0 | 9.62 | %80.8 |
+| `rising` (seçici), avsız | 0.00 | 393 | %20.8 | 1.26 | %0.0 |
+| `rising`, av açık | 0.69 | 412 | %22.2 | 1.25 | %0.0 |
+
+Şekil istenen şekil: **seçen kazanır, her işe atlayan batar.** Seçici dojo kelle avından
+kâr ediyor (393 → 412 altın, ölüm değişmiyor); her sözleşmeye giren dojo ölümü 8.37'den
+9.62'ye çıkarıyor. Sözleşme bir kolay para musluğu değil, riski oyuncunun seçtiği bir
+kalem oldu.
+
+Sayılar **kilitli değil**. Ölçümün ortaya çıkardığı asıl soru `PowerMultiplier` (1.8):
+hedef bu kadar güçlü olunca bandı çoğu gün `Heavy`/`Dire` çıkıyor ve seçici bir dojo 60
+günde ancak **0.69** sözleşmeye giriyor — yani sistem doğru çalışıyor ama neredeyse hiç
+görünmüyor. Güç ile ödül çarpanının birlikte taranması, antrenmanın stat etkisi
+yazıldıktan sonraki ölçüm turuna bırakıldı.
+
 ### Rastgele olaylar (2026-09-04)
 
 Günde **%15** olasılıkla bir aksilik çıkar. Beş tür var. Hepsi eksiltir — bağış, hazine, iyi haber yok:

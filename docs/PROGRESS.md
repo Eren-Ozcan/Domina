@@ -1401,3 +1401,74 @@ Yeni dosya `Domina.Core/Dojo/RecruitMarket.cs`; `Warrior` bir `Talent` alanı ka
 
 Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 388/388 yeşil
 (+10: `RecruitMarketTests`). Yeni dosyalarda `dotnet format` temiz.
+
+
+## 2026-09-04 (beşinci tur) — Pazar tavanı ve kelle avı
+
+### Pazar artık kadronun en iyisini geçemiyor
+
+Pazar kadro **ortalamasını** takip ediyordu ama bir tavanı yoktu: oynama payı üstten
+vurduğunda tek bir aday dojodaki en iyi savaşçıyı aşabiliyordu. Yetiştirilen savaşçı satın
+alınabiliyorsa antrenmanın anlamı kalmaz.
+
+`MarketAnchor` yeni bir tip: taban (nereye oturur) ve tavan (nereye kadar çıkar) ayrı iki
+soru. Tavan **en iyi yaşayan savaşçıyı** izliyor (`BestFollowCeiling` 0.75), ortalamayı
+değil — ortalamaya bağlansaydı iki ucuz acemi alıp ortalamayı düşürerek pazar
+sömürülebilirdi. Tavanı aşan aday **kırpılmıyor, oranlanıyor**: kırpma tavana dayanan her
+adayı aynı düz profile çevirir, "kimi alayım" sorusunu geri öldürürdü.
+
+**Ölçüm bir kusur yakaladı.** İlk hâlde tavan düz `0.75 × en iyi` idi; acemi skoru 355
+olduğu için acemi kadroda bile her aday acemiden %25 zayıf çıkıyordu. 400 dojonun
+**tamamı** kasayı sıfırladı, boş gün %93.7'ye çıktı. Tavana acemi tabanı eklendi:
+`max(Score(acemi), en_iyi × oran)`.
+
+Tavanın bedeli (400 dojo × 60 gün, `patrol`):
+
+| Tavan | Politika | Bitiş kasası | Sermayesini koruyan | Ölüm | Kapanan |
+|---|---|---|---|---|---|
+| yok | value | 354 | %26.5 | 7.16 | %11.8 |
+| yok | best | 705 | %52.2 | 5.93 | %4.8 |
+| 0.75 | value | 147 | %9.8 | 7.75 | %18.8 |
+| 0.75 | best | 204 | %13.0 | 7.08 | %13.2 |
+| 1.00 | best | 385 | %27.3 | 6.65 | %7.0 |
+
+Oran 0.75'te kilitlendi. `patrol` kadrosunda 0.75, 0.85 ve 0.90 **aynı** sonucu veriyor:
+en iyi savaşçının skoru 387, acemi tabanı 355, yani tavan ancak skor ~473'ü geçtiğinde
+konuşmaya başlıyor — oraya da ancak antrenmanla çıkılır. Bugün ölçülen bedel oranın değil
+**tavanın kendisinin** bedeli.
+
+### Kelle avı sözleşmeleri
+
+Yeni dosya `Domina.Core/Campaign/Bounty.cs`. Günlük teklifin yanında duran, isimli hedefli,
+süreli sözleşme. Ayrıntılı gerekçe GDD §11'de; kodun tuttuğu kararlar:
+
+- Hedef **isimli ve tek**; ekip büyüklüğü dayatılmaz, kaç kişi göndereceğin karar.
+- Sözleşme 4 günde bir asılır, 3 gün açık kalır — **sözleşmesiz günler** kasten var.
+- Kabul günü yemez, **süre** satın alır. Dönülemezse kadronun tamamı onur kaybeder.
+- Kelleyi getiren **ekip** onur kazanır; kırılan sözün borcu **kadroya** yazılır.
+- Kellesi alınan sözleşme tahtadan iner. Bu kayıt olmadan aynı hedef ertesi gün yeniden
+  asılı görünüyordu — ölçümde dojo başına 12.7 kelle avı çıktı, tahta bir para musluğuydu.
+- Üretim saf; kayda yalnızca "söz verildi mi" ve "kelle alındı mı" yazılıyor.
+
+Sefer katmanı `Expedition.SendToBounty` ile aynı dövüş yolundan geçiyor: dövüşe giden
+ikinci bir kapı açmak çözümleyiciyi ikiye bölerdi.
+
+**Ölçüm (400 dojo × 60 gün, `patrol`, teklif kipi, pazar açık):**
+
+| Kabul sınırı | Kelle avı | Bitiş kasası | Sermayesini koruyan | Ölüm | Kapanan |
+|---|---|---|---|---|---|
+| `dire`, avsız | 0.00 | 4 | %0.0 | 8.37 | %75.5 |
+| `dire`, av açık | 7.44 | 1 | %0.0 | 9.62 | %80.8 |
+| `rising`, avsız | 0.00 | 393 | %20.8 | 1.26 | %0.0 |
+| `rising`, av açık | 0.69 | 412 | %22.2 | 1.25 | %0.0 |
+
+Şekil istenen şekil: **seçen kazanır, her işe atlayan batar.** Ama sayı tarafı açık kaldı:
+`PowerMultiplier` 1.8 hedefi çoğu gün `Heavy`/`Dire` bandına itiyor, seçici dojo 60 günde
+ancak 0.69 sözleşmeye giriyor. Sistem doğru çalışıyor ama neredeyse görünmüyor; güç ile
+ödül çarpanının birlikte taranması antrenman turuna bırakıldı.
+
+`Domina.Sim` üç yeni düğme kazandı: `--market-ceiling <oran>`, `--bounty on|off` ve rapora
+"Kelle avı" satırı.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 401/401 yeşil
+(+13: `BountyTests` 10, `RecruitMarketTests` +3). Yeni dosyalarda `dotnet format` temiz.
