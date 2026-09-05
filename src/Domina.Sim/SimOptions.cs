@@ -68,6 +68,7 @@ internal static class SimArgs
         bool useMarket = false;
         MarketPick marketPick = MarketPick.Value;
         MarketTuning marketTuning = new();
+        bool useBounties = false;
         EconomyTuning economy = new();
 
         for (int i = 0; i < args.Count; i++)
@@ -625,6 +626,16 @@ internal static class SimArgs
                     useMarket = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
+                case "--bounty":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--bounty on veya off olmali: {value}");
+                    }
+
+                    useBounties = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
                 case "--market-ceiling":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double ceiling)
@@ -808,7 +819,8 @@ internal static class SimArgs
                 events,
                 useMarket,
                 marketTuning,
-                marketPick)
+                marketPick,
+                useBounties)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(

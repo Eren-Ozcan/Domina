@@ -182,6 +182,9 @@ internal static class CampaignSummaryReport
         writer.WriteLine("Kadro");
         writer.WriteLine($"  Ölüm (dojo başına)     {report.AverageDeaths:F2}");
         writer.WriteLine($"  Alınan savaşçı         {report.AverageHires:F2}");
+        writer.WriteLine(
+            $"  Kelle avı              {report.AverageBounties:F2}"
+            + $"  kelle alınan %{report.BountyClaimRate * 100:F1}");
         writer.WriteLine($"  Dağılan zırh parçası   {report.AverageArmorPiecesLost:F2}");
         writer.WriteLine($"  Kapanan dojo           %{report.CollapseRate * 100:F1}");
         writer.WriteLine(

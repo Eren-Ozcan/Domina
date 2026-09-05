@@ -41,7 +41,8 @@ internal sealed record CampaignOptions(
     EventTuning? Events = null,
     bool UseMarket = false,
     MarketTuning? Market = null,
-    MarketPick Pick = MarketPick.Value)
+    MarketPick Pick = MarketPick.Value,
+    bool UseBounties = false)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -181,6 +182,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// </remarks>
     private DayReport TakeOfferOrRest(DojoState state, ulong seed, CampaignRow row)
     {
+        if (_options.UseBounties && TakeBounty(state, seed, row) is DayReport hunted)
+        {
+            return hunted;
+        }
+
         EncounterOffer offer = state.Offer;
         if (Declines(state, offer))
         {
@@ -215,6 +221,55 @@ internal sealed class CampaignRunner(CampaignOptions options)
         row.ArmorPiecesLost += result.Aftermath.Warriors.Sum(w => w.ShatteredArmor.Count);
         row.WarriorBattles += party.Count;
         row.PowerSum += offer.EnemyHealth;
+
+        return result.Day;
+    }
+
+    /// <summary>
+    /// Açık sözleşme varsa ve kadro yetiyorsa kelle avına gider; gitmezse <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// Politika kasten <b>basit</b>: sözleşme bandı kabul sınırının içindeyse ve tam ekip
+    /// çıkarılabiliyorsa girilir. Ölçülmek istenen şey oyuncunun ne kadar iyi seçtiği
+    /// değil, sözleşmenin <b>kendisinin</b> ekonomiye ne kattığı.
+    /// </remarks>
+    private DayReport? TakeBounty(DojoState state, ulong seed, CampaignRow row)
+    {
+        if (state.Bounty is not BountyContract contract || contract.Threat > _options.AcceptUpTo)
+        {
+            return null;
+        }
+
+        List<RosterEntry> party = [.. state.Roster.FitForCampaign.Take(_options.PartySize)];
+        if (party.Count != _options.PartySize)
+        {
+            return null;
+        }
+
+        state.AcceptBounty();
+
+        BountyResult result = new Expedition().SendToBounty(
+            state,
+            contract,
+            party,
+            new SeededRandom(seed),
+            _options.Tuning,
+            _options.RetreatPolicy);
+
+        row.Battles++;
+        row.Bounties++;
+        row.GoldEarned += result.Reward;
+        if (result.Claimed)
+        {
+            row.Victories++;
+            row.BountiesClaimed++;
+        }
+
+        row.Deaths += result.Aftermath.Dead.Count();
+        row.RecoveryDays += result.Aftermath.Warriors.Sum(w => w.RecoveryDays);
+        row.ArmorPiecesLost += result.Aftermath.Warriors.Sum(w => w.ShatteredArmor.Count);
+        row.WarriorBattles += party.Count;
+        row.PowerSum += contract.Target.EffectiveStats.MaxHealth;
 
         return result.Day;
     }
@@ -451,6 +506,12 @@ internal sealed class CampaignRow
 
     public int Hires { get; set; }
 
+    /// <summary>Girilen kelle avı sayısı.</summary>
+    public int Bounties { get; set; }
+
+    /// <summary>Kellesi alınan sözleşme sayısı.</summary>
+    public int BountiesClaimed { get; set; }
+
     public int RecoveryDays { get; set; }
 
     public int ArmorPiecesLost { get; set; }
@@ -528,6 +589,19 @@ internal sealed class CampaignReport(int days)
     }
 
     public double AverageHires => Average(r => r.Hires);
+
+    /// <summary>Dojo başına girilen kelle avı.</summary>
+    public double AverageBounties => Average(r => r.Bounties);
+
+    /// <summary>Girilen kelle avlarının kaçının kellesi alındı.</summary>
+    public double BountyClaimRate
+    {
+        get
+        {
+            double attempts = _rows.Sum(r => r.Bounties);
+            return attempts <= 0 ? 0 : _rows.Sum(r => r.BountiesClaimed) / attempts;
+        }
+    }
 
     public double AverageEndingGold => Average(r => r.EndingGold);
 
