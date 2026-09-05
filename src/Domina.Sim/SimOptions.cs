@@ -70,6 +70,7 @@ internal static class SimArgs
         MarketTuning marketTuning = new();
         bool useBounties = false;
         EconomyTuning economy = new();
+        TrainingTuning training = new();
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -648,6 +649,26 @@ internal static class SimArgs
                     marketTuning = marketTuning with { BestFollowCeiling = ceiling };
                     break;
 
+                case "--train-rate":
+                    if (!TryFraction(value, out double trainRate))
+                    {
+                        return ParsedArgs.Fail($"--train-rate 0-1 arasında olmalı: {value}");
+                    }
+
+                    training = training with { GapClosedPerDay = trainRate };
+                    break;
+
+                case "--train-ceiling":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainCeiling)
+                        || trainCeiling <= 0)
+                    {
+                        return ParsedArgs.Fail($"--train-ceiling pozitif bir sayı olmalı: {value}");
+                    }
+
+                    training = training with { SkillCeiling = trainCeiling };
+                    break;
+
                 case "--market-pick":
                     if (!Enum.TryParse(value, ignoreCase: true, out marketPick))
                     {
@@ -809,7 +830,7 @@ internal static class SimArgs
                 repairAt,
                 reserveDays,
                 economy,
-                new DojoTuning(),
+                new DojoTuning { Training = training },
                 tuning,
                 policy,
                 useOffers,

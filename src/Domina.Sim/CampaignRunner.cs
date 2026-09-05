@@ -77,6 +77,15 @@ internal enum MarketPick
 
     /// <summary>Parası yeten en yüksek statlı aday — pahalı ve hazır taraf.</summary>
     Best,
+
+    /// <summary>Parası yeten en yetenekli aday — vaade yatıran taraf.</summary>
+    /// <remarks>
+    /// Üçüncü ucu ölçüm <b>gerektirdi</b>: "ucuz ham adayı al, eğit" stratejisinin gerçek
+    /// dayanağı ucuzluk değil <see cref="RecruitOffer.Talent"/>. Altın başına stata bakan
+    /// politika yeteneği hiç okumaz, yani antrenman yazıldıktan sonra bile o stratejiyi
+    /// temsil etmiyordu.
+    /// </remarks>
+    Talent,
 }
 
 /// <summary>Bir dojo'yu gün gün oynatır.</summary>
@@ -117,6 +126,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         CampaignRow row = new();
+        row.StartScore = BestScore(state);
         int hired = 0;
 
         for (int day = 0; day < _options.Days; day++)
@@ -154,6 +164,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
         row.DaysSurvived = _options.Days;
         row.EndingGold = state.Resources.Gold;
         row.SurvivingWarriors = state.Roster.Living.Count();
+        row.EndScore = BestScore(state);
+        row.TrainingDays = state.Roster.Living.Sum(e => e.TrainingDays);
         return row;
     }
 
@@ -296,9 +308,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             row.DeclinedOffers++;
         }
 
+        // Talim politikası kasten sabit: en geri stat çalışılır. Ölçülmek istenen şey
+        // oyuncunun ne kadar iyi seçtiği değil, antrenmanın <b>kendisinin</b> ne kattığı.
         foreach (RosterEntry entry in state.Roster.FitForCampaign)
         {
-            entry.Train();
+            entry.Train(TrainingGround.Weakest(entry.Warrior.BaseStats, state.Tuning.Training));
         }
 
         return state.AdvanceDay();
@@ -428,9 +442,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 continue;
             }
 
-            double value = pick == MarketPick.Best
-                ? Score(offer.Stats)
-                : Score(offer.Stats) / Math.Max(1, offer.Price);
+            double value = pick switch
+            {
+                MarketPick.Best => Score(offer.Stats),
+                MarketPick.Talent => offer.Talent,
+                _ => Score(offer.Stats) / Math.Max(1, offer.Price),
+            };
 
             if (best is null || value > bestValue)
             {
@@ -441,6 +458,18 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         return best is not null
             && Quartermaster.Hire(state, best, proto.Weapon, proto.Armor) is not null;
+    }
+
+    /// <summary>Kadronun en iyi savaşçısının stat skoru — pazar tavanı da bunu izler.</summary>
+    /// <remarks>
+    /// Ortalama değil <b>en iyi</b>: antrenmanın ürettiği şey kadronun düzgün dağılmış
+    /// ortalaması değil, oyuncunun üstüne yatırım yaptığı savaşçıdır. Ortalamaya
+    /// bakılsaydı ölen veteranın yerine alınan acemi, eğitimin kazancını gizlerdi.
+    /// </remarks>
+    private static double BestScore(DojoState state)
+    {
+        List<RosterEntry> living = [.. state.Roster.Living];
+        return living.Count == 0 ? 0 : living.Max(e => Score(e.Warrior.BaseStats));
     }
 
     private static double Score(WarriorStats stats) =>
@@ -532,6 +561,15 @@ internal sealed class CampaignRow
 
     public int SurvivingWarriors { get; set; }
 
+    /// <summary>Kadronun en iyi savaşçısının ilk gündeki stat skoru.</summary>
+    public double StartScore { get; set; }
+
+    /// <summary>Aynı skorun son gündeki hâli — aradaki fark antrenmanın ürünü.</summary>
+    public double EndScore { get; set; }
+
+    /// <summary>Canlı kadronun toplam antrenman günü.</summary>
+    public int TrainingDays { get; set; }
+
     /// <summary>Kadroda kimse kalmadı — dojo kapandı.</summary>
     public bool Collapsed { get; set; }
 }
@@ -605,6 +643,19 @@ internal sealed class CampaignReport(int days)
 
     public double AverageEndingGold => Average(r => r.EndingGold);
 
+    /// <summary>Ayakta kalan dojolarda en iyi savaşçının stat skoru — antrenmanın ürünü.</summary>
+    /// <remarks>
+    /// Kapanan dojolar dışarıda bırakılır: kadrosu ölmüş dojonun skoru sıfırdır ve
+    /// ortalamaya karışsaydı ölçüm antrenmanı değil hayatta kalmayı ölçerdi.
+    /// </remarks>
+    public double AverageBestScore => Standing(r => r.EndScore);
+
+    /// <summary>Aynı skorun ilk günden bugüne kazandığı puan.</summary>
+    public double AverageScoreGain => Standing(r => r.EndScore - r.StartScore);
+
+    /// <summary>Dojo başına antrenman günü (canlı kadro toplamı).</summary>
+    public double AverageTrainingDays => Standing(r => r.TrainingDays);
+
     public double AverageArmorPiecesLost => Average(r => r.ArmorPiecesLost);
 
     public double RecoveryDaysPerBattle => PerBattle(r => r.RecoveryDays);
@@ -655,6 +706,13 @@ internal sealed class CampaignReport(int days)
     public double SolventRate(int startingGold) => Campaigns == 0
         ? 0
         : (double)_rows.Count(r => !r.Collapsed && r.EndingGold >= startingGold) / Campaigns;
+
+    /// <summary>Yalnızca ayakta kalan dojolar üzerinden ortalama.</summary>
+    private double Standing(Func<CampaignRow, double> pick)
+    {
+        List<CampaignRow> standing = [.. _rows.Where(r => !r.Collapsed)];
+        return standing.Count == 0 ? 0 : standing.Sum(pick) / standing.Count;
+    }
 
     private double Average(Func<CampaignRow, int> pick) =>
         Campaigns == 0 ? 0 : (double)_rows.Sum(pick) / Campaigns;

@@ -51,6 +51,33 @@ public class CampaignRunnerTests
         Assert.InRange(report.VictoryRate, 0, 1);
     }
 
+    /// <summary>
+    /// Antrenman ölçülebilir olmalı: aynı dojo, tek fark oran.
+    /// </summary>
+    /// <remarks>
+    /// Ölçümün cevaplaması gereken soru "eğitmek işe yarıyor mu" — oranı sıfırlanmış
+    /// koşum bu sorunun kontrol grubudur, o yüzden ikisi de koşturulabilir kalmalı.
+    /// </remarks>
+    [Fact]
+    public void TrainingShowsUpAsStatGrowth()
+    {
+        CampaignOptions idle = Options() with
+        {
+            Dojo = new DojoTuning { Training = new TrainingTuning { GapClosedPerDay = 0 } },
+        };
+        CampaignOptions drilled = Options() with
+        {
+            Dojo = new DojoTuning { Training = new TrainingTuning { GapClosedPerDay = 0.1 } },
+        };
+
+        CampaignReport without = new CampaignRunner(idle).Run(firstSeed: 7);
+        CampaignReport with = new CampaignRunner(drilled).Run(firstSeed: 7);
+
+        Assert.True(without.AverageTrainingDays > 0);
+        Assert.True(without.AverageScoreGain <= 0);
+        Assert.True(with.AverageScoreGain > without.AverageScoreGain);
+    }
+
     /// <summary>Zafer ne kadar öderse kasa o kadar dolar — ölçümün tuttuğu tek eksen.</summary>
     [Fact]
     public void ARicherRewardLeavesARicherDojo()

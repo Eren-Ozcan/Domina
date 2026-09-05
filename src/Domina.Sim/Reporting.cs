@@ -186,6 +186,9 @@ internal static class CampaignSummaryReport
             $"  Kelle avı              {report.AverageBounties:F2}"
             + $"  kelle alınan %{report.BountyClaimRate * 100:F1}");
         writer.WriteLine($"  Dağılan zırh parçası   {report.AverageArmorPiecesLost:F2}");
+        writer.WriteLine(
+            $"  Antrenman günü         {report.AverageTrainingDays:F1}"
+            + $"  en iyi savaşçı {report.AverageBestScore:F0} skor (+{report.AverageScoreGain:F0})");
         writer.WriteLine($"  Kapanan dojo           %{report.CollapseRate * 100:F1}");
         writer.WriteLine(
             $"  Ayakta kalınan gün     ortalama {report.AverageDaysSurvived:F0}, ortanca {report.MedianDaysSurvived}");

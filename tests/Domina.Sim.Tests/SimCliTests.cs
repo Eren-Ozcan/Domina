@@ -28,6 +28,17 @@ public class SimCliTests
         Assert.IsType<NeverRetreat>(options.RetreatPolicy);
     }
 
+    /// <summary>Antrenman oranı taranabilir olmalı — sayı ancak süpürülerek kilitlenir.</summary>
+    [Fact]
+    public void TrainingNumbersAreSweepable()
+    {
+        SimOptions options = Parse(
+            "--mode", "campaign", "--train-rate", "0.04", "--train-ceiling", "80");
+
+        Assert.Equal(0.04, options.Campaign!.Dojo.Training.GapClosedPerDay, precision: 9);
+        Assert.Equal(80, options.Campaign.Dojo.Training.SkillCeiling, precision: 9);
+    }
+
     [Fact]
     public void OptionsAreParsed()
     {
@@ -88,6 +99,8 @@ public class SimCliTests
     [InlineData("--scenario", "yok")]
     [InlineData("--policy", "maybe")]
     [InlineData("--policy", "below:2")]
+    [InlineData("--train-rate", "2")]
+    [InlineData("--train-ceiling", "0")]
     [InlineData("--bilinmeyen", "1")]
     public void BadInputIsRejectedWithAMessage(string flag, string value)
     {
