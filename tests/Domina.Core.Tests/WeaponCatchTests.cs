@@ -22,6 +22,11 @@ public class WeaponCatchTests
         BaseCatchChance = 1.0,
         BaseDismembermentChance = 0,
         BaseStunChance = 0,
+
+        // Silahın elden düşmesi de aynı yakalamadan çıkar ve kilidin YERİNE geçer; açık
+        // bırakılsaydı bu dosyadaki testler kilidi hiç göremezdi. Düşürmenin kendisi
+        // DisarmTests'in konusu.
+        CatchDisarmChance = 0,
     };
 
     /// <summary>Yakalama zarının hiç tutmadığı ayar — kontrol tarafı.</summary>

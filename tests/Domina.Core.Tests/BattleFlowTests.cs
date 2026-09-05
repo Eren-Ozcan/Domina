@@ -82,8 +82,13 @@ public class BattleFlowTests
 
         foreach (WarriorBattleSummary summary in result.Summaries)
         {
-            int landed = battle.Events.OfType<AttackLanded>().Count(e => e.Attacker == summary.Id);
-            int taken = battle.Events.OfType<AttackLanded>().Count(e => e.Defender == summary.Id);
+            // Bloklanan darbe de inen darbedir: ayrı olay akar (ekranda ayrı görünmesi
+            // gerekiyor) ama sayaçlarda isabettir. İkisi toplanmazsa akış ile bilanço
+            // birbirini tutmaz.
+            int landed = battle.Events.OfType<AttackLanded>().Count(e => e.Attacker == summary.Id)
+                         + battle.Events.OfType<AttackBlocked>().Count(e => e.Attacker == summary.Id);
+            int taken = battle.Events.OfType<AttackLanded>().Count(e => e.Defender == summary.Id)
+                        + battle.Events.OfType<AttackBlocked>().Count(e => e.Defender == summary.Id);
             int dodges = battle.Events.OfType<AttackDodged>().Count(e => e.Defender == summary.Id);
             bool died = battle.Events.OfType<WarriorDied>().Any(e => e.Warrior == summary.Id);
             bool escaped = battle.Events.OfType<WarriorEscaped>().Any(e => e.Warrior == summary.Id);
