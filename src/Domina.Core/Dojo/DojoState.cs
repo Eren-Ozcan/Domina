@@ -16,6 +16,8 @@ public sealed class DojoState
 {
     private EncounterOffer? _offer;
     private IReadOnlyList<RecruitOffer>? _recruits;
+    private BountyContract? _bounty;
+    private bool _bountyRead;
 
     public DojoState(
         DojoTuning? tuning = null,
@@ -23,13 +25,15 @@ public sealed class DojoState
         ulong seed = 1,
         EncounterTuning? encounters = null,
         EventTuning? events = null,
-        MarketTuning? market = null)
+        MarketTuning? market = null,
+        BountyTuning? bounties = null)
     {
         Tuning = tuning ?? new DojoTuning();
         Quartermaster = new Quartermaster(economy);
         Encounters = new EncounterGenerator(encounters);
         Events = new DayEventTable(events);
         Market = new RecruitMarket(market);
+        Bounties = new BountyBoard(bounties, encounters);
         Seed = seed;
     }
 
@@ -48,6 +52,24 @@ public sealed class DojoState
 
     /// <summary>Savaşçı pazarı.</summary>
     public RecruitMarket Market { get; }
+
+    /// <summary>Kelle avı sözleşmelerini asan tahta.</summary>
+    public BountyBoard Bounties { get; }
+
+    /// <summary>Kabul edilmiş sözleşme varsa onun asıldığı gün; yoksa <c>null</c>.</summary>
+    /// <remarks>
+    /// Sözleşmenin kendisi saklanmaz — günden ve tohumdan yeniden hesaplanır. Saklanması
+    /// gereken tek şey <b>söz verilip verilmediği</b>, o da tek bir sayı.
+    /// </remarks>
+    public int? AcceptedBountyDay { get; private set; }
+
+    /// <summary>Kellesi alınmış sözleşmenin asıldığı gün; yoksa <c>null</c>.</summary>
+    /// <remarks>
+    /// Tahta saf olduğu için sözleşme, süresi dolana kadar her gün yeniden üretilir. Bu
+    /// kayıt olmadan aynı hedef ertesi gün yeniden asılı görünür ve aynı kelle iki kez
+    /// satılırdı — ölçüldü, dojo başına 60 günde 12.7 kelle avı çıktı.
+    /// </remarks>
+    public int? ClaimedBountyDay { get; private set; }
 
     /// <summary>
     /// Seferin tohumu. Kayıtta durur; teklifler bundan ve günden yeniden hesaplanır.
@@ -114,11 +136,16 @@ public sealed class DojoState
             entry.Warrior.Honor = DecayedHonor(entry.Warrior.Honor);
         }
 
+        // Söz, günün sonunda tartılır: son gün de dövüşmeden kapandıysa sözleşme kırılmıştır.
+        bool broken = BreakBountyIfExpired();
+
         int closed = Day;
         Day++;
         _offer = null;
         _recruits = null;
-        return new DayReport(closed, recovered, trained, upkeep, happening);
+        _bounty = null;
+        _bountyRead = false;
+        return new DayReport(closed, recovered, trained, upkeep, happening, broken);
     }
 
     /// <summary>
@@ -246,6 +273,68 @@ public sealed class DojoState
     public IReadOnlyList<RecruitOffer> Recruits =>
         _recruits ??= Market.Stock(Day, Seed, Market.AnchorFor(Roster), Economy.RecruitPrice);
 
+    /// <summary>Bugün tahtada asılı sözleşme; yoksa <c>null</c>.</summary>
+    /// <remarks>
+    /// Teklif gibi gün içinde sabittir ve saklanmaz: aynı gün ve aynı tohum daima aynı
+    /// sözleşmeyi verir. Sözleşme <b>günlük teklifin yerine geçmez</b>, yanında durur —
+    /// gün yine tek iş yer, hangi işi yapacağın karardır.
+    /// </remarks>
+    public BountyContract? Bounty
+    {
+        get
+        {
+            if (!_bountyRead)
+            {
+                BountyContract? posted = Bounties.Posted(Day, Seed, Economy);
+                _bounty = posted?.PostedDay == ClaimedBountyDay ? null : posted;
+                _bountyRead = true;
+            }
+
+            return _bounty;
+        }
+    }
+
+    /// <summary>Bugünün sözleşmesini kabul eder — bir söz verilir.</summary>
+    /// <remarks>
+    /// Kabul etmek günü <b>yemez</b>: sözleşme kabul edilip aynı gün başka bir iş
+    /// yapılabilir. Yediği şey süredir — son güne kadar dönülmezse kadro onur kaybeder
+    /// (<see cref="BountyContract.BrokenHonorPenalty"/>).
+    /// </remarks>
+    /// <returns>Kabul edilebildiyse sözleşme, edilemediyse <c>null</c>.</returns>
+    public BountyContract? AcceptBounty()
+    {
+        if (Bounty is not BountyContract open || AcceptedBountyDay is not null)
+        {
+            return null;
+        }
+
+        AcceptedBountyDay = open.PostedDay;
+        return open;
+    }
+
+    /// <summary>Kelle alındı: söz kapanır ve sözleşme tahtadan iner.</summary>
+    internal void CloseBounty(int postedDay)
+    {
+        AcceptedBountyDay = null;
+        ClaimedBountyDay = postedDay;
+        _bounty = null;
+        _bountyRead = false;
+    }
+
+    /// <summary>Kayıttan gelen sözü yerine koyar.</summary>
+    /// <remarks>
+    /// Sözleşmenin kendisi kayda yazılmaz, günden ve tohumdan yeniden hesaplanır; yazılan
+    /// tek şey söz verilip verilmediğidir. Aksi hâlde oyuncu kaydı yeniden yükleyerek
+    /// verdiği sözden kurtulurdu.
+    /// </remarks>
+    internal void RestoreBounty(int? acceptedDay, int? claimedDay)
+    {
+        AcceptedBountyDay = acceptedDay;
+        ClaimedBountyDay = claimedDay;
+        _bounty = null;
+        _bountyRead = false;
+    }
+
     /// <summary>
     /// Teklifi geri çevirir: gün dojo'da geçer.
     /// </summary>
@@ -262,6 +351,8 @@ public sealed class DojoState
         Day = Math.Max(1, day);
         _offer = null;
         _recruits = null;
+        _bounty = null;
+        _bountyRead = false;
     }
 
     /// <summary>Kayıttan gelen sefer tohumunu yerine koyar.</summary>
@@ -270,6 +361,46 @@ public sealed class DojoState
         Seed = seed;
         _offer = null;
         _recruits = null;
+        _bounty = null;
+        _bountyRead = false;
+    }
+
+    /// <summary>
+    /// Kabul edilip son günü geçen sözleşmenin bedelini keser.
+    /// </summary>
+    /// <remarks>
+    /// Ceza <b>kadronun tamamına</b> yazılır, sefere gidecek olana değil: sözü dojo verdi,
+    /// bir savaşçı değil. Tek kişiye yazılsaydı oyuncu cezayı zaten gözden çıkardığı bir
+    /// savaşçının üstüne yıkar, söz de bedelsiz kalırdı — çekilmenin bedeli de aynı
+    /// sebeple tüm ekibe yazılıyor (GDD §5).
+    /// </remarks>
+    private bool BreakBountyIfExpired()
+    {
+        if (AcceptedBountyDay is not int accepted)
+        {
+            return false;
+        }
+
+        // Ölçü bugünün değil <b>yarının</b> durumu: son gün de dövüşmeden kapandıysa söz
+        // kırılmıştır. Bugüne bakılsaydı ceza bir gün geç düşer, oyuncu son günün
+        // akşamında hâlâ "sözüm duruyor" sayılırdı.
+        BountyContract? open = Bounty;
+        if (open is not null && open.PostedDay == accepted && Day < open.Deadline)
+        {
+            return false;
+        }
+
+        double penalty = open?.PostedDay == accepted
+            ? open.BrokenHonorPenalty
+            : Bounties.Tuning.BrokenHonorPenalty;
+
+        foreach (RosterEntry entry in Roster.Living)
+        {
+            entry.Warrior.Honor = HonorScale.Clamp(entry.Warrior.Honor - penalty);
+        }
+
+        AcceptedBountyDay = null;
+        return true;
     }
 
     /// <summary>Onuru nötre doğru bir gün kadar çeker; eşiği geçip öbür tarafa sarkmaz.</summary>
@@ -302,7 +433,8 @@ public sealed record DayReport(
     IReadOnlyList<WarriorId> Recovered,
     IReadOnlyList<WarriorId> Trained,
     UpkeepReport Upkeep,
-    DayEvent? Event = null);
+    DayEvent? Event = null,
+    bool BountyBroken = false);
 
 /// <summary>Bir günün ambar ve kasa hareketi.</summary>
 /// <param name="GoldSpent">O gün piyasadan alınan stok için ödenen altın.</param>
