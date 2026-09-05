@@ -90,6 +90,24 @@ public sealed class RigAnimator
                 _stumble = 1;
                 break;
 
+            case RigReactionKind.WeaponLost:
+                // Sendelemenin eğrisini ödünç alır: iki durumda da savaşçı bir an
+                // dengesini kaybeder. Gerçek sanat geldiğinde ayrışacak (docs/ROADMAP.md 2.2).
+                _stumble = 1;
+                break;
+
+            case RigReactionKind.ArmorShattered:
+                // Sendelemenin eğrisini ödünç alır: plakası dağılan savaşçı bir an
+                // savrulur. Gerçek sanat geldiğinde ayrışacak (docs/ROADMAP.md 2.2).
+                _stumble = 1;
+                break;
+
+            case RigReactionKind.Block:
+                // Sarsıntı, geri savrulma değil: irkilmenin eğrisini ödünç alır ama
+                // duruşun kendisi Guard()'dan gelir, yani savaşçı yerinde kalır.
+                _flinch = 1;
+                break;
+
             case RigReactionKind.Dismember:
                 if (reaction.Part is BodyPart part && _lost.Add(part))
                 {
@@ -154,6 +172,7 @@ public sealed class RigAnimator
                 Windup(phase),
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
                 Swing(Curves.Smooth(Math.Min(1, phase * 2.6))),
+            CombatState.Blocking => Guard(),
             CombatState.Stunned => Stagger(),
             CombatState.WeaponBound => Bound(),
             CombatState.Retreating => Retreat(),
@@ -261,6 +280,30 @@ public sealed class RigAnimator
             Weapon = -0.95f + strain,
         };
     }
+
+    /// <summary>
+    /// Blok duruşu: savaşçı çökmüş, silahı gövdesinin önünde yatay.
+    /// </summary>
+    /// <remarks>
+    /// Bekleyenden (<see cref="Idle"/>) ayrışması şart — ikisinde de savaşçı vurmuyor,
+    /// ama biri fırsat kolluyor, diğeri kapanmış duruyor. Salınım yok: bloklayan savaşçı
+    /// yerinden kıpırdamaz, ekrandaki tek hareketi gelen darbeyle sarsılmasıdır.
+    /// </remarks>
+    private static RigPose Guard() => new()
+    {
+        Visible = true,
+        Torso = -0.30f,
+        Head = 0.10f,
+        NearShoulder = 1.75f,
+        NearElbow = -1.35f,
+        FarShoulder = 2.05f,
+        FarElbow = -1.15f,
+        NearHip = 0.22f,
+        NearKnee = 0.30f,
+        FarHip = -0.26f,
+        FarKnee = 0.34f,
+        Weapon = -1.55f,
+    };
 
     private static RigPose Windup(double phase)
     {

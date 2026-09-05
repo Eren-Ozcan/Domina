@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation.Tests;
@@ -25,7 +25,8 @@ internal static class TestSnapshots
         ArenaPoint position = default,
         int facing = 1,
         double speed = 0,
-        bool poisoned = false) =>
+        bool poisoned = false,
+        bool disarmed = false) =>
         new(
             new WarriorId(id),
             team,
@@ -41,5 +42,6 @@ internal static class TestSnapshots
             position,
             facing,
             speed,
-            poisoned);
+            poisoned,
+            disarmed);
 }

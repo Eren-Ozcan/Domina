@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 
 namespace Domina.Presentation.Tests;
 
@@ -109,6 +109,27 @@ public class HudModelTests
     [InlineData(CombatState.Dead, "öldü")]
     public void EveryStateHasALabel(CombatState state, string expected) =>
         Assert.Equal(expected, HudModel.DescribeState(TestSnapshots.Of(1, state: state)));
+
+    /// <summary>
+    /// Silahsızlık da durumun üstüne yazılır ve zehirle birlikte okunabilir.
+    /// </summary>
+    /// <remarks>
+    /// İkisi bir aradayken oyuncunun kararı belirir: zehirlenmiş <b>ve</b> silahsız
+    /// savaşçı, tuşa basılmadığında ölen savaşçıdır.
+    /// </remarks>
+    [Fact]
+    public void ABrokenWeaponIsWrittenOnTopOfTheState()
+    {
+        Assert.Equal(
+            "saldırıyor · silahsız",
+            HudModel.DescribeState(
+                TestSnapshots.Of(1, state: CombatState.AttackWindup, disarmed: true)));
+
+        Assert.Equal(
+            "bekliyor · zehirli · silahsız",
+            HudModel.DescribeState(
+                TestSnapshots.Of(1, state: CombatState.Idle, poisoned: true, disarmed: true)));
+    }
 
     /// <summary>
     /// Zehir durumun yerine geçmez, üstüne yazılır.

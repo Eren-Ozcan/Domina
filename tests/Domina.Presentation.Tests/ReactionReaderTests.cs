@@ -1,4 +1,4 @@
-using Domina.Core.Combat;
+﻿using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation.Tests;
@@ -62,6 +62,23 @@ public class ReactionReaderTests
 
         Assert.Equal(_defender, reaction.Warrior);
         Assert.Equal(RigReactionKind.PoisonThroe, reaction.Kind);
+    }
+
+    /// <summary>Kırılan silahın tepkisini yalnızca silahı giden savaşçı üretir.</summary>
+    /// <remarks>
+    /// Kıranın (varsa) karşılığı zaten ekranda: yakalama hamlesi bir an önce oynatıldı.
+    /// İkinci bir tepki aynı anı iki kez anlatırdı.
+    /// </remarks>
+    [Fact]
+    public void ABrokenWeaponMovesOnlyItsOwner()
+    {
+        var reader = new ReactionReader();
+        var events = Stream(new WeaponDropped(1, _attacker, "Katana", _defender));
+
+        RigReaction reaction = Assert.Single(reader.Drain(events));
+
+        Assert.Equal(_attacker, reaction.Warrior);
+        Assert.Equal(RigReactionKind.WeaponLost, reaction.Kind);
     }
 
     /// <summary>Kaçınma stamina harcar; harcamanın nereye gittiği ekranda görünmeli.</summary>

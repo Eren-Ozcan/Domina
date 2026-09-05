@@ -127,6 +127,14 @@ public static class HudModel
         // dövüşüyor ama can gidiyor".
         string mark = snapshot.Poisoned && snapshot.IsActive ? " · zehirli" : string.Empty;
 
+        // Silahsızlık da aynı türden bir işaret: savaşçı dövüşmeye devam eder, yalnızca
+        // yumrukla — ve yerdeki silaha yürürken. İkisi birden okunabilmeli; zehirlenmiş ve
+        // silahsız savaşçı oyuncunun tuşa basma kararının ta kendisi.
+        if (snapshot.Disarmed && snapshot.IsActive)
+        {
+            mark += " · silahsız";
+        }
+
         if (snapshot.RetreatRequested && snapshot.IsActive && snapshot.State != CombatState.Retreating)
         {
             return "çekilecek · vuruş bitince" + mark;

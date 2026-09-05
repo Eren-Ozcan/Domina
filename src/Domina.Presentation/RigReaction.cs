@@ -50,6 +50,38 @@ public enum RigReactionKind
     /// sendeleme kaçarken olur, zehir dövüşün ortasında.
     /// </remarks>
     PoisonThroe,
+
+    /// <summary>
+    /// Silahı elinden düştü — savaşçı bir an boşalan eline bakar.
+    /// </summary>
+    /// <remarks>
+    /// Kendi türü olarak durur çünkü ekranda anlatacağı şey hasar değil <b>kayıp</b>:
+    /// silah yere düşer, savaşçı ona yürüyene kadar yumrukla kalır. Sürekli hali anlık
+    /// görüntüden okunur (<c>CombatantSnapshot.Disarmed</c>); buradaki tepki yalnızca
+    /// düştüğü an içindir.
+    /// </remarks>
+    WeaponLost,
+
+    /// <summary>
+    /// Zırh parçası dağıldı — savaşçının üstünden bir plaka gitti.
+    /// </summary>
+    /// <remarks>
+    /// Silah kaybından ayrı durur çünkü kalıcılığı ayrı: düşen silah geri alınabilir,
+    /// dağılan parça dövüşten sonra da yok. Sürekli hali anlık görüntüde
+    /// (<c>CombatantSnapshot.DestroyedArmor</c>); buradaki tepki dağıldığı an içindir.
+    /// </remarks>
+    ArmorShattered,
+
+    /// <summary>
+    /// Darbeyi duruşuyla karşıladı: yerinde sarsıldı, silahı önünde kaldı.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Flinch"/>'ten ayrı: bloklayan savaşçı geri savrulmaz, <b>direnir</b>.
+    /// <see cref="Dodge"/>'dan da ayrı: kaçınan yana çekilir, bloklayan yerinden
+    /// kıpırdamaz. Üçü aynı tepkiye bağlansaydı ekranda Savunma statının yaptığı iş
+    /// görünmezdi.
+    /// </remarks>
+    Block,
 }
 
 /// <param name="Part">Yalnızca <see cref="RigReactionKind.Dismember"/> için doludur.</param>
@@ -130,6 +162,12 @@ public sealed class ReactionReader
                 into.Add(new RigReaction(dodged.Defender, RigReactionKind.Dodge));
                 break;
 
+            case AttackBlocked blocked:
+                // Duruş tuttu. Saldıran için ayrı bir tepki yok: darbe boşa gitmedi,
+                // karşılandı — savurma animasyonu yanlış şeyi anlatırdı.
+                into.Add(new RigReaction(blocked.Defender, RigReactionKind.Block));
+                break;
+
             case OpportunityAttack opportunity:
                 // Kaçışın bedeli. Kendi başına vuruş sonucu üretmez — hemen ardından
                 // gelen isabet/ıska olayı onu tamamlar; buradaki tek iş, bedava
@@ -139,6 +177,22 @@ public sealed class ReactionReader
 
             case WarriorDismembered lost:
                 into.Add(new RigReaction(lost.Warrior, RigReactionKind.Dismember, lost.Part));
+                break;
+
+            case WeaponDropped dropped:
+                // Yalnızca silahı giden tepki üretir. Düşürenin (varsa) karşılığı zaten
+                // ekranda: yakalama hamlesi bir an önce oynatıldı.
+                into.Add(new RigReaction(dropped.Warrior, RigReactionKind.WeaponLost));
+                break;
+
+            case ArmorDestroyed destroyed:
+                into.Add(new RigReaction(destroyed.Warrior, RigReactionKind.ArmorShattered));
+                break;
+
+            case WeaponPickedUp picked:
+                // Eğilip alma anı. Ayrı bir tepki değil, sendelemenin tersi bir eğilme —
+                // yordamsal duruşta ikisi de gövdeyi büker (bkz. docs/ROADMAP.md 2.2).
+                into.Add(new RigReaction(picked.Warrior, RigReactionKind.WeaponLost));
                 break;
 
             case PoisonTicked poison:
