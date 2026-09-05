@@ -54,6 +54,7 @@ public sealed record DojoSnapshot(
 /// <param name="RecoveryDaysRemaining">Kalan revir günü.</param>
 /// <param name="TrainingDays">Tamamlanmış antrenman günü.</param>
 /// <param name="Talent">Antrenmandan faydalanma payı; oyuncunun ürettiği bir değer olduğu için kayda girer.</param>
+/// <param name="Drill">Seçili talim — oyuncunun kararı olduğu için kayda girer.</param>
 public sealed record WarriorSnapshot(
     int Id,
     string Name,
@@ -67,7 +68,8 @@ public sealed record WarriorSnapshot(
     ThrownWeaponSnapshot? Thrown,
     int RecoveryDaysRemaining,
     int TrainingDays,
-    double Talent = 1.0);
+    double Talent = 1.0,
+    Drill Drill = Drill.Strikes);
 
 /// <summary>Silahın <b>tanımlayıcı</b> alanları. Türetilen sayılar yüklerken hesaplanır.</summary>
 public sealed record WeaponSnapshot(

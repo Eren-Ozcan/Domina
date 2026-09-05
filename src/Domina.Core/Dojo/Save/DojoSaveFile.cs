@@ -50,7 +50,8 @@ public static class DojoSaveFile
                 w.Thrown is null ? null : ThrownWeaponSnapshot.From(w.Thrown),
                 entry.RecoveryDaysRemaining,
                 entry.TrainingDays,
-                w.Talent));
+                w.Talent,
+                entry.Drill));
         }
 
         return new DojoSnapshot(
@@ -170,6 +171,7 @@ public static class DojoSaveFile
         RosterEntry entry = state.Roster.Add(warrior);
         entry.Injure(Math.Max(0, record.RecoveryDaysRemaining));
         entry.TrainingDays = Math.Max(0, record.TrainingDays);
+        entry.Drill = record.Drill;
 
         if (!record.IsAlive)
         {

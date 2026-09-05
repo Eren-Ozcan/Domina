@@ -74,6 +74,22 @@ public class DojoSaveTests
         Assert.Equal(source.TrainingDays, loaded.TrainingDays);
     }
 
+    /// <summary>
+    /// Talim oyuncunun kararıdır, türetilen bir değer değil: kayıt onu taşımasaydı
+    /// oyun her açılışta savaşçıyı varsayılan talime döndürürdü.
+    /// </summary>
+    [Fact]
+    public void ARoundTripKeepsTheChosenDrill()
+    {
+        DojoState before = Populated();
+        RosterEntry source = before.Roster.FindLiving("Hana")!;
+        Assert.True(source.Train(Drill.Footwork));
+
+        DojoState after = DojoSaveFile.Load(DojoSaveFile.Write(before)).State!;
+
+        Assert.Equal(Drill.Footwork, after.Roster.Find(source.Id)!.Drill);
+    }
+
     [Fact]
     public void TheDeadStayDeadThroughASave()
     {
