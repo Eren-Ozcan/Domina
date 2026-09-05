@@ -25,6 +25,10 @@ namespace Domina.Core.Dojo.Save;
 /// Seferin tohumu. Teklifler bundan ve günden yeniden hesaplandığı için tekliflerin
 /// kendisi dosyaya yazılmaz — eski kayıt yeni bestiary'yi geri getirmesin diye.
 /// </param>
+/// <param name="School">
+/// Alınmış okul tesisleri. Yalnızca <b>hangi düğümler</b> yazılır; bonusların büyüklüğü
+/// denge sayısıdır ve dosyaya girmez.
+/// </param>
 public sealed record DojoSnapshot(
     int Version,
     int Day,
@@ -32,7 +36,8 @@ public sealed record DojoSnapshot(
     IReadOnlyList<WarriorSnapshot> Warriors,
     ulong Seed = 1,
     int? AcceptedBountyDay = null,
-    int? ClaimedBountyDay = null)
+    int? ClaimedBountyDay = null,
+    IReadOnlyList<SchoolNodeId>? School = null)
 {
     /// <summary>
     /// Yazılan dosyaların sürümü. Biçim <b>bozucu</b> şekilde değiştiğinde artar;
@@ -55,6 +60,7 @@ public sealed record DojoSnapshot(
 /// <param name="TrainingDays">Tamamlanmış antrenman günü.</param>
 /// <param name="Talent">Antrenmandan faydalanma payı; oyuncunun ürettiği bir değer olduğu için kayda girer.</param>
 /// <param name="Drill">Seçili talim — oyuncunun kararı olduğu için kayda girer.</param>
+/// <param name="Path">Seçilmiş yol; geri alınamaz bir karar olduğu için kayda girer.</param>
 public sealed record WarriorSnapshot(
     int Id,
     string Name,
@@ -69,7 +75,8 @@ public sealed record WarriorSnapshot(
     int RecoveryDaysRemaining,
     int TrainingDays,
     double Talent = 1.0,
-    Drill Drill = Drill.Strikes);
+    Drill Drill = Drill.Strikes,
+    WarriorPath Path = WarriorPath.None);
 
 /// <summary>Silahın <b>tanımlayıcı</b> alanları. Türetilen sayılar yüklerken hesaplanır.</summary>
 public sealed record WeaponSnapshot(

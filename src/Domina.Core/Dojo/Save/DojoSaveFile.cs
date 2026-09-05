@@ -51,7 +51,8 @@ public static class DojoSaveFile
                 entry.RecoveryDaysRemaining,
                 entry.TrainingDays,
                 w.Talent,
-                entry.Drill));
+                entry.Drill,
+                w.Path));
         }
 
         return new DojoSnapshot(
@@ -61,7 +62,8 @@ public static class DojoSaveFile
             warriors,
             state.Seed,
             state.AcceptedBountyDay,
-            state.ClaimedBountyDay);
+            state.ClaimedBountyDay,
+            [.. state.School.Owned]);
     }
 
     public static string Write(DojoState state) =>
@@ -118,6 +120,7 @@ public static class DojoSaveFile
         state.RestoreDay(Math.Max(1, snapshot.Day));
         state.RestoreSeed(snapshot.Seed);
         state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
+        state.RestoreSchool(snapshot.School ?? []);
 
         foreach (WarriorSnapshot record in snapshot.Warriors ?? [])
         {
@@ -161,6 +164,7 @@ public static class DojoSaveFile
             Honor = HonorScale.Clamp(record.Honor),
             ArmorWear = record.ArmorWear,
             Talent = record.Talent <= 0 ? 1 : record.Talent,
+            Path = record.Path,
         };
 
         foreach (BodyPart part in record.Disabilities ?? [])
