@@ -67,6 +67,7 @@ internal static class SimArgs
         EventTuning events = new();
         bool useMarket = false;
         MarketPick marketPick = MarketPick.Value;
+        MarketTuning marketTuning = new();
         EconomyTuning economy = new();
 
         for (int i = 0; i < args.Count; i++)
@@ -624,6 +625,18 @@ internal static class SimArgs
                     useMarket = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
+                case "--market-ceiling":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double ceiling)
+                        || ceiling < 0)
+                    {
+                        return ParsedArgs.Fail(
+                            $"--market-ceiling negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    marketTuning = marketTuning with { BestFollowCeiling = ceiling };
+                    break;
+
                 case "--market-pick":
                     if (!Enum.TryParse(value, ignoreCase: true, out marketPick))
                     {
@@ -794,7 +807,7 @@ internal static class SimArgs
                 cautiousWhenThin,
                 events,
                 useMarket,
-                null,
+                marketTuning,
                 marketPick)
             : null;
 
