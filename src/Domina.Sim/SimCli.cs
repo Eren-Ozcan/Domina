@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Domina.Sim;
 
@@ -31,6 +31,16 @@ internal static class SimCli
         }
 
         SimOptions options = parsed.Options;
+
+        if (options.Campaign is CampaignOptions campaign)
+        {
+            long began = Stopwatch.GetTimestamp();
+            CampaignReport campaignReport = new CampaignRunner(campaign).Run(options.FirstSeed);
+            CampaignSummaryReport.Write(
+                output, campaign, campaignReport, Stopwatch.GetElapsedTime(began));
+            return ExitOk;
+        }
+
         var runner = new BatchRunner(
             options.Scenario,
             options.RetreatPolicy,

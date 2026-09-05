@@ -1,4 +1,4 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Sim;
@@ -39,6 +39,12 @@ internal static class Scenarios
         new("poison-armored", "zehirli bıçak vs zırhlı oni — zehir duvarı aşıyor mu", PoisonedVsArmored),
         new("katana-armored", "katana vs zırhlı oni — zehrin karşısındaki gerçek seçenek", KatanaVsArmored),
         new("3v3-poison", "3v3, tengu zehirli shuriken atıyor — zehir oyuncunun üstüne dönünce", ThreeVsThreePoison),
+        new("blade-armored", "kesici usta vs zırhlı oni — düşürmenin kesici ucu", BladeVsArmored),
+        new("club-armored", "aynı dövüş, künt silahla — plakaya vuran çelik", ClubVsArmored),
+        new("spear-armored", "aynı dövüş, delici silahla — üçüncü sınıfın yeri", SpearVsArmored),
+        new("jitte-armored", "jitte vs zırhlı oni — yakalama aletinin duvarı", JitteVsArmored),
+        new("3v3-armored", "3v3, yokai'lerin hepsi tam kuşam — düşürmenin takım bedeli", ThreeVsThreeArmored),
+        new("patrol", "günlük devriye (3v3) — ekonominin ölçüldüğü sıradan karşılaşma", Patrol),
     ];
 
     public static Scenario? Find(string name) =>
@@ -53,6 +59,39 @@ internal static class Scenarios
         ]);
 
     private static BattleSetup ThreeVsThree() => ThreeVsThreeWith(Weapon.Katana());
+
+    /// <summary>
+    /// Ekonominin ölçüldüğü <b>sıradan</b> karşılaşma.
+    /// </summary>
+    /// <remarks>
+    /// Diğer senaryolar birer denge sondasıdır: bir kuralın ucunu görebilmek için kasten
+    /// ağır kurulmuşlardır ve savaşçı-dövüş başına ölüm oranları %38-49 bandındadır. Böyle
+    /// bir dövüş <b>her gün</b> yapılamaz — kadro günde bir cenaze kaldıramaz, ve o kadroyla
+    /// ölçülen fiyat aslında savaşçı fiyatını ölçer, zırhın ya da ilacın fiyatını değil.
+    /// Devriye bu yüzden ayrı durur: aynı dojo kadrosu, zayıflatılmış bir yokai üçlüsüne
+    /// karşı. Ekonomi sayıları (Açık Karar #5) bunun üstünde ölçülür.
+    /// </remarks>
+    private static BattleSetup Patrol() => new(
+        [
+            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana(), Armor.Light()),
+            new Warrior(
+                new WarriorId(2),
+                "Kıdemli",
+                WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
+                Weapon.Nodachi(),
+                Armor.Medium()),
+            new Warrior(
+                new WarriorId(3),
+                "Mızrakçı",
+                WarriorStats.Recruit() with { Evasion = 50, Aggression = 50 },
+                Weapon.Yari(),
+                Armor.Light()),
+        ],
+        [
+            Yokai(101, "Kappa", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
+            Yokai(102, "Kappa", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
+            Yokai(103, "Kitsune", health: 78, aggression: 62, defense: 14, evasion: 42, strength: 33, speed: 72, weapon: Weapon.Tanto()),
+        ]);
 
     /// <summary>
     /// Kilit süresinin (<c>CatchBindSeconds</c>) asıl ölçüldüğü yer.
@@ -224,6 +263,55 @@ internal static class Scenarios
     /// </remarks>
     private static BattleSetup KatanaVsArmored() =>
         Trade(Weapon.Katana(), enemyArmor: Armor.Heavy());
+
+    /// <summary>
+    /// Silah düşürmenin ölçülebilir sorusu: plakaya vuran çelik neyi ödüyor?
+    /// </summary>
+    /// <remarks>
+    /// Üçü de <b>çift el</b> ve zırhlı düşmana karşı: nodachi (kesici, düşme eğilimi 1.0),
+    /// tetsubo (künt, 0.2) ve yari (delici, 0.6). Kural yalnızca zırha inen vuruşta
+    /// işlediği için düşmanın tam kuşam taşıması şart — zırhsız oni ile ölçüm
+    /// <c>blade</c>/<c>club</c> çiftinin aynısı olurdu.
+    /// </remarks>
+    private static BattleSetup BladeVsArmored() =>
+        Trade(Weapon.Nodachi(), enemyArmor: Armor.Heavy());
+
+    /// <inheritdoc cref="BladeVsArmored"/>
+    private static BattleSetup ClubVsArmored() =>
+        Trade(Weapon.Tetsubo(), enemyArmor: Armor.Heavy());
+
+    /// <inheritdoc cref="BladeVsArmored"/>
+    private static BattleSetup SpearVsArmored() =>
+        Trade(Weapon.Yari(), enemyArmor: Armor.Heavy());
+
+    /// <summary>
+    /// Yakalama aletinin kendi duvarı: hasarı zırhın önünde erir.
+    /// </summary>
+    /// <remarks>
+    /// Düşürme kuralı jitte'ye kılıç taşıyan düşmanın önünde açık bir üstünlük veriyor;
+    /// bunun bir bedeli olmalı, yoksa yakalama aleti her eşleşmede doğru seçim olur.
+    /// Kontrol <see cref="KatanaVsArmored"/> — aynı düşman, aynı statlar, tek fark silah.
+    /// </remarks>
+    private static BattleSetup JitteVsArmored() =>
+        Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy());
+
+    /// <summary>
+    /// Düşürmenin <b>takım</b> bedeli: kontrol <c>3v3</c>, tek fark yokai'lerin kuşamı.
+    /// </summary>
+    /// <remarks>
+    /// 1v1'de düşen silah yalnızca bir savaşçının sorunudur; kalabalıkta kadronun
+    /// hangi ucunun çürüdüğü görünür — kesici taşıyan kıdemli mi, mızrakçı mı.
+    /// </remarks>
+    private static BattleSetup ThreeVsThreeArmored()
+    {
+        BattleSetup control = ThreeVsThree();
+        foreach (Warrior enemy in control.EnemySide)
+        {
+            enemy.Armor = Armor.Heavy();
+        }
+
+        return control;
+    }
 
     private static BattleSetup Trade(
         Weapon weapon,

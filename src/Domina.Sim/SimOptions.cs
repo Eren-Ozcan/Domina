@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+using System.Globalization;
+using Domina.Core.Campaign;
 using Domina.Core.Combat;
+using Domina.Core.Dojo;
 using Domina.Core.Model;
 
 namespace Domina.Sim;
@@ -18,7 +20,8 @@ internal sealed record SimOptions(
     CombatTuning Tuning,
     Armor? PlayerArmor,
     string ArmorLabel,
-    double? PlayerSpeed = null);
+    double? PlayerSpeed = null,
+    CampaignOptions? Campaign = null);
 
 /// <summary>Ayrıştırma sonucu: ayarlar, yardım isteği veya hata.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
@@ -49,6 +52,22 @@ internal static class SimArgs
         Armor? playerArmor = null;
         string armorLabel = "senaryodaki";
         double? playerSpeed = null;
+        bool campaign = false;
+        int days = CampaignOptions.DefaultDays;
+        int campaigns = CampaignOptions.DefaultCampaigns;
+        int partySize = CampaignOptions.DefaultPartySize;
+        int rosterTarget = CampaignOptions.DefaultRosterTarget;
+        int startingGold = CampaignOptions.DefaultStartingGold;
+        double repairAt = CampaignOptions.DefaultRepairAtWearShare;
+        int reserveDays = CampaignOptions.DefaultReserveDays;
+        bool useOffers = false;
+        ThreatBand acceptUpTo = ThreatBand.Dire;
+        bool cautiousWhenThin = false;
+        EncounterTuning encounters = new();
+        EventTuning events = new();
+        bool useMarket = false;
+        MarketPick marketPick = MarketPick.Value;
+        EconomyTuning economy = new();
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -357,6 +376,139 @@ internal static class SimArgs
                     tuning = tuning with { PoisonMaxDose = poisonDose };
                     break;
 
+                case "--armor-durability":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double durability)
+                        || durability < 0)
+                    {
+                        return ParsedArgs.Fail($"--armor-durability negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ArmorDurabilityScale = durability };
+                    break;
+
+                case "--block-chance":
+                    if (!TryFraction(value, out double blockChance))
+                    {
+                        return ParsedArgs.Fail($"--block-chance 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { MaxBlockChance = blockChance };
+                    break;
+
+                case "--block-seconds":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double blockSeconds)
+                        || blockSeconds < 0)
+                    {
+                        return ParsedArgs.Fail($"--block-seconds negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BlockSeconds = blockSeconds };
+                    break;
+
+                case "--block-reduction":
+                    if (!TryFraction(value, out double blockReduction))
+                    {
+                        return ParsedArgs.Fail($"--block-reduction 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BlockDamageReduction = blockReduction };
+                    break;
+
+                case "--target-wounded":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetWounded)
+                        || targetWounded < 0)
+                    {
+                        return ParsedArgs.Fail($"--target-wounded negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { TargetWoundedWeight = targetWounded };
+                    break;
+
+                case "--target-exposed":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetExposed)
+                        || targetExposed < 0)
+                    {
+                        return ParsedArgs.Fail($"--target-exposed negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { TargetExposedWeight = targetExposed };
+                    break;
+
+                case "--target-crowd":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetCrowd)
+                        || targetCrowd < 0)
+                    {
+                        return ParsedArgs.Fail($"--target-crowd negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { TargetCrowdPenalty = targetCrowd };
+                    break;
+
+                case "--target-sticky":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetSticky)
+                        || targetSticky < 0)
+                    {
+                        return ParsedArgs.Fail($"--target-sticky negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { TargetStickiness = targetSticky };
+                    break;
+
+                case "--disarm-chance":
+                    if (!TryFraction(value, out double disarmChance))
+                    {
+                        return ParsedArgs.Fail($"--disarm-chance 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { BaseDisarmChance = disarmChance };
+                    break;
+
+                case "--disarm-catch":
+                    if (!TryFraction(value, out double disarmCatch))
+                    {
+                        return ParsedArgs.Fail($"--disarm-catch 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { CatchDisarmChance = disarmCatch };
+                    break;
+
+                case "--disarm-armor-share":
+                    if (!TryFraction(value, out double disarmArmorShare))
+                    {
+                        return ParsedArgs.Fail($"--disarm-armor-share 0-1 arasında olmalı: {value}");
+                    }
+
+                    tuning = tuning with { ArmorHardnessShare = disarmArmorShare };
+                    break;
+
+                case "--drop-distance":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double dropDistance)
+                        || dropDistance < 0)
+                    {
+                        return ParsedArgs.Fail($"--drop-distance negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { WeaponDropDistance = dropDistance };
+                    break;
+
+                case "--pickup-radius":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double pickupRadius)
+                        || pickupRadius < 0)
+                    {
+                        return ParsedArgs.Fail($"--pickup-radius negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    tuning = tuning with { WeaponPickupRadius = pickupRadius };
+                    break;
+
                 case "--armor":
                     if (!TryParseArmor(value, out playerArmor))
                     {
@@ -365,6 +517,242 @@ internal static class SimArgs
                     }
 
                     armorLabel = playerArmor!.Name;
+                    break;
+
+                case "--mode":
+                    if (!string.Equals(value, "battle", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "campaign", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--mode battle veya campaign olmali: {value}");
+                    }
+
+                    campaign = string.Equals(value, "campaign", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--days":
+                    if (!TryCount(value, out days))
+                    {
+                        return ParsedArgs.Fail($"--days pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    break;
+
+                case "--campaigns":
+                    if (!TryCount(value, out campaigns))
+                    {
+                        return ParsedArgs.Fail($"--campaigns pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    break;
+
+                case "--party":
+                    if (!TryCount(value, out partySize) || partySize > 4)
+                    {
+                        return ParsedArgs.Fail($"--party 1-4 arasinda olmali: {value}");
+                    }
+
+                    break;
+
+                case "--roster":
+                    if (!TryCount(value, out rosterTarget))
+                    {
+                        return ParsedArgs.Fail($"--roster pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    break;
+
+                case "--gold":
+                    if (!TryAmount(value, out startingGold))
+                    {
+                        return ParsedArgs.Fail($"--gold negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    break;
+
+                case "--repair-at":
+                    if (!TryFraction(value, out repairAt))
+                    {
+                        return ParsedArgs.Fail($"--repair-at 0-1 arasinda olmali: {value}");
+                    }
+
+                    break;
+
+                case "--reserve-days":
+                    if (!TryAmount(value, out reserveDays))
+                    {
+                        return ParsedArgs.Fail($"--reserve-days negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    break;
+
+                case "--offers":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--offers on veya off olmali: {value}");
+                    }
+
+                    useOffers = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--accept-up-to":
+                    if (!Enum.TryParse(value, ignoreCase: true, out acceptUpTo))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--accept-up-to faint | rising | heavy | dire olmali: {value}");
+                    }
+
+                    break;
+
+                case "--cautious":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--cautious on veya off olmali: {value}");
+                    }
+
+                    cautiousWhenThin = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--market":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--market on veya off olmali: {value}");
+                    }
+
+                    useMarket = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--market-pick":
+                    if (!Enum.TryParse(value, ignoreCase: true, out marketPick))
+                    {
+                        return ParsedArgs.Fail($"--market-pick value veya best olmali: {value}");
+                    }
+
+                    break;
+
+                case "--event-chance":
+                    if (!TryFraction(value, out double eventChance))
+                    {
+                        return ParsedArgs.Fail($"--event-chance 0-1 arasinda olmali: {value}");
+                    }
+
+                    events = events with { ChancePerDay = eventChance };
+                    break;
+
+                case "--power-start":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double powerStart)
+                        || powerStart <= 0)
+                    {
+                        return ParsedArgs.Fail($"--power-start pozitif bir sayi olmali: {value}");
+                    }
+
+                    encounters = encounters with { StartingPower = powerStart };
+                    break;
+
+                case "--power-per-day":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double perDay)
+                        || perDay < 0)
+                    {
+                        return ParsedArgs.Fail($"--power-per-day negatif olmayan bir sayi olmali: {value}");
+                    }
+
+                    encounters = encounters with { PowerPerDay = perDay };
+                    break;
+
+                case "--power-variance":
+                    if (!TryFraction(value, out double variance))
+                    {
+                        return ParsedArgs.Fail($"--power-variance 0-1 arasinda olmali: {value}");
+                    }
+
+                    encounters = encounters with { DailyVariance = variance };
+                    break;
+
+                case "--power-max":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double powerMax)
+                        || powerMax <= 0)
+                    {
+                        return ParsedArgs.Fail($"--power-max pozitif bir sayi olmali: {value}");
+                    }
+
+                    encounters = encounters with { MaxPower = powerMax };
+                    break;
+
+                case "--duel-chance":
+                    if (!TryFraction(value, out double duelChance))
+                    {
+                        return ParsedArgs.Fail($"--duel-chance 0-1 arasinda olmali: {value}");
+                    }
+
+                    encounters = encounters with { DuelChance = duelChance };
+                    break;
+
+                case "--reward":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double reward)
+                        || reward < 0)
+                    {
+                        return ParsedArgs.Fail($"--reward negatif olmayan bir sayi olmali: {value}");
+                    }
+
+                    economy = economy with { VictoryGoldPerEnemyHealth = reward };
+                    break;
+
+                case "--armor-gold":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double armorGold)
+                        || armorGold < 0)
+                    {
+                        return ParsedArgs.Fail($"--armor-gold negatif olmayan bir sayi olmali: {value}");
+                    }
+
+                    economy = economy with { ArmorGoldPerDurability = armorGold };
+                    break;
+
+                case "--repair-gold":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double repairGold)
+                        || repairGold < 0)
+                    {
+                        return ParsedArgs.Fail($"--repair-gold negatif olmayan bir sayi olmali: {value}");
+                    }
+
+                    economy = economy with { RepairGoldPerWear = repairGold };
+                    break;
+
+                case "--food-price":
+                    if (!TryAmount(value, out int foodPrice))
+                    {
+                        return ParsedArgs.Fail($"--food-price negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    economy = economy with { FoodPrice = foodPrice };
+                    break;
+
+                case "--water-price":
+                    if (!TryAmount(value, out int waterPrice))
+                    {
+                        return ParsedArgs.Fail($"--water-price negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    economy = economy with { WaterPrice = waterPrice };
+                    break;
+
+                case "--medicine-price":
+                    if (!TryAmount(value, out int medicinePrice))
+                    {
+                        return ParsedArgs.Fail($"--medicine-price negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    economy = economy with { MedicinePrice = medicinePrice };
+                    break;
+
+                case "--recruit-price":
+                    if (!TryAmount(value, out int recruitPrice))
+                    {
+                        return ParsedArgs.Fail($"--recruit-price negatif olmayan bir tam sayi olmali: {value}");
+                    }
+
+                    economy = economy with { RecruitPrice = recruitPrice };
                     break;
 
                 default:
@@ -386,9 +774,33 @@ internal static class SimArgs
                 + "(never | below:<0-1> | losing:<0-1> | at:<saniye>)");
         }
 
+        CampaignOptions? campaignOptions = campaign
+            ? new CampaignOptions(
+                scenario,
+                days,
+                campaigns,
+                partySize,
+                rosterTarget,
+                startingGold,
+                repairAt,
+                reserveDays,
+                economy,
+                new DojoTuning(),
+                tuning,
+                policy,
+                useOffers,
+                encounters,
+                acceptUpTo,
+                cautiousWhenThin,
+                events,
+                useMarket,
+                null,
+                marketPick)
+            : null;
+
         return ParsedArgs.Ok(new SimOptions(
             scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel,
-            playerSpeed));
+            playerSpeed, campaignOptions));
     }
 
     /// <summary>
@@ -481,6 +893,12 @@ internal static class SimArgs
         return false;
     }
 
+    private static bool TryCount(string value, out int count) =>
+        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out count) && count > 0;
+
+    private static bool TryAmount(string value, out int amount) =>
+        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out amount) && amount >= 0;
+
     public static void WriteUsage(TextWriter writer)
     {
         ArgumentNullException.ThrowIfNull(writer);
@@ -505,6 +923,14 @@ internal static class SimArgs
         writer.WriteLine("             [--catch-accuracy <0-1>]");
         writer.WriteLine("             [--poison-damage <sayı>] [--poison-seconds <sn>]");
         writer.WriteLine("             [--poison-tick <sn>] [--poison-dose <sayı>]");
+        writer.WriteLine("             [--armor-durability <çarpan>]");
+        writer.WriteLine("             [--target-wounded <puan>] [--target-exposed <puan>]");
+        writer.WriteLine("             [--target-crowd <puan>] [--target-sticky <puan>]");
+        writer.WriteLine("             [--block-chance <0-1>] [--block-seconds <sn>]");
+        writer.WriteLine("             [--block-reduction <0-1>]");
+        writer.WriteLine("             [--disarm-chance <0-1>] [--disarm-catch <0-1>]");
+        writer.WriteLine("             [--disarm-armor-share <0-1>] [--drop-distance <birim>]");
+        writer.WriteLine("             [--pickup-radius <birim>]");
         writer.WriteLine();
         writer.WriteLine("Seçenekler:");
         writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
@@ -542,6 +968,12 @@ internal static class SimArgs
         writer.WriteLine("  --poison-seconds   Bir dozun ömrü");
         writer.WriteLine("  --poison-tick      Zehrin hasar verme aralığı");
         writer.WriteLine("  --poison-dose      Bir savaşçıda birikebilecek azami doz");
+        writer.WriteLine("  --armor-durability Zırh dayanıklılık havuzlarının çarpanı (0 = yıpranmaz)");
+        writer.WriteLine("  --disarm-chance    Zırha inen vuruşta silahın elden düşme taban şansı");
+        writer.WriteLine("  --disarm-catch     Yakalanan silahın avuçtan çıkma şansı");
+        writer.WriteLine("  --disarm-armor-share Vurulan parçanın kopma direncinin sertlik payı");
+        writer.WriteLine("  --drop-distance    Düşen silahın savaşçıdan uzağa savrulma mesafesi");
+        writer.WriteLine("  --pickup-radius    Yerdeki silahın alınabildiği mesafe");
         writer.WriteLine();
         writer.WriteLine("Senaryolar:");
         foreach (Scenario s in Scenarios.All)

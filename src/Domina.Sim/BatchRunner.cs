@@ -21,6 +21,7 @@ internal sealed record BattleRow(
     int LostLegs,
     int LostEyes,
     int EnemyDeaths,
+    int EnemyWeaponsDropped,
     int PlayerAttacks,
     int PlayerHits,
     double PlayerDamageDealt,
@@ -28,7 +29,14 @@ internal sealed record BattleRow(
     int PlayerStunsTaken,
     int PlayerStunsInflicted,
     int PlayerCatchesMade,
+    int PlayerBlocksMade,
     int PlayerTimesCaught,
+    double PlayerArmorWear,
+    int PlayerArmorDestroyed,
+    int PlayerWarriorsLosingArmor,
+    int PlayerWeaponsDropped,
+    int PlayerDisarmsInflicted,
+    int PlayerWeaponsPickedUp,
     int PlayerTimesPoisoned,
     int PlayerPoisonsInflicted,
     double PlayerPoisonDamageTaken,
@@ -148,6 +156,7 @@ internal sealed class BatchRunner
         int lostLegs = 0;
         int lostEyes = 0;
         int enemyDeaths = 0;
+        int enemyWeaponsDropped = 0;
         int playerAttacks = 0;
         int playerHits = 0;
         double damageDealt = 0;
@@ -155,7 +164,14 @@ internal sealed class BatchRunner
         int stunsTaken = 0;
         int stunsInflicted = 0;
         int catchesMade = 0;
+        int blocksMade = 0;
         int timesCaught = 0;
+        double armorWear = 0;
+        int armorDestroyed = 0;
+        int warriorsLosingArmor = 0;
+        int weaponsDropped = 0;
+        int disarmsInflicted = 0;
+        int weaponsPickedUp = 0;
         int timesPoisoned = 0;
         int poisonsInflicted = 0;
         double poisonDamageTaken = 0;
@@ -176,6 +192,8 @@ internal sealed class BatchRunner
                 {
                     enemyDeaths++;
                 }
+
+                enemyWeaponsDropped += s.TimesDisarmed;
 
                 continue;
             }
@@ -221,7 +239,21 @@ internal sealed class BatchRunner
             stunsTaken += s.TimesStunned;
             stunsInflicted += s.StunsInflicted;
             catchesMade += s.CatchesMade;
+            blocksMade += s.BlocksPerformed;
             timesCaught += s.TimesCaught;
+            armorWear += s.ArmorWear.Total;
+
+            int destroyed = s.DestroyedArmor.Count();
+            armorDestroyed += destroyed;
+
+            if (destroyed > 0)
+            {
+                warriorsLosingArmor++;
+            }
+
+            weaponsDropped += s.TimesDisarmed;
+            disarmsInflicted += s.DisarmsInflicted;
+            weaponsPickedUp += s.WeaponsPickedUp;
             timesPoisoned += s.TimesPoisoned;
             poisonsInflicted += s.PoisonsInflicted;
             poisonDamageTaken += s.PoisonDamageTaken;
@@ -249,6 +281,7 @@ internal sealed class BatchRunner
             lostLegs,
             lostEyes,
             enemyDeaths,
+            enemyWeaponsDropped,
             playerAttacks,
             playerHits,
             damageDealt,
@@ -256,7 +289,14 @@ internal sealed class BatchRunner
             stunsTaken,
             stunsInflicted,
             catchesMade,
+            blocksMade,
             timesCaught,
+            armorWear,
+            armorDestroyed,
+            warriorsLosingArmor,
+            weaponsDropped,
+            disarmsInflicted,
+            weaponsPickedUp,
             timesPoisoned,
             poisonsInflicted,
             poisonDamageTaken,
@@ -300,6 +340,14 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public int EnemyDeaths { get; private set; }
 
+    /// <summary>Düşmanların silahını düşürme sayısı (olay olarak).</summary>
+    /// <remarks>
+    /// Zırhın hiç sayılmamış kazancı budur ve <b>hiçbir savaşçının sayacında</b>
+    /// görünmez: plakaya vurup silahını elinden kaçıran düşmanı kimse düşürmemiştir.
+    /// Ayrı tutulmasaydı "zırh düşmanın silahını elinden alır" iddiası ölçülemezdi.
+    /// </remarks>
+    public int EnemyWeaponsDropped { get; private set; }
+
     public int PlayerAttacks { get; private set; }
 
     public int PlayerHits { get; private set; }
@@ -329,8 +377,46 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     /// </remarks>
     public int PlayerCatchesMade { get; private set; }
 
+    public int PlayerBlocksMade { get; private set; }
+
     /// <summary>Oyuncu savaşçılarının silahının yakalandığı sayı.</summary>
     public int PlayerTimesCaught { get; private set; }
+
+    /// <summary>Oyuncu kuşamlarının emdiği toplam hasar.</summary>
+    /// <remarks>
+    /// Kuşamın <b>kaç dövüş dayandığı</b> yalnızca buradan çıkar: dövüş başına emilen
+    /// hasar, parçanın dayanıklılığına bölününce parçanın ömrü okunur.
+    /// </remarks>
+    public double PlayerArmorWear { get; private set; }
+
+    /// <summary>Dağılan oyuncu zırh parçası sayısı — <b>kalıcı</b> kayıp.</summary>
+    /// <remarks>
+    /// Zırhın gerçek fiyatı yalnızca burada görünür: kazanılan dövüş bile kuşamdan bir
+    /// parça götürebilir (docs/GDD.md §7).
+    /// </remarks>
+    public int PlayerArmorDestroyed { get; private set; }
+
+    /// <summary>En az bir zırh parçası kaybeden oyuncu savaşçısı sayısı.</summary>
+    public int PlayerWarriorsLosingArmor { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının silahını düşürme sayısı (olay olarak).</summary>
+    /// <remarks>
+    /// Kuralın bedeli yalnızca burada görünür: düşme ne hasar ne uzuv kaybı sayacına
+    /// düşer, ama savaşçı silahına yürüyene kadar yumrukla kalır
+    /// (docs/GDD.md §7).
+    /// </remarks>
+    public int PlayerWeaponsDropped { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının düşürdüğü düşman silahı sayısı.</summary>
+    public int PlayerDisarmsInflicted { get; private set; }
+
+    /// <summary>Oyuncu savaşçılarının yerden aldığı silah sayısı.</summary>
+    /// <remarks>
+    /// Bedelin kapanıp kapanmadığını söyleyen sayı budur — düşme kalıcı bir kayıp değil,
+    /// bir <b>yürüyüş</b>. İkisi yan yana durmazsa kuralın gerçekte ne kadar ısırdığı
+    /// bilinemez.
+    /// </remarks>
+    public int PlayerWeaponsPickedUp { get; private set; }
 
     /// <summary>Oyuncu savaşçılarının yediği zehirli vuruş sayısı.</summary>
     public int PlayerTimesPoisoned { get; private set; }
@@ -398,6 +484,9 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double EnemyDeathRate => Rate(EnemyDeaths, EnemyAppearances);
 
+    /// <summary>Sahaya çıkan bir düşmanın silahını düşürme oranı.</summary>
+    public double EnemyWeaponDropRate => Rate(EnemyWeaponsDropped, EnemyAppearances);
+
     public double PlayerAccuracy => Rate(PlayerHits, PlayerAttacks);
 
     /// <summary>Dövüş başına düşen hücum sayısı — eşik ve olasılığın birlikte çıktısı.</summary>
@@ -435,6 +524,36 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     /// dövüş başına yakalanma sayısıdır; yakalamanın iki yönlü olup olmadığını gösterir.</summary>
     public double TimesCaughtPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerTimesCaught / PlayerAppearances;
+
+    /// <summary>Bir oyuncu savaşçısının dövüş başına blokla karşıladığı darbe sayısı.</summary>
+    /// <remarks>
+    /// Bloğun bedeli vurulmayan vuruştur; bu sayaç tek başına "işe yarıyor mu" demez.
+    /// Yanına <see cref="ArmorWearPerWarrior"/> ve uzuv kaybı oranıyla bakılır: blok
+    /// hasarı ve kopmayı düşürürken zaferi düşürmüyorsa duruş bedelini ödüyor demektir.
+    /// </remarks>
+    public double BlocksPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerBlocksMade / PlayerAppearances;
+
+    /// <summary>Bir oyuncu savaşçısının dövüş başına kuşamına emdirdiği hasar.</summary>
+    public double ArmorWearPerWarrior =>
+        PlayerAppearances == 0 ? 0 : PlayerArmorWear / PlayerAppearances;
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının kuşamından parça kaybetme oranı.</summary>
+    public double ArmorLossRate => Rate(PlayerWarriorsLosingArmor, PlayerAppearances);
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına kaybettiği parça sayısı.</summary>
+    public double ArmorPiecesLostPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerArmorDestroyed / PlayerAppearances;
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına silahını düşürme oranı.</summary>
+    public double WeaponDropRate => Rate(PlayerWeaponsDropped, PlayerAppearances);
+
+    /// <summary>Düşen silahların yerden alınma oranı.</summary>
+    public double PickupRate => Rate(PlayerWeaponsPickedUp, PlayerWeaponsDropped);
+
+    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına düşürdüğü düşman silahı.</summary>
+    public double DisarmsPerWarrior =>
+        PlayerAppearances == 0 ? 0 : (double)PlayerDisarmsInflicted / PlayerAppearances;
 
     /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yediği zehirli vuruş.</summary>
     public double PoisoningsTakenPerWarrior =>
@@ -484,13 +603,21 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         LostLegs += row.LostLegs;
         LostEyes += row.LostEyes;
         EnemyDeaths += row.EnemyDeaths;
+        EnemyWeaponsDropped += row.EnemyWeaponsDropped;
         PlayerAttacks += row.PlayerAttacks;
         PlayerHits += row.PlayerHits;
         PlayerDamageDealt += row.PlayerDamageDealt;
         PlayerDamageTaken += row.PlayerDamageTaken;
         PlayerStunsTaken += row.PlayerStunsTaken;
         PlayerCatchesMade += row.PlayerCatchesMade;
+        PlayerBlocksMade += row.PlayerBlocksMade;
         PlayerTimesCaught += row.PlayerTimesCaught;
+        PlayerArmorWear += row.PlayerArmorWear;
+        PlayerArmorDestroyed += row.PlayerArmorDestroyed;
+        PlayerWarriorsLosingArmor += row.PlayerWarriorsLosingArmor;
+        PlayerWeaponsDropped += row.PlayerWeaponsDropped;
+        PlayerDisarmsInflicted += row.PlayerDisarmsInflicted;
+        PlayerWeaponsPickedUp += row.PlayerWeaponsPickedUp;
         PlayerTimesPoisoned += row.PlayerTimesPoisoned;
         PlayerPoisonsInflicted += row.PlayerPoisonsInflicted;
         PlayerPoisonDamageTaken += row.PlayerPoisonDamageTaken;
