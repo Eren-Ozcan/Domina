@@ -56,6 +56,31 @@ public sealed record MarketTuning
     /// </remarks>
     public double RosterFollow { get; init; } = 0.7;
 
+    /// <summary>
+    /// Pazardaki en iyi adayın, dojonun <b>en iyi savaşçısına</b> göre üst sınırı.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Ortalama takibi (<see cref="RosterFollow"/>) pazarın nereye <i>oturduğunu</i>
+    /// söyler ama nereye kadar <i>çıkabileceğini</i> söylemez: <see cref="Spread"/>
+    /// üstten vurduğunda tek bir aday kadronun en iyisine yaklaşabilir. Bu tavan onu
+    /// keser — satın alınan savaşçı elindeki en iyinin bu oranını asla geçemez.
+    /// </para>
+    /// <para>
+    /// Referans <b>ortalama değil en iyi savaşçıdır</b>: ortalamaya bağlansaydı iki ucuz
+    /// acemi alıp ortalamayı düşürerek pazar sömürülebilirdi. En iyi savaşçı
+    /// düşürülemez, yalnızca ölerek kaybedilir — ölünce tavanın da düşmesi doğrudur.
+    /// </para>
+    /// <para>
+    /// Gerekçe: yetiştirilen savaşçı oyuncunun <b>eseri</b> olmalı; pazar onu
+    /// kopyalayabiliyorsa antrenmanın anlamı kalmaz. Pazar <b>yerine koyma</b> aracıdır,
+    /// <b>ilerleme</b> aracı değil. Stat tavanı sertken pazarın tam güçle satabildiği tek
+    /// şey <see cref="RecruitOffer.Talent"/> olarak kalır — ilerleme yolu ham adayı alıp
+    /// eğitmekten geçer.
+    /// </para>
+    /// </remarks>
+    public double BestFollowCeiling { get; init; } = 0.75;
+
     /// <summary>Yeteneğin alt ve üst sınırı.</summary>
     public double MinTalent { get; init; } = 0.6;
 
@@ -77,6 +102,23 @@ public sealed record MarketTuning
     ];
 }
 
+/// <summary>Pazarın etrafında üretileceği taban ve aşamayacağı tavan.</summary>
+/// <remarks>
+/// İkisi ayrı sorulara cevap verir: <paramref name="Stats"/> adayların <b>nereye
+/// oturduğunu</b>, <paramref name="CeilingScore"/> ise <b>nereye kadar çıkabildiğini</b>
+/// söyler. Taban kadronun ortalamasını, tavan kadronun en iyisini izler.
+/// </remarks>
+/// <param name="Stats">Adayların etrafında oynatılacağı taban statlar.</param>
+/// <param name="CeilingScore">
+/// Bir adayın toplam stat skorunun üst sınırı; sınırsız için sonsuz.
+/// </param>
+public sealed record MarketAnchor(WarriorStats Stats, double CeilingScore)
+{
+    /// <summary>Tavansız taban — ölçüm ve test için.</summary>
+    public static MarketAnchor Uncapped(WarriorStats stats) =>
+        new(stats, double.PositiveInfinity);
+}
+
 /// <summary>Günün köle pazarını üretir.</summary>
 /// <remarks>
 /// Teklif ve olay gibi <b>saf</b>: aynı tohum, aynı dönem ve aynı kadro seviyesi daima aynı
@@ -89,9 +131,10 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
 
     /// <summary>Verilen gündeki adaylar.</summary>
     /// <param name="anchor">
-    /// Pazarın etrafında üretileceği seviye — kadronun ortalaması.
+    /// Pazarın etrafında üretileceği taban ve aşamayacağı tavan — bkz.
+    /// <see cref="AnchorFor(Roster)"/>.
     /// </param>
-    public IReadOnlyList<RecruitOffer> Stock(int day, ulong seed, WarriorStats anchor, int basePrice)
+    public IReadOnlyList<RecruitOffer> Stock(int day, ulong seed, MarketAnchor anchor, int basePrice)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
 
@@ -100,9 +143,10 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
     }
 
     /// <summary>Akışı dışarıdan verilen pazar — ölçüm ve test için.</summary>
-    public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, WarriorStats anchor, int basePrice)
+    public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, MarketAnchor anchor, int basePrice)
     {
         ArgumentNullException.ThrowIfNull(random);
+        ArgumentNullException.ThrowIfNull(anchor);
 
         List<RecruitOffer> stock = [];
         for (int i = 0; i < Tuning.Candidates; i++)
@@ -113,14 +157,26 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         return stock;
     }
 
-    /// <summary>
-    /// Pazarın etrafında üretileceği seviye: kadronun ortalaması ile acemi tabanı arasında.
-    /// </summary>
+    /// <summary>Tavansız pazar — ölçüm ve test için.</summary>
+    public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, WarriorStats anchor, int basePrice) =>
+        Stock(random, MarketAnchor.Uncapped(anchor), basePrice);
+
+    /// <summary>Kadroya bakarak pazarın tabanını ve tavanını çıkarır.</summary>
     /// <remarks>
-    /// Kadro boşken (herkes öldüyse) taban acemi statlarıdır — yoksa dojo çöktükten sonra
-    /// pazar da çöker ve toparlanmanın yolu kalmazdı.
+    /// <para>
+    /// <b>Taban</b> kadronun ortalaması ile acemi seviyesi arasındadır
+    /// (<see cref="MarketTuning.RosterFollow"/>). Kadro boşken (herkes öldüyse) taban
+    /// acemi statlarıdır — yoksa dojo çöktükten sonra pazar da çöker ve toparlanmanın
+    /// yolu kalmazdı.
+    /// </para>
+    /// <para>
+    /// <b>Tavan</b> ise ortalamayı değil kadronun <b>en iyi savaşçısını</b> izler
+    /// (<see cref="MarketTuning.BestFollowCeiling"/>): satın alınan hiçbir savaşçı elde
+    /// yetiştirilmiş en iyiyi geçemesin. Boş kadroda tavan acemi skorudur, yani ilk
+    /// alımlar da acemi bandında kalır.
+    /// </para>
     /// </remarks>
-    public WarriorStats AnchorFor(Roster roster)
+    public MarketAnchor AnchorFor(Roster roster)
     {
         ArgumentNullException.ThrowIfNull(roster);
 
@@ -128,7 +184,7 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         WarriorStats recruit = WarriorStats.Recruit();
         if (living.Count == 0)
         {
-            return recruit;
+            return new MarketAnchor(recruit, Score(recruit));
         }
 
         WarriorStats average = new(
@@ -142,29 +198,68 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
             living.Average(w => w.BaseStats.Speed));
 
         double follow = Math.Clamp(Tuning.RosterFollow, 0, 1);
-        return Blend(recruit, average, follow);
+        double best = living.Max(w => Score(w.BaseStats));
+
+        // Tavan acemi seviyesinin altına hiçbir zaman inmez: aksi halde tavan daha ilk
+        // günden ısırır ve pazar acemi kadroya acemiden zayıf adam satar — yerine koyma
+        // yolu kapanır, dojo toparlanamaz (ölçüldü: 400 dojonun tamamı kasayı sıfırladı).
+        // Tavan ancak en iyi savaşçı acemiyi belirgin şekilde geçtiğinde devreye girer.
+        double ceiling = Math.Max(
+            Score(recruit),
+            best * Math.Max(0, Tuning.BestFollowCeiling));
+
+        return new MarketAnchor(Blend(recruit, average, follow), ceiling);
     }
 
-    private RecruitOffer Draw(IRandomSource random, WarriorStats anchor, int basePrice)
+    private RecruitOffer Draw(IRandomSource random, MarketAnchor anchor, int basePrice)
     {
         double talent = Tuning.MinTalent
             + (random.NextDouble() * Math.Max(0, Tuning.MaxTalent - Tuning.MinTalent));
 
-        WarriorStats stats = new(
-            Roll(random, anchor.MaxHealth, cap: false),
-            Roll(random, anchor.Aggression),
-            Roll(random, anchor.Defense),
-            Roll(random, anchor.Evasion),
-            Roll(random, anchor.Strength),
-            Roll(random, anchor.Accuracy),
-            Roll(random, anchor.MaxStamina, cap: false),
-            Roll(random, anchor.Speed));
+        WarriorStats around = anchor.Stats;
+        WarriorStats stats = Capped(
+            new WarriorStats(
+                Roll(random, around.MaxHealth, cap: false),
+                Roll(random, around.Aggression),
+                Roll(random, around.Defense),
+                Roll(random, around.Evasion),
+                Roll(random, around.Strength),
+                Roll(random, around.Accuracy),
+                Roll(random, around.MaxStamina, cap: false),
+                Roll(random, around.Speed)),
+            anchor.CeilingScore);
 
         string name = Tuning.Names.Count == 0
             ? "Adsız"
             : Tuning.Names[random.NextInt(Tuning.Names.Count)];
 
-        return new RecruitOffer(name, stats, talent, Price(stats, talent, anchor, basePrice));
+        return new RecruitOffer(name, stats, talent, Price(stats, talent, around, basePrice));
+    }
+
+    /// <summary>Tavanı aşan adayı statlarını oranlayarak aşağı çeker.</summary>
+    /// <remarks>
+    /// Tek tek kırpmak yerine <b>hepsi aynı oranla</b> ölçeklenir: kırpma, tavana dayanan
+    /// her adayı aynı düz profile çevirirdi ve "kimi alayım" sorusu geri kaybolurdu.
+    /// Ölçekleme adayın şeklini korur, yalnızca ağırlığını düşürür.
+    /// </remarks>
+    private static WarriorStats Capped(WarriorStats stats, double ceilingScore)
+    {
+        double score = Score(stats);
+        if (double.IsInfinity(ceilingScore) || ceilingScore <= 0 || score <= ceilingScore)
+        {
+            return stats;
+        }
+
+        double scale = ceilingScore / score;
+        return new WarriorStats(
+            Math.Max(1, stats.MaxHealth * scale),
+            Math.Max(1, stats.Aggression * scale),
+            Math.Max(1, stats.Defense * scale),
+            Math.Max(1, stats.Evasion * scale),
+            Math.Max(1, stats.Strength * scale),
+            Math.Max(1, stats.Accuracy * scale),
+            Math.Max(1, stats.MaxStamina * scale),
+            Math.Max(1, stats.Speed * scale));
     }
 
     /// <summary>Tek bir statı taban etrafında oynatır.</summary>

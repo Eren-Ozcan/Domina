@@ -18,6 +18,15 @@ public class RecruitMarketTests
         return state;
     }
 
+    private static double Score(WarriorStats stats) =>
+        stats.MaxHealth
+        + stats.Strength
+        + stats.Accuracy
+        + stats.Defense
+        + stats.Evasion
+        + stats.Speed
+        + stats.Aggression;
+
     [Fact]
     public void CandidatesDifferFromEachOther()
     {
@@ -114,15 +123,62 @@ public class RecruitMarketTests
             "Usta",
             WarriorStats.Recruit() with { MaxHealth = 200, Strength = 80, Accuracy = 85 });
 
-        WarriorStats greenAnchor = market.AnchorFor(green.Roster);
-        WarriorStats veteranAnchor = market.AnchorFor(veteran.Roster);
+        MarketAnchor greenAnchor = market.AnchorFor(green.Roster);
+        MarketAnchor veteranAnchor = market.AnchorFor(veteran.Roster);
 
-        Assert.True(veteranAnchor.MaxHealth > greenAnchor.MaxHealth);
-        Assert.True(veteranAnchor.Strength > greenAnchor.Strength);
+        Assert.True(veteranAnchor.Stats.MaxHealth > greenAnchor.Stats.MaxHealth);
+        Assert.True(veteranAnchor.Stats.Strength > greenAnchor.Stats.Strength);
 
         // Kadro tamamen ölse bile pazar acemi seviyesine düşer, sıfıra değil.
         DojoState empty = Funded();
-        Assert.Equal(WarriorStats.Recruit(), market.AnchorFor(empty.Roster));
+        Assert.Equal(WarriorStats.Recruit(), market.AnchorFor(empty.Roster).Stats);
+    }
+
+    /// <summary>
+    /// Pazar kadronun ortalamasını takip eder ama en iyisini <b>geçemez</b>: yetiştirilen
+    /// savaşçı oyuncunun eseri kalsın, satın alınabilir olmasın.
+    /// </summary>
+    [Fact]
+    public void NoCandidateOutgrowsTheBestWarriorInTheRoster()
+    {
+        RecruitMarket market = new();
+
+        DojoState dojo = Funded();
+        dojo.Roster.Recruit("Acemi", WarriorStats.Recruit());
+        dojo.Roster.Recruit(
+            "Usta",
+            WarriorStats.Recruit() with { MaxHealth = 220, Strength = 90, Accuracy = 90 });
+
+        MarketAnchor anchor = market.AnchorFor(dojo.Roster);
+        double best = Score(
+            WarriorStats.Recruit() with { MaxHealth = 220, Strength = 90, Accuracy = 90 });
+
+        IEnumerable<RecruitOffer> offers = Enumerable
+            .Range(1, 200)
+            .SelectMany(seed => market.Stock(new SeededRandom((ulong)seed), anchor, basePrice: 150));
+
+        foreach (RecruitOffer offer in offers)
+        {
+            Assert.True(
+                Score(offer.Stats) <= best * new MarketTuning().BestFollowCeiling + 1e-6,
+                $"aday tavanı aştı: {Score(offer.Stats):F1} / {best:F1}");
+        }
+    }
+
+    /// <summary>Tavan kırpmaz, oranlar — tavana dayanan adaylar birbirinin kopyası olmaz.</summary>
+    [Fact]
+    public void TheCeilingScalesTheCandidateInsteadOfFlatteningIt()
+    {
+        RecruitMarket market = new(new MarketTuning { BestFollowCeiling = 0.2 });
+
+        DojoState dojo = Funded();
+        dojo.Roster.Recruit("Usta", WarriorStats.Recruit() with { MaxHealth = 300, Strength = 95 });
+
+        MarketAnchor anchor = market.AnchorFor(dojo.Roster);
+        IReadOnlyList<RecruitOffer> stock = market.Stock(new SeededRandom(3), anchor, basePrice: 150);
+
+        // Hepsi tavana dayandı ama profilleri hâlâ farklı.
+        Assert.True(stock.Select(o => Math.Round(o.Stats.Strength, 3)).Distinct().Count() > 1);
     }
 
     [Fact]
