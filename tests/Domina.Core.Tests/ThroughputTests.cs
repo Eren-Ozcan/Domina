@@ -14,6 +14,7 @@ namespace Domina.Core.Tests;
 /// yürür; bu döngü dakikalar sürerse pratikte kimse denge yapmaz. Çekirdeğe motor
 /// bağımlılığı veya dövüş başına ağır bir ayırma sızarsa ilk burada görülür.
 /// </remarks>
+[Collection(ThroughputGroup.Name)]
 public class ThroughputTests
 {
     private const int _battles = 10_000;
@@ -90,4 +91,16 @@ public class ThroughputTests
         // üstü, olay akışının veya başka bir listenin sızdığı anlamına gelir.
         Assert.True(perBattle < 16 * 1024, $"Dövüş başına {perBattle} bayt ayrıldı.");
     }
+}
+
+/// <summary>Süre ölçen testleri yalnız koşturur.</summary>
+/// <remarks>
+/// Bütçe duvar saatiyle ölçülüyor: aynı anda koşan başka bir test sınıfı çekirdeği
+/// meşgul ettiğinde ölçüm dövüş çözümleyicisinin hızını değil makinenin o anki yükünü
+/// ölçer. Sınıf sayısı arttıkça bu kaçınılmaz — bu yüzden ölçüm tek başına koşar.
+/// </remarks>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class ThroughputGroup
+{
+    public const string Name = "throughput";
 }
