@@ -19,7 +19,8 @@ namespace Domina.Core.Dojo;
 /// <param name="Name">Adayın adı.</param>
 /// <param name="Stats">Görünen statlar — pazarlıkta gizli bir şey yok.</param>
 /// <param name="Talent">
-/// Antrenmandan ne kadar hızlı faydalanacağı (1.0 = ortalama).
+/// Antrenmandan ne kadar hızlı faydalanacağı (1.0 = ortalama) — bir antrenman gününün
+/// kazancını doğrudan çarpar (<see cref="TrainingGround"/>).
 /// </param>
 /// <param name="Price">İstenen altın.</param>
 public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent, int Price);

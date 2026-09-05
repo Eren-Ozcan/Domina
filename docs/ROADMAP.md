@@ -198,12 +198,14 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
       — **kadro modeli hazır** (`Domina.Core/Dojo/Roster.cs`), ekran yok
 - [x] **İsim düzenleme** (chat'ten gelen veya üretilen ismi değiştirme — GDD §8)
       — `Roster.Rename`; isim eşsizliği yalnızca canlılar arasında zorlanıyor
-- [ ] Antrenman alanları + antrenman süresi/etkisi
-      — **gün sayacı var** (`RosterEntry.TrainingDays`) ve **yetenek alanı hazır**
-      (`Warrior.Talent`), etkisi ölçülmeden yazılmadı. Pazar ölçümü boşluğu sayıyla
-      gösterdi: ham aday gelişmediği için "ucuz al, eğit" stratejisi şu an kaybediyor
-      (GDD §11)
-- [ ] **Savaşçı skill tree'si (basit)**
+- [x] **Antrenman alanları + antrenman süresi/etkisi** — `Dojo/Training.cs`: dört talim
+      sekiz statı kaplar, kazanç tavana kalan boşluğun payıdır (azalan getiri kuralın
+      içinde), `Warrior.Talent` kazancı çarpar, aç savaşçı ilerlemez ve yazılan şey **ham**
+      stattır (sakatlığın çarpanı üstünde kalır). Oran **0.04'te kilitlendi**: 400 dojo ×
+      60 gün ölçümüyle, iyi işleyen dojo 60 günde pazar tavanının ısırdığı bandın önüne
+      çıkıyor (GDD §11 "Antrenman")
+- [ ] **Savaşçı skill tree'si (basit)** — antrenman oranının üstüne binecek; her bonus
+      0.04'ü yeniden ölçtürür
 - [ ] **Okul + Eğitmen skill tree'si (derin)** — antrenman hızı, tesis kilitleri,
       ekonomi bonusları, revir iyileştirmeleri
 - [x] **Revir/hekim: iyileşme süresi, ilaç kaynağıyla hızlandırma**

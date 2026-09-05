@@ -1403,7 +1403,8 @@ pazarından birebir alındı:
 - **Yetenek (`Talent`) ikinci eksen:** savaşçının antrenmandan ne kadar hızlı
   faydalanacağı, doğuştan gelen ve değişmeyen payı (0.6-1.4). Aynı statlarla gelen iki
   aday aynı hızda gelişmez. Fiyata girer ama statlardan daha az ağırlıkla: yetenek bir
-  **vaat**, stat ise elde olan. **Dövüş bunu okumaz**, yalnızca antrenman okuyacak.
+  **vaat**, stat ise elde olan. **Dövüş bunu okumaz**, yalnızca antrenman okur — bir
+  antrenman gününün kazancını doğrudan çarpar (aşağıda "Antrenman").
 - **Liste birkaç günde bir yenilenir** (`RefreshDays` 2) ve **gün içinde donar**. Her gün
   yenilenseydi beğenilmeyen kadro bir gün beklenerek düzeltilir, seçim ertelenirdi. Gün
   içinde donmasaydı — pazar kadro ortalamasını takip ettiği için — bir aday satın almak
@@ -1419,10 +1420,11 @@ pazarından birebir alındı:
 
 İki şey görünüyor. Birincisi, eski model **yerine koymayı sübvanse ediyormuş**: 150 altına
 veteran kalitesinde savaşçı geliyordu, pazar bunu gerçekçi fiyata çekince dojo zorlanıyor.
-İkincisi ve daha önemlisi, **"ucuz ham aday al" stratejisi şu an açıkça kaybediyor** —
-çünkü ham aday gelişmiyor: antrenmanın stat etkisi henüz yazılmadı (ROADMAP Faz 3). İki
-stratejinin rakip olması tasarımın hedefi; aradaki fark (354'e karşı 705 altın) antrenman
-sisteminin kapatması gereken boşluğun ölçüsüdür.
+İkincisi ve daha önemlisi, **"ucuz ham aday al" stratejisi o gün açıkça kaybediyordu** —
+çünkü ham aday gelişmiyordu: antrenmanın stat etkisi henüz yazılmamıştı. İki stratejinin
+rakip olması tasarımın hedefi; aradaki fark (354'e karşı 705 altın) antrenman sisteminin
+kapatması gereken boşluğun ölçüsüydü. Antrenman aynı gün yazıldı ve boşluğu daralttı —
+aşağıdaki "Antrenman" başlığı.
 
 **Tavanın ölçüsü (aynı kurulum):** tavan eklendikten sonra aynı iki strateji 147 (%9.8
 sermayesini koruyan, %18.8 kapanan) ve 204 altına (%13.0, %13.2) düşüyor; ölüm 5.93'ten
@@ -1487,6 +1489,65 @@ hedef bu kadar güçlü olunca bandı çoğu gün `Heavy`/`Dire` çıkıyor ve s
 günde ancak **0.69** sözleşmeye giriyor — yani sistem doğru çalışıyor ama neredeyse hiç
 görünmüyor. Güç ile ödül çarpanının birlikte taranması, antrenmanın stat etkisi
 yazıldıktan sonraki ölçüm turuna bırakıldı.
+
+### Antrenman (2026-09-04)
+
+Pazar tavanı (yukarıda) yerine koymayı acemi bandına kilitledi: satın alınan savaşçı elde
+yetiştirilmiş en iyinin %75'ini geçemiyor. Bu, ilerleme yolunu tek bir yere bırakır —
+**antrenman**. Kural şu:
+
+- **Gün tek iş yer.** Antrenman sefere çıkmakla aynı günü harcar; bedeli altın değil
+  **zaman ve fırsat**tır. Ayrı bir ücret konmadı: boş geçen gün zaten yiyecek yiyor ve
+  ödül getirmiyor.
+- **Dört talim, sekiz stat.** Vuruş (İsabet + Saldırganlık), Siper (Savunma + Güç), Ayak
+  (Kaçınma + Hız), Kondisyon (Can + Stamina). Her talimin bir birincil bir ikincil statı
+  var; ikincil **yarım pay** alır. Tek stat çalıştırılsaydı savaşçılar sekiz günde aynı düz
+  profile giderdi; ikincil pay talimlere şekil verir ve "bugün neyi çalıştırayım" gerçek
+  bir soru olur.
+- **Kazanç kalan boşluğun payıdır**, sabit bir artış değil: bir gün savaşçıyı tavana kalan
+  mesafenin `GapClosedPerDay` kadarını kapatır. Azalan getiri kuralın **içindedir**; tavan
+  aşılmaz, yalnızca yaklaşılır. Yüzdelik statların tavanı **90**, can ve staminanınki
+  **180** (ölçekleri ayrı; aynı tavana bağlansalardı kondisyon ilk günden ısırırdı).
+- **Yetenek kazancı doğrudan çarpar** (`Talent`, 0.6-1.4). Pazarın tam güçle satabildiği
+  tek şey buydu; artık bir karşılığı var.
+- **Rastgelelik yok.** Antrenman oyuncunun yatırımıdır, kumarı değil; zar atsaydı karar
+  zarın arkasına saklanırdı.
+- **Ham stat yazılır, etkin stat değil.** Sakatlığın çarpanı üstüne uygulanmaya devam eder:
+  çalışan sakat savaşçı toparlanır ama kaybettiği kolu geri kazanmaz (§7).
+- **Aç savaşçı ilerlemez.** Kıtlığın bedeli zamandır (§11 upkeep kuralı) — antrenman da o
+  zamandan yeniyor.
+
+**Ölçüm (400 dojo × 60 gün, `patrol`, sabit senaryo, pazar açık):** aynı kurulumda üç alım
+politikası, antrenman kapalıyken (oran 0) ve açıkken (0.04).
+
+| Alım politikası | Antrenmansız kasa | Antrenmanlı kasa | Kapanan dojo (yok → var) |
+|---|---|---|---|
+| Altın başına en çok stat | 147 | 392 | %18.8 → %13.0 |
+| Parası yeten en iyisi | 204 | 435 | %13.2 → %6.5 |
+| Parası yeten **en yetenekli** | 112 | 370 | %15.5 → %11.8 |
+
+Üçüncü politika bu turda **eklendi**: "ucuz ham adayı al, eğit" stratejisinin gerçek
+dayanağı ucuzluk değil `Talent`, ve altın başına stata bakan politika yeteneği hiç
+okumuyordu — yani o stratejiyi temsil etmiyordu.
+
+İki şey görünüyor. Birincisi, antrenman boşluğu **daralttı ama kapatmadı**: hazır savaşçı
+almak hâlâ önde (435'e karşı 392), aradaki fark 57 altından 43'e, oransal olarak %39'dan
+%11'e indi. İkincisi ve daha önemlisi, kalan farkın sebebi antrenmanın zayıflığı değil
+**kadro devri**: bu kurulumda dojo başına 60 günde ~7 ölüm var ve eğitilen savaşçı
+birikmeden ölüyor (dojo başına toplam antrenman günü yalnızca ~27). Seçici oynayan dojoda
+(`rising` bandı, teklif kipi) aynı sayı 128 antrenman gününe çıkıyor ve en iyi savaşçı 60
+günde 387'den 465 skora geliyor. **Antrenman uzun vadeli bir yatırım; onu görünür kılan
+şey hayatta kalmak.** Bu, §11'in zaten söylediği kısıtın aynısı: bağlayıcı kaynak altın
+değil kadro.
+
+**Oran 0.04'te kilitlendi.** Gerekçe kendi içinde kapanıyor: bu oranda iyi işleyen bir dojo
+60 günde en iyi savaşçısını ~465 skora çıkarır, yani pazar tavanının ısırmaya başladığı
+~473 sınırına dayanır — pazar bir yere kadar yerine koyar, ötesi yalnızca antrenmanla
+gelir. 0.02'de tavan hiç konuşmaz (antrenman süs kalır); 0.08'de dojo antrenmanla kurtulur
+(kasa 147'den 941'e, kapanan dojo %18.8'den %3.0'a) ve kötü oynamanın bedeli kaybolur.
+
+Açık kalan: **savaşçı ve okul skill tree'leri** (ROADMAP Faz 3) bu oranın üstüne binecek;
+antrenman hızını değiştiren her tesis/eğitmen bonusu 0.04'ü yeniden ölçtürür.
 
 ### Rastgele olaylar (2026-09-04)
 

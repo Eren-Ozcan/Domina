@@ -70,7 +70,7 @@ public sealed class Warrior
     /// Savaşçının doğuştan getirdiği, değişmeyen payı. Alım kararının ikinci ekseni budur:
     /// aynı statlarla gelen iki aday aynı hızda gelişmez, yani ucuz ve ham bir aday uzun
     /// vadede pahalı ve hazır olandan iyi çıkabilir. <b>Dövüş bunu okumaz</b> — yalnızca
-    /// antrenman okur (Faz 3'ün açık maddesi); şimdilik taşınır ve gösterilir.
+    /// antrenman okur (<see cref="Dojo.TrainingGround"/>): bir günün kazancını çarpar.
     /// </remarks>
     public double Talent { get; set; } = 1.0;
 
