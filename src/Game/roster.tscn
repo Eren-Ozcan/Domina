@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7r0s3t5e6r7d"]
+
+[ext_resource type="Script" path="res://Scripts/RosterDemo.cs" id="1_roster"]
+
+[node name="Roster" type="Node"]
+script = ExtResource("1_roster")

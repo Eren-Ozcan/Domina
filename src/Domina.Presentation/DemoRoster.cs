@@ -1,4 +1,5 @@
 using Domina.Core.Combat;
+using Domina.Core.Dojo;
 using Domina.Core.Model;
 
 namespace Domina.Presentation;
@@ -41,6 +42,34 @@ public static class DemoRoster
     {
         RetreatPolicy = null,
     };
+
+    /// <summary>Kadro ekranını sürecek geçici dojo.</summary>
+    /// <remarks>
+    /// Ekranın göstermesi gereken dört hâli birden taşır: hazır, antrenmandaki, revirdeki
+    /// ve ölü savaşçı. Kayıt katmanı geldiğinde bunun yerini yüklenen dojo alır.
+    /// </remarks>
+    public static DojoState Dojo()
+    {
+        DojoState dojo = new() { Resources = new Resources(Gold: 600, Food: 20, Water: 20, Medicine: 2) };
+
+        dojo.Roster.Recruit("Acemi", weapon: Weapon.Katana(), armor: Armor.Light());
+
+        RosterEntry senior = dojo.Roster.Recruit(
+            "Kıdemli",
+            WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
+            Weapon.Nodachi(),
+            Armor.Medium());
+        senior.Train(Drill.Guard);
+
+        RosterEntry wounded = dojo.Roster.Recruit("Mızrakçı", weapon: Weapon.Yari(), armor: Armor.Light());
+        wounded.Warrior.AddDisability(BodyPart.OffArm);
+        wounded.Injure(4);
+
+        RosterEntry fallen = dojo.Roster.Recruit("Rahip");
+        dojo.Roster.Kill(fallen.Id);
+
+        return dojo;
+    }
 
     private static Warrior Yokai(
         int id,
