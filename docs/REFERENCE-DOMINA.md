@@ -223,6 +223,32 @@ Sınıf **sonradan atanır** (köle → gladyatör) ve ekipman şablonunu belirl
 - Sınıf atamanın bir maliyeti var: rehber "**dövüşmeyecek köleye sınıf verme**, yoksa
   ajan/Faber onun ekipmanını yükseltmeye başlar ve asıl adamının parasını yer" diyor. **[T]**
 
+### Sınıf seçimi ayrı bir ekran **[V]**
+
+Gladyatör panelinden **"SELECT GLADIATOR CLASS"** ekranı açılıyor: üç portre düğmesi —
+`Murmillo`, `Thraex`, `Retiarius`. Oyunun **ikon öncelikli** tek ekranı; geri kalan her
+yer metin düğmesi.
+
+### Harita: "Map of Games" **[V]**
+
+İtalya haritası; bölgelerin çoğunda **asma kilit**, birinde **yeşil tik**. Yanında hedefi
+düz metinle yazan bir kutu:
+
+> "You need to defeat at least **3 Regional Champions** to be considered for the Final
+> Championship in Rome. **1 / 3** have been defeated."
+
+Yani finale girmek bir **ön koşul**: en az 3 bölge şampiyonu. Rehberlerin "Big 3'ü erken
+bitir" demesinin sebebi strateji değil, **kapı**.
+
+### Patron olayı — birebir metin **[V]**
+
+> "Magistrate Atilius Antonius has agreed to become a patron of your ludus! He has adopted
+> **Tullus of Lechia**. The Magistrate will be responsible for this gladiator's **food and
+> water** until the day that he dies on the field of battle."
+
+Tuşsuz, "Press any key" ile kapanan bir bildirim. Patronaj tam olarak şu: **bir
+gladyatörün yiyecek ve suyunu NPC ödüyor, ölene kadar**.
+
 ## 7. Personel (employees)
 
 Personel **slot**larda durur; slot sayısı sınırlı ve parayla (1500 altın) genişletilebilir
@@ -317,6 +343,7 @@ istiyor, bazıları ayrıca yiyecek/su:
 | Düğüm | Maliyet | İpucu metni |
 |---|---|---|
 | `Murmillo Training` | **400 altın · 16 tur** | "Unlock the Murmillo Class" |
+| `Retiarius Training` | **500 altın · 17 tur** | (sınıf açar) |
 | `Disarming Weapon` | **67 altın · 6 tur** | "Gladiator has higher chance of disarming opponent during a successful attack." |
 | `Mind Control` | **31 altın · 6 tur · 10 yiyecek · 10 su** | "Allows you to directly control one gladiator on the field of battle." |
 
@@ -328,18 +355,27 @@ istiyor, bazıları ayrıca yiyecek/su:
 
 ### Diğer personelin araştırma listeleri (ekrandan) **[V]**
 
+- **Faber → araştırmalar (ekrandan):** `Automatic Upgrade`, `Improved Furnace`,
+  `Improved Anvil`, `Helmet Blueprints`, `Weapon Blueprints`, `Armor Blueprints`,
+  `Shield Blueprints`, `Rebuild Nets`; altında **iki onay kutusu**: `Auto Repair`
+  (işaretli) ve `Auto Upgrade`. İpucu: *"Automatically repair damaged equipment, free of
+  cost."* **[V]**
 - **Architect → "Building Tasks":** `Palus`, `Baths`, `Grain Shelter`, `Water Well`,
   `Wall Reinforcement`, `Private Gladiator Quarters`, `Dig Hot Coal Pit`, `Wine Cellar`,
   `Apothecary`, `Gather Stones`. Kömür çukurunun ipucu: *"Hot coals under a gladiator's
   feet will decrease agility training time."* — yani **çevikliğin eğitim süresini
-  kısaltıyor**, çevikliği artırmıyor (§19'daki soru kapandı).
+  kısaltıyor**, çevikliği artırmıyor (§19'daki soru kapandı). Kuyunun ipucu daha da net:
+  *"Building a well will make the ludus more resilient during droughts, and will produce
+  water. (**+2 to 5 Water/day**)"* — **30 altın · 30 su · 15 taş**. Bina, kıtlık olayına
+  karşı **sigorta** olarak açıkça pazarlanıyor. **[V]**
 - **Sacerdos → dualar:** `Prayer to Neptune`, `Juno`, `Apollo`, `Mars`, `Mercury`, `Venus`,
   `Vulcan`. Mercury'nin maliyeti: **7 altın · 1 tur · 10 şarap · 30 yiyecek · 30 su**,
   ipucu *"Occasional upgrade to gladiator weapon."* — yani duaların bedeli altından çok
   **ambar**.
 - **Bard → şarkılar:** `Song of Venus`, `Juno`, `Minerva`, `Vesta`, `Diana`. Diana:
   **11 altın · 6 tur · 10 şarap · 20 su**, *"boost gladiator weapon training speed"*.
-- **Educator:** `Anatomy`, `Teachings of Dioscorides`, `Psychology`, `Philosophy`.
+- **Educator:** `Teachings of Galen`, `Teachings of Dioscorides`, `Anatomy`,
+  `Psychology`, `Philosophy`, `Focus`.
   Dioscorides: *"cleanliness can help their body heal more quickly after injury"*.
 
 ### Videonun anlattığı sıralama **[V]**
@@ -465,9 +501,13 @@ kalem: **`73` — "Crowd Favour"**.
 - **Kalabalık (crowd favor) bir sistem:** dövüş uzadıkça, sahada olay çoğaldıkça
   kalabalık daha çok seviyor ve **daha çok para** ödüyor. Kalabalık, oyuncunun
   gladyatörünü **elle sürmesinden hoşlanmıyor** ("mind control"). **[T]**
-- **Teslim (yield/missio):** Doctore araştırması *Automatic Yield*, Doctore Emeritus'un
-  *Deeper Humility I* becerisi "**%20 canda teslim ol**" verir. Teslim eden gladyatör
-  hem **kalıcı sakatlık** almıyor hem de kaybettiği maçtan sağ çıkıyor. **[T]**
+- **Teslim (yield/missio):** `Automatic Yield` becerisinin **oyun içi ipucu metni**:
+  *"Gladiator will automatically yield and surrender if they are less than 10% HP."* —
+  taban eşik **%10**. Rehberlerin söylediği **%20**, Doctore Emeritus'un *Deeper Humility*
+  yükseltmesinden geliyor olmalı; iki sayı aynı kolun iki kademesi. **[V]**
+- Teslim eden gladyatör hem **kalıcı sakatlık** almıyor hem de kaybettiği maçtan sağ
+  çıkıyor. **[T]** Ayrıca teslim **her dövüşte mümkün değil**: sözleşmede
+  `Surrender Allowed: Yes/No` alanı var. **[V]**
 - **Kalıcı sakatlık (impediment)** var ve gladyatörü işe yaramaz hâle getirebiliyor;
   sakatlanan köleler ya azat ediliyor ya da sakatlığın önemsiz olduğu bir sınıfa
   (charioteer, sagittarius) kaydırılıyor. **[T]**

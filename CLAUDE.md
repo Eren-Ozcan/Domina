@@ -15,6 +15,8 @@ Bu proje hakkında herhangi bir işe başlamadan önce oku:
 - **`docs/ROADMAP.md`** — Faz 0-9 geliştirme planı, kabul kriterleri, riskler.
 - **`docs/REFERENCE-DOMINA.md`** — esinlenilen oyunun (Domina, Dolphin Barn) sistem sistem
   dökümü; her madde kaynak güvenine göre işaretli. Bir mekaniği ödünç alırken önce buraya bak.
+- **`docs/REFERENCE-DOMINA-UI.md`** — aynı oyunun ekran ve arayüz dökümü: hangi bilgi
+  nerede, hangi kontrol neye benziyor, neyi kopyalamamalı.
 - **`docs/DESIGN-REFERENCES.md`** — kararların dışarıdan doğrulanabilir dayanakları
   (yerleşik tasarım pratiği, kaynak bağlantıları) ve kaynakların bizi çürüttüğü yerler.
 
