@@ -43,6 +43,7 @@ internal sealed record CampaignOptions(
     MarketTuning? Market = null,
     MarketPick Pick = MarketPick.Value,
     bool UseBounties = false,
+    double? AcceptRatio = null,
     bool UseSchool = false,
     SchoolBranch? SchoolOnly = null,
     bool UsePaths = false)
@@ -146,9 +147,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 row.Paths += ChoosePaths(state);
             }
 
+            int purse = state.Resources.Gold;
             if (Hire(state, template, ref hired))
             {
                 row.Hires++;
+                row.GoldSpentOnHires += purse - state.Resources.Gold;
             }
 
             DayReport closed = _options.UseOffers
@@ -301,8 +304,25 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>Teklif kadroya göre fazla ağır mı?</summary>
+    /// <remarks>
+    /// İki eleme kipi var. <b>Bant</b> kipi sabit bir eşiktir (GDD §10'un tehdit işareti);
+    /// <b>oran</b> kipi teklifi kadronun kendi gücüyle karşılaştırır. İkisinin ayrı olması
+    /// ölçümün asıl sorusu: sabit bant, gün geçtikçe büyüyen bir eğride er ya da geç her
+    /// teklifi geri çevirir ve dojo işsizlikten iflas eder — bunun eğrinin mi yoksa sabit
+    /// politikanın mı kusuru olduğu ancak uyum sağlayan bir politikayla görülür.
+    /// </remarks>
     private bool Declines(DojoState state, EncounterOffer offer)
     {
+        if (_options.AcceptRatio is double ratio)
+        {
+            double party = state.Roster.FitForCampaign
+                .Take(_options.PartySize)
+                .Sum(e => Score(e.Warrior.EffectiveStats));
+            double enemy = offer.Enemies.Sum(e => Score(e.EffectiveStats));
+
+            return enemy > 0 && party < enemy * ratio;
+        }
+
         if (offer.Threat > _options.AcceptUpTo)
         {
             return true;
@@ -662,6 +682,14 @@ internal sealed class CampaignRow
     /// <summary>Okula giden altın.</summary>
     public int GoldSpentOnSchool { get; set; }
 
+    /// <summary>Ölenin yerine alınan savaşçılara giden altın.</summary>
+    /// <remarks>
+    /// Ayrı bir kalem: ekonominin bağlayıcı kısıtı kadro olduğu için (GDD §11) yerine
+    /// koyma bedeli kuşam ya da ambar giderinin içinde kaybolmamalı. Net hesabına da
+    /// girer — girmediği sürece "dövüş başına kâr" pozitif görünürken kasa boşalıyordu.
+    /// </remarks>
+    public int GoldSpentOnHires { get; set; }
+
     /// <summary>Yolunu seçen savaşçı sayısı.</summary>
     public int Paths { get; set; }
 
@@ -751,6 +779,9 @@ internal sealed class CampaignReport(int days)
     /// <summary>Dojo başına antrenman günü (canlı kadro toplamı).</summary>
     public double AverageTrainingDays => Standing(r => r.TrainingDays);
 
+    /// <summary>Yerine koymaya giden altın, dövüş başına.</summary>
+    public double HireGoldPerBattle => PerBattle(r => r.GoldSpentOnHires);
+
     /// <summary>Dojo başına alınmış okul tesisi.</summary>
     public double AverageSchoolNodes => Standing(r => r.SchoolNodes);
 
@@ -802,7 +833,11 @@ internal sealed class CampaignReport(int days)
             }
 
             int net = _rows.Sum(
-                r => r.GoldEarned - r.GoldSpentOnGear - r.GoldSpentOnUpkeep - r.GoldSpentOnSchool);
+                r => r.GoldEarned
+                    - r.GoldSpentOnGear
+                    - r.GoldSpentOnUpkeep
+                    - r.GoldSpentOnSchool
+                    - r.GoldSpentOnHires);
             return (double)net / battles;
         }
     }

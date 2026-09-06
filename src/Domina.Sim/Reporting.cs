@@ -161,6 +161,7 @@ internal static class CampaignSummaryReport
         writer.WriteLine("Kasa (dövüş başına)");
         writer.WriteLine($"  Gelir                  {report.GoldEarnedPerBattle:F1}");
         writer.WriteLine($"  Kuşam gideri           {report.GearGoldPerBattle:F1}");
+        writer.WriteLine($"  Yerine koyma           {report.HireGoldPerBattle:F1}");
         writer.WriteLine($"  Net                    {report.NetGoldPerBattle:F1}");
         writer.WriteLine($"  Günlük tüketim         {report.UpkeepGoldPerDay:F1} altın/gün");
         writer.WriteLine($"  Bitiş kasası           {report.AverageEndingGold:F0} altın");

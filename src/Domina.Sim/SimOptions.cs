@@ -71,6 +71,7 @@ internal static class SimArgs
         bool useBounties = false;
         EconomyTuning economy = new();
         TrainingTuning training = new();
+        double? acceptRatio = null;
         bool useSchool = false;
         SchoolBranch? schoolOnly = null;
         bool usePaths = false;
@@ -652,6 +653,39 @@ internal static class SimArgs
                     marketTuning = marketTuning with { BestFollowCeiling = ceiling };
                     break;
 
+                case "--risk-premium":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double premium)
+                        || premium < 0)
+                    {
+                        return ParsedArgs.Fail($"--risk-premium negatif olmayan bir sayı olmalı: {value}");
+                    }
+
+                    economy = economy with { RiskPremium = premium };
+                    break;
+
+                case "--risk-free-health":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double riskFree)
+                        || riskFree <= 0)
+                    {
+                        return ParsedArgs.Fail($"--risk-free-health pozitif bir sayı olmalı: {value}");
+                    }
+
+                    economy = economy with { RiskFreeEnemyHealth = riskFree };
+                    break;
+
+                case "--accept-ratio":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double ratio)
+                        || ratio <= 0)
+                    {
+                        return ParsedArgs.Fail($"--accept-ratio pozitif bir sayı olmalı: {value}");
+                    }
+
+                    acceptRatio = ratio;
+                    break;
+
                 case "--school":
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
@@ -890,6 +924,7 @@ internal static class SimArgs
                 marketTuning,
                 marketPick,
                 useBounties,
+                acceptRatio,
                 useSchool,
                 schoolOnly,
                 usePaths)
