@@ -29,6 +29,27 @@ public class SimCliTests
         Assert.IsType<NeverRetreat>(options.RetreatPolicy);
     }
 
+    /// <summary>
+    /// Uzun ufuk ancak <b>uyum sağlayan</b> bir politikayla ölçülebilir.
+    /// </summary>
+    /// <remarks>
+    /// Sabit tehdit bandı, gün geçtikçe büyüyen bir eğride er ya da geç her teklifi geri
+    /// çevirir; o zaman ölçülen şey ekonominin değil politikanın iflası olur.
+    /// </remarks>
+    [Fact]
+    public void TheAcceptanceRatioAndTheRiskPremiumAreSweepable()
+    {
+        SimOptions options = Parse(
+            "--mode", "campaign",
+            "--accept-ratio", "1.5",
+            "--risk-premium", "0.4",
+            "--risk-free-health", "120");
+
+        Assert.Equal(1.5, options.Campaign!.AcceptRatio!.Value, precision: 9);
+        Assert.Equal(0.4, options.Campaign.Economy.RiskPremium, precision: 9);
+        Assert.Equal(120, options.Campaign.Economy.RiskFreeEnemyHealth, precision: 9);
+    }
+
     [Fact]
     public void TheSchoolAndThePathsAreSweepable()
     {
@@ -116,6 +137,9 @@ public class SimCliTests
     [InlineData("--scenario", "yok")]
     [InlineData("--policy", "maybe")]
     [InlineData("--policy", "below:2")]
+    [InlineData("--accept-ratio", "0")]
+    [InlineData("--risk-premium", "-1")]
+    [InlineData("--risk-free-health", "0")]
     [InlineData("--school", "belki")]
     [InlineData("--school-only", "mutfak")]
     [InlineData("--paths", "belki")]

@@ -205,4 +205,27 @@ public class EncounterTests
 
         Assert.Equal(ExpeditionRefusal.NotInRoster, Expedition.Refuse(state, offer, [stranger]));
     }
+
+    /// <summary>
+    /// Eğri bir yerde durur: tavan, tam büyümüş bir dojo'nun hâlâ kâr edebildiği yerdedir.
+    /// </summary>
+    /// <remarks>
+    /// Tavansız bir eğride dojo'nun büyümesi (stat tavanı, dört kişilik kadro, kuşam
+    /// kademeleri) er ya da geç geride kalır ve her teklif geri çevrilir — ölçüldü:
+    /// 180 günde dövüş başına net sıfırın altına iniyordu (GDD §11).
+    /// </remarks>
+    [Fact]
+    public void TheCurveStopsAtItsCeiling()
+    {
+        EncounterTuning tuning = new();
+        EncounterGenerator generator = new(tuning);
+
+        foreach (int day in new[] { 1, 60, 180, 1000 })
+        {
+            double power = generator.PowerFor(day, new SeededRandom((ulong)day));
+            Assert.True(power <= tuning.MaxPower);
+        }
+
+        Assert.Equal(tuning.MaxPower, generator.PowerFor(1000, new SeededRandom(7)), 9);
+    }
 }

@@ -132,7 +132,10 @@ public class EconomyTests
     [Fact]
     public void RewardComesFromTheEncounterNotFromTheFight()
     {
-        Quartermaster market = new(new EconomyTuning { VictoryGoldPerEnemyHealth = 2 });
+        // Prim kapalı: bu test ödülün <b>nereden</b> geldiğini tutuyor, ağırlığa binen
+        // primi değil (o aşağıda ayrı duruyor).
+        Quartermaster market = new(
+            new EconomyTuning { VictoryGoldPerEnemyHealth = 2, RiskPremium = 0 });
         BattleSetup setup = new(
             [new Warrior(new WarriorId(1), "Kenji", WarriorStats.Recruit(), Weapon.Katana())],
             [new Warrior(new WarriorId(101), "Oni", WarriorStats.Recruit() with { MaxHealth = 150 }, Weapon.Tetsubo())]);
@@ -143,6 +146,42 @@ public class EconomyTests
         // GDD §10: çekilmek o seferin ödülünü siler; bozgun da öyle.
         Assert.Equal(0, market.RewardFor(setup, BattleOutcome.PlayerWithdrawal));
         Assert.Equal(0, market.RewardFor(setup, BattleOutcome.PlayerWipe));
+    }
+
+    /// <summary>
+    /// Ağırlaşan karşılaşma orantısından <b>fazlasını</b> öder.
+    /// </summary>
+    /// <remarks>
+    /// Düz orantıda eğrinin üst ucu hiçbir zaman alınmaya değmiyordu: üç güçlü düşman üç
+    /// katı can taşır ama üç katından fazla risk taşır. Ölçüm GDD §11'de — prim olmadan
+    /// uzun vadede dövüş başına net sıfırın altına iniyor.
+    /// </remarks>
+    [Fact]
+    public void AHeavierEncounterPaysMoreThanItsShare()
+    {
+        EconomyTuning economy = new()
+        {
+            VictoryGoldPerEnemyHealth = 1,
+            RiskPremium = 0.25,
+            RiskFreeEnemyHealth = 100,
+        };
+        Quartermaster market = new(economy);
+
+        int ordinary = market.PromisedReward(Against(health: 100));
+        int heavy = market.PromisedReward(Against(health: 300));
+
+        Assert.Equal(100, ordinary);
+        Assert.Equal(450, heavy);
+
+        static BattleSetup Against(double health) => new(
+            [new Warrior(new WarriorId(1), "Kenji", WarriorStats.Recruit(), Weapon.Katana())],
+            [
+                new Warrior(
+                    new WarriorId(101),
+                    "Oni",
+                    WarriorStats.Recruit() with { MaxHealth = health },
+                    Weapon.Tetsubo()),
+            ]);
     }
 
     [Fact]
