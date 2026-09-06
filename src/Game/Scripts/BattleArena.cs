@@ -53,14 +53,38 @@ public sealed partial class BattleArena : Node2D
     [Export]
     public double SpeedMultiplier { get; set; } = 1.0;
 
+    /// <summary>
+    /// Oynatılacak dövüş. <c>null</c> ise demo kadrosu kurulur.
+    /// </summary>
+    /// <remarks>
+    /// Sefer katmanı dövüşü <c>Expedition.Prepare</c> ile kurar ve buraya verir; arena
+    /// kurulum yapmaz, yalnızca oynatır. Arena kendi kadrosunu kursaydı izlenen dövüş ile
+    /// dojo'nun hesabını kapattığı dövüş iki ayrı dövüş olurdu.
+    /// </remarks>
+    public BattleSetup? Bout { get; set; }
+
+    /// <summary>
+    /// Dövüş bittiğinde çağrılır — hesabı kapatacak taraf budur.
+    /// </summary>
+    /// <remarks>
+    /// Arena muhasebe yazmaz (ölüm, revir, ödül, gün): onu <c>Expedition.Settle</c> yapar.
+    /// Buradan çıkan tek şey <b>ham sonuç</b>.
+    /// </remarks>
+    public Action<BattleResult>? Finished { get; set; }
+
     public override void _Ready()
     {
         // Kadro bir kez kurulur: rig'ler ile dövüş aynı savaşçı nesnelerini görmeli.
-        _setup = DemoRoster.Setup();
+        _setup = Bout ?? DemoRoster.Setup();
 
-        ArenaArguments arguments = ArenaArguments.Parse(OS.GetCmdlineUserArgs());
-        Seed = arguments.Seed ?? Seed;
-        SpeedMultiplier = arguments.SpeedMultiplier ?? SpeedMultiplier;
+        // Komut satırı yalnızca demo dövüşü sürer: sefer katmanından gelen dövüşün seed'i
+        // günün seed'idir ve dışarıdan değiştirilemez — aynı kayıt aynı dövüşü versin.
+        if (Bout is null)
+        {
+            ArenaArguments arguments = ArenaArguments.Parse(OS.GetCmdlineUserArgs());
+            Seed = arguments.Seed ?? Seed;
+            SpeedMultiplier = arguments.SpeedMultiplier ?? SpeedMultiplier;
+        }
 
         _battle = new Battle(_setup, new SeededRandom((ulong)Seed));
         _choreography = new ArenaChoreography(new ArenaLayout());
@@ -140,6 +164,7 @@ public sealed partial class BattleArena : Node2D
         {
             _reported = true;
             GD.Print($"Dövüş bitti: {_battle.Result!.Outcome} ({_battle.Result.ElapsedSeconds:F1} sn)");
+            Finished?.Invoke(_battle.Result);
         }
     }
 

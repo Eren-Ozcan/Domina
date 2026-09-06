@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Domina"
 config/description="Yokai/samuray temalı dojo yönetimi + otomatik dövüş oyunu."
-run/main_scene="res://main.tscn"
+run/main_scene="res://dojo.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [dotnet]

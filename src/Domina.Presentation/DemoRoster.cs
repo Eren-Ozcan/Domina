@@ -46,7 +46,8 @@ public static class DemoRoster
     /// <summary>Kadro ekranını sürecek geçici dojo.</summary>
     /// <remarks>
     /// Ekranın göstermesi gereken dört hâli birden taşır: hazır, antrenmandaki, revirdeki
-    /// ve ölü savaşçı. Kayıt katmanı geldiğinde bunun yerini yüklenen dojo alır.
+    /// ve ölü savaşçı. Oynanan oyunun dojo'su buradan gelmez — o ya kayıttan yüklenir
+    /// ya da <c>NewGame.Create</c> ile kurulur; bu yalnızca tek başına açılan ekranlar için.
     /// </remarks>
     public static DojoState Dojo()
     {

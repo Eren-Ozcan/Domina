@@ -21,13 +21,12 @@ namespace Domina.Game;
 /// öğrenmeli.
 /// </para>
 /// </remarks>
-public sealed partial class RosterScreen : CanvasLayer
+public sealed partial class RosterScreen : DojoScreen
 {
-    private static readonly Color ReadyColor = new(0.82f, 0.82f, 0.78f);
-    private static readonly Color TrainingColor = new(0.78f, 0.70f, 0.32f);
+    private static readonly Color ReadyColor = InkColor;
+    private static readonly Color TrainingColor = PendingColor;
     private static readonly Color RecoveringColor = new(0.85f, 0.55f, 0.20f);
-    private static readonly Color FallenColor = new(0.45f, 0.45f, 0.48f);
-    private static readonly Color WarningColor = new(0.80f, 0.35f, 0.35f);
+    private static readonly Color FallenColor = MutedColor;
 
     private DojoState _dojo = null!;
     private VBoxContainer _list = null!;
@@ -42,29 +41,12 @@ public sealed partial class RosterScreen : CanvasLayer
 
     /// <summary>Ekranı kurar ve kadroyu basar.</summary>
     /// <param name="dojo">Gösterilecek dojo — ekran bunu okur ve komutları buna verir.</param>
-    public void Build(DojoState dojo)
+    public override void Build(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
         _dojo = dojo;
 
-        ColorRect backdrop = new()
-        {
-            Color = new Color(0.09f, 0.09f, 0.11f),
-            AnchorRight = 1,
-            AnchorBottom = 1,
-        };
-        AddChild(backdrop);
-
-        MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1 };
-        margin.AddThemeConstantOverride("margin_left", 24);
-        margin.AddThemeConstantOverride("margin_top", 20);
-        margin.AddThemeConstantOverride("margin_right", 24);
-        margin.AddThemeConstantOverride("margin_bottom", 20);
-        AddChild(margin);
-
-        VBoxContainer page = new();
-        page.AddThemeConstantOverride("separation", 12);
-        margin.AddChild(page);
+        VBoxContainer page = BuildPage();
 
         _summary = new Label();
         page.AddChild(_summary);
@@ -133,10 +115,7 @@ public sealed partial class RosterScreen : CanvasLayer
     /// <summary>Kadroyu ve seçili savaşçının ayrıntısını yeniden basar.</summary>
     public void Refresh()
     {
-        foreach (Node child in _list.GetChildren())
-        {
-            child.QueueFree();
-        }
+        Clear(_list);
 
         IReadOnlyList<RosterRow> rows = RosterModel.Describe(_dojo);
         _selected ??= rows.Count > 0 ? rows[0].Id : null;
@@ -219,10 +198,7 @@ public sealed partial class RosterScreen : CanvasLayer
 
     private void BuildPathButtons(RosterRow row)
     {
-        foreach (Node child in _pathRow.GetChildren())
-        {
-            child.QueueFree();
-        }
+        Clear(_pathRow);
 
         _pathRow.Visible = row.IsAlive;
         if (!row.IsAlive)
@@ -253,6 +229,7 @@ public sealed partial class RosterScreen : CanvasLayer
             button.Pressed += () =>
             {
                 _dojo.ChoosePath(id, chosen);
+                Persist();
                 Refresh();
             };
             _pathRow.AddChild(button);
@@ -289,6 +266,7 @@ public sealed partial class RosterScreen : CanvasLayer
 
         _dojo.Roster.Rename(id, _nameEdit.Text);
         _nameEdit.Text = string.Empty;
+        Persist();
         Refresh();
     }
 
@@ -297,6 +275,7 @@ public sealed partial class RosterScreen : CanvasLayer
         if (_selected is WarriorId id)
         {
             _dojo.Roster.Find(id)?.Train(drill);
+            Persist();
             Refresh();
         }
     }

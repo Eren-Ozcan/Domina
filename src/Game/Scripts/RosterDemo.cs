@@ -8,9 +8,9 @@ namespace Domina.Game;
 /// Kadro ekranını tek başına açan sahne kökü.
 /// </summary>
 /// <remarks>
-/// Ekran bir <see cref="DojoState"/> alır; kayıt katmanı gelene kadar onu
-/// <see cref="DemoRoster.Dojo"/> kuruyor. Meta katman akışı bağlandığında bu sınıf
-/// yerini gerçek geçişe bırakır — ekranın kendisi değişmez.
+/// Ekran bir <see cref="DojoState"/> alır; bu sahne onu <see cref="DemoRoster.Dojo"/>
+/// ile kuruyor. Oynanan oyun buradan geçmez (<see cref="DojoHub"/> kaydı yükler); bu
+/// sahne ekranı tek başına, kayda dokunmadan açmak için duruyor.
 /// </remarks>
 public sealed partial class RosterDemo : Node
 {
