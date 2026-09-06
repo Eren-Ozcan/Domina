@@ -1312,6 +1312,37 @@ fikri ileride tekrar açılabilir; şu an kural değil.
 Gerekçe: asıl uzun vadeli yatırım okulda olsun → savaşçı ölümü koca bir yatırım kaybı
 gibi hissettirmesin, permadeath'in acısı dengelensin.
 
+**Yazıldı (2026-09-04):** `Domina.Core/Dojo/School.cs` ve `Model/WarriorPath`.
+
+**Okul — üç kol, kolda üç kademe** (200 / 400 / 700 altın; kol içinde sıra zorunlu):
+
+| Kol | 1. kademe | 2. kademe | 3. kademe |
+|---|---|---|---|
+| **Talimhane** | Talimhane: antrenman hızı ×1.30 | Kata ustası: stat tavanı +4, can/stamina tavanı +20 | İç dojo: hız bir kez daha ×1.30 |
+| **Revir** | Revir: doğal iyileşme +1 gün/gün | Otacı: ilaç +1 gün eritir | Kırıkçı: sıyrık sayılan hasar payı +0.10 |
+| **Kâhya** | Kâhya: günlük stok ×0.80 | Hami: zafer ödülü ×1.15 | Simsar: savaşçı ×0.75, onarım ×0.80 |
+
+- **Tesis peşin ödenir ve geri satılmaz.** Geri alınabilseydi oyuncu her sefer öncesi ağacı
+  yeniden dizerdi; okul o zaman yatırım değil, ayar paneli olurdu.
+- **Kol içinde sıra vardır.** Sıra olmasaydı ağaç bir ağaç değil, dokuz bağımsız düğme olurdu.
+- **Bonuslar bütün okumalara işler:** `DojoState.Tuning` ve `Economy` artık ham ayarı değil
+  **okul işlenmiş** hâli döner. Yarısı tesisli yarısı tesissiz okuyan bir kod, bonusu sessizce
+  yarım uygulardı.
+- **İndirim aşağı yuvarlanır ve 1'in altına inmez.** Yakına yuvarlansaydı 2 altınlık yiyecek
+  ×0.80 = 1.6 → yine 2 çıkar, kâhya kolu ambara hiç dokunmamış olurdu.
+- **Kayda yalnızca hangi düğümlerin alındığı yazılır**; bonusların büyüklüğü denge sayısıdır
+  ve dosyaya girmez (§2). Bozuk bir kayıt kolun sırasını atlayamaz.
+
+**Savaşçının yolu — tek seçim, üç seçenek.** Kılıç (İsabet ×1.10, Güç ×1.10), Kaya
+(Savunma ×1.15, Can ×1.05), Gölge (Kaçınma ×1.15, Hız ×1.10). Bir kez seçilir, geri
+alınmaz; kilidi **20 antrenman günü** açar — yol satın alınmaz, çalışılarak kazanılır. Çarpan
+`EffectiveStats`'a girer, yani **dövüş yalnızca sonucunu okur**; sakatlık çarpanının
+**altında** uygulanır (yol kaybedilen uzvun cezasını büyütmez, ceza yolu keser).
+
+Savaşçı tarafının sığ tutulmasının sebebi yukarıdaki gerekçenin aynısı: derin bir savaşçı
+ağacı permadeath'i koca bir yatırım kaybına çevirir ve oyuncu savaşçısını sahaya sürmekten
+kaçınırdı. Ölçüm §11'de.
+
 ---
 
 ## 11. Ekonomi
@@ -1546,8 +1577,56 @@ değil kadro.
 gelir. 0.02'de tavan hiç konuşmaz (antrenman süs kalır); 0.08'de dojo antrenmanla kurtulur
 (kasa 147'den 941'e, kapanan dojo %18.8'den %3.0'a) ve kötü oynamanın bedeli kaybolur.
 
-Açık kalan: **savaşçı ve okul skill tree'leri** (ROADMAP Faz 3) bu oranın üstüne binecek;
-antrenman hızını değiştiren her tesis/eğitmen bonusu 0.04'ü yeniden ölçtürür.
+Bu oranın üstüne **okul ağacı** bindi (aynı gün, aşağıda): talimhane kolu oranı ×1.30, iç
+dojo bir kez daha ×1.30 çarpıyor ve kata ustası tavanı yükseltiyor. 0.04 tabanın kendisidir,
+tesisli dojo'nun oranı değil.
+
+### Okul ağacı ve savaşçının yolu (2026-09-04)
+
+Kural §10'da. Buradaki soru tek: **hangi kol kendi bedelini ödüyor?** Bir kol ancak yalnız
+koşturulunca görünür; hepsi birden alındığında kasadan çıkan para hangi kolun işine yaradığını
+gizler. Bu yüzden ölçüm koluna ayrı bir anahtar aldı (`--school-only`).
+
+**Ölçüm (400 dojo × 180 gün, `patrol`, sabit senaryo, pazar açık, yol açık):**
+
+| Okul | Bitiş kasası | Sermayesini koruyan | Dövüş | Ölüm | Kapanan dojo |
+|---|---|---|---|---|---|
+| yok | 731 | %21.0 | 55.4 | 9.95 | %9.8 |
+| yalnız **Talimhane** | 1299 | %28.7 | 58.2 | **6.36** | %7.2 |
+| yalnız **Revir** | 86 | %3.2 | 36.5 | 9.03 | %14.5 |
+| yalnız **Kâhya** | **1718** | %33.8 | 60.8 | 11.27 | %9.8 |
+| hepsi (ucuzdan) | 461 | %8.2 | 38.8 | 8.17 | %9.2 |
+
+Üç şey söylüyor.
+
+**Talimhane hayatta kalma satıyor:** ölüm 9.95'ten 6.36'ya iniyor, kapanan dojo %9.8'den
+%7.2'ye. Antrenman turunun bulgusuyla aynı yere çıkıyor — eğitilmiş savaşçı ölmüyor, ölmeyen
+savaşçı birikiyor.
+
+**Kâhya para satıyor, güvenlik değil:** en yüksek kasa (1718) ama **ölüm artıyor** (11.27).
+Mekanizma açık — ucuzlayan dojo daha çok sefere çıkıyor (60.8 dövüş) ve farkı canıyla ödüyor.
+İki kolun birbirinin yerine geçmemesi tam olarak istenen şey.
+
+**Revir bu hâliyle bir tuzak.** Sattığı şey **zaman**, ama bu ekonomide zaman bol (boş gün
+%67) ve kıt olan altın ile can. Üstelik hızlı iyileşen dojo daha sık sefere çıkıyor, yani
+revir **maruziyeti artırıyor**: 786 altın harcanıyor, kapanan dojo %9.8'den %14.5'e çıkıyor.
+Fiyat da değil — 150/300/500'e indirildiğinde tablo düzelmedi (188 altın, %15.5 kapanan).
+**Sayı değil çerçeve sorunu:** kolun çıktısı zaman olduğu sürece, zamanın bol olduğu bir
+dojoda bir şey satmıyor. Açık madde olarak duruyor; olası yön, revirin çıktısını **cana**
+bağlamak (ağır yaralının ölümden dönmesi) ya da **altına** (tedavi ilaç yerine geçsin).
+
+**Dağılmak odaklanmaktan kötü:** "hepsi" satırı (461 altın) tek kola yatırım yapan iki satırın
+da altında. Bu istenen bir özellik — ama ölçümdeki hâliyle kısmen politikanın ürünü: sim
+politikası açık düğümlerin **en ucuzunu** alıyor, yani parayı üç kola serpiyor.
+
+**Savaşçının yolu — küçük ve doğru yönde.** Aynı bedde yol kapalıyken 573 altın ve
+savaşçı-dövüş başına %6.3 ölüm; yol açıkken 731 altın ve %6.0 (dojo başına 1.05 savaşçı
+yolunu seçebiliyor). Kilit 10 güne indirilince 800 altın, %5.8 ve 2.94 seçim. **Kilit 20
+günde bırakıldı:** sert bedde savaşçıların çoğu yolu göremeden ölüyor, sağlıklı (seçici)
+dojoda ise 60 günde dört savaşçının 3.87'si görüyor. İstenen cümle bu — **yol, hayatta
+kalmanın satın aldığı şey.**
+
+Okulun sayılarının hiçbiri **kilitli değil**; kilitlenen tek şey kolların ne sattığı.
 
 ### Rastgele olaylar (2026-09-04)
 

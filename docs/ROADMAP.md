@@ -204,10 +204,16 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
       stattır (sakatlığın çarpanı üstünde kalır). Oran **0.04'te kilitlendi**: 400 dojo ×
       60 gün ölçümüyle, iyi işleyen dojo 60 günde pazar tavanının ısırdığı bandın önüne
       çıkıyor (GDD §11 "Antrenman")
-- [ ] **Savaşçı skill tree'si (basit)** — antrenman oranının üstüne binecek; her bonus
-      0.04'ü yeniden ölçtürür
-- [ ] **Okul + Eğitmen skill tree'si (derin)** — antrenman hızı, tesis kilitleri,
-      ekonomi bonusları, revir iyileştirmeleri
+- [x] **Savaşçı skill tree'si (basit)** — `Model/WarriorPath`: üç yol (Kılıç / Kaya /
+      Gölge), tek seçim, geri alınamaz; kilidi 20 antrenman günü açar, çarpan
+      `EffectiveStats`'a girer (dövüş yalnızca sonucunu okur). Ölçüm: savaşçı-dövüş başına
+      ölüm %6.3 → %6.0 (GDD §11)
+- [x] **Okul + Eğitmen skill tree'si (derin)** — `Dojo/School.cs`: üç kol × üç kademe,
+      kol içinde sıra zorunlu, tesis peşin ve geri satılmaz; bonuslar `DojoState.Tuning` ve
+      `Economy` üzerinden **bütün** okumalara işliyor, kayda yalnızca alınan düğümler
+      giriyor. Ölçüm (400 dojo × 180 gün): talimhane hayatta kalma satıyor (ölüm 9.95 →
+      6.36), kâhya para satıyor (kasa 731 → 1718 ama ölüm 11.27), **revir bu hâliyle
+      tuzak** — açık madde, GDD §11
 - [x] **Revir/hekim: iyileşme süresi, ilaç kaynağıyla hızlandırma**
       — ilaçsız gün bir revir günü eritir, ilaçlı gün iki (`DojoState.AdvanceDay`);
       ambar yetmezse revirdekiler önce doyar, aç savaşçı o gün iyileşmez
