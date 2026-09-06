@@ -177,13 +177,27 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
     /// <remarks>
     /// Düşmanın <b>ham</b> canından hesaplanır: karşılaşma ne kadar ağırsa o kadar öder.
     /// Dövüşün nasıl geçtiği ödülü değiştirmez; kazanmak ya da kazanmamak değiştirir.
+    /// Ağırlaşan karşılaşma orantısından <b>fazlasını</b> öder — bkz.
+    /// <see cref="EconomyTuning.RiskPremium"/>.
     /// </remarks>
     public int PromisedReward(BattleSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
 
         double health = setup.EnemySide.Sum(w => w.EffectiveStats.MaxHealth);
-        return (int)Math.Round(health * Economy.VictoryGoldPerEnemyHealth);
+        return (int)Math.Round(health * Economy.VictoryGoldPerEnemyHealth * RiskFactor(health));
+    }
+
+    /// <summary>Karşılaşmanın ağırlığına binen prim çarpanı.</summary>
+    private double RiskFactor(double health)
+    {
+        double reference = Economy.RiskFreeEnemyHealth;
+        if (Economy.RiskPremium <= 0 || reference <= 0 || health <= reference)
+        {
+            return 1;
+        }
+
+        return 1 + (Economy.RiskPremium * ((health / reference) - 1));
     }
 
     /// <summary>Dövüşün kasaya yazdığı altın.</summary>

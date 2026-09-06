@@ -72,6 +72,27 @@ public sealed record EconomyTuning
     /// </remarks>
     public double VictoryGoldPerEnemyHealth { get; init; } = 0.45;
 
+    /// <summary>
+    /// Riskin ödüle bindirdiği prim — 0 ise ödül düşman canıyla düz orantılıdır.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Düz orantı bir yerde bozuluyor: üç güçlü düşman, bir zayıf düşmanın üç katı kadar
+    /// <b>can</b> taşır ama üç katı kadar <b>risk</b> taşımaz — daha fazlasını taşır
+    /// (odaklanan üç düşman aynı anda vurur, kaçış zorlaşır, ölüm ihtimali doğrusal
+    /// büyümez). Ödül canla düz orantılı kaldığı sürece eğrinin üst ucu <b>hiçbir zaman</b>
+    /// alınmaya değmez ve oyuncu, dojo'su büyüse bile teklifleri geri çevirmeye devam eder.
+    /// </para>
+    /// <para>
+    /// Prim <see cref="RiskFreeEnemyHealth"/>'in üstünde başlar: sıradan bir karşılaşma
+    /// eskisi kadar öder, ağırlaşan karşılaşma orantısından fazlasını.
+    /// </para>
+    /// </remarks>
+    public double RiskPremium { get; init; } = 0.25;
+
+    /// <summary>Primin başladığı düşman canı — bunun altı sıradan iş sayılır.</summary>
+    public double RiskFreeEnemyHealth { get; init; } = 100;
+
     /// <summary>Çekilen ya da bozguna uğrayan seferin ödülü.</summary>
     /// <remarks>Sıfır — GDD §10: pes etmek o seferin ödülünü siler.</remarks>
     public int LostBattleGold { get; init; }
