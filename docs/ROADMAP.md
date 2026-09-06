@@ -222,7 +222,10 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 - [x] **Ekonomi: altın, yiyecek/su, ilaç; alım-satım** — `EconomyTuning` +
       `Quartermaster` (fiyat, onarım, yenileme, stok, savaşçı alımı, sefer ödülü);
       sayılar `Domina.Sim --mode campaign` ile 1000 dojo × 60 gün ölçülüp GDD §11'de
-      kilitlendi
+      kilitlendi. **Uzun ufuk düzeltmesi (2026-09-04):** net hesabı yerine koymayı
+      saymıyormuş (31.3 değil 18.5); zorluk eğrisinin tavanı 3.0 → **2.2**, ödüle **risk
+      primi** (0.25, 100 candan sonra). 180 günde bitiş kasası 75 → 2288, kapanan dojo
+      %8.5 → %2.5, erken oyun kıpırdamıyor (GDD §11 "Uzun ufuk")
 - [x] **Ekonomi: rastgele olaylar** — `Dojo/RandomEvents.cs`: günde %15, beş tür (hırsızlık, erzak bozulması, kuyunun bulanması, ilacın küflenmesi, hastalık); hepsi eksiltir, etkisi kasaya ve takvime vurur, ölçüm GDD §11'de
 - [x] Gün döngüsü — `DojoState.AdvanceDay()`: deterministik, rastgelelik içermez;
       revir günlerini eritir, onuru nötre çeker, kapanan günün özetini döndürür

@@ -1628,6 +1628,60 @@ kalmanın satın aldığı şey.**
 
 Okulun sayılarının hiçbiri **kilitli değil**; kilitlenen tek şey kolların ne sattığı.
 
+### Uzun ufuk: eğrinin tavanı ve risk primi (2026-09-04)
+
+Okul turunun yan bulgusu: 60 günde sağlıklı görünen dojo **180 günde iflas ediyordu** —
+kasa 0, boş gün %83, tekliflerin %83'ü geri çevriliyordu. Eşelemek iki ayrı kusur çıkardı,
+biri ölçüm aracında biri tasarımda.
+
+**Ölçüm kusuru: net hesabı yerine koymayı saymıyordu.** `NetGoldPerBattle` geliri kuşam ve
+ambar giderinden düşüyor ama ölen savaşçının yerine alınanı saymıyordu — oysa bağlayıcı
+kısıt zaten kadro (§11). Kalem eklenince tablo değişti: eski ekonomi ölçümünün "dövüş başına
+net 31.3 altın"ı, yerine koyma da düşülünce **18.5 altın**; teklif kipinde ise 60 günde bile
+**eksi** (−0.9). Yani günlük teklif ekonomisi hiçbir zaman kendini ödememişti; 60 günlük
+pencere bunu, dojo çoğu günü boş geçirdiği için gizliyordu.
+
+**Tasarım kusuru: eğrinin tavanı dojo'nun tavanının çok üstündeydi.** Dojo'nun büyümesinin
+sınırı var (stat tavanı 90/180, dört kişilik kadro, kuşam kademeleri); eğrininki 3.0'dı ve
+her düşman o güçte, üç taneye kadar geliyordu. Sonuç: bir yerden sonra hiçbir teklif
+alınmaya değmiyor, dojo işsizlikten eriyor.
+
+İki sayı kilitlendi.
+
+- **`MaxPower` 2.2** (eskiden 3.0). Tavan `DireThreshold` ile aynı yere kondu: **Dire
+  eğrinin varış noktası değil, tepesindeki dalgalanma.** İlk 60 gün hiç etkilenmiyor — eğri
+  66. güne kadar tavana değmiyor, yani daha önce kilitlenen sayılar yerinde.
+- **Risk primi 0.25, 100 candan sonra** (`RiskPremium`, `RiskFreeEnemyHealth`). Ödül düz
+  orantılı kaldığı sürece eğrinin üst ucu **hiçbir zaman** alınmaya değmez: üç güçlü düşman
+  üç kat *can* taşır ama üç kattan fazla *risk* taşır (üçü aynı anda vurur, kaçış zorlaşır).
+  Prim sıradan işi olduğu gibi bırakır, ağırlaşan işi orantısından fazla öder.
+
+**Ölçüm (400 dojo, `patrol`, teklif kipi, pazar + okul + yol açık, kadrosunun 1.5 katına
+kadar teklif kabul eden politika):**
+
+| Ayar | Gün | Bitiş kasası | Sermayesini koruyan | Ret oranı | Aç gün | Kapanan dojo |
+|---|---|---|---|---|---|---|
+| eski (tavan 3.0, primsiz) | 60 | 283 | %8.5 | %29.6 | %0.3 | %0.5 |
+| **yeni (2.2 + prim)** | 60 | 326 | %11.0 | %29.3 | %0.3 | %0.8 |
+| eski (tavan 3.0, primsiz) | 180 | 75 | %3.5 | %64.7 | %30.1 | %8.5 |
+| **yeni (2.2 + prim)** | 180 | **2288** | **%40.0** | %53.7 | %18.6 | **%2.5** |
+
+Erken oyun kıpırdamıyor, uzun ufuk düzeliyor: dövüş sayısı 57.7'den 79.5'e çıkıyor, ret
+oranı %64.7'den %53.7'ye iniyor — yani mesele "daha kolay" değil, **teklifin yeniden
+alınmaya değer olması**.
+
+İki not:
+
+- **Sabit banda yapışan dojo hâlâ eriyor** ve bu doğru. `rising` bandını aşan hiçbir teklife
+  girmeyen politika 180 günde dövüş başına −17.9 altın yazıyor, günlerinin %57'sini aç
+  geçiriyor ama **kapanmıyor** (%1.0): büyümeyi reddetmenin bedeli ölüm değil, yavaş çürüme.
+  Tehdit bandı kasten mutlak — "senin için zor" demek, oyuncunun kararını oyunun eline
+  vermek olurdu (§10) — dolayısıyla banda göre oynayan oyuncunun bandı **kendi** yükseltmesi
+  gerekiyor.
+- **Sabit senaryo bedi artık daha zengin okuyor** (60 günde 1226 → 3146 altın): `patrol` her
+  gün üç düşmanlık ağır bir karşılaşma sunuyor, prim de tam olarak oraya biniyor. O bed bir
+  üst sınır ölçer, oyunun kendisini değil; ekonominin asıl bedi teklif kipidir.
+
 ### Rastgele olaylar (2026-09-04)
 
 Günde **%15** olasılıkla bir aksilik çıkar. Beş tür var. Hepsi eksiltir — bağış, hazine, iyi haber yok:
@@ -1686,6 +1740,7 @@ sıradan günün karşılaşmasıdır: zafer %98.6, savaşçı-dövüş başına
 | Ölçü | Sonuç |
 |---|---|
 | Dövüş başına gelir / kuşam gideri / net | 114.5 / 31.1 / **31.3 altın** |
+| *(2026-09-04 düzeltmesi)* net, yerine koyma da düşülünce | **18.5 altın** — bkz. "Uzun ufuk" |
 | Günlük tüketim | 34.5 altın |
 | 60 günde dövüş | 39.4 (dojo başına) |
 | Boş gün (kadro sefere yetmiyor) | %33.8 |
@@ -1852,7 +1907,7 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 | 4-B | Ekipman — yeni kural gerektirenler | **Sersemletme kilitlendi (2026-09-02)** — kural ve sayılar §7'de; künt sınıfın karşılığı artık var (kesici %91.57 / künt %88.68 iken ikisi de ~%92). **Kılıç yakalama kilitlendi (2026-09-03)** — jitte/sai artık kalkanın bıraktığı boşluğu dolduruyor: taban şans 0.24, kilit 0.6 sn, çift el silaha karşı ×0.75; üç seçenek de bir şeyde en iyi (katana zaferde %73.09, sai uzuv korumasında %0.45). **Zehir kilitlendi (2026-09-03)** — doz zırhın etrafından dolaşır: tik başına 2.5, tik 1.0 sn, ömür 6.0 sn, azami doz 3.0; zehirli tantō açık dövüşte katana ile başa baş (%72.19'a karşı %73.09), zırhlı düşmanın önünde önde (%77.19'a karşı %68.62). Zehir uzuv koparmaz, sersemletmez ve çekilende de durmaz. **Silahın elden düşmesi kilitlendi (2026-09-03)** — zırhın karşılığı: zırha inen vuruşta taban şans 0.05, yakalanan silahta 0.05, elden çıkma eğilimi kesici 1.0 / delici 0.6 / künt 0.2. Silah kırılmaz, karşıdakinin arkasına 250 birim savrulur; eli boş olan herkes (düşüren, takım arkadaşı, düşman) alabilir, elinde silah olan ne alır ne arar. Ō-yoroi kuşanmış düşmanın önünde takas dönüyor (nodachi %87.53, tetsubo %89.20); yerden alma teke tekte %7.3, 3v3'te %40.4. **Madde kapandı** — kural ve sayılar §7'de. **Kalkan yok:** elde taşınan kalkan Japon savaşında yaygın değil (*tate* yere dayanan sabit siperdir); aynı mekanik ihtiyacı jitte/sai karşılar |
 | 4-C | ~~Ekipman — uzam/mermi gerektirenler~~ | **Kapandı (2026-08-14).** Çekirdek mermi kazandı: `ThrownWeapon` ayrı bir yuvada taşınır, atış havada süre geçirir, uçuş sırasında hedef kaçabilir/ölebilir/sahadan çıkabilir. Yumi ve fukiya aynı yoldan gelir — yalnızca menzil/hız/cephane sayıları farklıdır. Makibishi hâlâ açık: o bir sarf malzemesi, mermi değil |
 | ~~4-D~~ | ~~Ekipman — zırh ve sakat savaşçı~~ | **Zırh yıpranması eklendi (2026-09-03):** parça durdurduğu hasar kadar aşınır, havuzu bitince ortada dağılır ve **kalıcı olarak gider**; yıpranma savaşçıda birikir, tek dövüşte tükenmez (ō-yoroi ~15 dövüş, keikogi ~7). Kural ve sayılar §7'de. **Kilitlendi (2026-09-02).** Zırh üç kademe (keikogi / dō-maru / ō-yoroi) **altı yuvada** taşınır: kafa, gövde, kılıç kolu, boştaki kol, sağ bacak, sol bacak. Kuşamın bir **ağırlığı** vardır ve saldırı döngüsünü uzatır (`ArmorAttackSlowdownAtFullWeight` 0.75, tam ō-yoroi = 16) — §7'deki tablo. Sakat savaşçının cezaları taraflandı: kılıç kolu ×0.65, boştaki kol ×0.85, her bacak ×0.55 kaçınma / ×0.60 hız. **Sakata özel ekipman (protez) yazılmadı** — fikir olarak "Fikir Defteri"nde duruyor, açık karar değil |
-| ~~5~~ | ~~Ekonomi sayıları~~ | **Kilitlendi (2026-09-04).** Tek para birimi altın; fiyatlar ve günlük tüketim §11'de tabloyla. Zafer ödülü düşman canı başına 0.45, zırh 1.50/dayanıklılık, onarım 0.90/yıpranma, ilaç 12, savaşçı 150, başlangıç 600. Ölçüm 1000 dojo × 60 gün (`patrol` senaryosu): dövüş başına net 31.3 altın, boş gün %33.8, kapanan dojo %1.2. **Ölçümün ortaya çıkardığı kısıt:** bağlayıcı kaynak altın değil kadro — karşılaşma zorluğu savaşçı-dövüş başına %20 ölümün üstüne çıkınca hiçbir fiyat dojo'yu ayakta tutmuyor. **Rastgele olaylar da eklendi (2026-09-04):** günde %15, beş tür, hepsi eksiltir; ölçüm §11'de (tamponun ~beşte biri). **Açık kalan:** isteğe bağlı riskli maçlar (§11) |
+| ~~5~~ | ~~Ekonomi sayıları~~ | **Kilitlendi (2026-09-04).** Tek para birimi altın; fiyatlar ve günlük tüketim §11'de tabloyla. Zafer ödülü düşman canı başına 0.45, zırh 1.50/dayanıklılık, onarım 0.90/yıpranma, ilaç 12, savaşçı 150, başlangıç 600. Ölçüm 1000 dojo × 60 gün (`patrol` senaryosu): dövüş başına net 31.3 altın, boş gün %33.8, kapanan dojo %1.2. **Ölçümün ortaya çıkardığı kısıt:** bağlayıcı kaynak altın değil kadro — karşılaşma zorluğu savaşçı-dövüş başına %20 ölümün üstüne çıkınca hiçbir fiyat dojo'yu ayakta tutmuyor. **Rastgele olaylar da eklendi (2026-09-04):** günde %15, beş tür, hepsi eksiltir; ölçüm §11'de (tamponun ~beşte biri). **Uzun ufuk düzeltmesi (2026-09-04):** net hesabı yerine koymayı saymıyormuş — düzeltilince aynı bedde net 31.3 değil **18.5**; eğrinin tavanı **2.2**'ye çekildi ve ödüle **risk primi** (0.25, 100 candan sonra) eklendi, ölçüm §11 "Uzun ufuk". **Açık kalan:** isteğe bağlı riskli maçlar (§11) |
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
 | ~~12~~ | ~~Blok ayrı bir durum mu~~ | **Kilitlendi (2026-09-03).** Ayrı durum: `CombatState.Blocking`. Karar Savunma statından (`Savunma ÷ 100 × 0.45`), şart gelen vuruşu okumak, süre 0.8 sn, tuttuğu hasarın %70'i × silahın blok kalitesi. Bloklanan darbe uzuv koparmaz, künt sarsıntı %75 geçer. Ölçüldü: zafer %71.21 → %72.39, uzuv kaybı %5.19 → %4.96. Kural ve sayılar §5'te. **Kuralın kendi freni yok** — `MaxBlockChance` büyüdükçe tek yönlü kazanç; freni statın dojo'da yarışması, sayı Faz 9'da |
