@@ -1,4 +1,4 @@
-namespace Domina.Core.Honor;
+﻿namespace Domina.Core.Honor;
 
 /// <summary>Onur ve seppuku sisteminin ayarlanabilir sayıları.</summary>
 /// <remarks>
@@ -58,10 +58,21 @@ public sealed record HonorTuning
     public double DecayPerHourTowardNeutral { get; init; } = 6;
 
     /// <summary>Bu değerin altına düşen savaşçı seppuku oylamasına girer.</summary>
-    public double SeppukuThreshold { get; init; } = 12;
+    /// <remarks>
+    /// <b>Geçici sayı (2026-09-04):</b> 100'lük ölçekte 30, playtest'e kadar duracak
+    /// (GDD §14 #8 açık). Eski 12 ölçeğin dibine yapışıktı: onur oraya ancak üst üste
+    /// felaketle iniyordu, yani oylama neredeyse hiç açılmıyordu — chat'in en ağır
+    /// kararı pratikte oyunda yoktu.
+    /// </remarks>
+    public double SeppukuThreshold { get; init; } = 30;
 
     /// <summary>Affedilen savaşçının onuru bu değere çekilir — eşiğin biraz üstü.</summary>
-    public double PardonedHonor { get; init; } = 25;
+    /// <remarks>
+    /// Eşikle birlikte yürür: affedilen savaşçı doğrudan yeni bir oylamaya düşmemeli,
+    /// ama af onu nötre (<see cref="HonorScale.Starting"/>) de taşımamalı — af aklama
+    /// değil, savaşçı borçlu kalkar.
+    /// </remarks>
+    public double PardonedHonor { get; init; } = 45;
 
     /// <summary>Oylama penceresi.</summary>
     public TimeSpan VoteWindow { get; init; } = TimeSpan.FromSeconds(60);

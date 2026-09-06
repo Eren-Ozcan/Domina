@@ -223,9 +223,10 @@ public class SeppukuTests
     [Fact]
     public void TheArtificialAudienceJudgesTheRightWarriorsHonor()
     {
-        // Eşiğe yakın onur (11.9) → af şansı ~%50; sıfıra yakın onur → ~%5.
+        // Eşiğin hemen altı → af şansı ~%50; sıfıra yakın onur → ~%5. Sayı eşikten
+        // türetilir: eşik playtest'te oynayacak, testin iddiası oynamamalı.
         var lucky = Arbiter(roll: 0.30);
-        OpenVote(lucky, Disgraced(1, honor: 11.9));
+        OpenVote(lucky, Disgraced(1, honor: _tuning.SeppukuThreshold - 0.1));
         Assert.Equal(SeppukuOutcome.Pardoned, lucky.ForceResolve(_t0)!.Outcome);
 
         var doomed = Arbiter(roll: 0.30);
