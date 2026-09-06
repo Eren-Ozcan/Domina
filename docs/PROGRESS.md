@@ -1472,3 +1472,163 @@ ancak 0.69 sözleşmeye giriyor. Sistem doğru çalışıyor ama neredeyse gör�
 
 Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 401/401 yeşil
 (+13: `BountyTests` 10, `RecruitMarketTests` +3). Yeni dosyalarda `dotnet format` temiz.
+
+
+## 2026-09-04 (altıncı tur) — Sahipsiz üç ekran
+
+Kadro ekranından sonra geriye kalan üç ekran yazıldı: **pazar**, **okul** ve **günün
+teklifi**. Yeni kural yok — üçü de çekirdekte duran kuralların önüne cam takıyor.
+
+### Kararlar ekranın değil modelin
+
+Kadro ekranındaki kalıp korundu: ne yazılacağına ve neyin kapalı olacağına
+`Domina.Presentation` karar veriyor (motorsuz, testli), Godot tarafı düğüm kurup
+basıyor. Üç yeni model:
+
+- **`MarketModel`** — sıra **fiyata** göre, kasaya göre değil: alınabilirlik altın
+  harcandıkça değişir, tezgâh her alımda yeniden dizilseydi oyuncu adayın yerini
+  kaybederdi. Satır kadroya göre konum taşıyor (`BetterInRoster`), çünkü pazarın sorusu
+  "bu aday iyi mi" değil "elimdekinden iyi mi". Yetenek **sayı değil bant** olarak
+  okunuyor (`TalentBand`): stat elde olandır, yetenek bir vaat — "1.23" yazmak onu
+  ölçülmüş bir stat gibi gösterirdi. Skor formülü pazarın tavan hesabıyla birebir aynı,
+  yoksa ekran adayın neden kırpıldığını açıklayamazdı.
+- **`SchoolModel`** — kapalı düğümün **iki ayrı sebebi** var: sırası gelmemiş olmak ve
+  parasının yetmemesi. Biri beklemekle, diğeri kazanmakla açılır; aynı sönük tuşla
+  gösterilemezler. `School.Available()` yalnızca sırayı bilir, kasayı bilmez — ayrımı
+  model yapıyor, eksik altın da satırda yazıyor. Kilitli düğüm gizlenmiyor: okul uzun
+  vadeli yatırım, oyuncu neye biriktirdiğini görmeden biriktiremez.
+- **`OfferModel`** — düşman kadrosunu **hiç taşımıyor**. Teklif nesnesi onu tutar (dövüş
+  aynı kadroyla kurulsun diye) ama GDD §10'a göre girmeden önce yalnızca bant ve kaba
+  tanım okunur; model kadroyu taşımayınca ekran onu yanlışlıkla da basamaz. Sefere çıkma
+  hükmü `Expedition.Refuse`'dan okunuyor, ikinci bir kural kümesi yazılmadı: yazılsaydı
+  iki taraf ayrışır ve tuş gönderilebilen bir seferi kapatmaya başlardı.
+
+### Dört ekran tek dojo
+
+`DojoScreen` ortak iskelet (zemin, kenar boşluğu, en üstte gezinme çubuğu); `DojoHub`
+dördünü tek bir `DojoState` üzerinde gezdiriyor. Tek nesne olması şart: pazardan alınan
+savaşçı kadro ekranında, okuldan alınan tesis günün hesabında anında görünmeli. Ekran
+değişince yenisi baştan kuruluyor — gizlenip geri gösterilen ekran eski günü basardı.
+
+Komutların hepsi çekirdeğin kendi kapılarından geçiyor: `Quartermaster.Hire`,
+`DojoState.BuySchoolNode`, `DojoState.AcceptBounty`, `Expedition.Send` /
+`SendToBounty`, `DojoState.Decline`. Sefer akışı gün ve tohumdan türetiliyor; rastgele
+tohum "kaydı yükleyip dövüşü yeniden çevirme" kapısını açardı.
+
+**Açık kalan iki kalem:**
+
+1. Dövüş şimdilik **arka planda** çözülüyor, sonucu bilanço olarak yazılıyor. Arenada
+   izlemek sefer akışının arenaya bağlanmasıyla gelecek (Faz 4); kural tarafı aynı
+   yoldan geçtiği için sonuç değişmeyecek.
+2. Aynı adayın gün içinde iki kez alınmasını şimdilik **ekran** engelliyor. Tezgâh gün
+   boyu donduğu için (`DojoState.Recruits`) çekirdek bunu kaydetmiyor; kayda geçmesi
+   gerekirse yeri çekirdek.
+
+Yeni sahne `src/Game/dojo.tscn` (`main.tscn` hâlâ arena demosu).
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 482/482 yeşil
+(+28: `MarketModelTests` 9, `SchoolModelTests` 7, `OfferModelTests` 12). Yeni dosyalarda
+`dotnet format` temiz.
+
+## 2026-09-04 (yedinci tur) — Dövüş arenada, pazar her gün
+
+### Sefer arenaya bağlandı
+
+Sefer katmanı dövüşü kendi koşturuyordu (`Expedition.Send`), o yüzden gün ekranı dövüşü
+arka planda çözüp bilanço basıyordu. Arena dövüşü **gerçek zamanla** adımlamak zorunda —
+oyuncu "çek" komutuyla müdahale edebiliyor — yani dövüşün kurulması, koşturulması ve
+muhasebesi ayrı ayrı çağrılabilir olmalı. `Expedition` üçe bölündü:
+
+- `Prepare` / `PrepareBounty` — ekibi tartar, dövüşü kurar, **koşturmaz**. Dojo'ya
+  dokunmaz (gün de kasa da yerinde kalır).
+- `Settle` / `SettleBounty` — bitmiş bir dövüşün hesabını kapatır: kadroya yazar, ödülü
+  öder, kelle avıysa onuru ve sözü işler, günü kapatır.
+- `Send` / `SendToBounty` — ikisinin arasına dövüşü koyar; toplu simülasyon ve testler
+  bu yolu kullanmaya devam ediyor.
+
+Muhasebenin tek yerde kalması şart: arena kendi muhasebesini yazsaydı izlenen dövüş ile
+`Domina.Sim`'in çözdüğü dövüş farklı sonuçlar bırakır, denge ölçümü ekrandakini ölçmemiş
+olurdu. `ExpeditionSettleTests` bunu tutuyor — aynı tohum, aynı ekip, aynı teklif: iki yol
+tek dojo (kasa, kadro, revir günleri birebir).
+
+Godot tarafında `BattleArena` artık dışarıdan dövüş alabiliyor (`Bout`) ve bitince ham
+sonucu veriyor (`Finished`); kurulum ya da muhasebe yapmıyor. `DayScreen` dövüşü kurup
+`PendingBattle` olarak veriyor, `DojoHub` ekranları kapatıp arenayı açıyor, dövüş bitince
+"Dojo'ya dön" tuşu bilançoyla gün ekranına dönüyor. `Watcher` verilmezse (ekran tek başına
+açıldıysa) dövüş arka planda çözülüyor — aynı iki çağrı, arada arena yok.
+
+### Pazar her gün yenileniyor, alım sayısı serbest
+
+`RefreshDays` 2 → **1**, `Candidates` 3 → **10**. Gerekçe: beklemenin bedeli zaten var —
+bir gün beklemek bir gün yer — o yüzden tezgâhı durgun tutmak ikinci bir ceza. Alım
+sayısına tavan **konmadı**: pazar gün boyu açık, kasa el verdiği sürece birden fazla
+savaşçı alınabilir. Sınır altın, sayaç değil; aksi hâlde aynı gün iki ölünün yerine iki
+savaşçı konamazdı.
+
+Aynı adayın iki kez satılması sorunu **çekirdeğe** taşındı (önceki turda ekranda duran
+geçici işaret kalktı): `DojoState.HireRecruit(index)` alınan sırayı kaydediyor, gün
+kapanınca işaret düşüyor, ve alınan sıralar **kayıt dosyasına** yazılıyor — yoksa kaydı
+yükleyip aynı adamı yeniden almak açık kalırdı. `Domina.Sim` de artık bu kapıdan geçiyor:
+ölçüm oyuncunun oynadığı kapıdan geçmezse ölçtüğü şey oyun olmaz.
+
+**Ölçüm (400 dojo × 60 gün, `patrol`, `--market-pick value`):**
+
+| Tezgâh | Bitiş kasası | Sermayesini koruyan | Ölüm / savaşçı-dövüş | Kapanan dojo |
+|---|---|---|---|---|
+| 2 günde bir, 3 aday (eski) | 1254 | %51.7 | %9.6 | %17.5 |
+| Her gün, 3 aday | 1288 | %54.5 | %9.5 | %14.5 |
+| Her gün, 4 aday | 1184 | %50.5 | %10.0 | %19.2 |
+| Her gün, 6 aday | 1258 | %55.2 | %9.8 | %17.0 |
+| Her gün, 8 aday | 1301 | %56.0 | %9.7 | — |
+| Her gün, 10 aday (yeni) | 1285 | %55.2 | %9.7 | — |
+
+Satırlar arasındaki fark bu örneklemde gürültünün içinde: tezgâhın sıklığı ve genişliği
+**denge kolu değil**, pazarı bağlayan şey stat tavanı ile kasa. Aday sayısı bu yüzden
+denge değil his kararı olarak verildi — on aday, referans oyunun tezgâhıyla aynı ölçek
+(2026-09-05). Ölçümün kendi sınırı da
+görünüyor — simülasyon günde en çok bir aday alıyor, oysa kural birden fazlasına izin
+veriyor; "aynı gün iki ölünün yerine iki savaşçı" ancak oynayarak görülecek.
+
+`Domina.Sim` iki yeni düğme kazandı: `--market-refresh <gün>` ve `--market-candidates <n>`.
+
+### Okul sırası duruyor
+
+Kol içi sıra zorunluluğu (kata ustası talimhanesiz gelmez) tartışıldı ve **korundu**;
+ekran "önce Talimhane" diye yazmaya devam ediyor.
+
+Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 495/495 yeşil
+(+13: `ExpeditionSettleTests` 4, `RecruitMarketTests` +6, `DojoSaveTests` +1,
+`MarketModelTests` +2). `dojo.tscn` headless Godot'ta hatasız açılıyor.
+
+## 2026-09-05 — Kayıt oyuna bağlandı
+
+Dojo artık `DemoRoster.Dojo()` ile kurulmuyor: oyun **başlangıç ekranıyla** açılıyor ve
+dojo ya yuvadan yükleniyor ya da `NewGame.Create(seed)` ile kuruluyor. Playtest'in ön
+şartı buydu — 60 günlük bir dojo tek oturumda oynanmıyor.
+
+**Ne eklendi:**
+
+- `NewGame` (çekirdek): 600 altın, boş ambar, dört savaşçı. Kadro elle yazılmıyor,
+  pazarın kendi üreticisinden **ayrı bir tohumla** çekiliyor — aynı akış kullanılsaydı
+  ilk gün tezgâhta duran adaylar kadronun birebir kopyası olurdu. Başlangıç çekirdekte
+  duruyor ki ölçüm koşusu ile oynanan oyun aynı kurulumdan başlasın.
+- `SaveSlot` (Godot katmanı): `user://dojo.json`. Yazma iki adımlı — önce geçici dosya,
+  sonra takas; otomatik kayıt her değişiklikte çalıştığı için "yazarken kapanan oyun"
+  penceresi sık sık açılır ve doğrudan üstüne yazmak seferi silerdi.
+- `TitleScreen`: devam et / yeni oyun. Kayıt varken "yeni oyun" **iki kez** sorar —
+  tek yuva var ve permadeath'li bir sefer yanlış tuşla silinmemeli.
+- Otomatik kayıt: ekranlar dojo'yu değiştirdiklerini `DojoScreen.Changed` ile söylüyor,
+  yazan tek yer hub. Yazma noktaları: gün kapanışı, dövüş sonrası hesap, sözleşme kabulü,
+  aday alımı, tesis alımı, yol seçimi, talim ve ad değişikliği; üstüne kapanışta son bir
+  tur. Kapanışa **tek başına** güvenilmiyor (çökme, güç kesintisi).
+- Yükleme uyarıları sessiz kalmıyor: merge-on-load bir şeyi kurtaramadıysa gün ekranının
+  bilançosunda yazıyor (GDD §2).
+- `project.godot` artık `dojo.tscn` ile açılıyor, arena demosuyla değil.
+
+**Doğrulama:** build 0 hata / 0 uyarı; `dotnet test` 499/500 — tek kırmızı
+`ThroughputTests.TenThousandBattlesRunWithinTheBudget` (10.11 sn / 10 sn bütçe, Debug'da
+ölçüm gürültüsü, kayıt işiyle ilgisi yok). Yeni testler: `NewGameTests` 5 (başlangıç
+sayıları, tohum determinizmi, kadro ≠ ilk gün tezgâhı, kayıt turu).
+
+**Sırada:** kendi oynayışın — revir kolu tuzak mı, seppuku eşiği 30 doğru mu, kelle avı
+60 günde görünür mü, on aday tezgâhı kalabalık mı.
