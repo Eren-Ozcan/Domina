@@ -17,6 +17,8 @@ Bu proje hakkında herhangi bir işe başlamadan önce oku:
   dökümü; her madde kaynak güvenine göre işaretli. Bir mekaniği ödünç alırken önce buraya bak.
 - **`docs/REFERENCE-DOMINA-UI.md`** — aynı oyunun ekran ve arayüz dökümü: hangi bilgi
   nerede, hangi kontrol neye benziyor, neyi kopyalamamalı.
+- **`docs/COMPARISON-DOMINA.md`** — referans oyunla kalem kalem kıyas: neyi aynı yaptık,
+  neyi bilerek değiştirdik, neyi hiç yapmadık (⚪ işaretliler açık boşluk).
 - **`docs/DESIGN-REFERENCES.md`** — kararların dışarıdan doğrulanabilir dayanakları
   (yerleşik tasarım pratiği, kaynak bağlantıları) ve kaynakların bizi çürüttüğü yerler.
 
