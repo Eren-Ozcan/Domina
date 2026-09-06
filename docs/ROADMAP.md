@@ -194,8 +194,14 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 
 **Hedef:** Dövüşler arası oyun.
 
-- [ ] Roster ekranı: savaşçılar, statlar, yaralar, onur, isim düzenleme
-      — **kadro modeli hazır** (`Domina.Core/Dojo/Roster.cs`), ekran yok
+- [x] **Roster ekranı**: savaşçılar, statlar, yaralar, onur, isim düzenleme
+      — karar `Domina.Presentation/RosterModel.cs`'te (motorsuz, testli): rozet, sıralama
+      ve ad çakışması hükmü orada; `Game/Scripts/RosterScreen.cs` yalnızca düğüm kurup
+      basıyor. Sıra "bugün kimi gönderebilirim" sorusuna göre: hazır, antrenmandaki,
+      revirdeki, ölü. Ölü savaşçı listeden düşmez. Ham stat ile dövüşün okuduğu stat
+      yan yana yazılıyor (`40 → 46`), çünkü antrenman hama yazar, yol ve sakatlık üstüne
+      biner. Ad değiştirme tuşu `RosterModel.JudgeRename` ile önceden kapanıyor —
+      `Roster.Rename` çakışmada fırlatır, oyuncu bunu istisnadan öğrenmemeli
 - [x] **İsim düzenleme** (chat'ten gelen veya üretilen ismi değiştirme — GDD §8)
       — `Roster.Rename`; isim eşsizliği yalnızca canlılar arasında zorlanıyor
 - [x] **Antrenman alanları + antrenman süresi/etkisi** — `Dojo/Training.cs`: dört talim
@@ -239,6 +245,12 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 
 **Kabul:** Bir savaşçı işe alınıp eğitilebiliyor, yaralanıp iyileşebiliyor, oyun
 kapatılıp açıldığında her şey yerinde.
+
+> **Faz 3 kapandı (2026-09-04).** Maddelerin hepsi işaretli. Ekranlardan yalnızca kadro
+> ekranı var; pazar, okul ve günün teklifi için ekran yok. Bunlar Faz 3'ün maddesi
+> değildi — kuralları çekirdekte duruyor ve `Domina.Sim` üzerinden ölçülüyor — ama
+> hiçbir faza da yazılı değiller. **Sahipsiz iş:** oynanabilir bir döngü için gereken
+> ilk şey bu üç ekran.
 
 ---
 
