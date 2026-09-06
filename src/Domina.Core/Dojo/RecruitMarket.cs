@@ -34,15 +34,35 @@ public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent
 public sealed record MarketTuning
 {
     /// <summary>Aynı anda pazarda duran aday sayısı.</summary>
-    public int Candidates { get; init; } = 3;
+    /// <remarks>
+    /// <para>
+    /// On aday, geniş tezgâh: alım <b>seçmek</b> olsun, eldekiyle yetinmek olmasın.
+    /// Referans oyunun tezgâhıyla aynı ölçek.
+    /// </para>
+    /// <para>
+    /// Sayının <b>denge etkisi ölçüldü ve yok</b>: 400 dojo × 60 günde 4, 6, 8 ve 10 aday
+    /// aynı bandı veriyor (bitiş kasası 1184-1301, ölüm %9.7-10.0). Pazarı bağlayan şey
+    /// liste uzunluğu değil, stat tavanı (<see cref="BestFollowCeiling"/>) ile kasa.
+    /// Yani bu sayı bir denge kolu değil, ekranın verdiği <b>his</b>.
+    /// </para>
+    /// </remarks>
+    public int Candidates { get; init; } = 10;
 
     /// <summary>Pazarın kaç günde bir yenilendiği.</summary>
     /// <remarks>
-    /// Her gün yenilenseydi beğenilmeyen kadro bir gün beklenerek düzeltilirdi ve seçim
-    /// kararı "yarın daha iyisi gelir" diye ertelenirdi. Birkaç günlük durgunluk, eldeki
-    /// adayı gerçek bir seçenek yapar.
+    /// <para>
+    /// Tezgâh <b>her gün</b> yenilenir. Beklemenin bedeli zaten var: bir gün beklemek
+    /// bir gün yer (yiyecek, su, ilaç ödenir ve o gün sefere çıkılmaz), o yüzden
+    /// "yarın daha iyisi gelir" bedava bir erteleme değil.
+    /// </para>
+    /// <para>
+    /// Tezgâh gün <b>içinde</b> yine donar (<see cref="DojoState.Recruits"/>): oyuncu
+    /// gün boyu istediği zaman pazara girip çıkabilsin ama satın alarak listeyi yeniden
+    /// çeviremesin. Alınan aday da kayda geçer, aynı adam iki kez satılmaz
+    /// (<see cref="DojoState.HireRecruit"/>).
+    /// </para>
     /// </remarks>
-    public int RefreshDays { get; init; } = 2;
+    public int RefreshDays { get; init; } = 1;
 
     /// <summary>Adayın statlarının taban etrafındaki oynama payı.</summary>
     public double Spread { get; init; } = 0.35;

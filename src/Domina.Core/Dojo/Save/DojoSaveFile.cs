@@ -63,7 +63,8 @@ public static class DojoSaveFile
             state.Seed,
             state.AcceptedBountyDay,
             state.ClaimedBountyDay,
-            [.. state.School.Owned]);
+            [.. state.School.Owned],
+            [.. state.HiredToday]);
     }
 
     public static string Write(DojoState state) =>
@@ -121,6 +122,7 @@ public static class DojoSaveFile
         state.RestoreSeed(snapshot.Seed);
         state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
         state.RestoreSchool(snapshot.School ?? []);
+        state.RestoreHiredToday(snapshot.HiredRecruits ?? []);
 
         foreach (WarriorSnapshot record in snapshot.Warriors ?? [])
         {

@@ -293,4 +293,21 @@ public class DojoSaveTests
         Assert.Equal(1, result.State!.Day);
         Assert.Single(result.Warnings);
     }
+
+    /// <summary>
+    /// Bugün alınmış aday kayda geçer: geçmeseydi oyuncu kaydı yeniden yükleyerek aynı
+    /// adamı tekrar tekrar satın alırdı (tezgâh gün içinde donuyor).
+    /// </summary>
+    [Fact]
+    public void ALoadedSaveRemembersWhichCandidatesWereAlreadyBought()
+    {
+        DojoState state = new() { Resources = new Resources(Gold: 5000) };
+        Assert.NotNull(state.HireRecruit(1));
+
+        LoadResult loaded = DojoSaveFile.Load(DojoSaveFile.Write(state));
+
+        Assert.True(loaded.Succeeded);
+        Assert.Equal([1], loaded.State!.HiredToday);
+        Assert.Null(loaded.State.HireRecruit(1));
+    }
 }

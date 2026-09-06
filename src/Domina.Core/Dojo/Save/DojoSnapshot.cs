@@ -29,6 +29,11 @@ namespace Domina.Core.Dojo.Save;
 /// Alınmış okul tesisleri. Yalnızca <b>hangi düğümler</b> yazılır; bonusların büyüklüğü
 /// denge sayısıdır ve dosyaya girmez.
 /// </param>
+/// <param name="HiredRecruits">
+/// Bugün tezgâhtan alınmış adayların sıraları. Adayların kendisi yazılmaz (günden ve
+/// tohumdan yeniden üretilir); bu işaret olmadan kayıt yeniden yüklenerek aynı aday
+/// tekrar satın alınırdı.
+/// </param>
 public sealed record DojoSnapshot(
     int Version,
     int Day,
@@ -37,7 +42,8 @@ public sealed record DojoSnapshot(
     ulong Seed = 1,
     int? AcceptedBountyDay = null,
     int? ClaimedBountyDay = null,
-    IReadOnlyList<SchoolNodeId>? School = null)
+    IReadOnlyList<SchoolNodeId>? School = null,
+    IReadOnlyList<int>? HiredRecruits = null)
 {
     /// <summary>
     /// Yazılan dosyaların sürümü. Biçim <b>bozucu</b> şekilde değiştiğinde artar;

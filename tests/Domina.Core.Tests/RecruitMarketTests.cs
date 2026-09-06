@@ -34,7 +34,7 @@ public class RecruitMarketTests
         IReadOnlyList<RecruitOffer> stock =
             market.Stock(new SeededRandom(7), WarriorStats.Recruit(), basePrice: 150);
 
-        Assert.Equal(3, stock.Count);
+        Assert.Equal(new MarketTuning().Candidates, stock.Count);
         Assert.True(stock.Select(o => o.Stats.MaxHealth).Distinct().Count() > 1);
         Assert.True(stock.Select(o => o.Price).Distinct().Count() > 1);
         Assert.All(stock, o => Assert.InRange(o.Talent, 0.6, 1.4));
@@ -67,6 +67,85 @@ public class RecruitMarketTests
 
         Assert.Equal(day1, day2);
         Assert.NotEqual(day2, day3);
+    }
+
+    /// <summary>Tezgâh varsayılan ayarda her gün yenilenir.</summary>
+    [Fact]
+    public void TheStallTurnsOverEveryDay()
+    {
+        DojoState state = Funded();
+        static string Key(IReadOnlyList<RecruitOffer> stock) =>
+            string.Join('|', stock.Select(o => $"{o.Name}:{o.Price}"));
+
+        string day1 = Key(state.Recruits);
+        state.AdvanceDay();
+
+        Assert.Equal(1, new MarketTuning().RefreshDays);
+        Assert.NotEqual(day1, Key(state.Recruits));
+    }
+
+    /// <summary>
+    /// Alım günü yemez: pazar gün boyu açıktır, kasa el verdiği sürece birden fazla
+    /// savaşçı alınabilir. Aksi hâlde aynı gün iki ölünün yerine iki savaşçı konamazdı.
+    /// </summary>
+    [Fact]
+    public void BuyingDoesNotSpendTheDayAndMoreThanOneCanBeHired()
+    {
+        DojoState state = Funded();
+        int day = state.Day;
+
+        Assert.NotNull(state.HireRecruit(0));
+        Assert.NotNull(state.HireRecruit(1));
+
+        Assert.Equal(day, state.Day);
+        Assert.Equal(2, state.Roster.Living.Count());
+    }
+
+    /// <summary>
+    /// Tezgâh gün içinde donduğu için aynı aday iki kez satılabilirdi: tek bir kişi
+    /// kadronun tamamına dönüşürdü. Alınan aday kayda geçiyor.
+    /// </summary>
+    [Fact]
+    public void TheSameCandidateCannotBeBoughtTwiceInADay()
+    {
+        DojoState state = Funded();
+
+        Assert.NotNull(state.HireRecruit(0));
+        Assert.Null(state.HireRecruit(0));
+        Assert.Single(state.Roster.Living);
+        Assert.Equal([0], state.HiredToday);
+    }
+
+    /// <summary>Yarınki tezgâh başka adaylar taşır; dünün işareti yarını kapatmamalı.</summary>
+    [Fact]
+    public void TheMarkOnBoughtCandidatesFallsWithTheDay()
+    {
+        DojoState state = Funded();
+
+        Assert.NotNull(state.HireRecruit(0));
+        state.AdvanceDay();
+
+        Assert.Empty(state.HiredToday);
+        Assert.NotNull(state.HireRecruit(0));
+    }
+
+    [Fact]
+    public void AnIndexOutsideTheStallBuysNobody()
+    {
+        DojoState state = Funded();
+
+        Assert.Null(state.HireRecruit(-1));
+        Assert.Null(state.HireRecruit(state.Recruits.Count));
+        Assert.Empty(state.Roster.Entries);
+    }
+
+    [Fact]
+    public void AnEmptyPurseBuysNobodyAndLeavesNoMark()
+    {
+        DojoState state = Funded(gold: 0);
+
+        Assert.Null(state.HireRecruit(0));
+        Assert.Empty(state.HiredToday);
     }
 
     /// <summary>

@@ -20,6 +20,7 @@ public sealed class DojoState
     private IReadOnlyList<RecruitOffer>? _recruits;
     private BountyContract? _bounty;
     private bool _bountyRead;
+    private readonly HashSet<int> _hiredToday = [];
 
     public DojoState(
         DojoTuning? tuning = null,
@@ -170,6 +171,7 @@ public sealed class DojoState
         Day++;
         _offer = null;
         _recruits = null;
+        _hiredToday.Clear();
         _bounty = null;
         _bountyRead = false;
         return new DayReport(closed, recovered, trained, upkeep, happening, broken);
@@ -300,6 +302,50 @@ public sealed class DojoState
     public IReadOnlyList<RecruitOffer> Recruits =>
         _recruits ??= Market.Stock(Day, Seed, Market.AnchorFor(Roster), Economy.RecruitPrice);
 
+    /// <summary>Bugün tezgâhtan alınmış adayların sıraları.</summary>
+    /// <remarks>
+    /// Gün kapanınca boşalır — yarın tezgâhta başka adaylar durur
+    /// (<see cref="MarketTuning.RefreshDays"/>) ve eski işaret yanlış adamı kapatırdı.
+    /// </remarks>
+    public IReadOnlyCollection<int> HiredToday => _hiredToday;
+
+    /// <summary>
+    /// Tezgâhtaki adayı satın alır.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Alım günü yemez:</b> pazar gün boyu açıktır, kasa ve tezgâh el verdiği sürece
+    /// birden fazla savaşçı alınabilir. Günü yiyen şey sefere çıkmak ya da günü dojo'da
+    /// geçirmektir — alım sayısına ayrıca bir tavan konsaydı, aynı gün iki ölünün yerine
+    /// iki savaşçı koymak imkânsızlaşırdı.
+    /// </para>
+    /// <para>
+    /// Alınan aday <b>kayda geçer</b> ve tezgâhtan düşer. Tezgâh gün içinde donduğu için
+    /// (<see cref="Recruits"/>) bu kayıt olmadan aynı aday sınırsız kez satılırdı: tek
+    /// bir kişi kadronun tamamına dönüşürdü. Ekranın işaretine bırakılamaz — kaydı
+    /// yükleyip aynı adamı yeniden almak da aynı kapıdır.
+    /// </para>
+    /// </remarks>
+    /// <param name="index">Adayın <see cref="Recruits"/> içindeki sırası.</param>
+    /// <param name="weapon">Kuşandırılacak silah; verilmezse varsayılan.</param>
+    /// <param name="armor">Kuşandırılacak zırh; verilmezse varsayılan.</param>
+    /// <returns>Alındıysa kadro kaydı; tezgâhta yoksa, alınmışsa ya da para yetmiyorsa <c>null</c>.</returns>
+    public RosterEntry? HireRecruit(int index, Weapon? weapon = null, Armor? armor = null)
+    {
+        if (index < 0 || index >= Recruits.Count || _hiredToday.Contains(index))
+        {
+            return null;
+        }
+
+        RosterEntry? entry = Quartermaster.Hire(this, Recruits[index], weapon, armor);
+        if (entry is not null)
+        {
+            _hiredToday.Add(index);
+        }
+
+        return entry;
+    }
+
     /// <summary>Bugün tahtada asılı sözleşme; yoksa <c>null</c>.</summary>
     /// <remarks>
     /// Teklif gibi gün içinde sabittir ve saklanmaz: aynı gün ve aynı tohum daima aynı
@@ -419,6 +465,23 @@ public sealed class DojoState
     }
 
     /// <summary>Kayıttan gelen tesisleri yerine koyar.</summary>
+    /// <summary>Kayıttan gelen "bugün alınmış adaylar" işaretini yerine koyar.</summary>
+    /// <remarks>
+    /// Adayların kendisi kayda yazılmaz (günden ve tohumdan yeniden üretilir), yazılan
+    /// tek şey <b>hangi sıraların</b> alındığı. Yazılmasaydı oyuncu kaydı yeniden
+    /// yükleyerek aynı adayı tekrar tekrar satın alırdı.
+    /// </remarks>
+    internal void RestoreHiredToday(IEnumerable<int> indexes)
+    {
+        ArgumentNullException.ThrowIfNull(indexes);
+
+        _hiredToday.Clear();
+        foreach (int index in indexes)
+        {
+            _hiredToday.Add(index);
+        }
+    }
+
     internal void RestoreSchool(IEnumerable<SchoolNodeId> owned)
     {
         School.Restore(owned);
@@ -438,6 +501,7 @@ public sealed class DojoState
         Day = Math.Max(1, day);
         _offer = null;
         _recruits = null;
+        _hiredToday.Clear();
         _bounty = null;
         _bountyRead = false;
     }
