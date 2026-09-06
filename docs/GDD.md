@@ -1382,6 +1382,12 @@ alışveriş yapılmaz.
 | İlaç | **12 altın**, revirdeki savaşçı başına günde 1 | Yaralı sayısı |
 | Savaşçı alımı | **150 altın** | — |
 | Başlangıç sermayesi | **600 altın** | — |
+| Başlangıç kadrosu | **4 savaşçı**, bedava | — |
+
+Başlangıç kadrosu ölçümün kadrosuyla aynı büyüklükte (dört savaşçı) ve bedava geliyor:
+600 altın ilk günün kararları için duruyor, kadronun kendisi için değil. Başka bir sayı
+seçilseydi oynanan dojo, ekonomisi ölçülen dojo olmaktan çıkardı. Ambar **boş** başlar —
+ilk günün yiyeceğini gün kapanışı satın alır.
 
 **Onarım daima yenilemeden ucuzdur** (0.90 < 1.50). Eşit ya da pahalı olsaydı onarım
 diye bir karar kalmazdı: herkes parçayı dağılana kadar kullanıp yenisini alırdı. Aradaki
@@ -1446,10 +1452,44 @@ pazarından birebir alındı:
   aday aynı hızda gelişmez. Fiyata girer ama statlardan daha az ağırlıkla: yetenek bir
   **vaat**, stat ise elde olan. **Dövüş bunu okumaz**, yalnızca antrenman okur — bir
   antrenman gününün kazancını doğrudan çarpar (aşağıda "Antrenman").
-- **Liste birkaç günde bir yenilenir** (`RefreshDays` 2) ve **gün içinde donar**. Her gün
-  yenilenseydi beğenilmeyen kadro bir gün beklenerek düzeltilir, seçim ertelenirdi. Gün
-  içinde donmasaydı — pazar kadro ortalamasını takip ettiği için — bir aday satın almak
-  kalan adayları değiştirir, liste istenildiği kadar çevrilebilirdi.
+- **Liste her gün yenilenir** (`RefreshDays` 1) ve **gün içinde donar**. Günlük
+  yenilenme **kilitli bir karardır** (2026-09-04): beklemenin bedeli zaten var — bir gün
+  beklemek bir gün yer (stok ödenir, o gün sefere çıkılmaz) — o yüzden tezgâhı ayrıca
+  durgun tutmak ikinci bir ceza olurdu. Gün içinde donmasaydı, pazar kadro ortalamasını
+  takip ettiği için bir aday satın almak kalan adayları değiştirir, liste istenildiği
+  kadar çevrilebilirdi.
+- **Tezgâhta on aday durur** (`Candidates` 10, karar 2026-09-05). Referans oyunun
+  tezgâhıyla aynı ölçek — sayı yazılı bir kaynaktan değil, oyunun kendisinden görüldü;
+  taranan yazılı kaynakların (Steam guide'ları, gameskinny, gameplay.tips, namu.wiki,
+  Grokipedia, üç inceleme, forumlar — 2026-09-04) hiçbirinde tezgâh boyutu geçmiyor.
+  **Ölçüm sayının denge kolu olmadığını söylüyor:** 400 dojo × 60 günde 4 / 6 / 8 / 10
+  aday aynı bandı veriyor (bitiş kasası 1184 / 1258 / 1301 / 1285, ölüm %10.0 / %9.8 /
+  %9.7 / %9.7). Pazarı bağlayan şey liste uzunluğu değil, stat tavanı ile kasa; o yüzden
+  bu sayı denge değil **his** kararı: alım seçmek olsun, eldekiyle yetinmek olmasın.
+- **Alım günü yemez ve sayısı sınırlı değil** (`DojoState.HireRecruit`): pazar gün boyu
+  açıktır, kasa ve tezgâh el verdiği sürece birden fazla savaşçı alınabilir. Günü yiyen
+  şey sefere çıkmak ya da günü dojo'da geçirmektir. Alım sayısına ayrı bir tavan
+  konsaydı aynı gün iki ölünün yerine iki savaşçı konamazdı — pazarın işi tam olarak
+  budur. Sınır **altın**dır, sayaç değil.
+- **Alınan aday tezgâhtan düşer ve kayda geçer.** Liste gün içinde donduğu için bu kayıt
+  olmadan aynı aday sınırsız kez satılırdı: tek bir kişi kadronun tamamına dönüşürdü.
+  Ekranın işaretine bırakılamaz — kaydı yükleyip aynı adamı yeniden almak aynı kapıdır,
+  o yüzden alınan sıralar kayıt dosyasına yazılır.
+
+**Ölçüm — günlük tezgâhın bedeli (400 dojo × 60 gün, `patrol`, `--market-pick value`):**
+
+| Tezgâh | Bitiş kasası | Sermayesini koruyan | Alınan savaşçı | Kapanan dojo |
+|---|---|---|---|---|
+| 2 günde bir, 3 aday (eski) | 1254 | %51.7 | 7.98 | %17.5 |
+| Her gün, 3 aday | 1288 | %54.5 | 7.87 | %14.5 |
+| Her gün, 4 aday (yeni) | 1184 | %50.5 | 8.29 | %19.2 |
+| Her gün, 6 aday | 1258 | %55.2 | 8.61 | %17.0 |
+
+Tezgâhın sıklığı ve genişliği **denge kolu değil**: dört satır arasındaki fark bu örneklem
+büyüklüğünde gürültünün içinde kalıyor. Sebep, pazarı bağlayan şeyin liste değil iki başka
+kalem olması — stat tavanı (yukarıda) ve kasa. Ölçüm, ölçüm politikasının bir sınırını da
+gösteriyor: simülasyon günde en çok bir aday alıyor, oysa kural birden fazlasına izin
+veriyor; "aynı gün iki ölünün yerine iki savaşçı" davranışı ancak oynayarak görülecek.
 
 **Ölçüm (400 dojo × 60 gün, `patrol`):** iki alım stratejisi karşılaştırıldı.
 

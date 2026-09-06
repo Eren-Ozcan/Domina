@@ -246,11 +246,24 @@ Faz 2.2 artık başka hiçbir şeyi beklemiyor.
 **Kabul:** Bir savaşçı işe alınıp eğitilebiliyor, yaralanıp iyileşebiliyor, oyun
 kapatılıp açıldığında her şey yerinde.
 
-> **Faz 3 kapandı (2026-09-04).** Maddelerin hepsi işaretli. Ekranlardan yalnızca kadro
-> ekranı var; pazar, okul ve günün teklifi için ekran yok. Bunlar Faz 3'ün maddesi
-> değildi — kuralları çekirdekte duruyor ve `Domina.Sim` üzerinden ölçülüyor — ama
-> hiçbir faza da yazılı değiller. **Sahipsiz iş:** oynanabilir bir döngü için gereken
-> ilk şey bu üç ekran.
+> **Faz 3 kapandı (2026-09-04).** Maddelerin hepsi işaretli.
+
+> **Sahipsiz üç ekran yazıldı ve döngü kapandı (2026-09-04).** Pazar, okul ve günün
+> teklifi artık ekran olarak var; dördü (kadro dahil) `dojo.tscn` altında tek bir
+> `DojoState` üzerinde geziliyor. Kararlar `Domina.Presentation`'daki üç modelde
+> (`MarketModel`, `SchoolModel`, `OfferModel`), komutlar çekirdeğin kendi kapılarından
+> (`DojoState.HireRecruit`, `BuySchoolNode`, `AcceptBounty`, `Decline`, `Expedition`)
+> geçiyor. **Sefere çıkınca dövüş arenada izleniyor:** `Expedition.Prepare` dövüşü kurar,
+> arena adımlar, `Expedition.Settle` hesabı kapatır — muhasebe tek yerde, izlenen dövüş
+> ile toplu simülasyonda çözülen dövüş aynı sonucu bırakır (`ExpeditionSettleTests`).
+> Döngü elde oynanır: gün açılır, pazardan savaşçı alınır, teklif ya da sözleşme seçilir,
+> dövüş izlenir, kadro erir, okuldan tesis alınır, ertesi gün.
+
+> **Kayıt oyuna bağlandı (2026-09-05).** Oyun başlangıç ekranıyla açılıyor; dojo ya
+> `user://dojo.json` yuvasından yükleniyor ya da `NewGame.Create` ile kuruluyor, ve her
+> değişiklikte yazılıyor. Faz 3'ün kabul kriterinin son yarısı ("oyun kapatılıp
+> açıldığında her şey yerinde") artık ekranda da geçerli — o güne kadar yalnızca
+> çekirdekte doğruydu.
 
 ---
 
