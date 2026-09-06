@@ -78,6 +78,37 @@ public class CampaignRunnerTests
         Assert.True(with.AverageScoreGain > without.AverageScoreGain);
     }
 
+    /// <summary>Okul kolu tek başına koşturulabilmeli — ölçümün asıl sorusu bu.</summary>
+    /// <remarks>
+    /// Bir kolun kendi bedelini ödeyip ödemediği ancak yalnız koşturulunca görünür; hepsi
+    /// birden alındığında kasadan çıkan para hangi kolun işine yaradığını gizler.
+    /// </remarks>
+    [Fact]
+    public void ASingleSchoolBranchCanBeMeasuredOnItsOwn()
+    {
+        CampaignOptions options = Options(days: 60) with
+        {
+            StartingGold = 3000,
+            UseSchool = true,
+            SchoolOnly = SchoolBranch.Steward,
+        };
+
+        CampaignReport report = new CampaignRunner(options).Run(firstSeed: 5);
+
+        Assert.True(report.AverageSchoolNodes > 0);
+        Assert.True(report.AverageSchoolGold > 0);
+    }
+
+    [Fact]
+    public void WithoutTheSchoolNothingIsBought()
+    {
+        CampaignReport report = new CampaignRunner(Options() with { StartingGold = 3000 }).Run(firstSeed: 5);
+
+        Assert.Equal(0, report.AverageSchoolNodes);
+        Assert.Equal(0, report.AverageSchoolGold);
+        Assert.Equal(0, report.AveragePaths);
+    }
+
     /// <summary>Zafer ne kadar öderse kasa o kadar dolar — ölçümün tuttuğu tek eksen.</summary>
     [Fact]
     public void ARicherRewardLeavesARicherDojo()

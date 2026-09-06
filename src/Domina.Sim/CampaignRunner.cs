@@ -42,7 +42,10 @@ internal sealed record CampaignOptions(
     bool UseMarket = false,
     MarketTuning? Market = null,
     MarketPick Pick = MarketPick.Value,
-    bool UseBounties = false)
+    bool UseBounties = false,
+    bool UseSchool = false,
+    SchoolBranch? SchoolOnly = null,
+    bool UsePaths = false)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -133,6 +136,16 @@ internal sealed class CampaignRunner(CampaignOptions options)
         {
             row.GoldSpentOnGear += Maintain(state, template);
 
+            if (_options.UseSchool)
+            {
+                row.GoldSpentOnSchool += BuildSchool(state, row);
+            }
+
+            if (_options.UsePaths)
+            {
+                row.Paths += ChoosePaths(state);
+            }
+
             if (Hire(state, template, ref hired))
             {
                 row.Hires++;
@@ -165,6 +178,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         row.EndingGold = state.Resources.Gold;
         row.SurvivingWarriors = state.Roster.Living.Count();
         row.EndScore = BestScore(state);
+        row.SchoolNodes = state.School.Owned.Count;
         row.TrainingDays = state.Roster.Living.Sum(e => e.TrainingDays);
         return row;
     }
@@ -460,6 +474,78 @@ internal sealed class CampaignRunner(CampaignOptions options)
             && Quartermaster.Hire(state, best, proto.Weapon, proto.Armor) is not null;
     }
 
+    /// <summary>
+    /// Parası yettikçe okuldan tesis alır.
+    /// </summary>
+    /// <remarks>
+    /// Politika basit ve <b>aynı</b>: açık düğümlerin en ucuzu alınır.
+    /// <see cref="CampaignOptions.SchoolOnly"/> verildiğinde yalnızca o kol alınır —
+    /// ölçümün asıl sorusu bu, çünkü bir kolun kendi bedelini ödeyip ödemediği ancak
+    /// tek başına koşturulunca görünür.
+    /// </remarks>
+    private int BuildSchool(DojoState state, CampaignRow row)
+    {
+        int before = state.Resources.Gold;
+
+        // Okulun tamponu günlük tampondan <b>kalın</b>: yiyecek parasının üstüne bir de
+        // savaşçı alacak kadar. Tesis isteğe bağlı, ambar ve ölen savaşçının yerine
+        // konması değil — ince tamponla ölçüm ağacı değil, politikanın aç kalmasını
+        // ölçüyordu (dojo başına aç gün %47'den %67'ye çıkıyordu).
+        int reserve = Reserve(state) + _options.Economy.RecruitPrice;
+
+        while (true)
+        {
+            List<SchoolNode> open = [.. state.School.Available()];
+            SchoolNode? wanted = open
+                .Where(n => _options.SchoolOnly is not SchoolBranch only || n.Branch == only)
+                .Where(n => Affordable(state, n.Cost, reserve))
+                .OrderBy(n => n.Cost)
+                .FirstOrDefault();
+
+            if (wanted is null || !state.BuySchoolNode(wanted.Id))
+            {
+                break;
+            }
+
+            row.SchoolNodes++;
+        }
+
+        return before - state.Resources.Gold;
+    }
+
+    /// <summary>
+    /// Kilidi açılan savaşçıya <b>zaten güçlü olduğu</b> yolu seçtirir.
+    /// </summary>
+    /// <remarks>
+    /// Üstüne koymak, oyuncunun doğal hamlesi: zayıf tarafı kapatmak antrenmanın işi,
+    /// yol ise savaşçının kim olduğunu keskinleştirir.
+    /// </remarks>
+    private static int ChoosePaths(DojoState state)
+    {
+        int chosen = 0;
+        foreach (RosterEntry entry in state.Roster.Living)
+        {
+            if (entry.Warrior.Path != WarriorPath.None)
+            {
+                continue;
+            }
+
+            WarriorStats stats = entry.Warrior.BaseStats;
+            WarriorPath path = stats.Accuracy >= stats.Defense && stats.Accuracy >= stats.Evasion
+                ? WarriorPath.Blade
+                : stats.Defense >= stats.Evasion
+                    ? WarriorPath.Stone
+                    : WarriorPath.Shadow;
+
+            if (state.ChoosePath(entry.Id, path))
+            {
+                chosen++;
+            }
+        }
+
+        return chosen;
+    }
+
     /// <summary>Kadronun en iyi savaşçısının stat skoru — pazar tavanı da bunu izler.</summary>
     /// <remarks>
     /// Ortalama değil <b>en iyi</b>: antrenmanın ürettiği şey kadronun düzgün dağılmış
@@ -570,6 +656,15 @@ internal sealed class CampaignRow
     /// <summary>Canlı kadronun toplam antrenman günü.</summary>
     public int TrainingDays { get; set; }
 
+    /// <summary>Alınmış okul tesisi sayısı.</summary>
+    public int SchoolNodes { get; set; }
+
+    /// <summary>Okula giden altın.</summary>
+    public int GoldSpentOnSchool { get; set; }
+
+    /// <summary>Yolunu seçen savaşçı sayısı.</summary>
+    public int Paths { get; set; }
+
     /// <summary>Kadroda kimse kalmadı — dojo kapandı.</summary>
     public bool Collapsed { get; set; }
 }
@@ -656,6 +751,15 @@ internal sealed class CampaignReport(int days)
     /// <summary>Dojo başına antrenman günü (canlı kadro toplamı).</summary>
     public double AverageTrainingDays => Standing(r => r.TrainingDays);
 
+    /// <summary>Dojo başına alınmış okul tesisi.</summary>
+    public double AverageSchoolNodes => Standing(r => r.SchoolNodes);
+
+    /// <summary>Okula giden altın (dojo başına).</summary>
+    public double AverageSchoolGold => Standing(r => r.GoldSpentOnSchool);
+
+    /// <summary>Yolunu seçen savaşçı (dojo başına).</summary>
+    public double AveragePaths => Standing(r => r.Paths);
+
     public double AverageArmorPiecesLost => Average(r => r.ArmorPiecesLost);
 
     public double RecoveryDaysPerBattle => PerBattle(r => r.RecoveryDays);
@@ -697,7 +801,8 @@ internal sealed class CampaignReport(int days)
                 return 0;
             }
 
-            int net = _rows.Sum(r => r.GoldEarned - r.GoldSpentOnGear - r.GoldSpentOnUpkeep);
+            int net = _rows.Sum(
+                r => r.GoldEarned - r.GoldSpentOnGear - r.GoldSpentOnUpkeep - r.GoldSpentOnSchool);
             return (double)net / battles;
         }
     }

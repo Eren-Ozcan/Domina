@@ -71,6 +71,9 @@ internal static class SimArgs
         bool useBounties = false;
         EconomyTuning economy = new();
         TrainingTuning training = new();
+        bool useSchool = false;
+        SchoolBranch? schoolOnly = null;
+        bool usePaths = false;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -649,6 +652,51 @@ internal static class SimArgs
                     marketTuning = marketTuning with { BestFollowCeiling = ceiling };
                     break;
 
+                case "--school":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--school on veya off olmali: {value}");
+                    }
+
+                    useSchool = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--school-only":
+                    if (string.Equals(value, "any", StringComparison.OrdinalIgnoreCase))
+                    {
+                        schoolOnly = null;
+                        break;
+                    }
+
+                    if (!Enum.TryParse(value, ignoreCase: true, out SchoolBranch branch))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--school-only training | infirmary | steward | any olmali: {value}");
+                    }
+
+                    schoolOnly = branch;
+                    break;
+
+                case "--paths":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--paths on veya off olmali: {value}");
+                    }
+
+                    usePaths = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--path-days":
+                    if (!TryCount(value, out int pathDays))
+                    {
+                        return ParsedArgs.Fail($"--path-days pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    training = training with { PathTrainingDays = pathDays };
+                    break;
+
                 case "--train-rate":
                     if (!TryFraction(value, out double trainRate))
                     {
@@ -841,7 +889,10 @@ internal static class SimArgs
                 useMarket,
                 marketTuning,
                 marketPick,
-                useBounties)
+                useBounties,
+                useSchool,
+                schoolOnly,
+                usePaths)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(

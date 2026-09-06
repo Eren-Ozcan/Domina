@@ -1,4 +1,5 @@
 using Domina.Core.Combat;
+using Domina.Core.Dojo;
 using Domina.Sim;
 
 namespace Domina.Sim.Tests;
@@ -26,6 +27,22 @@ public class SimCliTests
         Assert.Equal(1ul, options.FirstSeed);
         Assert.Null(options.CsvPath);
         Assert.IsType<NeverRetreat>(options.RetreatPolicy);
+    }
+
+    [Fact]
+    public void TheSchoolAndThePathsAreSweepable()
+    {
+        SimOptions options = Parse(
+            "--mode", "campaign",
+            "--school", "on",
+            "--school-only", "infirmary",
+            "--paths", "on",
+            "--path-days", "12");
+
+        Assert.True(options.Campaign!.UseSchool);
+        Assert.Equal(SchoolBranch.Infirmary, options.Campaign.SchoolOnly);
+        Assert.True(options.Campaign.UsePaths);
+        Assert.Equal(12, options.Campaign.Dojo.Training.PathTrainingDays);
     }
 
     /// <summary>Antrenman oranı taranabilir olmalı — sayı ancak süpürülerek kilitlenir.</summary>
@@ -99,6 +116,10 @@ public class SimCliTests
     [InlineData("--scenario", "yok")]
     [InlineData("--policy", "maybe")]
     [InlineData("--policy", "below:2")]
+    [InlineData("--school", "belki")]
+    [InlineData("--school-only", "mutfak")]
+    [InlineData("--paths", "belki")]
+    [InlineData("--path-days", "0")]
     [InlineData("--train-rate", "2")]
     [InlineData("--train-ceiling", "0")]
     [InlineData("--bilinmeyen", "1")]
