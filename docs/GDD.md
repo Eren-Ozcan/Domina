@@ -640,6 +640,16 @@ Onur eşiğin altına düşerse savaşçı **hemen ölmez** → oylamaya gider.
 **Cooldown:** Affedilen savaşçı **15 dakika** bağışıklık kazanır. Bu sürede onuru
 eşiğin altına inse bile yeni oylama tetiklenmez.
 
+**Eşik — geçici sayı (2026-09-04):** 100'lük ölçekte **30**; af onuru **45**'e çekiyor
+(`HonorTuning.SeppukuThreshold`, `PardonedHonor`). Kullanıcının kararı, playtest'te
+oynanacak — §14 #8 açık kalıyor.
+
+> Eski 12 ölçeğin dibine yapışıktı: savaşçı oraya ancak üst üste felaketle iniyordu,
+> yani oylama neredeyse hiç açılmıyor, chat'in en ağır kararı pratikte oyunda
+> bulunmuyordu. 30, savaşçıyı nötrden (50) **ölçülebilir** bir mesafeye koyuyor.
+> Af 45: eşiğin üstü ama nötrün altı — affedilen savaşçı doğrudan yeni bir oylamaya
+> düşmemeli, ama af aklama da değil, savaşçı borçlu kalkar.
+
 ---
 
 ## 7. Yaralanma ve Uzuv Kaybı
@@ -1911,7 +1921,7 @@ yeni bir ekipman yuvası ve yeni bir ölçüm turu demek.
 | ~~6~~ | ~~Görsel stil~~ | **Kilitlendi 2026-08-13 — bkz. §12** |
 | 7 | Oyun adı | Henüz yok ("Domina" sadece klasör adı — final isim değil) |
 | ~~12~~ | ~~Blok ayrı bir durum mu~~ | **Kilitlendi (2026-09-03).** Ayrı durum: `CombatState.Blocking`. Karar Savunma statından (`Savunma ÷ 100 × 0.45`), şart gelen vuruşu okumak, süre 0.8 sn, tuttuğu hasarın %70'i × silahın blok kalitesi. Bloklanan darbe uzuv koparmaz, künt sarsıntı %75 geçer. Ölçüldü: zafer %71.21 → %72.39, uzuv kaybı %5.19 → %4.96. Kural ve sayılar §5'te. **Kuralın kendi freni yok** — `MaxBlockChance` büyüdükçe tek yönlü kazanç; freni statın dojo'da yarışması, sayı Faz 9'da |
-| 8 | Onur eşik sayıları | Seppuku eşiği, decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil |
+| 8 | Onur eşik sayıları | Decay hızı, hedefli komut etki katsayısı — playtest ile. **Kaçmanın onur bedeli de burada** (`RetreatHonorPenalty`, §5): kural kilitli, sayı değil. **Seppuku eşiği geçici olarak kondu (2026-09-04):** 100 üzerinden **30**, af **45** (§6). Kullanıcının kararı — kilitli değil, playtest'te oynanacak |
 | ~~9~~ | ~~Kaçışta kısmi ödül~~ | **Düştü (2026-08-29).** Sefer tek dövüşse önceki odalarda toplanmış ganimet diye bir şey yok; çekilmek o dövüşün ödülünü siler, o kadar (§10) |
 | ~~10~~ | ~~Seferin peşin bedeli~~ | **Kapandı (2026-08-29).** Girmek **bir gün** yer (kaçılsa da), düşman kadrosu **kısmen** görünür — yalnızca tehdit işareti (§10) |
 | ~~11~~ | ~~Hücum sayıları~~ | **Kilitlendi (2026-09-02)** — tablo §4'te. Mesafe 320, olasılık 0.40, birikme 0.75 sn, hız 1.6, hasar 1.5. Ölçüm sırasında **birikme aşaması eklendi**: hücumun bedeli yalnızca yazılıydı, koşu 0.6 sn sürdüğü için hiç ölçülmüyordu. Ölçüm sırasında ayrıca **yeniden tutuşma** ve **statlar + kalabalık** kuralları eklendi; hücum artık açılış hamlesi değil ve karar savaşçının kimliğinden çıkıyor. **Takip eden iş:** yokai bestiary'sinde (#3) "kime hücum eder" bir karakter özelliği olarak kullanılabilir — düşüncesizce hücum eden yokai savunmasızlığın bedelini öder |
