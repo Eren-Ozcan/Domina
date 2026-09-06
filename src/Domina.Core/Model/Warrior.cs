@@ -96,7 +96,12 @@ public sealed class Warrior
     {
         get
         {
-            WarriorStats s = PathScale.Apply(BaseStats, Path);
+            // Yol seçilmemişken hesaba hiç girilmez: burası dövüşün sıcak yolu (on binlerce
+            // dövüşte savaşçı başına milyonlarca okuma) ve boş bir çarpan turu ölçülebilir
+            // şekilde yavaşlatıyordu.
+            WarriorStats s = Path == WarriorPath.None
+                ? BaseStats
+                : PathScale.Apply(BaseStats, Path);
             foreach (Disability d in _disabilities)
             {
                 s = s with

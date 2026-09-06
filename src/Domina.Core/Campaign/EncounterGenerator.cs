@@ -19,7 +19,18 @@ public sealed record EncounterTuning
     public double PowerPerDay { get; init; } = 0.02;
 
     /// <summary>Eğrinin tavanı — sonsuza kadar sertleşmez.</summary>
-    public double MaxPower { get; init; } = 3.0;
+    /// <remarks>
+    /// <b>2.2'de kilitlendi</b> (400 dojo × 180 gün, ölçüm GDD §11). Tavan, tam büyümüş bir
+    /// dojo'nun hâlâ kâr edebildiği yerde durmak zorunda: dojo'nun kendi büyümesinin sınırı
+    /// var (stat tavanı, dört kişilik kadro, kuşam kademeleri) ama eğrinin yoktu, ve 3.0'da
+    /// uzun vadede dövüş başına net sıfırın altına iniyordu (−0.1), teklif reddi %62'ye,
+    /// kapanan dojo %11.2'ye çıkıyordu. 2.2'de net 25.6, ret %53.7, kapanan %2.5. Daha
+    /// alçak tavan (1.4) kararı öldürüyor: dojo tekliflerin %96'sını kabul ediyor.
+    /// Tavan <see cref="DireThreshold"/> ile aynı: <b>Dire eğrinin varış noktası değil,
+    /// tepesindeki dalgalanma.</b> İlk 60 günü hiç etkilemez — eğri 66. güne kadar tavana
+    /// değmiyor, yani daha önce kilitlenen sayılar yerinde kalıyor.
+    /// </remarks>
+    public double MaxPower { get; init; } = 2.2;
 
     /// <summary>
     /// Günün gücüne binen dalgalanma payı.
