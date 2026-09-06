@@ -466,12 +466,13 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// </remarks>
     private static bool HireFromMarket(DojoState state, Warrior proto, int reserve, MarketPick pick)
     {
-        RecruitOffer? best = null;
+        int best = -1;
         double bestValue = 0;
 
-        foreach (RecruitOffer offer in state.Recruits)
+        for (int index = 0; index < state.Recruits.Count; index++)
         {
-            if (!Affordable(state, offer.Price, reserve))
+            RecruitOffer offer = state.Recruits[index];
+            if (!Affordable(state, offer.Price, reserve) || state.HiredToday.Contains(index))
             {
                 continue;
             }
@@ -483,15 +484,16 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 _ => Score(offer.Stats) / Math.Max(1, offer.Price),
             };
 
-            if (best is null || value > bestValue)
+            if (best < 0 || value > bestValue)
             {
-                best = offer;
+                best = index;
                 bestValue = value;
             }
         }
 
-        return best is not null
-            && Quartermaster.Hire(state, best, proto.Weapon, proto.Armor) is not null;
+        // Alım DojoState.HireRecruit üzerinden geçiyor: ölçüm oyuncunun oynadığı
+        // kapıdan geçmezse ölçtüğü şey oyun olmaz (aynı aday iki kez alınamaz).
+        return best >= 0 && state.HireRecruit(best, proto.Weapon, proto.Armor) is not null;
     }
 
     /// <summary>

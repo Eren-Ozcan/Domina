@@ -641,6 +641,26 @@ internal static class SimArgs
                     useBounties = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
+                case "--market-refresh":
+                    if (!TryCount(value, out int refreshDays))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--market-refresh pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    marketTuning = marketTuning with { RefreshDays = refreshDays };
+                    break;
+
+                case "--market-candidates":
+                    if (!TryCount(value, out int candidates))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--market-candidates pozitif bir tam sayi olmali: {value}");
+                    }
+
+                    marketTuning = marketTuning with { Candidates = candidates };
+                    break;
+
                 case "--market-ceiling":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double ceiling)
