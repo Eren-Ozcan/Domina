@@ -491,4 +491,79 @@ gerektirmez.
 geçmişti (%89.20'ye karşı %87.53); ayrı zarın taban şansı, künt sınıfı baskın hale
 getirmeyecek yerde aranacak. Ayrıca ilk kez **savunan** taraf silah kaybettiği için
 "eli boş olan alır" kuralının dövüş şekline göre bedeli (1v1 %7.3, 3v3 %40.4) yeniden
-ölçülmelidir.
+ölçülmelidir.
+
+## Bölüm 10 — Sayı sayı özet ✔ tamamlandı
+
+Not: 9.2'nin kararı gereği aşağıdaki sayılar **şeklin** kaydıdır, ölçümün değil. Karar
+turu bütün mevcut dengeyi geçersiz kıldı; her sayı ilgili sistem koda girdiğinde yeniden
+ölçülecek.
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Başlangıç kasası ve ambarı | 600 altın, **boş** ambar | **600 altın + 3 günlük yiyecek ve su** | Domina dolu ambarla (800/400/80) başlatıyor, bizde ambar bomboştu. Ortası seçildi: oyuncu ilk seferini aç kalmadan planlar, tedarik baskısı **4. günden** itibaren bastırır. Gerekçe: ilk günü bir tedarik kriziyle açmak, oyunu daha zor değil daha **kafa karıştırıcı** yapıyordu; kıtlık öğretilmeden ceza olmamalı. |
+| Başlangıç kadrosu | 4 savaşçı | **4 savaşçı** (değişmedi) | Domina 3 ile başlatıyor. Bizde sefer ekibi zaten en çok 4; kadroyu tam ekip çıkacak sayıda başlatmak ilk seferi pazara bağımlı kılmıyor. |
+| Kampanya uzunluğu | Sınırsız (ölçüm 60 gün) | **180 gün sabit geri sayım** | Bölüm 1 "sabit geri sayım + ekranda kalan gün" demişti, sayı buraya bırakılmıştı. 180, uzun ufuk turunun ölçtüğü ufkun tamamı: seçici dojo kasayı 75'ten 2288'e çıkarıyor, kapanma %8.5'ten %2.5'e iniyor. Domina'nın 365'i yarıya indirildi — bizde gün başına karar yoğunluğu daha yüksek. ⚠️ Ölçülen risk: geç oyunda tehdit tükenirse günler tekrara düşer; zorluk eğrisinin tavanı (`MaxPower` 2.2) bu uzunlukta yeniden bakılacak. |
+| Sefer ekibi | En çok 4 | **En çok 4** (GDD #1, kilitli) | Domina sözleşmeye göre 1-15 gönderiyor. Bizde ekip sınırı finalin şeklini de belirledi (aşağıya bakınız). |
+| Mecburi dövüş | Yok | **7 günde bir; cezası onur** | Bölüm 1'in "`Sıradaki dövüş: n gün` sayacı" kararının sayısı. Kaçıran dojo **para değil itibar** kaybeder: kadro onuru düşer ve teklif kuyruğu kötüleşir. Gerekçe: para cezası olsaydı zengin oyuncu güvenli antrenman turunu **satın alır**, sömürü kapanmazdı. Onur cezası ayrıca seppuku eşiğine doğru ittiği için kaçmanın bedeli birikimlidir. |
+| Finale giriş | Yok | **3 kelle** | Domina'nın kapısıyla aynı sayı ("3 Regional Champions", ekranda 1/3 diye yazıyor) ama gerekçesi başka: bizde kelle avı zaten zor — ölçümde seçici dojo 60 günde ancak **0.69** sözleşmeye giriyordu. 5 kelle kapıyı gerçek bir tıkaca çevirir, oyuncu finali hiç görmeden sezonu bitirirdi. Kapı **hedef** vermeli, duvar olmamalı. |
+| Final turnuvası | Yok | **5 ardışık tur, aralarda iyileşme yok** | Domina yıl sonunda **15 iyi kuşanmış gladyatörle** tek şampiyona yapıyor (hepsi her statta 100+). Bizde 15 çalışmaz: sefer ekibi en çok 4. Ama tek dövüş de 180 günün ağırlığını taşımaz. Beş tur, aralarında iyileşme olmadan: her tura yeni ekip kurulabilir, yaralı ve yorgun birikir — yani final **kadro derinliğini** sınar, Domina'nın 15 rakiple sınadığı şeyi 4'lük ekip sınırıyla yapar. Bölüm 1'in "sezonun hedefi kadro genişliği ve derinliği" gerekçesiyle birebir örtüşür. ⚠️ **Bölüm 6'nın "kampanyanın sonu tek bir final dövüşüdür" satırının yerine geçer** — sonu tek dövüş değil beş turdur; o satırın **"final kaybı = game over"** hükmü aynen geçerlidir, turnuvadan elenmek koşuyu bitirir. |
+| Pazar | 10 aday, her gün yenilenir, 150 altın taban | **Aynı; arada bir sınıflı aday düşer** | Sınıflar tesisle açıldığı için (aşağıda) pazarın ana malı **sınıfsız acemi** olarak kalır. Üstüne nadiren **hazır sınıflı** ve belirgin biçimde pahalı bir aday çıkar: tesis yatırımını atlatan bir kısa yol, ama fiyatıyla. Sıklık ve fiyat çarpanı ölçülecek — kısa yol tesis kolunu anlamsız kılmayacak yerde durmalı. |
+| Savaşçı fiyatı | 150 altın taban, yeteneğe göre çarpılır | **Şekil aynı** | Taban × yetenek, en iyi savaşçıyı takip eden tavanla (0.75) ısırılır. Sayılar 9.2 gereği yeniden ölçülecek; pazar tavanı artık antrenman, tesis ve risk primi varken tekrar taranacak. |
+| Sınıf açma | Domina: 400-500 altın + 16-17 tur; bizde yoktu | **Tesisle açılır: altın + inşa süresi** | Domina'nın araştırma modeli tema uyarlamasıyla alınır. Sınıf dojo'nun kararıdır: ilgili tesis kurulunca o sınıf yetiştirilebilir hale gelir. Bölüm 7'nin tesis ağacına ve inşa süresi kuralına doğrudan oturur; sezon başında dar olan dojo zamanla genişler. Tesis başına altın ve gün ölçümle konacak. |
+| Okul/tesis düğümü | Altın, süre yok | **Altın + inşa süresi** (Bölüm 7) | Domina'nın kum saati alınmıştı; bu satır o kararın sayı tarafıdır. |
+| Teslim eşiği | Domina: %10 (yükseltmeyle %20); bizde oyuncu kararı | **Oyuncu kararı kalır** 🔵 | Otomatik teslim girmez. Savaşçının ölüp ölmeyeceğine oyuncu karar verir; çekilmenin bedeli zaten merdiven gibi artıyor (GDD §5). Otomatik eşik, otomatik dövüşün oyuncuya bıraktığı **tek** müdahaleyi de elinden alırdı. Bedeli bilinerek kabul edildi: unutulan savaşçı ölür. |
+| Dövüş süresi | Domina ~3 dk sayaç; bizde `TimeLimit` | **Süre sınırı yok** (Bölüm 5) | `BattleOutcome.TimeLimit` koddan çıkıyor. |
+| Olay sıklığı | Günde %15 | **Gün birim olarak kalır** | Zaman gerçek zamana geçti ama olay zarı **gün dönümünde** atılır; oyuncu sabah bütün teklif ve olayları bir arada görür. Gerekçe: akış içinde ansızın düşen olaylar tempoyu artırır ama duraklat-oku-devam et döngüsünü sürekli kesintiye çevirir; günlük toplu okuma hem yazılması hem oynanması daha sakin. %15 oranı ölçümle yeniden bakılacak. |
+
+### Bölüm 10'un getirdiği yeni işler
+- **180 günlük sezon**: geri sayım ekranı, sezon sonu koşulları, geç oyun tehdidinin tükenmemesi için zorluk tavanının bu uzunlukta yeniden ölçülmesi.
+- **Mecburi dövüş sayacı**: 7 günlük ritim, kaçırmanın onur cezası, cezanın seppuku eşiğiyle birikimli etkisinin ölçülmesi.
+- **Final turnuvası**: 5 tur, turlar arası iyileşmenin kapalı olması, her tur için ekip seçim ekranı, rakip kadrolarının kurulması.
+- **Kelle kapısı**: 3/3 sayacının ekranda görünmesi, kapı kapalıyken finalin kilitli durması.
+- **Sınıf tesisleri**: her sınıf için tesis, altın ve inşa süresi; pazardaki nadir sınıflı adayın sıklığı ve fiyat çarpanı.
+- **Başlangıç paketi**: 3 günlük yiyecek ve suyun kayda ve yeni oyun akışına girmesi.
+
+## Bölüm 11 — Buradan çıkan iş listesi ✔ tamamlandı
+
+Bu bölüm öneri listesiydi, karar değil. Turun sonunda maddelerin çoğu başka bölümlerde
+zaten kapandı; burada her maddenin nereye bağlandığı yazılıdır.
+
+| Madde | Sonuç | Nerede karara bağlandı |
+|---|---|---|
+| **A. Kampanyanın sonu yok** | **Kapandı** | Bölüm 1 (sabit geri sayım, final, kelle kapısı) + Bölüm 10 (180 gün, 3 kelle, 5 turluk final). Önerilen üç seçenekten (1) ve (3) birleştirildi: sabit sezon **ve** kelle kapısı. |
+| **B. Dövüş hiçbir şey öğretmiyor** | **Kapandı** | Bölüm 2/3: dövüş artık stat kazandırır. GDD §10'un "savaşçı tarafı sığ tutulur" gerekçesi geçersiz. Maddenin teşhisi ("sefere çıkmak saf kayıp") doğruydu. |
+| **C. Zararsız dövüş yok** | **Kapandı — bilerek kapalı** | Bölüm 6: exhibition yalnızca **dojo içi talim maçı** olarak girer; dışarıya karşı ölümsüz gösteri dövüşü açılmaz. Riskin eşiği net kalır: dojonun içi güvenli, dışarı çıkan her dövüş ölümcül. |
+| **D. Moral diye bir kaynak yok** | **Kapandı — moral girer** | Bölüm 2: ayrı **moral kaynağı** + **9. stat İrade**, çift yönlü bağlı (İrade yüksek → moral yavaş düşer; moral düşük → seppuku riski ve panik eşiği aleyhe kayar). Bu turda bir ara "moral onurun içine katılsın" seçildi, sonra geri alındı: onur **itibardır**, moral **keyif** — ikisini tek sayaçta toplamak, chat'in onur oyunu ile dojo yönetiminin bakım oyununu aynı çubuğa bindirirdi. Bölüm 4'te ⏳ bırakılan **sake'nin dördüncü kaynak** olması bu sisteme bağlanacak. |
+| **E. Kadrodan kurtulma yolu yok** | **Kapandı** | Bölüm 2: **emeklilik — usta olur** (sahayı bırakır, eğitmen olur, antrenman hızına kalıcı bonus, günlük yiyecek yükü biter) ve **yalnızca onurlu çıkışlar** (seppuku, emeklilik, yolcu etme). Satma ve öldürme **girmez**: öğrenci mal değildir. "Sakat savaşçı sonsuza kadar yiyecek yiyor" sızıntısı emeklilikle kapanır. |
+| **F. "İyi dövüş" ödüllendirilmiyor** | **Kapandı — girmez** | Bölüm 8: Crowd Favour reddedildi. Kalabalığın tek para kanalı onur çarpanı olarak kalır; ikinci bir seyirlik ödemesi oyuncuyu onurun istediğinden başka yöne iterdi. |
+| **G. Teslim hakkı sözleşmeye bağlanabilir** | **Girer** | Bazı sözleşmeler `çekilme yok` şartıyla gelir ve **daha çok öder**. Karar dövüşte değil, **sözleşmeyi alırken** verilir — 10.3'ün "çekilme oyuncunun kararıdır" ilkesiyle çelişmez, çünkü tuşu kapatan şey oyuncunun kendi imzasıdır. Kelle avlarına ağırlık katar. Ödül çarpanı ve bu şartın hangi sözleşme türlerinde çıkabileceği ölçülecek; her sözleşmede çıkarsa kural bir tercihten çok bir vergiye döner. |
+| **H. Alınmayacaklar listesi** | **Kısmen geçersiz** | Hâlâ geçerli: elle savaşçı sürme (mind control), kazandıkça zorlaşma + kasten kaybetme sömürüsü, şarap rüşveti / şantaj. **Geçersiz olan iki madde:** "personel + slot ekonomisi alınmaz" — Bölüm 7 personeli aldı (slot yerine maaş kısıtıyla); "kart/kutsama sistemi alınmaz" — Bölüm 7 bunu **omamori** olarak aldı. Liste GDD'ye işlenirken bu iki satır düzeltilecek. |
+
+### Bölüm 11'in getirdiği yeni işler
+- **Teslim yasaklı sözleşme**: şartın teklif ekranında görünmesi, ödül çarpanı, hangi sözleşme türlerinde ne sıklıkla çıkacağı, çekilme tuşunun o dövüşte kapalı olması.
+- **Sake ve moral**: Bölüm 4'ün açık bıraktığı dördüncü kaynağın moral sistemine bağlanması.
+- **"Alınmayacaklar" listesinin düzeltilmesi**: personel ve kart sistemi satırları GDD'ye geçerken güncellenecek.
+
+---
+
+## Karar turunun sonu
+
+Bütün bölümler (1-11) gözden geçirildi. Turdan çıkan durum:
+
+**Açık kalan tek büyük madde:** 9.1 — motordan bağımsız deterministik çekirdek. Kural
+şimdilik yürürlükte ama kullanıcı kararı vermedi; 9.2'nin "her sistem girdikçe ölç"
+kararı sim'in yaşamasını gerektiriyor, yani karar bu iki maddenin birlikte çözülmesi.
+
+**Sonraya kalan ayrı tur:** **14 meslek tek tek** — her rol ne verir, kendi yükseltme kolu
+var mı, emekli savaşçı hangi mesleği yapabilir (Bölüm 4'ün ⏳ satırı da burada kapanır).
+
+**Diğer ⏳ satırlar:** Bölüm 4 stok kaynakları (sake — artık morale bağlanacak) ve kıtlık;
+Bölüm 5 **Rakip** (düşman havuzu — yokai mi, yokai + insan mı; bestiary kararına bağlı);
+kayıt yedeğinin geri alma kapısına dönüşmemesi (9.9); rakip dojo ve köy NPC'leri (Bölüm 7).
+
+**Sıradaki iş:** bu bölümün kararları **GDD'ye işlenecek**. Turda geçersiz kılınan kilitli
+kurallar: ayrık gün modeli, "sınıf yok", "savaşçı tarafı sığ tutulur", `BattleOutcome.TimeLimit`,
+"isim bulunamazsa sessizce yok sayılır", ödül çarpanı bandı 0.5-1.5, ve "alınmayacaklar"
+listesinin personel/kart satırları. Bütün denge ölçümleri de geçersiz — yeniden ölçüm,
+9.2 gereği her sistem koda girdikçe yapılacak.
