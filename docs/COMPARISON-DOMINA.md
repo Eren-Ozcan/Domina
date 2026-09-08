@@ -422,3 +422,73 @@ Talim ustası · Kata ustası · Silah ustası · Hekim · Kırıkçı · Demirc
 - **Personel stok tüketimi**: günlük tüketim formülüne personelin girmesi.
 - **NPC ilişki sistemi**: üç taraf, beş kademe, yükselten/düşüren eylem tablosu, kademe başına etki (teklif kuyruğu kalitesi, pazar fiyatı ve stok, omamori arzı), kayda yazılması.
 - **Omamori**: takı tanımları, savaşçı ve personel yuvası, taşınma/satış akışı, tapınak arzına bağlanması, denge ölçümü.
+
+## Bölüm 8 — Chat / seyirci ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Bağlantı | Platform-bağımsız adapter, salt okuma 🟡 | **Adapter kalır; oyun chat'e bir bot ile yazar** | Domina'nın `domina_bot`'u alınır. Adapter katmanı (Twitch + Kick aynı iç olaya düşer) aynen korunur — bot onun yazma yönü, ayrı bir entegrasyon değil. Chat'e yazılanlar: seppuku oylamasının açılışı ve sonucu, savaşçının ölümü, havuzdan yeni savaşçının çekilmesi, komut geri bildirimi. GDD §6'daki "isim bulunamazsa sessizce yok sayılır" kuralı bu kararla düşer; komut hatası artık chat'e söylenir. Yazma hacmi kasıtlı olarak sınırlı tutulur (her onur değişimi duyurulmaz) — bot yayının sohbetini boğmamalı. |
+| Katılım | Opt-out havuz, `!no` / `!join`, süre yok 🟡 | **Opt-out kalır; havuza 1 saatlik tazelik penceresi girer** | Havuz artık "yayın boyunca konuşmuş herkes" değil, **son 1 saatte konuşmuş herkes**. Gerekçe: 6 saatlik yayında başta bir kez yazıp gitmiş izleyicinin adıyla savaşçı üretmek, izleyicinin kendi ölümünü hiç görmediği bir sürpriz demek — mekaniğin gücü ekranda olan kişide. `!join` önceliği de **1 saat** yaşar, sonra düşer. Maliyet sorunu değildir: chat zaten satır satır okunuyor (onur komutları için), havuz o akıştan biriken bir küme; Twitch'in chatter listesi API'si (lurker dahil) **alınmaz** — moderator yetkisi ister ve Kick'te dengi yoktur, platform bağımsızlığını kırardı. |
+| Katılım — `!no` | Süresiz 🟡 | **Oturum boyu** | `!no` **pencereye tabi değildir** (süre dolunca çıkmış kişi havuza geri düşmez) ama **kayda da yazılmaz**: oyun kapanınca liste sıfırlanır, ertesi yayında kişi yeniden `!no` yazar. Gerekçe: kalıcı kara liste, oyunun kullanıcı adlarını diskte tutması demek; rıza her yayın yeniden alınır, kayıt dosyası temiz kalır. |
+| Oylama | Dövüş bitince 60 sn pencere, kuyruk 🔵 | **Aynen kalır** 🔵 | Bölüm 1'de zaman modeli duraklatmalı gerçek zamana geçti; oylama yine de dövüşün **içinde açılmaz**. Kuyruk mekaniği korunur: eşiğe düşen savaşçı bekler, dövüş bitince 60 saniyelik pencere açılır, aynı anda asla iki oylama olmaz. Dövüşü chat oyu için durdurmak, otomatik dövüşün kendi ritmini kesip her seppuku adayını bir kesinti hâline getirirdi. Dövüş sırasında chat yalnızca onur komutu yazar; hüküm dövüşten sonra verilir. |
+| Ekonomi etkisi | Oran tabanlı çarpan, clamp 0.5–1.5 ✅ | **Formül aynı, band 0.75–1.25'e daraltılır** | `bushiOrani = bushi/(bushi+ronin)` ve ham sayı yerine oran kullanımı (küçük/büyük chat adaleti) korunur; aynı oranın pes etme sonrası hayatta kalma şansına uygulanması da korunur. Değişen yalnızca uçlar: %100 ronin 0.75, %100 bushi 1.25. Gerekçe: 0.5 çarpanı, sessiz ya da düşman bir chat'in ekonomiyi tek başına batırabilmesi demekti; 1.5 ise hype'ın denge ölçümlerini anlamsızlaştırması. Chat ödülü **renklendirmeli**, belirlememeli. Yeni band `Domina.Sim`'de ölçülecek. |
+| Yayınsız oynanış | AI seyirci tam eşdeğer 🔵 | **Mekanik eşdeğerlik kalır; sahte chat üretilmez** | AI seyirci aynı performans sinyallerine bakar, kendi bushi/ronin oranını üretir, aynı ödül çarpanı formülünü çalıştırır ve seppuku oylamasına onur ağırlıklı karar verir — hiçbir sistem kapalı kalmaz (GDD §9 korunur). Değişen **sunum**: tek oyuncuda uydurma kullanıcı adlarıyla sahte chat akışı gösterilmez, kalabalık tek bir toplu gösterge olarak okunur (örn. *hoşnutsuz ×0.82*). Uydurma isimler, oyuncunun tanıdığı gerçek izleyici adlarının yerini alamaz; boş bir taklit yerine dürüst bir gösterge tercih edildi. Bot da yalnızca yayın kipinde yazar. |
+| Kalabalık parası | Crowd Favour bizde yok ⬜ | **Girmez** | Kalabalığın tek para kanalı onur çarpanı olarak kalır. Ayrı bir "seyirlik" ödemesi, oyuncuyu onurun istediğinden başka bir yöne — gösterişli ama gereksiz riske — iterdi; iki ayrı kalabalık ödülü birbiriyle yarışır ve dövüşün okunuşunu bulandırırdı. Gösteri dövüşleri (exhibition, turnuva) kendi ödül kalemlerini zaten getirecek; oradaki bilet/ödül parası bu satırın karşılığı değildir. |
+
+### Bölüm 8'in getirdiği yeni işler
+- **Chat botu**: adapter'a yazma yönü, duyurulacak olayların listesi ve hız limiti, komut geri bildirimi, yalnızca yayın kipinde çalışması. GDD §6'daki "sessizce yok sayılır" satırı güncellenecek.
+- **Havuz penceresi**: konuşan kümesine zaman damgası, 1 saatlik düşme kuralı, `!join` önceliğinin aynı sürede sönmesi, `!no`'nun pencereden muaf ama oturumla sınırlı olması.
+- **Ödül bandı**: clamp 0.75–1.25'e çekilecek ve `Domina.Sim`'de ölçülecek (pes etme sağkalımı aynı oranı kullandığı için o da yeniden ölçülür).
+- **Kalabalık göstergesi**: tek oyuncuda sahte chat yerine toplu kalabalık göstergesi (ruh hâli + yürürlükteki çarpan), yayın kipinde gerçek chat akışının yanında da okunabilir olması.
+
+## Bölüm 9 — Bizde olup Domina'da olmayanlar ✔ tamamlandı (9.1 hariç)
+
+| Madde | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| 9.1 Motorsuz deterministik çekirdek | Mimari kural, CLAUDE.md'de "bozulmaması kritik" | ⏳ *kesinleşmedi* | Bölüm 5'in "Çözüm" satırında açılan madde açık kaldı. Üç seçenek masada: (a) kural aynen sürer, (b) karar çekirdekte kalır ama konum/mesafe/animasyon zamanlaması bütünüyle Godot'a bırakılır, (c) çözümleme motora taşınır. 9.2'de "her sistem girdikçe ölç" seçildiği için (c) o kararla çelişir — sim yoksa ölçüm de yoktur. Karar bu turda verilmedi. |
+| 9.2 Ölçülmüş ekonomi | 1000 dojo × 60 gün koşuları, fiyatların gerekçesi ölçüm | **Yöntem kalır; her sistem koda girdikçe ölçülür** | Karar turu bütün mevcut ölçümleri geçersiz kıldı (gerçek zaman, dövüşten stat kazanımı, personel, sınıflar). Tek büyük ölçüm turu yerine **artımlı** ölçüm seçildi: her sistem girer girmez kendi taramasını alır. Bedeli bilinerek kabul edildi — sonraki sistem önceki ölçümü bozar, bazı taramalar tekrarlanır; karşılığında hatalı bir sayı aylarca gömülü kalmaz. Artık geçersiz sayılacak numaralar: antrenman oranı 0.04, okul kollarının etkisi, `MaxPower` 2.2, risk primi 0.25, pazar tavanı 0.75. |
+| 9.3 Yakalama / zehir / sersemletme | Üçü de **elde tutulan silaha** bağlı 🔵 | **Hem sınıfa hem silaha bağlı — çarpım** | Sınıf mekaniği **açar**, silah **çarpar**: `şans = taban × sınıf × alet`. Uygun aletle tam güç (yakalayıcı + sai %30, + jitte %24), yanlış silahla ya da eli boşken **zayıf ama sıfır değil** (%10); sınıfsız savaşçı jitte tutsa da **hiç** yakalayamaz (%0). Gerekçe: kimlik savaşçının, verim ekipmanın olsun — silahını düşüren usta zayıflar ama bambaşka birine dönüşmez, acemiye jitte vermek de usta yaratmaz. Bedeli: iki çarpanın **birlikte** taranması gerekir; eski tek eksenli ölçümler (jitte %78.00 / katana %75.02 gibi) bu kuralla yeniden alınacak. |
+| 9.4 Zırh yıpranması | Parça durdurduğu hasar kadar aşınır, dağılınca kalıcı gider 🔵 | **Aynen kalır; onarım var, dağılan geri gelmez** | Keikogi ~7, ō-yoroi ~15 dövüş. Yıpranmış parça altınla onarılabilir ama havuzu bitip dağıldıysa gitmiştir. Zırh böylece sürekli bir gider kalemi olarak kalır — Bölüm 4'ün günlük tüketim baskısıyla aynı yöne çalışır. Onarım fiyatlandırması ve zırhçı personelin buna etkisi meslek turunda görülecek. |
+| 9.5 Uzuv kaybının sürmesi | Savaşçı sakat kalıp yaşar, cezalar taraflı 🔵 | **Aynen kalır** 🔵 | Kılıç kolu ×0.65, boştaki kol ×0.85, bacak ×0.55 kaçınma / ×0.60 hız, göz ×0.75 isabet. Sakat savaşçı kullanılamaz hale gelmez; oyuncuya bırakılan karar **"emekliye ayır mı, kullanmaya devam mı"**dır ve kararın kendisi mekaniğin değeridir. Sakat savaşçının kadrodan onurlu çıkışı **Bölüm 2'de zaten kapanmıştı**: emeklilik (usta olur, antrenman hızına kalıcı bonus, yiyecek yükü biter) ve uzuv kaybının **sınıf seçimini yeniden açması**. Bu satır o kararları değiştirmez, ham cezaların hafifletilmediğini teyit eder. |
+| 9.6 Onur sistemi | 0-100, decay'li, ödül çarpanına ve seppuku'ya bağlı ✅ | **Savaşçı başına kalır; dojo onuru eklenmez** | Onur her savaşçının kendi statı olarak kalır (başlangıç 50, eşik 30, af 45 — sayılar playtest'e bırakıldı). Kadronun ortalamasından türetilen ikinci bir "dojo onuru" katmanı **açılmadı**: NPC ilişkisi zaten kendi beş kademeli sayısını taşıyor (Bölüm 7), üçüncü bir soyut itibar sayısı ekranı da modeli de bulandırırdı. |
+| 9.7 Sözleşme onuru | Alınıp dönülmeyen sözleşme kadro onurunu düşürür ✅ | **Kalır ve NPC cezasıyla üst üste biner** | Sözleşmeyi bırakmak iki yerden birden yer: bütün kadro onur kaybeder **ve** sözleşmeyi veren tarafın ilişki kademesi düşer. Gerekçe: sözleşmeyi almak bir söz vermektir; sözü tutmamanın hem savaşçının sicilinde hem iş ilişkisinde izi olmalı. Seçici oynayan dojo'nun bu çifte cezayı ne sıklıkla yediği ölçülecek — Bölüm 4'ün ölçümünde 60 günde ancak 0.69 sözleşmeye giriliyordu, yani ceza ağırsa politika büsbütün kilitlenebilir. |
+| 9.8 Yol seçimi | Kılıç / Kaya / Gölge, 20 antrenman gününde açılan tek ve geri alınamaz seçim 🔵 | **Sınıfla yan yana kalır; iki ayrı katman** | **Sınıf** ne yapabildiğini söyler (yakalama, zehir, menzil — 9.3), **Yol** neye yattığını söyler (saf stat eğilimi: Kılıç İsabet/Güç ×1.10, Kaya Savunma ×1.15 + Can ×1.05, Gölge Kaçınma ×1.15 + Hız ×1.10). Aynı sınıftan iki savaşçı farklı yollara gidebilir; kadro böylece iki eksende ayrışır. Yolun sınıf içinde dallanması (her sınıfa özel yollar) reddedildi — denge yüzeyini gereksiz büyütürdü. Yolun 20 günlük kilidi ve geri alınamazlığı korunur. |
+| 9.9 Versiyonlu, merge-on-load kayıt | Sürümlü, birleştiren, asla exception atmayan `Load` ✅ | **Kalır; üstüne döndürülen otomatik yedek eklenir** | Sürüm + merge-on-load + uyarıların oyuncuya gösterilmesi aynen korunur (erken erişimde kayıt kırmadan güncelleme atabilmenin şartı). Üstüne, bozulmaya karşı döndürülen yedek dosyalar gelir. ⏳ *Açık ayrıntı:* permadeath'li bir oyunda yedeğin **geri alma kapısı** olmaması gerekir — yedeklerin oyun içi "önceki güne dön" seçeneği olarak sunulmaması, yalnızca bozulma kurtarma yolu olarak kalması ayrıca kararlaştırılacak. |
+
+### Bölüm 9'un getirdiği yeni işler
+- **9.1'in kapatılması**: çekirdek/motor sınırı hâlâ açık; bu karar verilmeden Faz 4 ve sonrasının şekli belirsiz.
+- **Artımlı ölçüm düzeni**: her sistem için kontrol koşusu deseni, hangi sayının hangi ölçümle geldiğinin kaydı, geçersizleşen numaraların GDD'de işaretlenmesi.
+- **İki çarpanlı yakalama/zehir/sersemletme**: `sınıf × alet` formülünün çekirdeğe girmesi, sınıfsız savaşçıda sıfırlanması, iki çarpanın birlikte taranması.
+- **Zırh onarım fiyatı**: onarım maliyeti ve dağılma sınırının ekonomiye bağlanması (meslek turuyla birlikte).
+- **Sözleşme cezasının çifte etkisi**: onur kaybı + ilişki düşüşünün birlikte ölçülmesi, seçici politikanın kilitlenip kilitlenmediği.
+- **Kayıt yedeği**: döndürmeli yedek dosya düzeni ve yedeğin oyuncuya nasıl (ya da hiç) sunulacağı.
+
+## Ek karar — sersemletme silah düşürür (Bölüm 5 eki, 2026-09-07)
+
+Bölüm 5 kapandıktan sonra açılan madde. Şu ana kadar silah düşürme zarı iki yerde
+atılıyordu (zırha inen vuruşta 0.05, yakalanan silahta 0.05) ve zar hep **saldıranın**
+silahına atılıyordu — plakaya saplanan ağız burkulur, silah vuranın elinden çıkar.
+
+**Karar:** sersemletme **üçüncü tetikleyici** olur. Sersemleme tuttuğunda ayrı bir zar
+daha atılır ve **sersemleyen** savaşçı silahını düşürebilir.
+
+**Şansı sersemleyenin kendi silahı belirler** — mevcut "elden çıkma eğilimi" tablosu
+ikinci yönde de çalışır:
+
+| Sersemleyenin elindeki | Eğilim | Sonuç |
+|---|---|---|
+| Kesici (katana, nodachi) | 1.0 | Kolay düşürür |
+| Delici (yari) | 0.6 | — |
+| Künt (tetsubo, kanabō) | 0.2 | Zor düşürür |
+| Yumruk | 0 | Düşecek bir şey yok |
+
+**Neden bu yön:** ağır künt silah taşımanın kendi içinde bir savunması olur — sersemlese
+de sopası avucunda kalır. Aynı tablonun iki yönde birden çalışması yeni bir sayı seti de
+gerektirmez.
+
+**Ölçülmesi gereken:** bu kural künt sınıfa **üçüncü** kazancı verir (sersemletmeyi o
+üretir, düşürmeye de en dirençli o). Künt zaten ō-yoroi kuşanmış düşmanın önünde kesiciyi
+geçmişti (%89.20'ye karşı %87.53); ayrı zarın taban şansı, künt sınıfı baskın hale
+getirmeyecek yerde aranacak. Ayrıca ilk kez **savunan** taraf silah kaybettiği için
+"eli boş olan alır" kuralının dövüş şekline göre bedeli (1v1 %7.3, 3v3 %40.4) yeniden
+ölçülmelidir.
