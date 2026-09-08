@@ -245,3 +245,180 @@ kelle avlarına ağırlık katardı.
 *Güncelleme kuralı: bu dosya `REFERENCE-DOMINA*.md` ya da GDD değiştiğinde birlikte
 güncellenir. ⚪ işaretli her satır ya bir GDD kararına ya da bilinçli bir "almıyoruz"
 satırına dönüşmeli.*
+
+---
+
+# 12. Değişenler — satır satır karar turu (2026-09-05)
+
+Bu bölüm, yukarıdaki tablolar tek tek gözden geçirilirken alınan kararları tutar.
+Yukarısı **olduğu gibi bırakılır** (tarihsel kayıt); güncel karar burada yazandır.
+Çakışma olursa **bu bölüm geçerlidir**. Tur bitince GDD'ye işlenecek.
+
+## Bölüm 1 — Çerçeve ve zaman ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Zaman akışı | Ayrık gün 🔵 | **Gerçek zaman + duraklat** (Domina modeli) | Çekirdek sabit tik'le ilerlemeye devam eder, determinizm korunur; gerçek zaman yalnızca tik'i saatin sürmesi. Ayrık günü varsayan gün-kapanışı/olay kodu yeniden kurulacak. Chat oylaması için duraklat-ya-da-pencere kuralı gerekir. |
+| Takvim | Üst sınır yok ⚪ | **Sabit geri sayım**, ekranda kalan gün | Uzunluk sayısı Bölüm 10'da kararlaştırılacak (ölçümler 60 gün üzerinden). |
+| İkinci saat | Yok ⚪ | **Mecburi dövüş sayacı** (`Sıradaki dövüş: n gün`) | Kaçırmanın cezası var; sonsuz güvenli antrenman sömürüsünü kapatır. Ceza türü ve n sayısı ayrıca belirlenecek. |
+| Bitiş | Yok ⚪ | **Final turnuvası** — son gün, elemeli, tüm kadro | Sezonun hedefi kadro genişliği ve derinliği. Rakip sayısı belirlenecek. |
+| Finale giriş koşulu | Yok ⚪ | **Kelle avı kapısı** — n kelle tamamlanmadan finale girilemez | Mevcut kelle avı sistemine amaç verir. n (Domina'da 3) belirlenecek. |
+| Zorluk kademesi | Yok ⚪ | **Kademe seçimi**: Çırak / Usta / Efsane | "Usta" denge ölçümünün tabanı; diğer kademeler çarpanla türetilir, ayrı ölçüm koşusu değil. |
+| Kaybetme | Anlatısal son yok ⚪ | **Net son: dojo kapanır** | Kasa ve kadro bitince kapanış ekranı + sezon özeti (gün, zafer, ölü sayısı). Geri sayım + mecburi dövüş varken kaybetmek gerçek ihtimal. |
+
+### Bölüm 1'in getirdiği yeni işler
+- Gerçek zaman geçişi: mevcut ayrık gün mimarisi (gün kapanışı, olay tetikleme, chat oylaması) yeniden tasarlanmalı — ROADMAP'e risk olarak girecek.
+- Final turnuvası, mecburi dövüş sayacı, kademe çarpanları, kapanış ekranı: dördü de yeni sistem.
+- Açık sayılar: sezon uzunluğu, mecburi dövüş aralığı ve cezası, finale kapı kelle sayısı, turnuva rakip sayısı.
+
+## Bölüm 2 — Kadro ve savaşçı ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Kadro büyüklüğü | Sınır yok ⚪ | **Kademeli tavan**, dojo yükseltmesiyle açılır (başlangıç ~6) | Kadro büyütmek yatırım kararı olur; final turnuvası için derinlik biriktirmek anlam kazanır. Her kademe altın + günlük stok yükü getirir. |
+| Sefere giden | En çok 4 🔵 | **Aynı: en çok 4** | Dövüş sahnesi okunaklı kalır; denge ölçümü bu varsayımla yapıldı. Final turnuvasında derinlik yedek kadro olarak işe yarar. |
+| Statlar | 8 stat ✅ | **9. stat: İrade** eklenir | Seppuku direnci, panik eşiği, onur kazancı. Domina'daki Meditate'in karşılığı. |
+| Güç ne yapıyor | Üçü ayrı 🔵 | **Aynı: üçü ayrı** (MaxHealth / Strength / Defense) | Antrenman seçimi anlamlı kalsın: dayanıklı ama vurucu olmayan savaşçı mümkün. |
+| Davranış eğilimi | Tek `Aggression` 🟡 | **Üç eğilim, açık sayı**: Saldırgan / Savunmacı / Kaçıngıl | Hem savaşçıda hem yokai'de ekranda görünür. Dövüş tam otomatik olduğu için oyuncunun dövüşü önceden okuyabilmesi kritik. |
+| Sınıf | Sınıf yok 🔵 | **Sınıf sistemi eklenir** — açılır, atanır, geri alınmaz | Yol ile birlikte var olur: **Yol = stat eğilimi, Sınıf = rol** (silah + davranış). GDD §4'ün "sınıf yok" kararı geçersiz. |
+| Yol / uzmanlaşma | 3 yol, geri alınamaz ✅ | **Aynı** — ama sakatlıkta **sınıf** yeniden seçilir, Yol asla | Yol 20 antrenman günüyle kazanılıyor; sakatlık o emeği silmemeli. Kolunu kaybeden adamın çevikliği kaybolmaz — değişen şey nasıl dövüştüğü. |
+| **Sakatlıkta sınıf değişimi** (yeni satır) | — | **Uzuv kaybı sınıf seçimini yeniden açar**; kaybedilen uzuv bazı sınıfları imkânsız kılar, kalanlardan oyuncu seçer | Uzuv kaybı "sızıntı" olmaktan çıkıp **ikinci kariyer**e döner. Kader değil, daralan seçim. |
+| Yetenek farkı | Talent çarpanı ✅ | **Talent + farklı başlangıç statları birlikte** | Pazarda iki eksen: şimdi güçlü olan mı, sonra güçlenecek olan mı. Geri sayım varken "yetiştirmeye vaktim var mı" sorusu doğar. |
+| İsim | Havuz → Faz 5 chat 🟡 | **Aynı plan** | Yayınsız oynanış tam eşdeğer kalır. |
+| Ölüm | Kalıcı ✅ | **Kalıcı + miras** | Devreden **yalnızca iki şey**: (1) **ekipmanı** — silahı ve zırhı dojo ambarına döner, **ama yalnızca dövüş kazanılırsa**: cesedi taşıyacak sağ kalan biri gerekir. Tek kişilik seferde ölen savaşçının ekipmanı da sahada kalır. Kalabalık sefere çıkmanın ölçülebilir bir getirisi olur; 1v1 sözleşmeler ekipman riski taşır. (2) **onuru ve unvanı** — dojo duvarına yazılır, kalıcı küçük onur artışı, sezon özetinde görünür. Devretmeyen: **sınıf** (450 altın) ve **yol** (20 antrenman günü) — ikisi de tamamen gider, ölüm ağır kalır. Gerekçe: bu turda savaşçı pahalılaştı (sınıf + yol + moral); saf permadeath oyuncuyu sahaya çıkmaktan kaçındırırdı — GDD §10'un kendi uyarısı artık bize karşı çalışıyordu. |
+| Kalıcı sakatlık | Uzuv kaybı, taraflı cezalar ✅🔵 | **Ham cezalar aynen kalır** (kılıç kolu ×0.65, bacak ×0.55); telafi **sınıf değişimi** | Ceza hafifletilmez — kayıp gerçek kalır, ama çıkış yolu var. |
+| Moral | Yok 🔵 | **Moral kaynağı eklenir**; İrade ile çift yönlü bağlı | İrade yüksek → moral yavaş düşer, yenilgiden sonra kolay kırılmaz. Moral düşük → İrade'ye dayanan kontroller (seppuku riski, panik eşiği) aleyhe kayar. Moral kısa vadeli keyif, İrade uzun vadeli dayanıklılık. |
+| Azat etme | Yok ⚪ | **Emeklilik: usta olur** | Çok zafer alan ya da ağır sakatlanan savaşçı sahayı bırakıp eğitmen olur: antrenman hızına kalıcı bonus, günlük yiyecek yükü biter, bir daha sahaya çıkmaz. Kaybetmek yerine dönüştürme. |
+| Öldürme / satma | Yok ⚪ | **Yalnızca onurlu çıkışlar**: seppuku, emeklilik, yolcu etme | Öğrenci mal değil — satılmaz, öldürülmez. "Sakat savaşçı sonsuza kadar yiyecek yiyor" sızıntısı emeklilikle kapanır. |
+
+### Bölüm 2'nin getirdiği yeni işler
+- **Sınıf sistemi**: sınıf listesi, açılış maliyeti, uzuv-sınıf uygunluk matrisi, Yol ile etkileşimi.
+- **İrade statı** ve **moral kaynağı**: iki yeni sistem, birbirine bağlı; seppuku ve panik kontrollerine giriyor.
+- **Üç davranış eğiliminin** ekranda gösterimi + yokai profilleri.
+- **Miras**: ölen savaşçıdan ne devrolur, nasıl gösterilir.
+- **Emeklilik / yolcu etme** akışı ve kadro tavanı yükseltme düğümü.
+- GDD §4'ün "sınıf yok" gerekçesi ve §10'un "savaşçı tarafı sığ tutulur" gerekçesi **artık geçersiz** — ikisi de yeniden yazılmalı.
+
+## Bölüm 3 — Eğitim ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Antrenman nasıl | Günlük tek talim 🔵 | **Aynı: tek talim seçimi** (Strikes / Guard / Footwork / Conditioning) | Kaydırıcı bir ayar, seçim bir karar. Gerçek zamanlı akışta "talim bloğu" olarak sürer. |
+| Hız kolu | Soyut okul düğümleri ✅ | **Fiziksel tesisler** — dojoda görünen bina ve ekipman | Talim direği, taş, hamam gibi; dojonun büyüdüğü ekranda görülür. Soyut düğüm mantığı (kol içi sıra, peşin ödeme, geri satılmaz) korunur; değişen şey sunum ve yapım maliyeti. |
+| Tavan | `FormsMaster` yükseltir ✅ | **Aynı: tesisle yükselen tavan** | Dövüşten gelen stat kazancı da aynı tavana çarpar — dojoya yatırım yapmadan savaşçı belli noktadan sonra büyüyemez. İki sistem birbirini kilitler. |
+| Dövüşten öğrenme | Yok ⚪ | **Dövüş büyütür** (Domina modeli) — dövüş antrenmandan hızlı stat kazandırır | Tempo tersine döndü: artık "riske gir, güçlen". Mecburi dövüş sayacı ceza değil fırsat olur. Zafer ekranı stat kazancını gösterir. **Ölçümdeki "bağlayıcı kaynak kadro" bulgusu bu değişiklikle geçersizleşir — yeniden ölçülmeli.** |
+| Zararsız eğitim maçı | Yok ⚪ | **Dojo içi talim maçı** — kendi savaşçıların birbiriyle | Gelir yok, ölüm yok; yara, stat kazancı ve moral etkisi var. Aynı çözümleyici kullanılır, yeni rakip içeriği gerekmez. Acemiyi ve sakatlanan savaşçının yeni sınıfını sınamanın güvenli yolu. |
+| Otomatik eğitim | Talim seçili kalır ✅ | **Aynı** | Gerçek zamanlı akışta doğal: oyuncu başka işle uğraşırken dojo çalışır. Ayrı bir "otomatik mod" kutusu gerekmez. |
+
+### Bölüm 3'ün getirdiği yeni işler
+- **Dövüşten stat kazancı**: kazanç formülü, zafer ekranı gösterimi, tesis tavanıyla etkileşimi. Mevcut denge ölçümleri bu değişiklikle geçersiz — yeniden koşulmalı.
+- **Dojo içi talim maçı**: eşleştirme ekranı, ölümsüz mod, moral ve yara sonuçları.
+- **Fiziksel tesisler**: dokuz okul düğümünün görsel karşılığı; dojo ekranı artık büyüyen bir mekân.
+
+## Bölüm 4 — Ekonomi ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Para | Tek: altın ✅ | **Aynı: tek para** | Her şey tek eksende ölçülür. |
+| Stok kaynakları | Yiyecek / Su / İlaç ✅🔵 | **Aynı** ⏳ *kesinleşmedi* | Moral sistemi geldiği için sake (Domina'daki şarap) dördüncü stok olarak yeniden değerlendirilecek. Moral oturunca bakılır. |
+| Başlangıç | 600 altın, ambar boş 🔵 | **Dolu ambarla başla** (Domina modeli) | 600 altın + yiyecek/su/ilaç. Geri sayım zaten baskı kuruyor; açılışın da boğması gerekmiyor. Kesin sayılar yeniden ölçülecek. |
+| Savaşçı fiyatı / pazar | 150 altın, 10 aday ✅ | **Aynı** | Fiyat formülü artık iki ekseni birden yansıtacak (statlar + Talent), Bölüm 2'deki karara bağlı. |
+| Personel | Yok 🔵 | **Personel sistemi eklenir** — her meslek hem kiralanabilir hem emekli savaşçıyla doldurulabilir | Günlük maaş + stok yer, istediğin gün kesersin. Emekli savaşçı maaş almaz. **Emekli savaşçı dövüş dışı rollerde zayıf** (talim/kata/silah ustasında kiralıktan iyi, hekim/demirci/ozanda yarı verim). 14 meslek taslağı çıkarıldı. |
+| Tesis boş kalırsa | — (yeni) | **Yarı verimle çalışır** | İnşa yatırımı asla boşa gitmez; personel tam verime çıkarır. Bazı kapılar yine de personel ister (Ö-yoroi için demirci şart). |
+| Zırh / onarım | Birim fiyat + onarım ✅ | **Kademeli zırh**: Deri → Lamel → Ö-yoroi | Kademe **koruma ↑ ağırlık ↑** dengesiyle çalışır (ağırlık staminayı yakar, saldırı döngüsünü uzatır — mevcut sistem). Üst kademeler **demirhane + demirci** ister, yoksa pazarda bulunmaz. Yıpranma/onarım ekonomisi korunur. |
+| Günlük tüketim | Kişi başı sabit ✅ | **Aynı** | Kadro tavanı yükseltmenin gerçek bedeli bu: doğrusal artan gider. |
+| Dövüş ödülü | Yalnızca altın 🔵 | **Altın + stok** (Domina modeli) | Yiyecek/su/ilaç da düşer. Ambar baskısı sefere çıkmanın ikinci sebebi olur; aç dojo sahaya çıkmak zorunda kalır. |
+| "İyi dövüş" ödülü | Yok ⚪ | **Onur çarpanına gösteri girer** | Ayrı bir "kalabalık ödemesi" kalemi eklenmez; çekişmeli dövüş onuru hızlı yükseltir, onur zaten ödül çarpanı — dolaylı yoldan paraya döner. Mevcut sistem derinleşir, yeni sistem kurulmaz. |
+| Kumar | Yok ⚪ | **Aynı: bahis yok** | Kumar iyi oynamayan oyuncuya kestirme sunar ve denge ölçümünü bozar. |
+| Hırsızlık | Yok 🔵 | **Karşılıklı, ama olay olarak** | Biz ajan tutup çalmayız; ama onur yükseldikçe hırsızlık olayının olasılığı artar ("ünün kadar hırsız çeker"). Onur artık bir maliyet de taşır. |
+| Pazarlık / indirim | Kalıcı düğüm indirimi ✅ | **Tesis kalıcı, personel çarpan** | Bina bir kez alınır, küçük indirimi kalıcı verir (×0.90); başına personel konursa tam indirim (×0.75) ama günlük maaş işler. Kriz anında personeli kesip binayı tutarsın — ekonomiye ilk kez bir **vites** girer. Emekli savaşçı maaş almadığı için uzun oyunun ödülü olur. |
+| Kıtlık | Beş olay türü ✅ | ⏳ **kesinleşmedi** | Mevsimlik kıtlık (kuraklık/kış) ileride yeniden değerlendirilecek. |
+| Olay sıklığı | Günde %15, hepsi eksiltir ✅ | **Olaylar karar sunsun** | Olay bir bildirim değil bir seçim olur: "aç köylüler kapıda — ver (onur +) / verme (stok korunur)". Chat oylamasına doğrudan bağlanır. Sıklık sayısı yeniden ölçülecek. |
+
+### Terim değişikliği
+"Okul düğümü" terimi emekliye ayrıldı. Bundan sonra: **Tesis** = kurulan fiziksel bina (peşin, kalıcı, geri satılmaz) · **Personel** = o binayı çalıştıran kişi (günlük maaş, kesilebilir; kiralık ya da emekli savaşçı).
+
+### Meslek taslağı (14 rol)
+Talim ustası · Kata ustası · Silah ustası · Hekim · Kırıkçı · Demirci · Kâhya · Simsar · Aracı · Ozan · Keşiş · Aşçı · Seyis · Kâhin.
+İlk üçünde (talim / kata / silah ustası) emekli savaşçı kiralıktan **iyi**; kâhya / simsar / aracı / keşiş / seyis rollerinde **orta**; demirci ve ozanda emekli savaşçı çalışabilir ama **zayıf** (yarı verim).
+
+⏳ *kesinleşmedi:* **hekim, kırıkçı, aşçı ve kâhin** rollerine emekli savaşçı hiç konamaz — bu dört meslek için **dışarıdan personel şart**. Demirci ve ozan bu kuralın dışında tutuldu (zayıf da olsa emekli savaşçı bakabilir). Karar kesinleşmedi, personel ekonomisi oturunca yeniden bakılacak.
+
+### Bölüm 4'ün getirdiği yeni işler
+- **Personel sistemi**: 14 meslek, günlük maaş, işe alma/çıkarma, emekli savaşçı yerleştirme, rol başına verim çarpanı.
+- **Kademeli zırh**: üç kademe × altı yuva, demirhane kapısı, ağırlık dengesi.
+- **Karar sunan olaylar**: olay başına seçenek metinleri ve sonuçları, chat oylaması bağlantısı.
+- **Dövüş ödülüne stok**: ödül formülü yeniden kurulur.
+- Tüm ekonomi sayıları (600 altın, 150 altın, ×0.45 ödül, %15 olay) **yeniden ölçülmeli** — dövüşün stat kazandırması ve gerçek zaman bu ölçümlerin varsayımlarını değiştirdi.
+
+## Bölüm 5 — Dövüş ✔ tamamlandı (Rakip satırı hariç)
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Çözüm | Motordan bağımsız çekirdek 🔵 | **Aynı: motorsuz, seed'li deterministik çekirdek** ⏳ *yeniden bakılabilir* | Gerçek zaman, çekirdeğin sabit tik'inin (`TickSeconds` 0.05) görselleştirmede akıtılmasıdır: duraklama = `Step()` çağırmamak, 2x = tik başına iki adım, akıcılık = tikler arası interpolasyon. Değişken `dt` reddedildi: determinizm kare hızına bağlanır, sim ile oyun farklı sonuç verir. Motorda çözmek görsel kaliteyi vermez (onu görselleştirme verir), yalnızca öngörülemeyen fizik verir — otomatik ve chat'in etkilediği bir dövüşte bu haksızlık okunur, karşılığında ölçülebilirlik kaybedilir. **Kullanıcı bu satırı ileride yeniden açma hakkını saklı tuttu.** |
+| Müdahale | Yok ✅ | **Aynı: tam otomatik** | Elle sürme de, dövüş içi emir de yok. Oyuncunun tüm kontrolü hazırlıkta (kadro, teçhizat, talim); dövüşteki tek kararı çekilme. |
+| Tek müdahale | Tek tuş "Kaç" ✅ | **Aynı** | Koşullu açılan tek tuş, onur bedelli. QTE yok — beceri sınavı değil, karar. |
+| Teslim eşiği | Otomatik eşik yok ✅ | **Aynı: otomatik teslim yok** | Savaşçı ölene kadar dövüşür; çekilme kararı oyuncunundur. İrade statı bu satıra bağlanmadı. |
+| Teslim hakkı | Çekilme her zaman açık ⚪ | **Aynı: her sözleşmede açık** | `Surrender Allowed` gibi bir sözleşme alanı gelmez. Kural tek, bedel hep aynı: onur. |
+| Süre sınırı | `BattleOutcome.TimeLimit` ✅ | **Süre sınırı kalkar** | Sayaç yok; dövüş biri düşene, çekilene ya da teslim olana kadar sürer. Uzun dövüşü yöneten şey artık duraklama/hızlandırma. |
+| Blok | Savunma statından türeyen karar ✅ | **Stat + ekipman iki eksene ayrılır** | Savunma statı bloğun **sıklığını** verir (`MaxBlockChance` 0.45, taban yok — kilitli sayı korunur); silah bloğun **kalitesini**; zırh blok tutmayınca **ne kadarının emildiğini**. Ele takılan kalkan **yok** — samurayda iki el silaha gider, savunma zırha yazılıdır. Bunun yerine **ō-sode** omuz yuvasına girer: blok şansı vermez (pasif parça, hamle değil), etkisini büyütür, bedeli ağırlık. Kademeli zırh kararına (Deri → Lamel → Ō-yoroi) doğal oturur. Gerçek kalkan (**tate**) sahaya girer, kola değil: "siperli mevzi" saha özelliğinde mermiye karşı korur, yakın dövüşte işe yaramaz. Bedeli kabul edildi: kalkan bir bakışta okunur, ō-sode değil — silueti abartarak kapatılacak. |
+| Hücum | Mesafe 320 / 0.40 / 0.75 sn ✅ | **Sayılar aynı, hücum görünür olur** | Birikme sırasında savaşçı ekranda işaretlenir; izleyici geleceği önceden görür. Chat için gerilim anı, çözümleyici için değişiklik yok. |
+| Silah düşürme | Zırha vuruşta 0.05 taban, herkeste ✅ | **Taban herkeste kalır, uzmanlık büyütür** | Sınıf, Yol ya da silah türü (jitte/sai) şansı yükseltir; kimse sıfırlanmaz. Domina'nın "beceri yoksa hiç düşüremezsin" modeli reddedildi. Ölçülmüş bulgu korunur: kuralın bedelini düşme **yönü** belirliyor (rakibin arkası), mesafe değil. |
+| Silah yakalama | Jitte/sai kilitleme ✅ (bizde fazladan) | **Aynı, sayılar kilitli** | Açık kalan iki ölçüm Faz 9'a: kilidin **takıma** değeri ve sayıca azken sai'nin yüksek yakalama hacminin karşılığı. Blok geldiğinden jitte'nin üstünlüğü 2.98 → 0.42 puana inmişti; o da yeniden ölçülecek. |
+| Zehir | Doz/tik/ömür kurallarıyla ✅ (bizde fazladan) | **Aynı** | Herkese açık, onur bedeli yok, sözleşme yasağı yok. Ölçülmüş bulgu korunur: asıl ayar doz **tavanı**, ömrü değil. |
+| Sersemletme | Künt silahların karşılığı ✅ (bizde fazladan) | **Aynı** | Künt silahın kimliği bloğu delmesi (`BlockStunShare` 0.75). Ō-sode bu dengeyi değiştirmez: zırh hasarı emer, sarsıntıyı emmez. |
+| Mermi | `ThrownWeapon` ayrı yuvada, herkeste ✅ | **Atılan silah aynı + `yumi` (yay) bir sınıf olur** | Şuriken/tanto herkeste açık kalır. Yay **iki elli** silah olarak girer ve bir sınıfa bağlanır: menzilde üstün, yakında çaresiz. Boş el yuvasının kararını büyütür (yay = iki el), ō-sode'ye oka karşı gerçek bir iş verir, temaya tam oturur (samurayda yay birincil silahtı). |
+| Zırh | Altı yuva, ağırlık, yıpranma, dağılma ✅ | **Mekanik aynı; ekrana `A / D / kg` gelir** | Domina'dan alınan tek şey gösterim: her parçada zırh değeri / dayanıklılık / ağırlık açıkça yazılır, oyuncu takası görerek yapar. Toplam ağırlığın saldırı döngüsüne etkisi de aynı ekranda okunur. |
+| Uzuv kopması | Yaşayıp sakat kalma 🔵 | **Aynı** | Kopma bir beceri değil, herkeste açık; ölüm değil kader değiştiren olay. Blok bunu sıfırlar (`BlockDismembermentShare` 0) — Savunma statının verdiği tek kesin söz. Bölüm 2'nin uzuv-sınıf uygunluk matrisi buraya bağlı. |
+| Sahadaki engel | Yok ⚪ | **Saha özelliği eklenir (canlı üçüncü taraf değil)** | Sis (isabet/menzil düşer), çamur (hız/kaçınma düşer, ağır zırh ekstra ceza), dar köprü (sayı üstünlüğü işlemez), gece (mermi zayıf), siperli mevzi (tate panoları). Sözleşme kartında yazılı gelir; mevcut çözümleyiciye çarpan olarak girer, yeni yapay zekâ gerekmez. |
+| Rakip | Yokai (kappa, kitsune, tengu, oni, jorōgumo) 🔵 | ⏳ **kesinleşmedi** | Düşman havuzunun ne olacağı (yalnız yokai / yokai + insan / ağırlık insanda) karara bağlanmadı. Bestiary (#3) ile birlikte bakılacak. |
+
+### Bölüm 5'in getirdiği yeni işler
+- **Ō-sode ve blok ekseninin ayrılması**: `BlockDamageReduction`'ın zırh parçasından ölçeklenmesi, omuz yuvasının blokla ilişkisi, ağırlık dengesi.
+- **`yumi` sınıfı**: iki elli menzilli silah, uçuş/menzil davranışı, yakın mesafede ceza, ok cephanesi ekonomisi.
+- **Saha özellikleri**: beş saha türü, sözleşme kartında gösterimi, çözümleyiciye çarpan girişi.
+- **Süre sınırının kaldırılması**: `BattleOutcome.TimeLimit` yolunun sökülmesi ve buna dayanan testlerin gözden geçirilmesi.
+- **Görünür hücum ve `A/D/kg` zırh paneli**: sunum işi, çekirdeğe dokunmaz.
+- Faz 9'a devreden ölçümler: takımda kilit değeri, sayıca azken sai, blok sonrası jitte/katana farkı.
+
+## Bölüm 6 — Dövüş türleri ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Planlanmış dövüş | "Günün teklifi" — al ya da bırak ✅ | **Süreli teklif kuyruğu** | Tek günlük teklif yerine aynı anda birkaç teklif asılı durur, her birinin kendi son kullanma süresi vardır. Sefere çıkmak gerçek zamandan süre yer (yol + dövüş). Karar "hangisini alayım" değil, **"hangisine yetişirim"** olur — ayrık gün modeli kalktığı için teklifin de günlük olması anlamsızlaşmıştı. |
+| Pit fight | Yok ⚪ | **Kör dövüş girer, bahis girmez** | Rakibin bilinmediği yüksek ödüllü sözleşme türü: hangi teçhizatı götüreceğini bilmeden karar verirsin. Bölüm 4'ün "kumar yok" kararı korunur — belirsizlik bir risk kararı olur, kestirme para değil. |
+| Exhibition | Yok ⚪ | **Yalnızca dojo içi talim maçı** (Bölüm 3'te kabul edildi) | Dışarıya karşı ölümsüz gösteri dövüşü **açılmaz**. Riskin eşiği net kalır: dojonun içi güvenli, dışarı çıkan her dövüş ölümcül. Domina'nın exhibition'ı zaten "kasten kaybet" sömürüsünün kapısıydı. |
+| Bölge şampiyonları | Kelle avı sözleşmeleri ✅🔵 | **Sabit adlı hikâye hedefleri** + kelle avı çerçevesi | Ana hikâye karakterleri **her oyunda aynı**: kimlik ve statlar sabit, ezberlenip hazırlanılabilir (Domina'daki gibi). Sıradan kelle avları arada üretilmeye devam eder. İleride yazılacak basit hikâye bu omurgaya oturur. |
+| Yenilen hedef | — (yeni) | **Güçlenmez, büyür** | Ara hikâye dövüşünü kaybedersen hedefin statları **değişmez** (ezber korunur); yanına adam katılır — yenilen oni bir sürü toplar (yenilgi 1: +2 kappa, yenilgi 2: +4). Zorluk artar ama karşı hamle açık kalır: kalabalığa karşı kadro, saha ve teçhizat seçimi. Stat çarpanı reddedildi çünkü tavansız çarpan hedefi erişilemez yapıp koşuyu sessizce bitirir. |
+| Gece baskını | — (yeni) | **Yenilgi tetikler** | Hikâye dövüşünü kaybetmek dojoyu hedef haline getirir: yenilen yokai birkaç gün içinde gece baskını yapabilir. Hazırlıksızsan ambar yağmalanır, revirdeki yaralılar ölür; hazırsan (nöbetçi savaşçı + duvar tesisi) dövüş başlar — ama kadro yorgun ve teçhizat yarımdır. Yenilgi dışarıda kalmaz, eve gelir. Mevcut kararlarla örtüşür: duvar/kapı bir tesis kolu, nöbetçi bir personel rolü, "nöbetçi koy / koyma" karar sunan bir olay. |
+| Chariot race / Beast mode / Gravitas | Yok 🔵 | **Aynı: özel etkinlik yok** | Ayrı kural seti gerektiren mini oyunlar açılmaz. Çeşitlilik sözleşme türlerinden ve saha özelliklerinden gelir; her şey aynı çözümleyiciyi kullanır. |
+| Final şampiyonası | Yok ⚪ | **Var — ve kaybetmek oyunu bitirir** | Kampanyanın sonu tek bir final dövüşüdür. **Final kaybı = game over**, kesin. Domina'dan ayrıldığımız yer burası: orada final kaybı yılın bitmesi (kayıp koşulu resmî değil, "en iyi gladyatörünü kaybedersen pratikte bitti" **[T]**), bizde koşunun bitmesi. Kaybetmek gerçek olmalı — oyun oyuncuyu kazanmaya taşımaz. |
+
+### Bölüm 6'nın getirdiği yeni işler
+- **Teklif kuyruğu**: aynı anda birden çok teklif, teklif başına süre, sefer süresinin gerçek zamandan düşmesi.
+- **Kör sözleşme**: rakibin gizlendiği teklif türü ve ödül çarpanı.
+- **Sabit hikâye hedefleri**: adlı yokai tanımları (kimlik + sabit stat), kelle avı sistemine bağlanması, hikâye ilerleme durumu.
+- **Yenilgi sonrası büyüme**: hedefe eşlik eden sürünün yenilgi sayısına göre kurulması.
+- **Gece baskını**: tetikleme kuralı, dojo savunması (nöbetçi personel + duvar tesisi), hazırlıksız kayıp tablosu (ambar, revir), baskın dövüşünün yorgun/yarım teçhizatlı başlaması.
+- **Final dövüşü ve game over**: koşunun bitiş ekranı, kayıt akışının sonlanması.
+
+## Bölüm 7 — Yönetim katmanı ✔ tamamlandı
+
+| Satır | Eski durum | Yeni karar | Not |
+|---|---|---|---|
+| Yapı | Okul ağacı: 9 düğüm, üç kol 🔵 | **Tesis ağacı + personel; bazı mesleklerin kendi yükseltme kolu olur** | Üç kol × üç kademe tesis ağacı kalır (Bölüm 4'ün terim ayrımıyla: tesis = bina, personel = onu çalıştıran kişi). Domina'nın "her personelin kendi araştırma ağacı" modeli **bütünüyle** alınmaz — 14 ayrı ağaç ekonomi değil, tablo doldurmadır. Ama bir kısmı alınır: seçilecek birkaç meslek 2-3 kademelik kendi yükseltmesini taşır. **Hangi meslekler olacağı ayrı bir turda, 14 rol tek tek karara bağlanacak.** |
+| Slot kısıtı | Düğüm alınınca kalıcı, slot yok 🔵 | **Sabit slot sayısı yok** | Tesis kalıcı ve geri satılmaz (GDD kararı korunur). Personelde doğal tavan = tesis sayısı, bina başına bir kişi; gerçek kısıt **günlük maaş**. Domina'nın "aynı anda 3/6 personel" sayısı yapay bir tavan; bizde kısıtı ekonominin kendisi koyar ve kriz anında personeli kesmek zaten Bölüm 4'te açılan vitestir. Kesilen personelin bonusu gider, binası kalır — Domina'daki Architect kuralıyla aynı yer. |
+| Maliyet | Düğüm yalnızca altın 🔵 | **Tesis peşin altın; personel günlük maaş + kişi başı stok** | Araştırma/tur maliyeti ve ikinci kaynak (Domina'daki taş) girmez — tek para kararı korunur. Personel de yiyecek/su tüketir: kadro tavanı gibi, yönetimi büyütmenin bedeli de doğrusal artan gider olur. |
+| Bina | Soyut düğümler 🔵 | **Fiziksel bina, sabit yerleşim** | Açılan tesis dojo ekranında görünür bina olur. Serbest yerleştirme / komşuluk bonusu **yok** — plan kurma oyunu açmıyoruz. Gece baskını kararı zaten duvar ve kapıyı fiziksel yapmıştı; tesislerin geri kalanının soyut kalması tutarsız olurdu. Sunum işi, çözümleyiciye dokunmaz. |
+| İnşa süresi | Anında 🔵 | **Süre yer; personel meşgul olmaz** | Domina'nın kum saati alınır: altın ödendikten sonra tesis belli bir sürede kalkar, o süre sefere çıkma kararıyla yarışır. Domina'nın "o işi yapan personel o sürede başka iş yapamaz" kısmı **alınmaz** — personel bizde tesisi çalıştırmak için var, takip edilecek meşguliyet durumu eklemeye değmez. Ayrıca altınla hızlandırma yok. |
+| NPC ilişkisi | Yok ⚪ | **Üç NPC ile başlanır; ilişki var, entrika yok** ⏳ *rakip dojo ve köy sonraya* | **Bölge beyi** (teklif kuyruğunun sahibi), **tüccar loncası** (pazar fiyatı, üst kademe zırhın satışta olması, kıtlıkta stok), **tapınak** (omamori arzı, cenaze töreniyle onur telafisi). Her biri için tek sayı, beş kademe: Düşman / Soğuk / Nötr / Hoşnut / Sadık; kayda yalnızca bu sayı yazılır. **Yükselten:** sözleşmeyi süresinde bitirmek (büyük), hediye (küçük ve azalan verimli — sadıklık işle kazanılır), olayda o tarafın lehine karar, onurun yükselmesi (hepsine birden, çok küçük). **Düşüren:** aldığı sözleşmede kaybetmek ya da çekilmek, teklifini süresi dolana kadar hiç almamak (birikir), aleyhine karar. **Alınmayan:** sır satma, şantaj, dövüş sonucu ayarlatma — otomatik dövüşün adaleti okunur kalmalı. Rakip dojo ve köy (ve ilişkilerin birbirini bozduğu karşı kutup modeli) şimdilik dışarıda; ekonomi ve personel oturunca bakılır. |
+| Patronaj | Yok ⚪ | **Girmez** 🔵 | NPC bir savaşçının giderini üstlenmez. Domina'da bu, kadroyu iki kişiye düşürüp iki NPC'ye de patron oldurmakla sömürülüyordu; bizde günlük tüketim baskısı ekonominin omurgası (Bölüm 4) ve o baskıyı seyrelten bir muafiyet açılmayacak. |
+| Kart sistemi | Yok 🔵 | **Omamori olarak girer** | Jupiter kutsamaları tema uyarlamasıyla alınır: **omamori (tapınak takısı)** hem savaşçıya hem personele takılır, sökülüp başkasına verilir, satılabilir. Tapınak ilişkisi arzını ve gücünü belirler — takı sistemi NPC katmanının karşılığıdır, başıboş bir ekonomi kalemi değil. Taşınabilirliğin sömürüye açık olduğu biliniyor (sefer öncesi hepsini bir savaşçıda toplamak); denge turunda ölçülecek. |
+
+### Bölüm 7'nin getirdiği yeni işler
+- **Meslek turu**: 14 rolün tek tek kararı — her rol ne verir, kendi yükseltme kolu var mı, emekli savaşçı verimi ne. Bölüm 4'ün açık bıraktığı "hekim/kırıkçı/aşçı/kâhin'e emekli savaşçı konamaz" satırı da burada kapanır.
+- **İnşa süresi**: tesis başına süre, sürerken yarım çalışmama kuralı, ekranda kalan süre gösterimi.
+- **Fiziksel dojo ekranı**: sabit yerleşimde tesis binalarının açılması, duvar/kapının bu ekranda görünmesi.
+- **Personel stok tüketimi**: günlük tüketim formülüne personelin girmesi.
+- **NPC ilişki sistemi**: üç taraf, beş kademe, yükselten/düşüren eylem tablosu, kademe başına etki (teklif kuyruğu kalitesi, pazar fiyatı ve stok, omamori arzı), kayda yazılması.
+- **Omamori**: takı tanımları, savaşçı ve personel yuvası, taşınma/satış akışı, tapınak arzına bağlanması, denge ölçümü.
