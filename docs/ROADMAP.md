@@ -3,6 +3,44 @@
 > Tasarım kararları için `GDD.md`. Bu dosya **nasıl inşa edileceğini** anlatır.
 > Efor tahminleri **görecelidir** (S/M/L/XL), takvim değil.
 
+> ⚠️ **2026-09-07 — karar turu bu planı değiştirdi.** `COMPARISON-DOMINA.md` üzerindeki
+> karar turu ve meslek turu yeni sistemler getirdi, birkaç kilitli kuralı geçersiz kıldı.
+> Faz sınırları aşağıdaki "Karar turunun getirdiği yeni iş" bölümünde toplandı; fazların
+> içine dağıtılması, açık kalan **9.1 çekirdek kararı** verildikten sonra yapılacak
+> (o karar mimariyi doğrudan belirliyor).
+
+## Karar turunun getirdiği yeni iş (2026-09-07)
+
+**Önce karara bağlanması gereken:** GDD "Açık Kararlar" #13 — çözümleme motorda mı,
+dışında mı? Bu karar Faz 1'in ve denge düzeninin şeklini belirliyor; altındaki her şey
+ona bağlı.
+
+**Mevcut fazları yeniden açan değişiklikler**
+
+| Değişiklik | Etkilenen | Not |
+|---|---|---|
+| **Ayrık gün → duraklatmalı gerçek zaman** | Faz 1, Faz 3 | Gün kapanışı, olay tetikleme, `AdvanceDay` ve chat oylaması ayrık günü varsayıyor. Çekirdek sabit tik'te kalır; değişen onu tüketen katman. **En büyük tek risk kalemi** |
+| **`BattleOutcome.TimeLimit` kalkıyor** | Faz 1 | Dövüş biri düşene kadar sürer |
+| **Dövüş stat kazandırıyor** | Faz 1, Faz 3 | Antrenman tek büyüme yolu olmaktan çıkıyor; "sefere çıkmak saf kayıp" sorunu kapanıyor |
+| **Sersemletme silah düşürüyor** | Faz 1 | Üçüncü tetikleyici; ilk kez savunan silahını kaybediyor |
+| **Blok stat/ekipman diye ayrılıyor** | Faz 1, Faz 2 | Sıklık Savunma'dan, etki ō-sode'den |
+| **Ödül bandı 0.75-1.25** | Faz 5, Faz 9 | Pes etme sağkalımı da aynı oranı kullanıyor |
+| **Bütün denge sayıları geçersiz** | Faz 9 → her faz | Ölçüm artık tek turda değil, **her sistem koda girdikçe** yapılacak |
+
+**Yeni sistemler** (fazlara dağıtılacak)
+
+- **Sınıf sistemi** — sınıf listesi, tesisle açılma, uzuv-sınıf uygunluk matrisi, `sınıf × alet` çarpımı
+- **Moral + İrade** — 9. stat, moral kaynağı, iki yönlü bağ, seppuku ve panik kontrollerine girmesi
+- **Personel ve tesis** — 11 meslek, günlük maaş, dört yükseltme kolu, emekli savaşçı yerleştirme, boş tesis yarı verimi, inşa süresi
+- **NPC ilişkileri** — üç taraf, beş kademe, yükselten/düşüren eylem tablosu, kademe etkileri
+- **Omamori** — takı tanımları, savaşçı ve personel yuvası, taşınma/satış, tapınak arzı
+- **Sezon iskeleti** — 180 gün geri sayım, 7 günlük mecburi dövüş sayacı, 3 kelle kapısı, 5 turluk final, kapanış ekranı
+- **Hikâye kadrosu** — sabit adlı hedefler, yenilgide büyüyen sürü, gece baskını
+- **Saha özellikleri** — sis, çamur, dar köprü, gece, tate
+- **Chat botu ve havuz penceresi** — yazma yönü, 1 saatlik tazelik, `!no` oturum ömrü
+- **Kalabalık göstergesi** — tek oyuncuda sahte chat yerine toplu gösterge
+- **Ekranlar** — pazar, tesis/personel, teklif kuyruğu, final turnuvası (Faz 3 "bitti" sayılıyordu; dojo katmanı büyüdü)
+
 ## Temel İlke: Çekirdek Önce, Motor Sonra
 
 En kritik mimari karar: **simülasyon çekirdeği Godot'a hiç bağımlı olmayacak.**
@@ -409,6 +447,11 @@ oyun Twitch ile çıkabilir — **Kick'i sürüm engeli yapma.**
 3. **`FakeChatSource` gerçek API'lerden önce** — yoksa her test için canlı yayın gerekir
 4. **Kick spike'ı erken** — en büyük teknik bilinmeyen
 5. **Görsel stil kararı Faz 2'den önce** — teknik yol (2D cutout) belli, stil değil
+6. **Çekirdek kararı (#13) her şeyden önce (2026-09-07)** — motorsuz çekirdek kuralı
+   sürecek mi? Sürmezse "her sistem girdikçe ölç" düzeni uygulanamaz ve Faz 1'in tamamı
+   yeniden şekillenir
+7. **Gerçek zamana geçiş, yeni sistemlerden önce** — personel, sınıf ve moral ayrık gün
+   varsayımının üstüne yazılırsa iki kez yazılır
 
 ## Bağımlılık Zinciri
 
