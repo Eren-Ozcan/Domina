@@ -21,6 +21,8 @@ Bu proje hakkında herhangi bir işe başlamadan önce oku:
   neyi bilerek değiştirdik, neyi hiç yapmadık (⚪ işaretliler açık boşluk).
 - **`docs/DESIGN-REFERENCES.md`** — kararların dışarıdan doğrulanabilir dayanakları
   (yerleşik tasarım pratiği, kaynak bağlantıları) ve kaynakların bizi çürüttüğü yerler.
+- **`docs/GLOSSARY.md`** — Japonca silah/zırh terimleri ve çekirdeğin mekanik
+  sözcükleri (yakalama şansı, kilit vb.); bir terim tanıdık gelmiyorsa önce buraya bak.
 
 Tasarım kararlarını yeniden tartışmaya açma — kullanıcı bunları uzun bir oturumda
 madde madde kararlaştırdı. Değişiklik gerekiyorsa önce GDD'yi güncelle.
