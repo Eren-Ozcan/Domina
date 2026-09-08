@@ -566,4 +566,87 @@ kayıt yedeğinin geri alma kapısına dönüşmemesi (9.9); rakip dojo ve köy 
 kurallar: ayrık gün modeli, "sınıf yok", "savaşçı tarafı sığ tutulur", `BattleOutcome.TimeLimit`,
 "isim bulunamazsa sessizce yok sayılır", ödül çarpanı bandı 0.5-1.5, ve "alınmayacaklar"
 listesinin personel/kart satırları. Bütün denge ölçümleri de geçersiz — yeniden ölçüm,
-9.2 gereği her sistem koda girdikçe yapılacak.
+9.2 gereği her sistem koda girdikçe yapılacak.
+
+# 13. Meslek turu — 14 rol tek tek (2026-09-07)
+
+Bölüm 7 ve Bölüm 4'ün borçlu bıraktığı ayrı tur. Taslaktaki 14 rol tek tek karara
+bağlandı; **üçü listeden düştü, biri başka rolün kademesine girdi**. Geriye **11 rol**
+kalıyor. Bölüm 4'ün ⏳ bıraktığı "emekli savaşçı hangi role konabilir" satırı da burada
+kapanıyor.
+
+## Kalan roller
+
+| Rol | Domina'daki karşılığı | Ne verir | Kendi kolu |
+|---|---|---|---|
+| **Talim ustası** | *Doctore* (bedava başlangıç personeli, auto-train, oyunun en büyük beceri ağacı) | Antrenman hızı çarpanı. Dojo'nun **bedava başlangıç personeli**. | ✅ 3 kademe: hız ×1.30 → aynı gün iki talim → hız bir kez daha ×1.30 |
+| **Kata ustası** | *Doctore Emeritus* (eğitim süresi −%75, stat tavanı, EXP artışı) | **Stat tavanını** yükseltir (yüzdelikte +4, can/staminada +20) **ve dövüşten kazanılan statı çarpar**. Geç oyunun personeli; sefere çıkmayı ödüllendirir. | — |
+| **Silah ustası** | Ayrı personel değil — *Doctore*'nin silah düğümleri (*Blade Control*, *Attack Vector*) | Savaşçılara **silah başına kalıcı ustalık** kazandırır (o silahla isabet ve vuruş hızı). Ustalık **savaşçıda** durur: usta kesilirse kazanılmış ustalık gitmez, yenisi kazanılmaz. | — |
+| **Hekim** | *Medicus* (34 altın; video "ilginç ama zayıf" diyor) | Ölümcül yarayı çevirir **ve** ilaç giderini kaldırır. | ✅ 3 kademe: ölümcül yara çevrilir → ilaç gideri sıfır → uzuv kaybı riski ×0.75 |
+| **Demirci** | *Faber* (otomatik onarım ve yükseltme, blueprint indirimi) | Onarımı ucuzlatır ve hızlandırır; **ō-yoroi gibi üst kademe zırhın şartıdır** (demirci yoksa alınamaz). | ✅ 3 kademe: onarım ×0.7 → ō-yoroi açılır → özel silah dövülür |
+| **Kâhya** | *Emptor* ("ucuz yükseltme ve kaynak"; rehberler son alışverişte alıp kovuyor) | **Yalnızca gider tarafı**: stok ×0.80, savaşçı ×0.75, onarım ×0.80. Ödül çarpanı **yoktur**. | ✅ 3 kademe: alım ×0.90 → ×0.80 → ambar kapasitesi +%50 |
+| **Simsar** | Yok sayılır (*Emptor* pazarlık eder, aday *Magistrate*'ten gelir) | **Fiyata dokunmaz** — pazarın *ne çıkaracağını* değiştirir: aday sayısı ve kalitesi artar, sınıflı aday sıklaşır. | — |
+| **Ozan** | *Bard* (13 altın, en ucuz personel; şarkılarla moral) | Günlük moral kazancı verir ve düşüşü yavaşlatır; ayrıca **ölen savaşçının ardından ağıt yakar** — ölümün kadro moralinde açtığı çukuru kısmen kapatır. | — |
+| **Keşiş** | *Sacerdos* (100 altın, **hiçbir şey tüketmez**; dualar, pasif stat) | **Tapınağın dojo'daki elidir**: omamori yuvalarını açar, cenaze töreniyle ölümün onur kaybını telafi eder, tapınak ilişkisini yavaşça yükseltir. Pasif stat bonusu **vermez**. | — |
+| **Aşçı** | *Agricultor* (25 altın, günde 4 yiyecek üretir; videoya göre açılışın en önemli personeli) | **Üretmez — tüketimi kısar**: kadronun günlük yiyecek tüketimi ×0.75. | — |
+| **Kâhin** | *Haruspex* (72 altın; düşmana lanet, canını yarıya indirme) | **Lanet yok — bilgi verir**: tekliflerdeki düşmanın statlarını, silahını ve davranış eğilimini açar; kör dövüşte kısmi okuma sağlar. | — |
+
+## Listeden düşenler
+
+| Rol | Sonuç | Gerekçe |
+|---|---|---|
+| **Kırıkçı** | **Hekimin 3. kademesi oldu** | Hekim ölümcül yarayı ve ilaç giderini üstlenince kırıkçıya ayrı bir iş kalmıyordu. İki ayrı sağlık personeli yerine tek rol, derin kol. |
+| **Aracı** | **Girmez** | Domina'daki *Agent* kirli iş, hırsızlık ve bahis taşıyordu; bahis Bölüm 4'te, çalınan ekipman ekonominin belkemiğini deldiği için burada reddedildi. Sözleşmeler zaten NPC ilişkisinden geliyor (Bölüm 7); ikinci bir kuyruk kaynağı açılmıyor. Kirli iş ekseni bu turda **hiç açılmadı**. |
+| **Seyis** | **Girmez** | Domina'daki karşılığı at/araba etkinlikleriydi ve Bölüm 6 onları reddetti. At olmayan bir oyunda seyise gerçek bir iş kalmıyor; sefer süresi sözleşmenin kendi özelliği olarak kalır, personelle pazarlık edilmez. |
+
+## Yükseltme kolu olan roller
+
+Bölüm 7'nin kuralı ("14 ayrı ağaç ekonomi değil tablo doldurmadır") uygulandı: **dört rol**
+kendi 2-3 kademeli kolunu taşır — **talim ustası, hekim, demirci, kâhya.** Kalan yedi rol
+tek etkilidir; derinlikleri tesis ağacından ve NPC ilişkilerinden gelir.
+
+Okunuşu: kol taşıyan dört rol, dojo'nun dört sürekli giderine karşılık geliyor —
+**yetiştirme, sağlık, ekipman, tedarik.** Geri kalanlar durum personeli: bir kapı açar
+(keşiş, demirci-üstü), bir eksende bilgi ya da moral verir (kâhin, ozan, simsar), ya da
+bir sayıyı kısar (aşçı).
+
+## Emekli savaşçı verimi (Bölüm 4'ün ⏳ satırı kapandı)
+
+Emekli savaşçı **maaş almaz** — uzun oyunun ödülü budur. Ama her işi yapamaz:
+
+| Kademe | Roller | Anlamı |
+|---|---|---|
+| **İyi** (kiralıktan üstün) | Talim ustası, Kata ustası, Silah ustası | Sahada öğrendiğini öğretir; yetiştirdiğin savaşçı en çok burada işe yarar |
+| **Orta** | Kâhya, Simsar, Keşiş | İdare eder; kiralık kadar iyi değil ama maaşsız |
+| **Zayıf** (yarı verim) | Demirci, Ozan | Zanaatı yarım yapar |
+| **Hiç** | **Hekim, Aşçı, Kâhin** | Ömür boyu ayrı bir uzmanlık ister — **dışarıdan personel şart** |
+
+**Yasağın gerekçesi bir ekonomi kararıdır:** bedava emekli savaşçı her tesisi
+doldurabilseydi hiçbir tesis boş kalmaz ve personel maaşı ekonomiden çekilirdi. Bölüm 4'ün
+"kriz anında personeli kesip binayı tutarsın — ekonomiye ilk kez bir **vites** girer"
+kararı, kesilecek maaş kalmayınca boşa dönerdi. Üç yasaklı rol maaş baskısını hep açık
+tutar. Yasağın büsbütün genişletilmesi de (yalnızca üç antrenman rolü) reddedildi:
+emeklilik o zaman Bölüm 2'nin kapattığı sızıntıyı yeniden açacak kadar dar kalırdı.
+
+## Boş tesis kuralının bu tura yansıması
+
+Bölüm 4'ün "tesis boş kalırsa **yarı verimle** çalışır" kuralı korunur; personel tam verime
+çıkarır. Keşiş bunun örneğidir:
+
+- **Tapınak var, keşiş yok:** tek omamori yuvası çalışır; cenaze töreni yapılamaz, tapınak
+  ilişkisi kendiliğinden yükselmez.
+- **Keşiş var:** bütün yuvalar açılır (savaşçı ve personel), cenaze töreni yapılır, ilişki
+  yavaş yükselir.
+
+Bazı kapılar yine de personel şartıdır (ō-yoroi için demirci) — bunlar yarı verimle
+açılmaz, ya vardır ya yoktur.
+
+## Bu turun getirdiği işler
+
+- **11 rolün tanımı**: rol başına etki, günlük maaş, günlük stok tüketimi, tesis eşleşmesi.
+- **Dört yükseltme kolu**: talim ustası / hekim / demirci / kâhya için kademe maliyetleri ve etkileri.
+- **Silah ustalığı**: savaşçıda duran, silah başına kalıcı ustalık sayacı; `sınıf × alet` çarpımının dışında, ayrı ölçülecek düz bonus.
+- **Kâhinin düşman okuması**: teklif ekranında düşman kartı, kör dövüşte kısmi okuma.
+- **Ozanın ağıtı**: ölüm sonrası kadro morali düşüşünün azaltılması; moral sistemine bağlanır.
+- **Emekli savaşçı yerleştirme**: rol başına verim kademesi, üç rolde yerleştirmenin engellenmesi, arayüzde gerekçenin gösterilmesi.
+- **Boş tesis yarı verimi**: tesis başına "personelsiz ne çalışır" tanımı ve personel şartı olan kapıların işaretlenmesi.
