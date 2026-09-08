@@ -248,6 +248,11 @@ satırına dönüşmeli.*
 
 ---
 
+> ✅ **İşlendi (2026-09-07).** Aşağıdaki `# 12` ve `# 13` bölümleri **`docs/GDD.md`'ye
+> ve `docs/ROADMAP.md`'ye işlendi.** Bundan sonra tek doğruluk kaynağı GDD'dir; bu iki
+> bölüm **tarihsel kayıt** olarak duruyor — hangi kararın hangi gerekçeyle alındığını ve
+> referans oyunun ne yaptığını gösteriyor. Yeni bir karar buraya değil, GDD'ye yazılır.
+
 # 12. Değişenler — satır satır karar turu (2026-09-05)
 
 Bu bölüm, yukarıdaki tablolar tek tek gözden geçirilirken alınan kararları tutar.
