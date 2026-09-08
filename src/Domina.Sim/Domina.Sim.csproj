@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Araç bir uygulama, kütüphane değil: tipler internal kalır, testler görür. -->
+    <!-- The tool is an application, not a library: the types stay internal and the tests see them. -->
     <InternalsVisibleTo Include="Domina.Sim.Tests" />
   </ItemGroup>
 

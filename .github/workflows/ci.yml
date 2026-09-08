@@ -7,10 +7,11 @@ on:
 
 jobs:
   core:
-    # Çekirdek ve chat katmanı Godot'a bağımlı değildir; CI motor kurmadan koşar.
-    # Bu iş akışının motorsuz koşabiliyor olması, mimari kuralın canlı testidir
-    # (bkz. CLAUDE.md → "Mimari kuralı"). Godot referansı sızarsa burası kırılır.
-    name: Çekirdek derleme + test
+    # The core and the chat layer do not depend on Godot; CI runs without installing
+    # the engine. This workflow being able to run engine-free is the live test of the
+    # architecture rule (see CLAUDE.md -> "Architecture rule"). If a Godot reference
+    # leaks in, this breaks.
+    name: Core build + test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,21 +30,21 @@ jobs:
       - name: Test
         run: dotnet test Domina.slnx --no-build --configuration Release --verbosity normal
 
-      - name: Format kontrolü
+      - name: Format check
         run: dotnet format Domina.slnx --verify-no-changes --severity warn
 
   game:
-    # Godot katmanı AYRI bir job. Aynı job'a eklenseydi çekirdeğin motorsuz
-    # derlendiğini kanıtlayan test kirlenirdi; böyle kalınca "core" job'ı hâlâ
-    # Godot'a hiç dokunmadan koşuyor (bkz. CLAUDE.md → "Mimari kuralı").
+    # The Godot layer is a SEPARATE job. Adding it to the same job would pollute the
+    # test that proves the core builds engine-free; kept this way, the "core" job still
+    # runs without touching Godot at all (see CLAUDE.md -> "Architecture rule").
     #
-    # Neden gerekli: src/Game çözüme (Domina.slnx) dahil değil, yani çekirdekteki
-    # bir imza değişikliği bu katmanı kırdığında "core" job'ı yemyeşil kalıyor ve
-    # hata Godot bir dahaki açılana kadar görünmüyor.
+    # Why it is needed: src/Game is not part of the solution (Domina.slnx), so when a
+    # signature change in the core breaks this layer the "core" job stays green and the
+    # error stays invisible until Godot is opened next.
     #
-    # Motor ikilisi indirilmez: Godot.NET.Sdk bir NuGet paketidir, derlemek için
-    # editör gerekmez. Bu yüzden job ~1 dakika sürer.
-    name: Godot katmanı derleme
+    # The engine binary is not downloaded: Godot.NET.Sdk is a NuGet package, no editor is
+    # needed to build. That is why this job takes about a minute.
+    name: Godot layer build
     runs-on: ubuntu-latest
 
     steps:
