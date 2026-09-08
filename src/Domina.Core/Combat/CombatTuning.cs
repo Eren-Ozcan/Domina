@@ -1,333 +1,347 @@
-﻿namespace Domina.Core.Combat;
+namespace Domina.Core.Combat;
 
 /// <summary>
-/// Dövüşün tüm ayarlanabilir sayıları tek yerde.
+/// Every tunable number of combat in one place.
 /// </summary>
 /// <remarks>
-/// Bu değerler <b>denge için tahmini başlangıç noktalarıdır</b>, kanıtlanmış
-/// değerler değil. Faz 9'da <c>Domina.Sim</c> toplu simülasyonuyla ayarlanacak
-/// (bkz. docs/GDD.md → Açık Karar #8).
+/// These values are <b>estimated starting points for balance</b>, not proven
+/// values. They will be tuned in phase 9 with the <c>Domina.Sim</c> batch
+/// simulation (see docs/GDD.md → Open Decision #8).
 /// </remarks>
 public sealed record CombatTuning
 {
-    /// <summary>Simülasyon adımı. 20 Hz, saldırı pencerelerini ayırt etmeye yeter.</summary>
+    /// <summary>Simulation step. 20 Hz, enough to tell attack windows apart.</summary>
     public double TickSeconds { get; init; } = 0.05;
 
-    /// <summary>Dövüş bu süreyi aşarsa berabere sayılır.</summary>
+    /// <summary>A fight that runs past this duration counts as a draw.</summary>
     public double MaxBattleSeconds { get; init; } = 180;
 
-    // ---- Arena ve hareket ----
+    // ---- Arena and movement ----
 
-    /// <summary>Arenanın hat boyunca genişliği.</summary>
+    /// <summary>Width of the arena along the line.</summary>
     public double ArenaWidth { get; init; } = 1920;
 
-    /// <summary>Arenanın derinliği. Kuşatma ve çevirme bu eksende olur.</summary>
+    /// <summary>Depth of the arena. Encircling and flanking happen on this axis.</summary>
     public double ArenaDepth { get; init; } = 420;
 
-    /// <summary>Takımların başlangıçta merkeze uzaklığı.</summary>
+    /// <summary>The teams' starting distance from the centre.</summary>
     public double StartOffsetX { get; init; } = 480;
 
-    /// <summary>Aynı takımdaki savaşçıların başlangıçtaki derinlik aralığı.</summary>
+    /// <summary>Starting depth spacing between warriors on the same team.</summary>
     public double StartSpacingY { get; init; } = 120;
 
-    /// <summary>Hız statı 0 iken yürüme hızı (birim/saniye).</summary>
+    /// <summary>Walking speed when the Speed stat is 0 (units/second).</summary>
     /// <remarks>
-    /// Hız tek bir sabitken kovalayan ile kaçan aynı hızda gidiyordu; net kapanma sıfır
-    /// olduğu için <b>kaçış her zaman başarılıydı</b>. Uçlar 50'de eski sabite (240)
-    /// denk gelecek şekilde seçildi, böylece mevcut denge tabanı korunuyor.
+    /// While speed was a single constant, chaser and fleer moved at the same rate; since
+    /// net closing was zero, <b>escape always succeeded</b>. The ends were chosen so that
+    /// 50 lands on the old constant (240), which preserves the existing balance baseline.
     /// </remarks>
     public double MoveSpeedAtZeroSpeed { get; init; } = 150;
 
     /// <inheritdoc cref="MoveSpeedAtZeroSpeed"/>
     public double MoveSpeedAtMaxSpeed { get; init; } = 330;
 
-    /// <summary>Kaçanın hız çarpanı — sırtı dönük, dengesi bozuk.</summary>
+    /// <summary>Speed multiplier of the one fleeing — back turned, balance broken.</summary>
     /// <remarks>
-    /// Kovalamacanın tek ayar düğmesi bu. 0.85 çok sert: kaçan hiç arayı açamıyor ve
-    /// temastan sonra basılan tuş neredeyse her zaman en az bir ölüye mal oluyordu
-    /// (%56 kısmi kaçış). 0.92'de erken basmak hâlâ işe yarıyor, geç basmak yakıyor.
+    /// This is the single tuning knob of the chase. 0.85 is too harsh: the fleer can never
+    /// open a gap and, after contact, pressing the key almost always cost at least one death
+    /// (56% partial escape). At 0.92 pressing early still works and pressing late burns you.
     /// </remarks>
     public double RetreatSpeedMultiplier { get; init; } = 0.92;
 
     /// <summary>
-    /// Savaşçılar birbirine bundan daha fazla sokulamaz — üst üste binmeyi engeller.
+    /// Warriors cannot get closer to each other than this — it prevents overlap.
     /// </summary>
     public double PersonalSpace { get; init; } = 74;
 
-    /// <summary>Menzile girdikten sonra ne kadar daha yaklaşılacağı (0-1).</summary>
+    /// <summary>How much further to close after entering reach (0-1).</summary>
     /// <remarks>
-    /// 1.0 tam menzilde durur; menzil sınırında durmak vuruşları ıskalatır çünkü hedef
-    /// de hareket ediyor. Biraz içeri girmek daha kararlı.
+    /// 1.0 stops at exactly full reach; stopping at the edge of reach makes attacks miss
+    /// because the target is moving too. Stepping slightly inside is more stable.
     /// </remarks>
     public double PreferredReachFraction { get; init; } = 0.85;
 
-    /// <summary>Arkadan gelen saldırının isabet şansına eklediği.</summary>
+    /// <summary>What an attack from behind adds to hit chance.</summary>
     /// <remarks>
-    /// Kuşatmanın mekanik karşılığı bu: çevrildiğinde birileri mutlaka arkanda kalır.
+    /// This is the mechanical meaning of encircling: when you are surrounded, someone is
+    /// necessarily behind you.
     /// </remarks>
     public double FlankHitBonus { get; init; } = 0.25;
 
-    /// <summary>Arkadan gelen saldırının hasar çarpanı.</summary>
+    /// <summary>Damage multiplier of an attack from behind.</summary>
     public double FlankDamageMultiplier { get; init; } = 1.25;
 
-    /// <summary>Kaçan savaşçının arenayı terk etmiş sayılması için gereken mesafe.</summary>
+    /// <summary>Distance required for a fleeing warrior to count as having left the arena.</summary>
     public double ExitMargin { get; init; } = 220;
 
-    // ---- Hücum ----
+    // ---- Charge ----
 
     /// <summary>
-    /// Açıklık doğduğunda hücuma kalkma olasılığı — <b>Saldırganlık 0 iken</b>.
+    /// Probability of launching a charge when an opening appears — <b>at Aggression 0</b>.
     /// </summary>
     /// <remarks>
-    /// Hücum kararı savaşçının kimliğinden çıkar: atılgan olan atılır, ölçülü olan
-    /// mesafeyi yürüyerek kapatır. Saldırganlık zaten saldırı sıklığını belirliyor
-    /// (<see cref="SpacingSecondsAtZeroAggression"/>); aynı stat'ın ikinci işi budur.
-    /// Zar <b>açıklık başına bir kez</b> atılır (docs/GDD.md §4), o yüzden bu sayılar
-    /// "saniyede bir denenen şans" değil, <b>gördüğü fırsatların kaçını kullandığı</b>.
+    /// The charge decision comes out of the warrior's identity: the bold one throws himself
+    /// forward, the measured one closes the distance walking. Aggression already sets attack
+    /// frequency (<see cref="SpacingSecondsAtZeroAggression"/>); this is the same stat's
+    /// second job. The die is rolled <b>once per opening</b> (docs/GDD.md §4), so these
+    /// numbers are not "a chance tried each second" but <b>how many of the openings he sees
+    /// he uses</b>.
     /// </remarks>
     public double ChargeChanceAtZeroAggression { get; init; } = 0.35;
 
     /// <inheritdoc cref="ChargeChanceAtZeroAggression"/>
     /// <remarks>
     /// <para>
-    /// Fırsat değerlendirmesi <b>ne zaman</b> hücum edilebileceğini söyler; bu eğri
-    /// <b>hangi savaşçının</b> o fırsatı kullandığını. Boşluk açıldığında ölçülü savaşçı
-    /// çoğu zaman yürümeyi seçer, atılgan olan atlar.
+    /// Opportunity evaluation says <b>when</b> a charge is possible; this curve says
+    /// <b>which warrior</b> uses that opportunity. When a gap opens, the measured warrior
+    /// mostly chooses to walk, the bold one leaps.
     /// </para>
     /// <para>
-    /// Ölçüldü (3v3): 0.35-1.00 dövüş başına 1.88 kalkış / <b>1.66 tamamlanmış hücum</b>
-    /// veriyor — zar açıklık başına atıldığından bu, saniye başına atılan eski 0.12-0.45
-    /// bandının ürettiği sıklığın (1.71 tamamlanmış) yerini tutar. Eğri tek başına sıklık
-    /// düğmesidir: 0.12-0.45 aynı kuralla 0.78 kalkışa iner, 0.50-1.00 ise 2.15'e çıkar.
+    /// Measured (3v3): 0.35-1.00 gives 1.88 launches / <b>1.66 completed charges</b> per
+    /// fight — since the die is rolled per opening, this stands in for the frequency the old
+    /// per-second band of 0.12-0.45 produced (1.71 completed). The curve alone is the
+    /// frequency knob: under the same rule 0.12-0.45 drops to 0.78 launches, and 0.50-1.00
+    /// rises to 2.15.
     /// </para>
     /// <para>
-    /// Üst uç <b>1.00</b>: en atılgan savaşçı gördüğü her açıklığı kullanır. Bandın alt ucu
-    /// da yükseldiği için Saldırganlık'ın ayırt etme gücü daraldı (eski oran 3.75 kat, yeni
-    /// 2.86 kat) — bunun karşılığında hücum sıklığı savaşçının hızından bağımsızlaştı ve
-    /// <c>Speed</c> ekseni ilk kez canlandı (3v3 zaferi Hız 0'da %83.8, Hız 100'de %87.1).
+    /// Upper end <b>1.00</b>: the boldest warrior uses every opening he sees. Because the
+    /// bottom of the band rose too, Aggression's discriminating power narrowed (old ratio
+    /// 3.75x, new 2.86x) — in exchange, charge frequency became independent of the warrior's
+    /// speed and the <c>Speed</c> axis came alive for the first time (3v3 victory 83.8% at
+    /// Speed 0, 87.1% at Speed 100).
     /// </para>
     /// </remarks>
     public double ChargeChanceAtMaxAggression { get; init; } = 1.00;
 
     /// <summary>
-    /// Koşu başlamadan önce yerinde geçirilen birikme süresi. Savaşçı bu sürede yerinden
-    /// kıpırdamaz ve <b>yediği ilk isabetle hücum dağılır</b> (docs/GDD.md §4).
-    /// Savunması normal oranıyla sürer — kaçınabildiği darbe hamlesini götürmez.
+    /// The windup spent in place before the run starts. The warrior does not move during it
+    /// and <b>the first hit he takes breaks the charge</b> (docs/GDD.md §4). His defence
+    /// continues at its normal rate — a blow he can dodge does not take the move away.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Bu süre, hücum için <b>gereken mesafeyi belirleyen şeydir</b>:
-    /// birikirken düşman yürümeye devam eder, ve sana yetişmesi
-    /// <c>(mesafe − düşmanın menzili) ÷ düşmanın hızı</c> kadar sürer. Süre bundan
-    /// uzunsa hücum daha kalkmadan dağılır.
+    /// This duration is <b>what determines the distance a charge needs</b>: while winding up,
+    /// the enemy keeps walking, and reaching you takes
+    /// <c>(distance − enemy reach) ÷ enemy speed</c>. If the windup is longer than that, the
+    /// charge breaks before it even launches.
     /// </para>
     /// <para>
-    /// Ölçüldü: 320 birimden Tengu 0.73 sn'de, Kappa 0.88 sn'de, Oni 0.87 sn'de yetişiyor.
-    /// 0.75 sn bu yüzden seçildi — <b>yalnızca hızlı düşman</b> eşikten kalkan bir hücumu
-    /// bozabilir, ve hız stat'ı ilk kez "hücumu bozan şey" olarak iş görür.
+    /// Measured: from 320 units Tengu arrives in 0.73 s, Kappa in 0.88 s, Oni in 0.87 s.
+    /// 0.75 s was chosen for that reason — <b>only a fast enemy</b> can break a charge that
+    /// launched at the threshold, and the speed stat does its first real job as "the thing
+    /// that breaks a charge".
     /// </para>
     /// </remarks>
     public double ChargeWindupSeconds { get; init; } = 0.75;
 
-    // Not: hücumun bir "en az mesafe" ayarı YOKTUR ve olmamalıdır. Savaşçı sabit bir eşiğe
-    // bakmaz, boşluğa bakar: "şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar
-    // vaktim var mı?" Gereken mesafe bundan türer —
-    //     düşmanın menzili + düşmanın hızı × ChargeWindupSeconds
-    // — yani her düşman için ayrı çıkar. Ölçüm bunu doğruladı: elle 320'ye kilitlenmiş olan
-    // eski sabit, bu formülün mevcut kadro için ürettiği 287-327 bandının tam ortasıydı.
-    // Aynı sebeple ayrı bir kalabalık kısıntısı da yok: üç düşman yetişiyorsa boşluk yoktur.
+    // Note: the charge has NO "minimum distance" setting and must not have one. The warrior
+    // does not look at a fixed threshold, he looks at the opening: "can nobody hit me right
+    // now, and do I have time to finish my windup?" The distance needed derives from that —
+    //     enemy reach + enemy speed × ChargeWindupSeconds
+    // — that is, it comes out differently for each enemy. Measurement confirmed this: the old
+    // constant, hand-locked to 320, sat right in the middle of the 287-327 band this formula
+    // produces for the current roster. For the same reason there is no separate crowd
+    // restriction either: if three enemies can reach you, there is no opening.
 
-    /// <summary>Hücum sırasındaki hız çarpanı.</summary>
+    /// <summary>Speed multiplier during a charge.</summary>
     /// <remarks>
-    /// <b>Ölçüldü: bu eksen dengeye neredeyse hiç dokunmuyor</b> (3v3 zaferi 1.0'da
-    /// %86.5, 1.6'da %85.4, 3.0'da %83.7 — yüksek hız hafifçe aleyhte, çünkü daha erken
-    /// varmak düşman hattına daha erken girmek demek). Bu yüzden bir denge düğmesi değil
-    /// <b>sunum düğmesidir</b>: hücum ekranda hücum gibi görünsün diye 1.6.
+    /// <b>Measured: this axis barely touches balance</b> (3v3 victory 86.5% at 1.0, 85.4% at
+    /// 1.6, 83.7% at 3.0 — high speed is slightly unfavourable, because arriving earlier means
+    /// entering the enemy line earlier). So it is not a balance knob but a <b>presentation
+    /// knob</b>: 1.6 so that a charge looks like a charge on screen.
     /// </remarks>
     public double ChargeSpeedMultiplier { get; init; } = 1.6;
 
     /// <summary>
-    /// Arenanın azami yürüme hızında koşan bir savaşçının varış vuruşuna eklenen hasar
-    /// oranı. Gerçek çarpan <c>1 + (varış hızı ÷ MoveSpeedAtMaxSpeed) × bu sayı</c>.
+    /// The damage share added to the arrival blow of a warrior running at the arena's maximum
+    /// walking speed. The actual multiplier is
+    /// <c>1 + (arrival speed ÷ MoveSpeedAtMaxSpeed) × this number</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Momentum hızdır.</b> Çarpan sabit değil, savaşçının varış anındaki gerçek
-    /// hızından çıkar — yani hem <see cref="ChargeSpeedMultiplier"/> hem de savaşçının
-    /// <c>Speed</c> stat'ı hasara işler. Ağır Oni'nin hücumu, Tengu'nunki kadar sert
-    /// olamaz.
+    /// <b>Momentum is speed.</b> The multiplier is not fixed, it comes out of the warrior's
+    /// real speed at the moment of arrival — meaning both <see cref="ChargeSpeedMultiplier"/>
+    /// and the warrior's <c>Speed</c> stat feed into damage. A heavy Oni's charge cannot be
+    /// as hard as a Tengu's.
     /// </para>
     /// <para>
-    /// Bu, ölçümde <b>atıl</b> çıkmış olan hız eksenini canlıya çevirir ve <c>Speed</c>
-    /// stat'ına dojo'da ikinci bir iş verir: o güne kadar çekirdekte yalnızca temel yürüme
-    /// hızını belirliyordu. Kalıp Mount &amp; Blade'in couched lance'ından geliyor — orada
-    /// da hasar atın hızına bağlıdır (bkz. docs/DESIGN-REFERENCES.md §3).
+    /// This turns the speed axis, which measured as <b>inert</b>, into a live one and gives
+    /// the <c>Speed</c> stat a second job in the dojo: until then it only set base walking
+    /// speed in the core. The pattern comes from Mount &amp; Blade's couched lance — there too
+    /// damage depends on the horse's speed (see docs/DESIGN-REFERENCES.md §3).
     /// </para>
     /// <para>
-    /// Uzuv kaybı riski hasar/maxHP oranından geldiği için (docs/GDD.md §7) hücumun
-    /// sakatlama olasılığı buradan <b>kendiliğinden</b> çıkar; ayrı bir kopma çarpanı yok.
+    /// Because limb-loss risk comes from the damage/maxHP ratio (docs/GDD.md §7), the charge's
+    /// maiming probability falls out of this <b>on its own</b>; there is no separate
+    /// dismemberment multiplier.
     /// </para>
     /// </remarks>
     public double ChargeDamageAtFullSpeed { get; init; } = 0.43;
 
     /// <summary>
-    /// Hücumun <b>hedefinin</b> karşı vuruş yapma olasılığı. Yoldan geçilen diğer
-    /// düşmanlar bedava vuruşlarını her zaman alır; bu sayı yalnızca cepheden gelene
-    /// bakan savaşçı içindir.
+    /// The probability that the <b>target</b> of a charge lands a counter-hit. Other enemies
+    /// passed on the way always get their free hits; this number is only for the warrior
+    /// facing the charge head-on.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Ayrımın sebebi zamanlamadır (docs/GDD.md §4): yanından koşarak geçen bir gövdeye
-    /// vurmak kolaydır, üstüne gelen bir gövdeyi tam anında karşılamak zordur. Bu yüzden
-    /// hedefin karşı vuruşu normal dövüş sekansındaki gibi kesin değil, <b>seyrek</b>.
+    /// The reason for the distinction is timing (docs/GDD.md §4): hitting a body running past
+    /// you is easy, meeting a body coming at you at exactly the right moment is hard. So the
+    /// target's counter-hit is not certain the way it is in the normal combat sequence, it is
+    /// <b>rare</b>.
     /// </para>
     /// <para>
-    /// Ölçüm bu sayıya bir <b>taban</b> koydu, ve tabanı koyan şey hücum değil kaçış
-    /// kuralı: hedefin topladığı karşı vuruşlar, sayıca azalan tarafın başlıca geliri
-    /// ve sayı üstünlüğünün çığa dönmesini engelleyen şey. Altına inildiğinde
-    /// docs/GDD.md §5'in "çekmek ölümü azaltır" vaadi <b>tersine dönüyor</b> (3v3,
-    /// 20.000 dövüş: 0.25'te çeken %41.5, çekmeyen %40.0). 0.6 bu tabanın kendisi —
-    /// zevkle değil kısıtla seçildi: çeken %39.6, çekmeyen %40.3.
+    /// Measurement put a <b>floor</b> under this number, and what sets that floor is not the
+    /// charge but the escape rule: the counter-hits the target collects are the main income of
+    /// the outnumbered side and the thing that stops a numbers advantage from snowballing.
+    /// Below it, docs/GDD.md §5's promise that "pulling out reduces death" <b>inverts</b>
+    /// (3v3, 20,000 fights: at 0.25 pulling gives 41.5%, not pulling 40.0%). 0.6 is that floor
+    /// itself — chosen by constraint, not by taste: pulling 39.6%, not pulling 40.3%.
     /// </para>
     /// <para>
-    /// Kurguyu taşıyan şey oran değil, karşı vuruşun <b>sonucu</b>: tuttuğunda hücumun
-    /// momentumu söner (bkz. <c>Combatant.ChargeMomentumBroken</c>). Nadirlik yerine
-    /// ağırlık — ve yeni bir ayar sayısı doğurmadan.
+    /// What carries the fiction is not the rate but the counter-hit's <b>consequence</b>: when
+    /// it lands, the charge's momentum dies (see <c>Combatant.ChargeMomentumBroken</c>).
+    /// Weight instead of rarity — and without spawning a new tuning number.
     /// </para>
     /// </remarks>
     public double ChargeTargetCounterChance { get; init; } = 0.6;
 
     /// <summary>
-    /// Hücum bu kadar sürerse hedefe varılamamış sayılır ve hamle boşa gider.
+    /// If a charge takes this long, the target counts as unreached and the move is wasted.
     /// </summary>
     /// <remarks>
-    /// Zaman sınırı olmasaydı hücum, kaçan bir hedefi süresiz kovalayan kalıcı bir hız
-    /// bonusuna dönerdi ve §5'in kaçış dengesini yıkardı.
+    /// Without a time limit the charge would turn into a permanent speed bonus that chases a
+    /// fleeing target indefinitely, and it would wreck §5's escape balance.
     /// </remarks>
     public double ChargeMaxSeconds { get; init; } = 4.0;
 
-    // ---- Saldırı ritmi ----
+    // ---- Attack rhythm ----
 
-    /// <summary>Saldırganlık 0 iken saldırılar arası bekleme.</summary>
+    /// <summary>Wait between attacks at Aggression 0.</summary>
     public double SpacingSecondsAtZeroAggression { get; init; } = 1.4;
 
-    /// <summary>Saldırganlık 100 iken saldırılar arası bekleme.</summary>
+    /// <summary>Wait between attacks at Aggression 100.</summary>
     public double SpacingSecondsAtMaxAggression { get; init; } = 0.30;
 
-    /// <summary>Saldırı süresinin kesilemez (windup) kısmı; kalanı toparlanmadır.</summary>
+    /// <summary>The uninterruptible (windup) part of attack duration; the rest is recovery.</summary>
     public double WindupFraction { get; init; } = 0.6;
 
-    // ---- İsabet ve kaçınma ----
+    // ---- Hit and evasion ----
 
     public double BaseHitChance { get; init; } = 0.55;
     public double AccuracyHitBonus { get; init; } = 0.004;
 
-    /// <summary>Kaçınma 100 iken kaçınma şansı.</summary>
+    /// <summary>Evasion chance at Evasion 100.</summary>
     public double MaxEvasionChance { get; init; } = 0.45;
 
-    /// <summary>Çekilirken savunmasızlık: kaçınma/blok yok, üstüne isabet bonusu.</summary>
+    /// <summary>Vulnerability while pulling out: no evasion or block, plus a hit bonus against him.</summary>
     public double RetreatingHitBonus { get; init; } = 0.30;
 
-    /// <summary>Fırlatmanın taban isabet şansı; yakın dövüşten düşüktür.</summary>
+    /// <summary>Base hit chance of a throw; lower than melee.</summary>
     /// <remarks>
-    /// Menzilli saldırı bedava olmamalı: uzaktan vurabilmenin bedeli, daha sık ıskalamak
-    /// ve daha az hasar. Yoksa herkesin cebine shuriken koymak baskın strateji olurdu.
+    /// A ranged attack must not be free: the price of being able to hit from a distance is
+    /// missing more often and doing less damage. Otherwise putting a shuriken in everyone's
+    /// pocket would be the dominant strategy.
     /// </remarks>
     public double BaseThrowHitChance { get; init; } = 0.40;
 
-    /// <summary>Menzilin tam ucunda isabetin düştüğü oran.</summary>
+    /// <summary>The fraction hit chance falls to at the very edge of range.</summary>
     /// <remarks>
-    /// Menzilin dibinden atmak neredeyse yakın dövüş kadar isabetli, ucundan atmak
-    /// umut atışıdır — mesafenin iki yönlü bir karar olmasını sağlayan şey bu.
+    /// Throwing from point blank is almost as accurate as melee, throwing from the edge is a
+    /// hopeful shot — this is what makes distance a two-way decision.
     /// </remarks>
     public double ThrowFalloffAtMaxRange { get; init; } = 0.55;
 
-    // ---- Hasar ----
+    // ---- Damage ----
 
-    /// <summary>Güç 100 iken silah hasarına uygulanan çarpan.</summary>
+    /// <summary>Multiplier applied to weapon damage at Strength 100.</summary>
     public double StrengthDamageBonusAtMax { get; init; } = 0.8;
 
-    /// <summary>Savunma 100 iken hasarın azaldığı oran.</summary>
+    /// <summary>The fraction damage is reduced by at Defence 100.</summary>
     public double MaxDefenseReduction { get; init; } = 0.45;
 
     public double MinimumDamage { get; init; } = 1;
 
-    // ---- Hedef seçimi ----
+    // ---- Target selection ----
 
-    /// <summary>Hedefe yürünecek her arena biriminin puan cezası.</summary>
+    /// <summary>Score penalty per arena unit that must be walked to the target.</summary>
     /// <remarks>
-    /// Tek başına bırakıldığında kural eski hâline iner: en yakını seç. Diğer ağırlıklar
-    /// bunun karşısında tartılır — 100 birim yol, tam açık bir bölgeye bedeldir.
+    /// Left on its own, the rule collapses to its old form: pick the nearest. The other
+    /// weights are measured against it — 100 units of walking is worth one fully exposed body
+    /// region.
     /// </remarks>
     public double TargetDistanceWeight { get; init; } = 1.0;
 
     /// <summary>
-    /// Yara ve açık bölge kazançlarının sıfıra indiği mesafe (menzil dışı, arena birimi).
+    /// The distance at which wound and exposure gains fall to zero (beyond reach, arena units).
     /// </summary>
     /// <remarks>
-    /// Fırsat penceresi: savaşçı önündeki yaralıyı bitirir, arenanın öbür ucundakine
-    /// yürümez. Sınırsız bırakıldığında ölçüm kuralı zorluk artışına çeviriyordu.
+    /// An opportunity window: the warrior finishes the wounded man in front of him, he does not
+    /// walk to the one at the far end of the arena. Left unbounded, measurement turned the rule
+    /// into a difficulty increase.
     /// </remarks>
     public double TargetOpportunityRange { get; init; } = 200;
 
-    /// <summary>Canı tamamen bitmiş bir düşmanın puan kazancı (oranla ölçeklenir).</summary>
+    /// <summary>Score gain for an enemy whose health is fully gone (scales with the ratio).</summary>
     public double TargetWoundedWeight { get; init; } = 120;
 
-    /// <summary>Kuşamı tamamen dağılmış bir düşmanın puan kazancı (açık bölge oranıyla ölçeklenir).</summary>
+    /// <summary>Score gain for an enemy whose armour is fully broken (scales with the exposed-region ratio).</summary>
     public double TargetExposedWeight { get; init; } = 90;
 
-    /// <summary>Aynı hedefe kilitlenmiş her takım arkadaşının puan cezası.</summary>
+    /// <summary>Score penalty per teammate already locked onto the same target.</summary>
     public double TargetCrowdPenalty { get; init; } = 60;
 
-    /// <summary>Hâlihazırdaki hedefin puan avantajı — yön değiştirmenin bedeli.</summary>
+    /// <summary>Score advantage of the current target — the cost of switching.</summary>
     public double TargetStickiness { get; init; } = 80;
 
-    // ---- Blok ----
+    // ---- Block ----
 
-    /// <summary>Savunma 100 iken menzildeki savaşçının blok duruşuna geçme olasılığı.</summary>
+    /// <summary>Probability that a warrior in reach goes into a block stance at Defence 100.</summary>
     /// <remarks>
     /// <para>
-    /// Kaçınmayla (<see cref="MaxEvasionChance"/>) aynı şekilde kurulur, hücumla
-    /// (<see cref="ChargeChanceAtZeroAggression"/>) aynı şekilde <b>değil</b>: taban yok,
-    /// yani Savunma 0 olan savaşçı hiç bloklamaz. Gerekçe iki katlı — Savunma statı artık
-    /// yalnızca pasif bir hasar azaltımı değil, ekranda görünen bir <b>hamle</b> satın
-    /// alıyor; ve tabansız eşik, kuralı sınamayan testlerin statı sıfırlayarak bloğu
-    /// kapatabilmesini sağlıyor (hücumun aksine).
+    /// It is built the same way as evasion (<see cref="MaxEvasionChance"/>) and <b>not</b> the
+    /// same way as the charge (<see cref="ChargeChanceAtZeroAggression"/>): there is no base,
+    /// so a warrior with Defence 0 never blocks. The rationale is twofold — the Defence stat is
+    /// no longer only a passive damage reduction, it now buys a <b>move</b> visible on screen;
+    /// and a baseless threshold lets tests that are not exercising the rule switch blocking off
+    /// by zeroing the stat (unlike the charge).
     /// </para>
     /// </remarks>
     public double MaxBlockChance { get; init; } = 0.45;
 
     /// <summary>
-    /// Blok duruşunun süresi — bu sürede savaşçı vurmaz.
+    /// Duration of the block stance — the warrior does not strike during it.
     /// </summary>
     /// <remarks>
-    /// Bloğun bedeli budur ve kasıtlı olarak <b>kaçınmadan pahalıdır</b>: kaçınma tek bir
-    /// darbeyi siler ve savaşçıyı saldırı döngüsünde bırakır, blok bir <b>süre</b> satın
-    /// alır. Süre kısa olsaydı blok bedava ikinci bir kaçınma olurdu; uzun olsaydı savunmacı
-    /// savaşçı hiç vurmazdı.
+    /// This is the cost of blocking and it is deliberately <b>more expensive than evasion</b>:
+    /// evasion erases a single blow and leaves the warrior in his attack cycle, a block buys a
+    /// <b>span of time</b>. If the duration were short, a block would be a free second evasion;
+    /// if it were long, a defensive warrior would never strike at all.
     /// </remarks>
     public double BlockSeconds { get; init; } = 0.8;
 
-    /// <summary>Blokla karşılanan darbenin silinen hasar oranı (silahın blok kalitesiyle ölçeklenir).</summary>
+    /// <summary>The damage share erased from a blocked blow (scales with the weapon's block quality).</summary>
     public double BlockDamageReduction { get; init; } = 0.70;
 
-    /// <summary>Blokla karşılanan darbenin uzuv koparma riskinden kalan pay.</summary>
+    /// <summary>The share of dismemberment risk that remains on a blocked blow.</summary>
     /// <remarks>
-    /// Sıfır: bloklanan darbe uzuv koparmaz. Bloğun kaçınmadan ayrıldığı yer burasıdır —
-    /// kaçınma bir zar, blok bir <b>garanti</b>: duruşa geçen savaşçı o darbede kolunu
-    /// kaybetmez. Oyunun imza cezasına karşı Savunma statının verdiği tek kesin söz bu.
+    /// Zero: a blocked blow does not take a limb. This is where blocking parts ways with
+    /// evasion — evasion is a die, a block is a <b>guarantee</b>: the warrior who takes the
+    /// stance does not lose his arm to that blow. It is the only certain promise the Defence
+    /// stat makes against the game's signature punishment.
     /// </remarks>
     public double BlockDismembermentShare { get; init; }
 
-    /// <summary>Blokla karşılanan darbenin sersemletme riskinden kalan pay.</summary>
+    /// <summary>The share of stun risk that remains on a blocked blow.</summary>
     /// <remarks>
-    /// Künt sınıfın bloğa karşı kazancı. Pay yüksek tutuldu çünkü blok, kesiciyi tamamen
-    /// keserken künte de aynı şeyi yapsaydı künt silahın tek karşılığı savunmacı savaşçının
-    /// önünde silinirdi. Duruş çelikten korur, sarsıntıdan korumaz.
+    /// The blunt class's gain against blocking. The share is kept high because if a block cut
+    /// off blunt weapons as completely as it cuts off blades, the blunt weapon's only answer
+    /// would be erased in front of a defensive warrior. The stance protects against steel, not
+    /// against concussion.
     /// </remarks>
     public double BlockStunShare { get; init; } = 0.75;
 
-    /// <summary>Blokla karşılanan her darbenin stamina bedeli.</summary>
+    /// <summary>The stamina cost of every blocked blow.</summary>
     public double BlockStaminaCost { get; init; } = 5;
 
     // ---- Stamina ----
@@ -336,373 +350,379 @@ public sealed record CombatTuning
     public double DodgeStaminaCost { get; init; } = 12;
     public double StaminaRegenPerSecond { get; init; } = 4;
 
-    /// <summary>Bu oranın altında stamina kalınca hasar ve isabet düşer.</summary>
+    /// <summary>Below this fraction of stamina, damage and hit chance drop.</summary>
     public double LowStaminaThreshold { get; init; } = 0.3;
     public double LowStaminaPenalty { get; init; } = 0.65;
 
-    // ---- Zırh ağırlığı ----
+    // ---- Armour weight ----
 
     /// <summary>
-    /// Cezaların tamamının uygulandığı toplam kuşam ağırlığı. Tam ō-yoroi budur;
-    /// daha hafif kuşamlar cezayı oranla alır.
+    /// The total armour weight at which the penalties apply in full. That is a complete
+    /// ō-yoroi; lighter armour takes the penalty proportionally.
     /// </summary>
     /// <remarks>
-    /// Zırhın dövüş içi bedeli yoktu ve ō-yoroi her eksende üstündü: zafer %68 → %96,
-    /// ölüm %41.6 → %16.3, uzuv kaybı %8.6 → %0.4, karşılığında sıfır. Tek fren fiyattı,
-    /// o da ekonomi sayıları gelene kadar yok. Ağırlık, §7'nin vaat ettiği "ağır
-    /// göğüslük, çıplak kollar" kararının sahadaki karşılığıdır.
+    /// Armour had no in-combat cost and ō-yoroi was superior on every axis: victory 68% → 96%,
+    /// death 41.6% → 16.3%, limb loss 8.6% → 0.4%, in exchange for nothing. The only brake was
+    /// price, and that does not exist until the economy numbers arrive. Weight is the field
+    /// equivalent of §7's promised "heavy cuirass, bare arms" decision.
     /// </remarks>
     public double ArmorWeightAtFullPenalty { get; init; } = 16;
 
-    /// <summary>Tam ağırlıkta saldırı döngüsünün uzama oranı.</summary>
+    /// <summary>How much the attack cycle stretches at full weight.</summary>
     /// <remarks>
     /// <para>
-    /// Ağırlığın <b>tek</b> hattı budur, ve öyle olması ölçümle geldi. Denenip düşen iki
-    /// hat: stamina toparlanmasına yazılan ceza <b>hiç</b> ölçülmedi (%90 kesintide zafer
-    /// %92.34 → %92.33), yürüme hızına yazılan ceza ise zaferi kıpırdatmadığı hâlde §5'in
-    /// vaadini sildi — kuşanmış savaşçı arenayı terk edemeden yetişildiği için "Kaç" tuşu
-    /// ölümü düşürmez oldu (çeken %46.35, çekilmeyen %46.44; ceza yokken %44.32'ye karşı
-    /// %46.33). Sebep: dövüş hasar alışverişiyle bitiyor ve iki hat da o alışverişe
-    /// dokunmuyordu. Kılıcın yavaşlaması doğrudan hasar çıktısına iner.
+    /// This is weight's <b>only</b> line of effect, and it being so came out of measurement.
+    /// Two lines were tried and dropped: a penalty written onto stamina regeneration measured
+    /// as <b>nothing</b> (at a 90% cut, victory 92.34% → 92.33%), and a penalty written onto
+    /// walking speed did not budge victory yet erased §5's promise — the armoured warrior was
+    /// caught before he could leave the arena, so the "Flee" key stopped reducing death
+    /// (pulling 46.35%, not pulling 46.44%; against 44.32% vs 46.33% with no penalty). The
+    /// reason: fights end through the damage exchange and neither line touched that exchange.
+    /// The sword slowing down lands directly on damage output.
     /// </para>
     /// <para>
-    /// 0.75 seçildi çünkü takasın döndüğü eşik orası (3v3, 20.000 dövüş,
-    /// <c>losing:0.7</c>): dō-maru dövüşü kazanır (%71.8 zafer, %40.3 ölüm), ō-yoroi
-    /// sakat dönmemeyi alır (uzuv kaybı %0.82'ye karşı %3.38). Üç kademe de bir şeyde
-    /// en iyi olur. 0.60'ta ō-yoroi hâlâ her eksende önde (%76.3 / %37.0), 0.90'da
-    /// ağır kuşam düpedüz kötü (%64.3 zafer).
+    /// 0.75 was chosen because that is the threshold where the trade turns (3v3, 20,000 fights,
+    /// <c>losing:0.7</c>): dō-maru wins the fight (71.8% victory, 40.3% death), ō-yoroi buys not
+    /// coming back maimed (limb loss 0.82% against 3.38%). All three tiers are best at
+    /// something. At 0.60 ō-yoroi is still ahead on every axis (76.3% / 37.0%), at 0.90 heavy
+    /// armour is outright bad (64.3% victory).
     /// </para>
     /// </remarks>
     public double ArmorAttackSlowdownAtFullWeight { get; init; } = 0.75;
 
-    // ---- Sersemletme ----
+    // ---- Stun ----
 
     /// <summary>
-    /// Tek darbenin azami cana oranı bunu aşarsa sersemletme zarı atılır.
+    /// If a single blow's ratio to maximum health exceeds this, the stun die is rolled.
     /// </summary>
     /// <remarks>
-    /// Uzuv kopma eşiğiyle (<see cref="GrievousSeverityThreshold"/>) aynı yerden başlar
-    /// ama ayrı bir düğmedir: ikisi <b>aynı ağır darbenin</b> iki ayrı sonucudur ve
-    /// künt/kesici takasının nereden döndüğü ancak ayrı ayrı taranarak bulunur.
+    /// It starts from the same place as the dismemberment threshold
+    /// (<see cref="GrievousSeverityThreshold"/>) but it is a separate knob: the two are two
+    /// distinct outcomes of <b>the same heavy blow</b>, and where the blunt/blade trade turns
+    /// can only be found by sweeping them separately.
     /// </remarks>
     /// <remarks>
-    /// Tarandı (<c>blade</c>/<c>club</c>, 20.000 dövüş, <c>losing:0.7</c>): 0.20'de iki
-    /// sınıf başa baş (kesici %92.06, künt %92.08 zafer). 0.30'da sersemletme neredeyse
-    /// hiç ateşlenmiyor ve künt yine geriye düşüyor (%89.07'ye karşı %91.55) — kuralın
-    /// çözdüğü sorun aynen geri geliyor. 0.10'da <b>kesici silah da</b> sersemletmeye
-    /// başlıyor (savaşçı başına 0.26 yenen) ve iki taraf birden zayıflıyor.
+    /// Swept (<c>blade</c>/<c>club</c>, 20,000 fights, <c>losing:0.7</c>): at 0.20 the two
+    /// classes are level (blade 92.06%, blunt 92.08% victory). At 0.30 stun almost never fires
+    /// and blunt falls behind again (89.07% against 91.55%) — the problem the rule solved comes
+    /// straight back. At 0.10 <b>blades stun too</b> (0.26 taken per warrior) and both sides
+    /// weaken at once.
     /// </remarks>
     public double StunSeverityThreshold { get; init; } = 0.20;
 
-    /// <summary>Ağır darbede taban sersemletme şansı; silah, bölge ve zırh bunu ölçekler.</summary>
+    /// <summary>Base stun chance on a heavy blow; weapon, body region and armour scale it.</summary>
     /// <remarks>
     /// <para>
-    /// 0.35, takasın <b>tam döndüğü</b> yer: künt silah kopma çarpanında kaybettiğini
-    /// (0.15'e karşı 1.0) burada geri alır. Ölçüldü (aynı savaşçı, aynı düşman, yalnızca
-    /// silah farklı — <c>blade</c>/<c>club</c>, 20.000 dövüş): kural yokken kesici %91.57,
-    /// künt %88.68 zafer alıyordu; künt silah <b>her eksende</b> kötüydü. 0.35'te ikisi
-    /// %92.06 / %92.08. 0.60'ta künt öne geçiyor (%93.83), 1.00'da düpedüz baskın (%95.67).
+    /// 0.35 is where the trade turns <b>exactly</b>: what the blunt weapon loses on the
+    /// dismemberment multiplier (0.15 against 1.0) it takes back here. Measured (same warrior,
+    /// same enemy, only the weapon different — <c>blade</c>/<c>club</c>, 20,000 fights):
+    /// without the rule, blades took 91.57% and blunt 88.68% victory; the blunt weapon was bad
+    /// on <b>every axis</b>. At 0.35 the two sit at 92.06% / 92.08%. At 0.60 blunt goes ahead
+    /// (93.83%), at 1.00 it is outright dominant (95.67%).
     /// </para>
     /// <para>
-    /// Bedeli oyuncu da öder: 3v3'te Oni'nin tetsubo'su artık ısırıyor, oyuncu zaferi
-    /// %69.31'den %65.20'ye iniyor. Mutlak denge Faz 9'un işi; buradaki sayı sınıflar
-    /// arası <b>oranı</b> tutuyor.
+    /// The player pays for it too: in 3v3 the Oni's tetsubo now bites, and player victory drops
+    /// from 69.31% to 65.20%. Absolute balance is phase 9's job; the number here holds the
+    /// <b>ratio</b> between the classes.
     /// </para>
     /// </remarks>
     public double BaseStunChance { get; init; } = 0.35;
 
-    /// <summary>Sersemleyen savaşçının donduğu süre.</summary>
+    /// <summary>How long a stunned warrior is frozen.</summary>
     /// <remarks>
-    /// Sersemletme <b>hamleyi değil savaşçıyı</b> durdurur: yürümez, vurmaz, kaçınmaz.
-    /// Süre saldırı döngüsünden kısa tutulur — uzun süre, sersemleten tarafın bedava
-    /// bir infaz penceresi kazanması demek olurdu.
+    /// A stun stops <b>the warrior, not the move</b>: he does not walk, strike or evade. The
+    /// duration is kept shorter than the attack cycle — a long one would hand the stunning side
+    /// a free execution window.
     /// </remarks>
     /// <remarks>
-    /// Ölçüm şaşırtıcı çıktı: 0.5 ile 0.9 arasında <b>hiçbir fark yok</b> (künt zaferi
-    /// %92.06 / %92.08). Sebep, sersemlemenin bu bantta çoğunlukla savaşçının zaten
-    /// beklemekte olduğu boşluğa denk gelmesi — kuralın ısıran tarafı kaybedilen hamle
-    /// değil, <b>kapanan kaçınma</b>. Diş 1.0 saniyenin üstünde çıkıyor: 1.4'te künt
-    /// %94.16'ya fırlıyor. 0.9, o eşiğin hemen altında ve ekranda okunacak kadar uzun
-    /// olduğu için seçildi.
+    /// The measurement was surprising: between 0.5 and 0.9 there is <b>no difference at all</b>
+    /// (blunt victory 92.06% / 92.08%). The reason is that in this band a stun mostly lands in
+    /// a gap where the warrior was waiting anyway — the biting side of the rule is not the lost
+    /// move but the <b>closed evasion</b>. The teeth appear above 1.0 seconds: at 1.4 blunt
+    /// jumps to 94.16%. 0.9 was chosen because it sits just under that threshold and is long
+    /// enough to read on screen.
     /// </remarks>
     public double StunSeconds { get; init; } = 0.9;
 
-    /// <summary>Kafaya inen darbenin sersemletme şansına uyguladığı çarpan.</summary>
+    /// <summary>The multiplier a blow to the head applies to stun chance.</summary>
     /// <remarks>
-    /// Kabuto'nun dövüş içi karşılığı budur. Bölge ağırlıkları (§7) kafayı zaten nadir
-    /// yapıyor; nadir olanın ağır sonucu olmazsa miğfer yalnızca bir hasar sayısıdır.
+    /// This is the kabuto's in-combat meaning. The region weights (§7) already make the head
+    /// rare; if the rare thing has no heavy consequence, the helmet is only a damage number.
     /// </remarks>
     /// <remarks>
-    /// Ölçüldü (3v3, 20.000 dövüş): çarpan 1.0'da savaşçı başına 0.35, 2.0'da 0.39,
-    /// 3.0'da 0.42 sersemleme. Eksen çalışıyor ama yumuşak — kafa isabet ağırlığı 10
-    /// olduğu için burada çok büyük bir sayı, nadir bir olayı büyütmekten öteye geçmez.
+    /// Measured (3v3, 20,000 fights): at multiplier 1.0 there are 0.35 stuns per warrior, at
+    /// 2.0 there are 0.39, at 3.0 there are 0.42. The axis works but is soft — since the head
+    /// hit weight is 10, a very large number here does no more than magnify a rare event.
     /// </remarks>
     public double StunHeadMultiplier { get; init; } = 2.0;
 
     /// <summary>
-    /// Zırhın uzuv kopmaya karşı direncinin ne kadarı sersemletmeye de sayılır.
+    /// How much of armour's resistance to dismemberment also counts against stun.
     /// </summary>
     /// <remarks>
-    /// Plaka kesiği durdurduğu kadar darbeyi durdurmaz — künt kuvvet zırhın altından
-    /// geçer. Ayrı bir <c>ArmorPiece</c> alanı yerine tek bir pay kullanılmasının sebebi,
-    /// zırhın iki direnci arasındaki farkın <b>ölçülebilir tek sayı</b> kalması.
+    /// Plate does not stop a blow the way it stops a cut — blunt force goes through underneath
+    /// the armour. The reason a single share is used instead of a separate <c>ArmorPiece</c>
+    /// field is to keep the difference between armour's two resistances a <b>single measurable
+    /// number</b>.
     /// </remarks>
     /// <remarks>
-    /// Ölçüldü (3v3, tam kuşam, 20.000 dövüş): pay 0'da savaşçı başına 0.51, 0.6'da 0.33,
-    /// 1.0'da 0.22 sersemleme. 0.6 seçildi çünkü 4-D'nin kademe takası ayakta kalıyor —
-    /// dō-maru her payda daha az ölüm veriyor (%43.78'e karşı %44.15), ō-yoroi uzvu
-    /// koruyor (%0.83'e karşı %3.43). Pay 1.0 zırhı künt silaha karşı fazla iyi yapardı
-    /// ve künt sınıfın tek kazancını en pahalı kuşamın önünde silerdi.
+    /// Measured (3v3, full armour, 20,000 fights): at share 0 there are 0.51 stuns per warrior,
+    /// at 0.6 there are 0.33, at 1.0 there are 0.22. 0.6 was chosen because 4-D's tier trade
+    /// survives — dō-maru gives fewer deaths at every share (43.78% against 44.15%), ō-yoroi
+    /// protects the limb (0.83% against 3.43%). A share of 1.0 would make armour too good
+    /// against blunt weapons and would erase the blunt class's only gain in front of the most
+    /// expensive armour.
     /// </remarks>
     public double ArmorStunResistanceShare { get; init; } = 0.6;
 
-    // ---- Kılıç yakalama ----
+    // ---- Sword catching ----
 
     /// <summary>
-    /// Yakalama aletiyle gelen vuruşu tutma taban şansı; silah, kavrayış ve isabet
-    /// bunu ölçekler.
+    /// Base chance of catching an incoming strike with a catching implement; weapon, grip and
+    /// accuracy scale it.
     /// </summary>
     /// <remarks>
-    /// GDD §4 kalkanı reddederken "aynı mekanik ihtiyacı jitte/sai karşılar" diyordu;
-    /// karşılığı kodda yoktu. Yakalama, savunmanın kaçınmadan sonraki <b>ikinci</b>
-    /// eksenidir: kaçınma darbeyi ıskalatır ve orada biter, yakalama darbeyi durdurur
-    /// <b>ve</b> saldıranı açıkta bırakır.
+    /// While rejecting the shield, GDD §4 said "the jitte/sai fills the same mechanical need";
+    /// there was no equivalent in the code. Catching is defence's <b>second</b> axis after
+    /// evasion: evasion makes the blow miss and it ends there, catching stops the blow <b>and</b>
+    /// leaves the attacker exposed.
     /// </remarks>
     public double BaseCatchChance { get; init; } = 0.24;
 
-    /// <summary>Yakalamanın stamina bedeli. Yalnızca tutan zar için ödenir.</summary>
+    /// <summary>The stamina cost of a catch. Paid only for the die that holds.</summary>
     /// <remarks>
-    /// Kaçınmadan (<see cref="DodgeStaminaCost"/>) pahalıdır: kaçınma savaşçıyı olduğu
-    /// yerden çeker, yakalama karşıdakinin bütün ağırlığını tutar. Pahalı olmasaydı
-    /// yakalama aleti bedava bir ikinci savunma katmanı olurdu.
+    /// It is more expensive than evasion (<see cref="DodgeStaminaCost"/>): evasion pulls the
+    /// warrior out of where he was, a catch holds the other man's entire weight. If it were not
+    /// expensive, a catching implement would be a free second layer of defence.
     /// </remarks>
     public double CatchStaminaCost { get; init; } = 16;
 
-    /// <summary>Silahı yakalanan saldıranın açıkta kaldığı süre.</summary>
+    /// <summary>How long the attacker whose weapon is caught stays exposed.</summary>
     /// <remarks>
-    /// Kural bu süreyle yaşar: yakalama yalnızca hasarı silseydi zayıf bir kaçınma
-    /// olurdu. Asıl karşılık, saldıranın kilitlendiği ve <b>kaçınamadığı</b> penceredir —
-    /// yakalayanın kendi düşük hasarı bu pencerede telafi edilir.
+    /// The rule lives on this duration: if catching only erased damage it would be a weak
+    /// evasion. The real return is the window in which the attacker is bound and <b>cannot
+    /// evade</b> — the catcher's own low damage is made up for in that window.
     /// </remarks>
     public double CatchBindSeconds { get; init; } = 0.6;
 
-    /// <summary>Çift el silahla gelen vuruşun yakalanma şansına uygulanan çarpan.</summary>
+    /// <summary>The multiplier applied to the catch chance of a strike from a two-handed weapon.</summary>
     /// <remarks>
-    /// Yakalamanın kendi cevabı budur — yoksa jitte her eşleşmede doğru seçim olurdu.
-    /// Nodachi'nin kaldıracı tek elle tutulan bir çengeli söker; ağır silah seçen
-    /// savaşçı bunun karşılığını burada alır.
+    /// This is catching's own answer — otherwise the jitte would be the right choice in every
+    /// matchup. A nodachi's leverage tears a one-handed hook off; the warrior who chooses a
+    /// heavy weapon collects his return here.
     /// </remarks>
     public double CatchTwoHandedFactor { get; init; } = 0.75;
 
-    /// <summary>İsabet 100 iken yakalama şansına eklenen oran.</summary>
+    /// <summary>The share added to catch chance at Accuracy 100.</summary>
     /// <remarks>
-    /// Yakalama bir zamanlama işidir, bir refleks işi değil: kaçınma Kaçınma'ya bağlıyken
-    /// yakalama <b>İsabet</b>'e bağlanır. İki savunma ekseni aynı stattan beslenseydi
-    /// yakalama aleti yalnızca kaçınması yüksek savaşçının işine yarar, ekipman kararı
-    /// stat kararının kopyası olurdu.
+    /// Catching is a matter of timing, not of reflex: where evasion hangs on Evasion, catching
+    /// hangs on <b>Accuracy</b>. If both defensive axes fed off the same stat, a catching
+    /// implement would only help a warrior with high evasion, and the equipment decision would
+    /// be a copy of the stat decision.
     /// </remarks>
     public double CatchAccuracyBonusAtMax { get; init; } = 0.5;
 
-    // ---- Silahın elden düşmesi ----
+    // ---- Dropping the weapon ----
 
     /// <summary>
-    /// Zırha inen vuruşta silahın elden düşme taban şansı; silahın elden çıkma eğilimi
-    /// ve vurulan parçanın sertliği bunu ölçekler.
+    /// Base chance of the weapon being knocked out of the hand on a strike that lands on armour;
+    /// the weapon's tendency to slip and the hardness of the piece struck scale it.
     /// </summary>
     /// <remarks>
-    /// Zırhın <b>ikinci</b> cevabıdır. Birincisi hasarı düşürmek; ama ölçüm zehirle
-    /// birlikte zırhın işaretinin ters dönebildiğini gösterdi (docs/GDD.md §7). Düşürme,
-    /// plakayı yalnızca bir hasar sayısı olmaktan çıkarır: çeliğe vuran savaşçı
-    /// <b>silahını</b> harcar. Kırılma değil düşme: dövüş biterken silah geri gelir,
-    /// bedeli kalan dövüştür.
+    /// This is armour's <b>second</b> answer. The first is reducing damage; but measurement
+    /// showed that, together with poison, armour's sign can invert (docs/GDD.md §7). Disarming
+    /// stops the plate from being only a damage number: the warrior who strikes steel spends
+    /// <b>his weapon</b>. Not breakage but dropping: the weapon comes back when the fight ends,
+    /// the cost is the rest of the fight.
     /// </remarks>
     public double BaseDisarmChance { get; init; } = 0.05;
 
     /// <summary>
-    /// Silahı yakalandığında elden çıkma şansı; silahın elden çıkma eğilimi bunu ölçekler.
+    /// The chance of losing the weapon when it is caught; the weapon's tendency to slip scales it.
     /// </summary>
     /// <remarks>
-    /// Jitte'nin tarihsel işi budur: çengel yalnızca tutmaz, kaldıraç yapıp silahı
-    /// avuçtan söker. Zar tek başına sertlikle çarpılmaz (yakalanan namlu zaten
-    /// çengeldedir), yani olay başına zırha vuruştan <b>güçlüdür</b>; karşılığında
-    /// yakalama seyrektir.
+    /// This is the jitte's historical job: the hook does not only hold, it levers the weapon out
+    /// of the palm. The die is not multiplied by hardness on its own (a caught blade is already
+    /// in the hook), so it is <b>stronger per event</b> than a strike on armour; in exchange,
+    /// catching is rare.
     /// </remarks>
     /// <remarks>
-    /// Tarandı (<c>jitte</c>/<c>sai</c>/<c>katana</c>, 20.000 dövüş, <c>losing:0.7</c>).
-    /// Kural 0'da jitte %74.87, katana %75.02 — yakalama aleti eskisi gibi hasarda öder,
-    /// silah düşürmekle hiçbir şey kazanmaz. 0.05'te jitte %78.00 / sai %78.88 ile öne
-    /// geçer ama iki freni de ayakta kalır: nodachi taşıyan düşmanın önünde hâlâ yanlış
-    /// seçim (%35.22'ye karşı katana %37.84) ve zırhlı düşmanın önünde düpedüz kötü
-    /// (%41.38'e karşı %60.32). 0.10'da birinci fren kırılıyor (jitte-heavy %38.27,
-    /// katana %37.84): yakalama aleti ağır silahın da cevabı olur ve
-    /// <c>CatchTwoHandedFactor</c> anlamsızlaşır.
+    /// Swept (<c>jitte</c>/<c>sai</c>/<c>katana</c>, 20,000 fights, <c>losing:0.7</c>). With the
+    /// rule at 0, jitte takes 74.87% and katana 75.02% — the catching implement pays in damage
+    /// as before and gains nothing from disarming. At 0.05 jitte goes ahead with 78.00% / sai
+    /// with 78.88%, but both brakes hold: it is still the wrong choice against an enemy carrying
+    /// a nodachi (35.22% against katana's 37.84%) and outright bad against an armoured enemy
+    /// (41.38% against 60.32%). At 0.10 the first brake breaks (jitte-heavy 38.27%, katana
+    /// 37.84%): the catching implement becomes the answer to the heavy weapon too and
+    /// <c>CatchTwoHandedFactor</c> becomes meaningless.
     /// </remarks>
     public double CatchDisarmChance { get; init; } = 0.05;
 
     /// <summary>
-    /// Vurulan parçanın kopma direncinin ne kadarı <b>sertlik</b> olarak okunur.
+    /// How much of the struck piece's dismemberment resistance is read as <b>hardness</b>.
     /// </summary>
     /// <remarks>
-    /// Sersemletmedeki payla (<see cref="ArmorStunResistanceShare"/>) aynı gerekçe: zırhın
-    /// ayrı bir "sertlik" alanı olsaydı her parça iki yerde bakım isterdi. Çıplak bölgeye
-    /// inen vuruş <b>hiç</b> düşürmez — kavrayışı bozan şey et değil, plakadır.
+    /// Same rationale as the share used for stun (<see cref="ArmorStunResistanceShare"/>): if
+    /// armour had a separate "hardness" field, every piece would need maintenance in two places.
+    /// A strike landing on a bare region <b>never</b> disarms — what breaks the grip is plate,
+    /// not flesh.
     /// </remarks>
     public double ArmorHardnessShare { get; init; } = 1.0;
 
     /// <summary>
-    /// Düşen silahın savaşçıdan ne kadar uzağa savrulduğu.
+    /// How far the dropped weapon is flung from the warrior.
     /// </summary>
     /// <remarks>
-    /// Kuralın gerçek bedeli bu mesafedir. Silah ayağın dibine düşseydi savaşçı onu bir
-    /// sonraki adımda alır ve düşürme hiçbir şeye mal olmazdı; uzağa savrulunca bedel
-    /// <b>yürüyüşe</b> dönüşür — o süre boyunca savaşçının elinde yumruktan başka bir
-    /// şey yok ve yürüdüğü yön dövüşten uzaktır.
+    /// This distance is the rule's real cost. If the weapon fell at his feet the warrior would
+    /// pick it up on the next step and disarming would cost nothing; flung far, the cost turns
+    /// into <b>walking</b> — for that whole span the warrior has nothing but his fists, and the
+    /// direction he walks is away from the fight.
     /// </remarks>
     public double WeaponDropDistance { get; init; } = 220;
 
-    /// <summary>Yerde duran silahın alınabildiği mesafe.</summary>
+    /// <summary>The distance at which a weapon on the ground can be picked up.</summary>
     /// <remarks>
-    /// Silahsız savaşçı silaha <b>yürür</b>; bu yarıçap yalnızca "vardı mı" sorusunun
-    /// cevabıdır. Kişisel alandan (<see cref="PersonalSpace"/>) küçük tutulur ki eğilip
-    /// alma anı savaşçının durduğu yerle aynı yer olsun.
+    /// An unarmed warrior <b>walks</b> to the weapon; this radius only answers the question "did
+    /// he get there?". It is kept smaller than personal space (<see cref="PersonalSpace"/>) so
+    /// that the moment of bending down is the same place the warrior is standing.
     /// </remarks>
     public double WeaponPickupRadius { get; init; } = 60;
 
     /// <summary>
-    /// Zırh parçasının dayanıklılık havuzunun ölçeği. 0 = zırh hiç yıpranmaz.
+    /// The scale of an armour piece's durability pool. 0 = armour never wears.
     /// </summary>
     /// <remarks>
-    /// Parçaların kendi dayanıklılığı <see cref="Model.ArmorPiece.Durability"/>'de; bu
-    /// çarpan hepsini birden ölçekler, yani denge çalışmasının tek düğmesi olur.
+    /// The pieces' own durability lives in <see cref="Model.ArmorPiece.Durability"/>; this
+    /// multiplier scales all of them at once, so it becomes balance work's single knob.
     /// </remarks>
     public double ArmorDurabilityScale { get; init; } = 1.0;
 
-    // ---- Zehir ----
+    // ---- Poison ----
 
     /// <summary>
-    /// Zehrin bir tikte verdiği hasar (doz 1 iken). Zırh ve Savunma bunu <b>azaltmaz</b>.
+    /// Damage poison deals in one tick (at dose 1). Armour and Defence do <b>not</b> reduce it.
     /// </summary>
     /// <remarks>
-    /// Kuralın tamamı buradan asılır: zehir, hasar azaltımının etrafından dolaşan tek
-    /// yoldur. Plaka kesiği durdurur, künt kuvvetin bir payını durdurur
-    /// (<see cref="ArmorStunResistanceShare"/>), zehri hiç durdurmaz — çünkü zehir zırha
-    /// değil kana işler. Zehirli silahın kendi hasarının düşük olması bunun bedelidir.
+    /// The whole rule hangs off this: poison is the only route around damage reduction. Plate
+    /// stops a cut, stops a share of blunt force (<see cref="ArmorStunResistanceShare"/>), and
+    /// does not stop poison at all — because poison works on blood, not on armour. The poisoned
+    /// weapon's own low damage is the price of that.
     /// </remarks>
     /// <remarks>
-    /// Ölçüldü (<c>poison</c>/<c>katana</c>, 20.000 dövüş, <c>losing:0.7</c>): 2.5'te
-    /// zehirli bıçak açık dövüşte katana ile başa baş (%72.19'a karşı %73.09) ama zırhlı
-    /// düşmanın önünde öne geçiyor (%77.19'a karşı %68.62). 1.2'de zehir yalnızca zayıf
-    /// bir silahı kurtarıyor, zırhı hiç aşmıyor (%74.00 / %55.99); 3.0'da her iki eksende
-    /// de baskın (%79.25 / %88.47).
+    /// Measured (<c>poison</c>/<c>katana</c>, 20,000 fights, <c>losing:0.7</c>): at 2.5 the
+    /// poisoned knife is level with the katana in an open fight (72.19% against 73.09%) but goes
+    /// ahead against an armoured enemy (77.19% against 68.62%). At 1.2 poison only rescues a
+    /// weak weapon and never gets through armour (74.00% / 55.99%); at 3.0 it is dominant on
+    /// both axes (79.25% / 88.47%).
     /// </remarks>
     public double PoisonDamagePerTick { get; init; } = 2.5;
 
-    /// <summary>Zehrin hasar verme aralığı.</summary>
+    /// <summary>The interval at which poison deals damage.</summary>
     /// <remarks>
-    /// Tick süresinden (<see cref="TickSeconds"/>) bağımsız tutulur: zehir simülasyon
-    /// adımına bağlansaydı 20 Hz'lik çözünürlük hasarı da yirmiye katlardı.
+    /// It is kept independent of the tick duration (<see cref="TickSeconds"/>): if poison were
+    /// tied to the simulation step, the 20 Hz resolution would multiply its damage by twenty too.
     /// </remarks>
     /// <remarks>
-    /// Aralık tarafsız bir düğme değil, doğrudan hasar hızıdır: aynı doz 0.5 sn'de
-    /// %94.93, 1 sn'de %72.19, 2 sn'de %30.40 zafer veriyor. 1 sn seçildi çünkü ekranda
-    /// tek tek okunabilen bir ritim, ve dozun ömrü (<see cref="PoisonSeconds"/>) buna
-    /// bölününce zehir <b>sayılabilir</b> bir şey oluyor: altı vuruş.
+    /// The interval is not a neutral knob, it is damage rate directly: the same dose gives 94.93%
+    /// victory at 0.5 s, 72.19% at 1 s and 30.40% at 2 s. 1 s was chosen because it is a rhythm
+    /// that can be read one tick at a time on screen, and because dividing the dose's lifetime
+    /// (<see cref="PoisonSeconds"/>) by it makes poison something <b>countable</b>: six ticks.
     /// </remarks>
     public double PoisonTickSeconds { get; init; } = 1.0;
 
-    /// <summary>Bir dozun ömrü. Her yeni vuruş süreyi baştan kurar.</summary>
+    /// <summary>The lifetime of one dose. Every new strike restarts the timer.</summary>
     /// <remarks>
-    /// Ölçümde 6 saniyeden sonrası neredeyse hiçbir şey yapmıyor: 3 sn'de %52.90,
-    /// 4.5'te %68.83, 6'da %72.19, 9'da %73.11. Sebep, zehirli silahın hızlı vurup
-    /// süreyi sürekli yenilemesi — uzun ömür yalnızca <b>son</b> vuruştan sonrasını
-    /// uzatır, o da çoğu dövüşte bitmiş dövüştür.
+    /// In measurement, anything past 6 seconds does almost nothing: 52.90% at 3 s, 68.83% at 4.5,
+    /// 72.19% at 6, 73.11% at 9. The reason is that the poisoned weapon strikes fast and keeps
+    /// refreshing the timer — a long lifetime only extends what happens after the <b>last</b>
+    /// strike, and in most fights that is a fight already over.
     /// </remarks>
     public double PoisonSeconds { get; init; } = 6.0;
 
-    /// <summary>Bir savaşçıda birikebilecek azami doz.</summary>
+    /// <summary>The maximum dose that can accumulate on one warrior.</summary>
     /// <remarks>
-    /// Tavan olmasaydı zehirli silah kendi kendini besleyen bir sarmal olurdu: her vuruş
-    /// dozu büyütür, büyüyen doz düşmanı yavaşlatmadan öldürür ve silahın düşük hasarı
-    /// hiçbir şeyin bedeli olmaktan çıkardı.
+    /// Without a cap the poisoned weapon would be a self-feeding spiral: every strike grows the
+    /// dose, the growing dose kills the enemy without slowing him, and the weapon's low damage
+    /// would stop being the price of anything.
     /// </remarks>
     /// <remarks>
-    /// Asıl denge düğmesi budur: 1'de zehirli bıçak düpedüz kötü (%16.71), 2'de hâlâ
-    /// geride (%50.92), 3'te katana ile başa baş (%72.19), 5'te baskın (%82.25). Tavan
-    /// aynı zamanda kuralın <b>üst sınırını</b> yazar — üç vuruşluk zehir taşıyan bir
-    /// savaşçının dördüncü vuruşu artık zehir için değil, hasar için atılır.
+    /// This is the real balance knob: at 1 the poisoned knife is outright bad (16.71%), at 2 it is
+    /// still behind (50.92%), at 3 it is level with the katana (72.19%), at 5 it is dominant
+    /// (82.25%). The cap also writes the rule's <b>upper bound</b> — the fourth strike of a warrior
+    /// carrying three strikes' worth of poison is thrown for damage, not for poison any more.
     /// </remarks>
     public double PoisonMaxDose { get; init; } = 3.0;
 
-    // ---- Uzuv kaybı ----
+    // ---- Limb loss ----
 
     /// <summary>
-    /// Tek darbenin azami cana oranı bunu aşarsa "ağır darbe" sayılır ve uzuv
-    /// kopma zarı atılır. Düşük can ÖN KOŞUL DEĞİL — ilk darbede de olabilir
-    /// (bkz. docs/GDD.md §7).
+    /// If a single blow's ratio to maximum health exceeds this, it counts as a "heavy blow" and
+    /// the dismemberment die is rolled. Low health is NOT A PRECONDITION — it can happen on the
+    /// first blow too (see docs/GDD.md §7).
     /// </summary>
     /// <remarks>
-    /// 0.28'den 0.20'ye indirildi: uzuv kaybı oyunun imza mekaniği ama ölçümde
-    /// binde birkaça düşmüştü. Eşik silah hasarlarının kümelendiği yerin hemen
-    /// altına çekildi — 0.24 ile 0.28 arasında hiçbir fark yok, çünkü aradaki
-    /// aralığa düşen darbe yok.
+    /// Lowered from 0.28 to 0.20: limb loss is the game's signature mechanic but it had dropped to
+    /// a few per thousand in measurement. The threshold was pulled just under where weapon damage
+    /// clusters — there is no difference at all between 0.24 and 0.28, because no blow falls in the
+    /// interval between them.
     /// </remarks>
     public double GrievousSeverityThreshold { get; init; } = 0.20;
 
-    /// <summary>Ağır darbede taban uzuv kopma şansı; silah ve zırh bunu ölçekler.</summary>
+    /// <summary>Base dismemberment chance on a heavy blow; weapon and armour scale it.</summary>
     /// <remarks>
-    /// 0.35'ten 0.05'e indirildi. 0.35, kopmanın <b>yalnızca kaçış penceresinde</b>
-    /// ateşlendiği eski sonuç ağacına göre ayarlanmıştı; ağaç ikiye ayrılıp öldürmeyen
-    /// ağır darbe de koparmaya başlayınca (docs/GDD.md §7) aynı sayı uzuv kaybını
-    /// %45'e çıkardı. Tarandı (3v3, 10.000 dövüş, <c>losing:0.7</c>) — ölüm ve zafer
-    /// oranları bu knobla kayda değer biçimde oynamıyor, yalnızca uzuv kaybı ölçekleniyor.
+    /// Lowered from 0.35 to 0.05. 0.35 was tuned against the old outcome tree, in which
+    /// dismemberment fired <b>only in the escape window</b>; once the tree split in two and a heavy
+    /// blow that does not kill also started taking limbs (docs/GDD.md §7), the same number pushed
+    /// limb loss to 45%. Swept (3v3, 10,000 fights, <c>losing:0.7</c>) — death and victory rates do
+    /// not move appreciably with this knob, only limb loss scales.
     /// </remarks>
     public double BaseDismembermentChance { get; init; } = 0.05;
 
     /// <summary>
-    /// Öldürücü darbeden "Kaç" tuşuyla kurtulan savaşçının kalan canı.
+    /// The health left to a warrior saved from a killing blow by the "Flee" key.
     /// </summary>
     /// <remarks>
-    /// Tuş ölümü uzuv kaybına çevirir (docs/GDD.md §7) ama sağlık vermez: savaşçı
-    /// kaçışın geri kalanını bir sonraki darbede ölecek durumda geçirir. Kurtuluş
-    /// garanti değil, sadece bir şans.
+    /// The key turns death into limb loss (docs/GDD.md §7) but it does not grant health: the warrior
+    /// spends the rest of the escape one blow away from dying. Survival is not guaranteed, only a
+    /// chance.
     /// </remarks>
     public double SurvivalHealthAfterIntervention { get; init; } = 1;
 
-    // ---- İsabet bölgesi ----
+    // ---- Hit region ----
 
     /// <summary>
-    /// Darbenin nereye ineceğinin ağırlıkları. Birbirine göre okunur, toplamları 1
-    /// olmak zorunda değil.
+    /// The weights for where a blow lands. They are read relative to each other, they do not have
+    /// to sum to 1.
     /// </summary>
     /// <remarks>
-    /// Gövde kasıtlı olarak baskın: bölgeler eşit olsaydı gövde zırhı, dört zırh
-    /// parçasından yalnızca biri olduğu için değersizleşirdi.
+    /// The torso is deliberately dominant: if the regions were equal, torso armour would be
+    /// worthless, since it is only one of four armour pieces.
     /// </remarks>
     public double TorsoHitWeight { get; init; } = 45;
 
-    /// <summary>Ağırlık <b>bacak başına</b>dır; iki bacak birlikte 25 eder.</summary>
+    /// <summary>The weight is <b>per leg</b>; two legs together make 25.</summary>
     /// <inheritdoc cref="TorsoHitWeight"/>
     public double LegHitWeight { get; init; } = 12.5;
 
-    /// <summary>Ağırlık <b>kol başına</b>dır; iki kol birlikte 20 eder.</summary>
+    /// <summary>The weight is <b>per arm</b>; two arms together make 20.</summary>
     /// <inheritdoc cref="TorsoHitWeight"/>
     public double ArmHitWeight { get; init; } = 10;
 
     /// <inheritdoc cref="TorsoHitWeight"/>
     public double HeadHitWeight { get; init; } = 10;
 
-    // ---- Çekilme ----
+    // ---- Pulling out ----
 
-    /// <summary>Kaçış komutundan arenadan çıkışa kadar geçen savunmasız süre.</summary>
+    /// <summary>The defenceless span between the flee command and leaving the arena.</summary>
     public double RetreatSeconds { get; init; } = 1.2;
 
     /// <summary>
-    /// Arenayı terk ederken kaza yarası alma şansı.
+    /// The chance of taking an accidental wound while leaving the arena.
     /// </summary>
     /// <remarks>
-    /// Kaçışın soyut bedeli: burkulan ayak, dönüş yolunda kanayan yara. Öldürmez
-    /// (bkz. <c>Battle.RollEscapeMishap</c>), yalnızca "bedelsiz çıkış" diye bir şey
-    /// kalmasın diye vardır — temastan önce basılan tuş bunsuz %100 temiz çıkış veriyordu.
+    /// The abstract cost of escape: a twisted ankle, a wound bleeding on the way back. It does not
+    /// kill (see <c>Battle.RollEscapeMishap</c>), it exists only so that there is no such thing as
+    /// a "free exit" — without it, the key pressed before contact gave a 100% clean exit.
     /// </remarks>
     public double EscapeMishapChance { get; init; } = 0.30;
 

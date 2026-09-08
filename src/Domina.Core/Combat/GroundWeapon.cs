@@ -3,24 +3,24 @@ using Domina.Core.Model;
 namespace Domina.Core.Combat;
 
 /// <summary>
-/// Elden düşüp arenada kalan bir silah.
+/// A weapon that fell out of a hand and stayed in the arena.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Düşen silah yok olmaz: <b>arenada bir nokta</b> olur ve silahsız kalan herkes —
-/// düşüren, takım arkadaşı ya da düşman — onu alabilir. Kırılma yerine düşme
-/// seçilmesinin asıl karşılığı bu; kaybedilen silah kayıp değil, yerde duran ve
-/// uğruna yürünmesi gereken bir şey.
+/// A dropped weapon is not destroyed: it becomes <b>a point in the arena</b> and anyone left unarmed —
+/// the one who dropped it, a teammate or an enemy — can pick it up. This is the real return of choosing
+/// dropping over breaking; a lost weapon is not a loss but something lying on the ground that has to be
+/// walked to.
 /// </para>
 /// <para>
-/// Liste düşme sırasını korur: aynı tick'te iki savaşçı aynı silaha varırsa hangisinin
-/// aldığı sabit olmalı, yoksa aynı seed aynı dövüşü vermez.
+/// The list preserves the order of the drops: if two warriors reach the same weapon on the same tick,
+/// which one takes it must be fixed, or the same seed does not give the same fight.
 /// </para>
 /// </remarks>
 internal sealed class GroundWeapon(Weapon weapon, ArenaPoint position)
 {
     public Weapon Weapon { get; } = weapon;
 
-    /// <summary>Düştüğü yer. Silah yerde durur, sürüklenmez.</summary>
+    /// <summary>Where it fell. The weapon lies there, it is not dragged.</summary>
     public ArenaPoint Position { get; } = position;
 }

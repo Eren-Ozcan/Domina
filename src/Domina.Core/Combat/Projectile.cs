@@ -7,13 +7,13 @@ namespace Domina.Core.Combat;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Mermi atıldığı anda çözülmez; <see cref="SecondsToImpact"/> sıfırlanana kadar uçar.
-/// Bunun bedeli biraz durum tutmak, karşılığı ise şu: hedef uçuş sırasında kaçabilir,
-/// ölebilir ya da arenayı terk edebilir. "Attı = vurdu" olsaydı mesafenin bir anlamı
-/// kalmazdı — fırlatmanın var oluş sebebi tam olarak mesafeyi bir tehdide çevirmek.
+/// A projectile is not resolved the moment it is thrown; it flies until <see cref="SecondsToImpact"/>
+/// reaches zero. The price is holding a little state, the return is this: the target can flee, die or
+/// leave the arena during the flight. Were it "thrown = hit", distance would mean nothing — and turning
+/// distance into a threat is exactly why throwing exists.
 /// </para>
 /// <para>
-/// <see cref="Origin"/> yalnızca görselleştirme içindir; çözümleme yalnızca zamana bakar.
+/// <see cref="Origin"/> is for the visualisation only; the resolution looks at time alone.
 /// </para>
 /// </remarks>
 internal sealed class Projectile(

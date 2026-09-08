@@ -1,17 +1,17 @@
-﻿namespace Domina.Core.Combat;
+namespace Domina.Core.Combat;
 
 /// <summary>
-/// Arena düzlemindeki bir nokta. <b>X</b> hat boyunca (soldan sağa), <b>Y</b> derinlik.
+/// A point on the arena plane. <b>X</b> along the line (left to right), <b>Y</b> depth.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Çekirdek motorsuz olmak zorunda olduğu için Godot'un <c>Vector2</c>'si kullanılamaz.
-/// Birim keyfîdir ama sahnenin ölçeğiyle aynıdır: arena 1920 birim geniş, savaşçı
+/// Because the core has to be engine-free, Godot's <c>Vector2</c> cannot be used. The unit is arbitrary
+/// but matches the scene's scale: the arena is 1920 units wide, a warrior
 /// 256 birim boyunda.
 /// </para>
 /// <para>
-/// Derinlik ekranda dikey kayma + hafif ölçek + çizim sırası olarak gösterilir (brawler
-/// sahnelemesi). Yani düzlem gerçek, kamera hâlâ yandan bakıyor.
+/// Depth is shown on screen as a vertical offset + a slight scale + the draw order (brawler staging).
+/// So the plane is real while the camera still looks from the side.
 /// </para>
 /// </remarks>
 public readonly record struct ArenaPoint(double X, double Y)
@@ -25,7 +25,7 @@ public readonly record struct ArenaPoint(double X, double Y)
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    /// <summary>Karekök almadan mesafe karşılaştırmak için.</summary>
+    /// <summary>For comparing distances without taking a square root.</summary>
     public double SquaredDistanceTo(ArenaPoint other)
     {
         double dx = other.X - X;
@@ -33,7 +33,7 @@ public readonly record struct ArenaPoint(double X, double Y)
         return (dx * dx) + (dy * dy);
     }
 
-    /// <summary>Hedefe doğru en fazla <paramref name="distance"/> birim ilerler.</summary>
+    /// <summary>Advances at most <paramref name="distance"/> units toward the target.</summary>
     public ArenaPoint MovedToward(ArenaPoint target, double distance)
     {
         double dx = target.X - X;
@@ -54,11 +54,11 @@ public readonly record struct ArenaPoint(double X, double Y)
         return new ArenaPoint(X + (dx * scale), Y + (dy * scale));
     }
 
-    /// <summary>Hedeften uzağa doğru ilerler.</summary>
+    /// <summary>Advances away from the target.</summary>
     /// <remarks>
-    /// Mesafe <b>her zaman</b> istenen kadardır: aradaki uzaklıkla sınırlanmaz. Yön
-    /// birim vektöre indirgenmeden hesaplansaydı, kaynağa yakınken atılan adım kısalır
-    /// ve "şu kadar uzağa" isteği sessizce kırpılırdı.
+    /// The distance is <b>always</b> what was asked for: it is not bounded by the gap between them. If
+    /// the direction were computed without being reduced to a unit vector, a step taken near the source
+    /// would shorten and the request "this far away" would be silently clipped.
     /// </remarks>
     public ArenaPoint MovedAwayFrom(ArenaPoint source, double distance)
     {

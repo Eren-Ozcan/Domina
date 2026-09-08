@@ -1,10 +1,10 @@
-﻿using Domina.Core.Model;
+using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
-/// <summary>Bir dövüşün girdileri.</summary>
-/// <param name="PlayerSide">Dojo'nun sefere gönderdiği 1-3 savaşçı.</param>
-/// <param name="EnemySide">Karşıdaki yokai(ler).</param>
+/// <summary>A fight's inputs.</summary>
+/// <param name="PlayerSide">The 1-3 warriors the dojo sent on the expedition.</param>
+/// <param name="EnemySide">The yokai on the other side.</param>
 public sealed record BattleSetup(
     IReadOnlyList<Warrior> PlayerSide,
     IReadOnlyList<Warrior> EnemySide)
@@ -12,20 +12,20 @@ public sealed record BattleSetup(
     public CombatTuning Tuning { get; init; } = CombatTuning.Default;
 
     /// <summary>
-    /// Olay akışı biriktirilsin mi? Görselleştirme için gerekli; toplu simülasyonda
-    /// (on binlerce dövüş) kapatılırsa gereksiz ayırma yapılmaz.
+    /// Should the event stream be collected? Needed for visualisation; switched off in batch simulation
+    /// (tens of thousands of fights) it avoids needless allocation.
     /// </summary>
     public bool CollectEvents { get; init; } = true;
 
     /// <summary>
-    /// Kaçış kararını veren politika. Oyunda oyuncunun tuşu
-    /// (<see cref="Battle.CommandRetreat"/>) kullanılır; simülasyonda bir politika
-    /// verilir. <c>null</c> ise kimse kendiliğinden çekilmez.
+    /// The policy that makes the retreat decision. In the game the player's key
+    /// (<see cref="Battle.CommandRetreat"/>) is used; in simulation a policy is supplied. <c>null</c>
+    /// means nobody pulls out on his own.
     /// </summary>
     public IRetreatPolicy? RetreatPolicy { get; init; }
 }
 
-/// <summary>Bir dövüşün sonucu.</summary>
+/// <summary>A fight's result.</summary>
 public sealed record BattleResult(
     BattleOutcome Outcome,
     double ElapsedSeconds,
@@ -35,7 +35,7 @@ public sealed record BattleResult(
         Summaries.First(s => s.Id == id);
 }
 
-/// <summary>Tek bir savaşçının dövüşten çıkardığı bilanço.</summary>
+/// <summary>The books a single warrior came out of the fight with.</summary>
 public sealed record WarriorBattleSummary(
     WarriorId Id,
     string Name,
@@ -51,133 +51,133 @@ public sealed record WarriorBattleSummary(
     bool LostLimb)
 {
     /// <summary>
-    /// Bu dövüşte kaybedilen uzuvlar. Meta katman bunları kalıcı sakatlığa çevirir.
+    /// The limbs lost in this fight. The meta layer turns them into permanent disabilities.
     /// </summary>
     /// <remarks>
-    /// Birden fazla olabilir: kuşatılmış savaşçı kaçarken menzilindeki her düşmandan bir
-    /// fırsat saldırısı yer (§5) ve her biri ayrı bir uzva mal olabilir.
+    /// There can be more than one: a surrounded warrior takes an opportunity attack from every enemy in
+    /// reach while fleeing (§5) and each can cost a separate limb.
     /// </remarks>
     public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
 
-    /// <summary>Kaç darbe blokla karşılandı.</summary>
+    /// <summary>How many blows were met with a block.</summary>
     /// <remarks>
-    /// Kaçınma sayacından ayrı durur: kaçınma darbeyi siler, blok darbeyi <b>alır</b>.
-    /// Savunma statının karşılığı ancak bu ikisi ayrı sayıldığında ölçülebilir.
+    /// It stands apart from the evasion counter: evasion erases the blow, a block <b>takes</b> it. The
+    /// Defence stat's return can only be measured when the two are counted separately.
     /// </remarks>
     public int BlocksPerformed { get; init; }
 
-    /// <summary>Bu dövüşte kaç kez sersemleyip donuldu.</summary>
+    /// <summary>How many times he was stunned and frozen in this fight.</summary>
     /// <remarks>
-    /// Künt silahın karşılığı ancak bununla ölçülür: kesici uzuv kopmasıyla ödüllenir,
-    /// künt bu sayaçla (docs/GDD.md §7).
+    /// The blunt weapon's return can only be measured with this: a cutting weapon is rewarded with limb
+    /// loss, a blunt one with this counter (docs/GDD.md §7).
     /// </remarks>
     public int TimesStunned { get; init; }
 
-    /// <summary>Kaç düşman sersemletildi.</summary>
+    /// <summary>How many enemies were stunned.</summary>
     public int StunsInflicted { get; init; }
 
-    /// <summary>Öldüyse ölümün sebebi; hayatta kaldıysa null.</summary>
+    /// <summary>The cause of death if he died; null if he survived.</summary>
     /// <remarks>
-    /// Zehirle ölüm ile darbeyle ölüm aynı kutuya konsaydı zehrin ölçümü yapılamazdı:
-    /// zehirli silahın iddiası "daha çok öldürüyor" değil, <b>başka türlü</b> öldürüyor.
+    /// If death by poison and death by a blow were put in the same box, poison could not be measured:
+    /// the poisoned weapon's claim is not "it kills more" but that it kills <b>differently</b>.
     /// </remarks>
     public DeathCause? DeathCause { get; init; }
 
-    /// <summary>Kaç kez zehirli vuruş yendi.</summary>
+    /// <summary>How many poisoned strikes were taken.</summary>
     /// <remarks>
-    /// Zehrin karşılığı iki sayıda birden okunur: bu sayaç silahın <b>temas</b> sıklığını,
-    /// <see cref="PoisonDamageTaken"/> ise dozun gerçekten ne kadar iş yaptığını söyler
+    /// Poison's return is read from two numbers at once: this counter says how often the weapon
+    /// <b>connects</b>, while <see cref="PoisonDamageTaken"/> says how much work the dose really did
     /// (docs/GDD.md §7).
     /// </remarks>
     public int TimesPoisoned { get; init; }
 
-    /// <summary>Kaç düşman zehirlendi.</summary>
+    /// <summary>How many enemies were poisoned.</summary>
     public int PoisonsInflicted { get; init; }
 
-    /// <summary>Zehirden yenen toplam hasar — zırhın hiç azaltmadığı tek hasar.</summary>
+    /// <summary>The total damage taken from poison — the only damage armour never reduces.</summary>
     public double PoisonDamageTaken { get; init; }
 
     /// <summary>Zehirle verilen toplam hasar.</summary>
     public double PoisonDamageDealt { get; init; }
 
-    /// <summary>Kaç kez gelen silah yakalandı.</summary>
+    /// <summary>How many incoming weapons were caught.</summary>
     /// <remarks>
-    /// Jitte/sai'nin karşılığı ancak bununla ölçülür: yakalama aleti hasarda kaybeder,
-    /// kazandığını bu sayaçta ve düşmanın kilitli kaldığı süredeki bedava vuruşlarda
-    /// geri alır (docs/GDD.md §7).
+    /// The jitte/sai's return can only be measured with this: the catching implement loses on damage and
+    /// takes its gain back in this counter and in the free hits during the window the enemy stays bound
+    /// (docs/GDD.md §7).
     /// </remarks>
     public int CatchesMade { get; init; }
 
-    /// <summary>Kaç kez kendi silahı yakalanıp açıkta kalındı.</summary>
+    /// <summary>How many times his own weapon was caught and left him exposed.</summary>
     public int TimesCaught { get; init; }
 
-    /// <summary>Silahı bu dövüşte elinden düştü mü?</summary>
+    /// <summary>Did his weapon fall out of his hand in this fight?</summary>
     /// <remarks>
-    /// Düşürmenin karşılığı ne hasarda ne uzuv kaybında görünür: silahını kaybeden
-    /// savaşçı dövüşü yumrukla bitirir — menzili, hasarı ve yakalama hakkı birden gider
+    /// Disarming's return shows up in neither damage nor limb loss: a warrior who loses his weapon
+    /// finishes the fight with his fists — his reach, his damage and his right to catch all go at once
     /// (docs/GDD.md §7).
     /// </remarks>
     public bool Disarmed { get; init; }
 
-    /// <summary>Bu dövüşte kuşamın emdiği hasar — dojo bunu kalıcı yıpranmaya ekler.</summary>
+    /// <summary>The damage the kit absorbed in this fight — the dojo adds it to the permanent wear.</summary>
     /// <remarks>
-    /// Zırh tek bir dövüşte tükenmez; seferler boyunca yıpranır. Kuşamın kaç dövüş
-    /// dayandığı ancak bu sayı ile parçanın dayanıklılığı yan yana konunca bilinir.
+    /// Armour is not used up in a single fight; it wears across expeditions. How many fights a kit lasts
+    /// is only known when this number is put next to the piece's durability.
     /// </remarks>
     public ArmorWearSet ArmorWear { get; init; }
 
-    /// <summary>Bu dövüşte dağılan zırh parçaları — <b>kalıcı</b> kayıp.</summary>
+    /// <summary>The armour pieces broken in this fight — a <b>permanent</b> loss.</summary>
     /// <remarks>
-    /// Uzuv kaybıyla aynı yoldan raporlanır (<see cref="LostParts"/>): çekirdek kalıcı
-    /// hale dokunmaz, ne olduğunu söyler. Zırhın gerçek fiyatı ancak burada görünür —
-    /// kazanılan dövüş bile kuşamdan bir parça götürebilir.
+    /// It is reported the same way as limb loss (<see cref="LostParts"/>): the core does not touch the
+    /// persistent state, it says what happened. Armour's real price only shows here — even a won fight
+    /// can take a piece off the kit.
     /// </remarks>
     public HitLocationSet DestroyedArmor { get; init; } = HitLocationSet.None;
 
-    /// <summary>Bu dövüşte kaç kez silah elden düştü.</summary>
+    /// <summary>How many times a weapon fell out of the hand in this fight.</summary>
     /// <remarks>
-    /// <see cref="Disarmed"/> dövüşün <b>sonundaki</b> hali söyler; kuralın kaç kez
-    /// ısırdığını yalnızca bu sayaç söyler.
+    /// <see cref="Disarmed"/> says the state at the <b>end</b> of the fight; only this counter says how
+    /// many times the rule bit.
     /// </remarks>
     public int TimesDisarmed { get; init; }
 
-    /// <summary>Kaç kez yerden silah alındı.</summary>
+    /// <summary>How many weapons were picked up from the ground.</summary>
     /// <remarks>
-    /// <see cref="Disarmed"/> ile birlikte okunur: biri bedelin doğduğunu, bu sayaç
-    /// bedelin kapanıp kapanmadığını söyler.
+    /// It is read together with <see cref="Disarmed"/>: one says the price was incurred, this counter
+    /// says whether it was settled.
     /// </remarks>
     public int WeaponsPickedUp { get; init; }
 
-    /// <summary>Kaç düşmanın silahı düşürüldü — zırhın ve yakalama aletinin sayacı.</summary>
+    /// <summary>How many enemy weapons were knocked out — the counter for armour and the catching implement.</summary>
     public int DisarmsInflicted { get; init; }
 
-    /// <summary>Bu dövüşte kaç kez hücuma kalkıldı.</summary>
+    /// <summary>How many charges were launched in this fight.</summary>
     /// <remarks>
-    /// Hücumun sayıları ancak bu iki sayaçla ölçülebilir: eşik ve olasılık hücumun ne
-    /// sıklıkla <b>başladığını</b>, varış oranı ise başlayanın karşılığının alınıp
-    /// alınmadığını söyler (docs/GDD.md Açık Karar 11).
+    /// The charge's numbers can only be measured with these two counters: the threshold and the
+    /// probability say how often a charge <b>starts</b>, while the arrival rate says whether what was
+    /// started collected its return (docs/GDD.md Open Decision 11).
     /// </remarks>
     public int ChargesStarted { get; init; }
 
-    /// <summary>Başlayan hücumların kaçı hedefe vardı.</summary>
+    /// <summary>How many of the charges launched reached the target.</summary>
     public int ChargesConnected { get; init; }
 
-    /// <summary>Hücumları sırasında yediği bedava vuruş — hücumun §4'te vaat edilen bedeli.</summary>
+    /// <summary>The free hits taken during his charges — the charge's price promised in §4.</summary>
     public int ChargeOpportunitiesTaken { get; init; }
 
-    /// <summary>Birikme aşamasında isabet yiyip dağılan hücum sayısı.</summary>
+    /// <summary>The number of charges scattered by a hit during the windup.</summary>
     public int ChargesBroken { get; init; }
 
-    /// <summary>Hücum kalkış anlarının toplamı — ortalama kalkış anını verir.</summary>
+    /// <summary>The sum of the charge launch moments — it gives the average launch moment.</summary>
     public double ChargeStartSecondsSum { get; init; }
 
-    /// <summary>Bu dövüşte en geç kalkılan hücumun anı.</summary>
+    /// <summary>The moment of the latest charge launched in this fight.</summary>
     public double LastChargeStartSeconds { get; init; }
 
     public bool Died => FinalState == CombatState.Dead;
 
     public bool Escaped => FinalState == CombatState.Escaped;
 
-    /// <summary>Saldırıların ne kadarı tuttu — onur hesabının ana girdisi.</summary>
+    /// <summary>How many of the attacks landed — the main input of the honour calculation.</summary>
     public double Accuracy => AttacksMade == 0 ? 0 : (double)HitsLanded / AttacksMade;
 }

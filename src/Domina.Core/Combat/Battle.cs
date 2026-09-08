@@ -1,21 +1,21 @@
-﻿using Domina.Core.Model;
+using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Combat;
 
 /// <summary>
-/// Tek bir dövüşün deterministik simülasyonu.
+/// Deterministic simulation of a single fight.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Adım adım ilerler (<see cref="Step"/>). Godot katmanı bunu animasyonla eş
-/// zamanlı adımlar; toplu simülasyon <see cref="Run"/> ile sonuna kadar koşturur.
-/// Aynı seed + aynı girdi = aynı sonuç.
+/// It advances step by step (<see cref="Step"/>). The Godot layer steps it in sync with
+/// animation; batch simulation runs it to the end with <see cref="Run"/>.
+/// Same seed + same input = same result.
 /// </para>
 /// <para>
-/// <b>Savaşçıların kalıcı halini DEĞİŞTİRMEZ.</b> Ölüm ve sakatlık sonuçları
-/// <see cref="BattleResult"/> içinde raporlanır; kalıcı hale işlemek meta katmanın
-/// işidir. Aksi hâlde aynı savaşçı nesnesiyle on binlerce dövüş simüle edilemezdi.
+/// <b>It does NOT change the warriors' persistent state.</b> Death and maiming outcomes are
+/// reported inside <see cref="BattleResult"/>; writing them into persistent state is the meta
+/// layer's job. Otherwise tens of thousands of fights could not be simulated with the same warrior object.
 /// </para>
 /// </remarks>
 public sealed class Battle
@@ -26,56 +26,56 @@ public sealed class Battle
     private readonly CombatTuning _tuning;
     private readonly IRandomSource _rng;
     /// <summary>
-    /// Bu dövüşte kaybedilen uzuvlar, savaşçı başına.
+    /// The limbs lost in this fight, per warrior.
     /// </summary>
     /// <remarks>
-    /// Savaşçı başına <b>küme</b> tutulur, tek parça değil: kuşatılmış bir savaşçı
-    /// kaçarken menzilindeki her düşmandan bir fırsat saldırısı yer (§5), yani tek
-    /// dövüşte birden fazla uzvunu kaybedebilir. Tek parça tutulduğunda her yeni kayıp
-    /// öncekini siliyordu ve <see cref="AlreadyLost"/> yalnızca sonuncusuna baktığı için
-    /// aynı uzuv tekrar tekrar kopabiliyordu (ölçüldü: tek savaşçıda 22 kopma,
-    /// Kol/Bacak sırayla).
+    /// A <b>set</b> is kept per warrior, not a single part: a surrounded warrior takes an
+    /// opportunity attack from every enemy in reach while fleeing (§5), so he can lose more
+    /// than one limb in a single fight. With a single part kept, every new loss erased the
+    /// previous one, and because <see cref="AlreadyLost"/> only looked at the last one the
+    /// same limb could come off over and over (measured: 22 severings on one warrior,
+    /// arm/leg in turn).
     /// </remarks>
     private readonly Dictionary<WarriorId, BodyPartSet> _lostParts = [];
 
     /// <summary>
-    /// Dövüş boyunca dağılan zırh parçaları — savaşçı başına.
+    /// The armour pieces destroyed during the fight — per warrior.
     /// </summary>
     /// <remarks>
-    /// Uzuv kaybıyla aynı yoldan taşınır: çekirdek kalıcı hali değiştirmez, ne olduğunu
-    /// dövüş özetine yazar; kuşamı defterden düşmek dojo katmanının işi.
+    /// It travels the same route as limb loss: the core does not change persistent state, it
+    /// writes what happened into the fight summary; striking the armour off the books is the dojo layer's job.
     /// </remarks>
     private readonly Dictionary<WarriorId, HitLocationSet> _destroyedArmor = [];
 
     /// <summary>
-    /// Havadaki mermiler. Atıldıkları sırada durur, sırayla çözülür.
+    /// Projectiles in the air. They stay in the order they were thrown and resolve in order.
     /// </summary>
     /// <remarks>
-    /// Sıra determinizm için şart: aynı tick'te iki mermi varırsa hangisinin önce
-    /// çözüleceği sabit olmalı, yoksa aynı seed aynı dövüşü vermez.
+    /// The ordering is required for determinism: if two projectiles arrive on the same tick,
+    /// which one resolves first must be fixed, or the same seed does not give the same fight.
     /// </remarks>
     private readonly List<Projectile> _projectiles = [];
 
     /// <summary>
-    /// Elden düşüp arenada duran silahlar.
+    /// Weapons that fell out of a hand and lie in the arena.
     /// </summary>
     /// <remarks>
-    /// Düşen silah dövüşten çıkmaz, yalnızca <b>sahibinden</b> çıkar; silahsız kalan
-    /// herkes ona yürüyebilir (bkz. <see cref="GroundWeapon"/>).
+    /// A dropped weapon does not leave the fight, it only leaves <b>its owner</b>; anyone left
+    /// unarmed can walk to it (see <see cref="GroundWeapon"/>).
     /// </remarks>
     private readonly List<GroundWeapon> _dropped = [];
 
     /// <summary>
-    /// İlk isabet düştü mü? Kaçış tuşunu açan eşik budur.
+    /// Has the first hit landed? This is the threshold that unlocks the flee key.
     /// </summary>
     /// <remarks>
-    /// Eşik <b>isabet</b>, hamle değil: silah havaya kalktı diye savaş başlamış sayılmaz,
-    /// kan aktı diye sayılır. Iskalanan hamleler boyunca ekip hâlâ ucuza çekilebilir —
-    /// zırhın karşılığı budur (bkz. docs/GDD.md §5).
+    /// The threshold is a <b>hit</b>, not a move: the fight does not count as begun because a
+    /// sword went up, it counts as begun because blood was drawn. Through missed moves the team
+    /// can still be pulled out cheaply — that is what armour buys (see docs/GDD.md §5).
     /// </remarks>
     private bool _contactMade;
 
-    /// <summary>Temastan önce arka arkaya reddedilen "çek" basışları.</summary>
+    /// <summary>Consecutive refused "pull out" presses before contact.</summary>
     private int _refusedRetreatPresses;
 
     public Battle(BattleSetup setup, IRandomSource rng)
@@ -85,7 +85,7 @@ public sealed class Battle
 
         if (setup.PlayerSide.Count == 0 || setup.EnemySide.Count == 0)
         {
-            throw new ArgumentException("Her iki tarafta da en az bir savaşçı olmalı.", nameof(setup));
+            throw new ArgumentException("Both sides must have at least one warrior.", nameof(setup));
         }
 
         _setup = setup;
@@ -119,37 +119,37 @@ public sealed class Battle
 
     public bool IsFinished { get; private set; }
 
-    /// <summary>Dövüş bittiğinde dolar.</summary>
+    /// <summary>Filled in when the fight ends.</summary>
     public BattleResult? Result { get; private set; }
 
     /// <summary>
-    /// Üretilen olay akışı. <see cref="BattleSetup.CollectEvents"/> kapalıysa boştur.
+    /// The event stream produced. Empty if <see cref="BattleSetup.CollectEvents"/> is off.
     /// </summary>
     public IReadOnlyList<BattleEvent> Events => _events;
 
     /// <summary>
-    /// İlk isabet düştüyse true — yani <see cref="CommandRetreat"/> artık kabul edilir.
+    /// True if the first hit has landed — that is, <see cref="CommandRetreat"/> is now accepted.
     /// </summary>
     /// <remarks>
-    /// Arayüz tuşu bundan önce pasif çizer. Savaşçı bazlı değil <b>dövüş bazlı</b> bir
-    /// bayraktır: hangi tarafın vurduğu fark etmez, ilk kan savaşı başlatır.
+    /// The interface draws the key inactive before that. It is a <b>fight-level</b> flag, not a
+    /// per-warrior one: it does not matter which side struck, first blood starts the fight.
     /// </remarks>
     public bool ContactMade => _contactMade;
 
-    /// <summary>Temastan önce arka arkaya kaç kez tuşa basıldığı.</summary>
+    /// <summary>How many times in a row the key was pressed before contact.</summary>
     public int RefusedRetreatPresses => _refusedRetreatPresses;
 
     /// <summary>
-    /// Savaşçıların anlık hali. Godot katmanı bunu HUD'a basar (can/stamina barı,
-    /// "çek" tuşunun hangi savaşçı için aktif olduğu).
+    /// The warriors' current state. The Godot layer prints it to the HUD (health/stamina bars,
+    /// which warrior the "pull out" key is active for).
     /// </summary>
     public IReadOnlyList<CombatantSnapshot> Snapshots() => _combatants.ConvertAll(Snapshot);
 
-    /// <summary>Tek bir savaşçının anlık hali.</summary>
+    /// <summary>The current state of a single warrior.</summary>
     public CombatantSnapshot SnapshotOf(WarriorId id)
     {
         Combatant c = _combatants.Find(x => x.Id == id)
-                      ?? throw new ArgumentException($"Dövüşte böyle bir savaşçı yok: {id}", nameof(id));
+                      ?? throw new ArgumentException($"No such warrior in the fight: {id}", nameof(id));
 
         return Snapshot(c);
     }
@@ -174,26 +174,26 @@ public sealed class Battle
         c.DestroyedArmor);
 
     /// <summary>
-    /// Oyuncunun "çek" tuşu — <b>tüm ekibi</b> çeker.
+    /// The player's "pull out" key — it pulls <b>the whole team</b>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Tek bir savaşçı ayrıca çekilemez (bkz. docs/GDD.md §5). Savaşçı bazlı olsaydı
-    /// doğru oynanış "yara alanı hemen çek, kalanla devam et" olurdu — kayıpsız,
-    /// sürekli tekrarlanan küçük bir optimizasyon. Ekip bazlı komut kararı nadir ve
-    /// ağır yapar.
+    /// A single warrior cannot be pulled out separately (see docs/GDD.md §5). Were it
+    /// per-warrior, the right play would be "pull the moment someone is wounded, continue with
+    /// the rest" — a small, losslessly repeatable optimisation. A team-level command makes the
+    /// decision rare and heavy.
     /// </para>
     /// <para>
-    /// Komut her savaşçı için <b>ayrı ayrı</b> çözülür: kılıcı havada olan buffer'lanır,
-    /// boşta olan hemen kaçmaya başlar. Yani tek tuş, üç farklı anda devreye girebilir.
+    /// The command is resolved <b>separately</b> for each warrior: the one with his sword in the air
+    /// is buffered, the one who is idle starts fleeing immediately. So one key press can take effect at three different moments.
     /// </para>
     /// </remarks>
-    /// <returns>En az bir savaşçı komutu kabul ettiyse true.</returns>
+    /// <returns>True if at least one warrior accepted the command.</returns>
     public bool CommandRetreat()
     {
         if (!_contactMade)
         {
-            // Savaş henüz başlamadı: kimse dokunmadan çekilmek yok (§5).
+            // The fight has not begun: no pulling out before anyone is touched (§5).
             _refusedRetreatPresses++;
             Emit(new RetreatRefused(ElapsedSeconds, _refusedRetreatPresses));
             return false;
@@ -228,15 +228,15 @@ public sealed class Battle
         }
         else
         {
-            // Kılıç havada — mevcut vuruş tamamlanmadan kaçamaz.
+            // Sword in the air — he cannot flee before the current strike finishes.
             Emit(new RetreatBuffered(ElapsedSeconds, c.Id));
         }
 
         return true;
     }
 
-    /// <summary>Bir adım ilerletir.</summary>
-    /// <returns>Dövüş devam ediyorsa true, bittiyse false.</returns>
+    /// <summary>Advances one step.</summary>
+    /// <returns>True if the fight continues, false if it has ended.</returns>
     public bool Step()
     {
         if (IsFinished)
@@ -248,8 +248,8 @@ public sealed class Battle
 
         Move();
 
-        // Mermiler savaşçılardan önce ilerler: hareketten sonra, hamlelerden önce.
-        // Havadaki mermi bu tick'te nereye varacağını hedefin YENİ yerine göre bulur.
+        // Projectiles advance before the warriors: after movement, before moves.
+        // A projectile in the air finds where it arrives this tick from the target's NEW position.
         AdvanceProjectiles();
 
         if (Finish())
@@ -268,8 +268,8 @@ public sealed class Battle
 
             if (!c.IsActive)
             {
-                // Zehir bitirdiyse bu savaşçının sırası burada kapanır; kalan hamleler
-                // ölü bir savaşçının hamleleri olurdu.
+                // If poison finished him, this warrior's turn closes here; the remaining moves
+                // would be the moves of a dead warrior.
                 if (Finish())
                 {
                     return false;
@@ -297,21 +297,21 @@ public sealed class Battle
         return true;
     }
 
-    /// <summary>Dövüşü sonuna kadar koşturur.</summary>
+    /// <summary>Runs the fight to the end.</summary>
     public BattleResult Run()
     {
         while (Step())
         {
-            // Step() bitiş koşulunu kendi kontrol eder.
+            // Step() checks the end condition itself.
         }
 
         return Result!;
     }
 
-    // --------------------------------------------------------------- hareket
+    // -------------------------------------------------------------- movement
 
     /// <summary>
-    /// Başlangıç düzeni: iki taraf karşılıklı, kendi içlerinde derinliğe yayılmış.
+    /// Starting formation: the two sides facing each other, each spread out in depth.
     /// </summary>
     private void PlaceCombatants()
     {
@@ -327,7 +327,7 @@ public sealed class Battle
             int index = isPlayer ? player++ : enemy++;
             int count = isPlayer ? _setup.PlayerSide.Count : _setup.EnemySide.Count;
 
-            // Kadroyu derinlikte ortalar: 3 kişi -1, 0, +1 aralığına dağılır.
+            // Centres the roster in depth: 3 people spread over the range -1, 0, +1.
             double lane = index - ((count - 1) / 2.0);
 
             c.Position = new ArenaPoint(
@@ -339,17 +339,17 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Herkesi bir tick ilerletir: hedefe yaklaşma, kaçış, ve üst üste binmeyi
-    /// engelleyen itme.
+    /// Advances everyone by one tick: closing on the target, fleeing, and the push that
+    /// prevents overlap.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Saldırıya kilitli savaşçı yürümez.</b> Vuruş taahhüdünün bedeli budur:
-    /// hamleyi başlattıysan hedef kaçsa bile yerinde çakılırsın.
+    /// <b>A warrior locked into an attack does not walk.</b> That is the price of committing to a
+    /// strike: once you have started the move you are nailed in place even if the target flees.
     /// </para>
     /// <para>
-    /// Fizik motoru yok, kendi kinematiğimiz var — Godot'un çarpışma çözümü sürümden
-    /// sürüme değişir ve "aynı seed = aynı dövüş" garantisini bozardı.
+    /// There is no physics engine, we have our own kinematics — Godot's collision resolution
+    /// changes from version to version and would break the "same seed = same fight" guarantee.
     /// </para>
     /// </remarks>
     private void Move()
@@ -368,7 +368,7 @@ public sealed class Battle
 
             if (c.State is CombatState.Retreating)
             {
-                // Hedef, çıkış eşiğinin de ötesi: savaşçı eşiği geçerken durmasın.
+                // The destination is beyond the exit threshold too, so the warrior does not stop on it.
                 double exitX = c.Team == PlayerTeam
                     ? -(_tuning.ExitMargin * 2)
                     : _tuning.ArenaWidth + (_tuning.ExitMargin * 2);
@@ -377,9 +377,9 @@ public sealed class Battle
             }
             else if (c.Unarmed && !c.RetreatRequested && NearestDropped(c) is GroundWeapon dropped)
             {
-                // Eli boş savaşçının ilk işi silah bulmak: yumrukla dövüşmek yerine
-                // yerdeki namluya yürür. Yürürken savunmasız değildir ama vurmaz da —
-                // bedelin ödendiği yer bu yürüyüş.
+                // An empty-handed warrior's first job is to find a weapon: instead of fighting with
+                // his fists he walks to the blade on the ground. While walking he is not defenceless,
+                // but he does not strike either — this walk is where the price is paid.
                 if (c.State is CombatState.Idle)
                 {
                     c.Position = c.Position.MovedToward(dropped.Position, step);
@@ -407,17 +407,17 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Arenayı terk ederken alınan kaza yarası.
+    /// The accidental wound taken while leaving the arena.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kaçmak hiçbir zaman tamamen temiz değildir: burkulan ayak, karanlıkta yenen bir
-    /// dal, dönüş yolunda kanayan bir yara. Kimseyi <b>öldürmez</b> — canı 1'in altına
-    /// indirmez. Amacı ölüm değil, "hiç bedel ödemeden çıktım" durumunu ortadan kaldırmak.
+    /// Fleeing is never entirely clean: a twisted ankle, a branch taken in the dark, a wound
+    /// bleeding on the way back. It <b>never kills</b> anyone — it does not push health below 1.
+    /// Its purpose is not death but removing the case of "I got out without paying anything".
     /// </para>
     /// <para>
-    /// Bu, uzamsal olmayan tek yaralanma kaynağı: ekranda karşılığı bir vuruş değil, bir
-    /// sendeleme. Diğer iki kaynak (yetişen düşman, arkadan gelen fırlatma) uzamsaldır.
+    /// This is the only non-spatial source of injury: on screen it is not a strike but a stumble.
+    /// The other two sources (the enemy catching up, a throw from behind) are spatial.
     /// </para>
     /// </remarks>
     private void RollEscapeMishap(Combatant c)
@@ -444,29 +444,29 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Savaşçı bu tick'te hedefine doğru ilerleyebilir mi?
+    /// Can this warrior advance toward his target this tick?
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kural normalde "hamleye kilitlendiysen yürüyemezsin" — vuruş taahhüdünün bedeli.
-    /// <b>Kaçan bir hedefe karşı bu kural askıya alınır:</b> kovalayan, kılıcını
-    /// savururken de koşmaya devam eder.
+    /// The rule is normally "if you are locked into a move you cannot walk" — the price of
+    /// committing to a strike. <b>Against a fleeing target this rule is suspended:</b> the chaser
+    /// keeps running while he swings his sword.
     /// </para>
     /// <para>
-    /// Sebebi ölçüldü. Kural iki savaşçının durup vuruştuğu duruma göre yazılmıştı;
-    /// kovalamacada ise avcı yetişip hamleye başlıyor, hamle boyunca donuyor, kaçan bu
-    /// arada menzilden çıkıyor ve kılıç <b>her seferinde</b> boşluğa iniyordu. Yani
-    /// yetişen düşman hiç vuramıyordu ve GDD §5'in "kaçış boyunca savunmasız kalır"
-    /// vaadinin karşılığı yoktu.
+    /// The reason was measured. The rule was written for the case of two warriors standing and
+    /// trading blows; in a chase, the hunter catches up and starts a move, freezes for the whole
+    /// move, the fleer leaves reach in the meantime, and the sword landed on empty air <b>every
+    /// single time</b>. So the enemy who caught up could never land a hit, and GDD §5's promise
+    /// that "he stays defenceless throughout the escape" had no equivalent.
     /// </para>
     /// </remarks>
     /// <remarks>
     /// <para>
-    /// Yalnızca <b>hamle</b> sırasında; toparlanmada değil. İkisi de açık olduğunda
-    /// kovalayan hiç durmuyor, net hızı hep kaçanın üstünde kalıyor ve kaçış çöküyordu
-    /// (ölçüldü: sayıca geri kalınca çekilen ekibin %76'sı tamamen kırılıyordu, %30
-    /// yerine). Toparlanmada durmak kovalayana nefes aldırıyor ve kaçana arayı açma şansı
-    /// veriyor — takip bir kovalamaca oluyor, bir infaz değil.
+    /// Only during the <b>move</b>; not during recovery. With both open, the chaser never stops,
+    /// his net speed stays above the fleer's the whole time and escape collapsed (measured: when
+    /// outnumbered, 76% of the team that pulled out was wiped out entirely, instead of 30%).
+    /// Stopping during recovery lets the chaser breathe and gives the fleer a chance to open the
+    /// gap — the pursuit becomes a chase, not an execution.
     /// </para>
     /// </remarks>
     private static bool CanAdvanceOn(Combatant c, Combatant target) =>
@@ -474,12 +474,12 @@ public sealed class Battle
         || (target.State is CombatState.Retreating && c.State is CombatState.AttackWindup);
 
     /// <summary>
-    /// Bu savaşçının alabileceği en yakın silah; yoksa <c>null</c>.
+    /// The nearest weapon this warrior can pick up; <c>null</c> if there is none.
     /// </summary>
     /// <remarks>
-    /// <b>Elinde silah olan aramaz.</b> Çağıran taraf zaten silahsızlığı kontrol eder;
-    /// buradaki tek eleme, kolunu kaybetmiş savaşçının çift el silahı alamamasıdır —
-    /// alsaydı yerden aldığı silah elinde yumruğa dönerdi ve yürüyüş boşa giderdi.
+    /// <b>A warrior with a weapon in hand does not search.</b> The caller already checks for being
+    /// unarmed; the only filter here is that a warrior who has lost an arm cannot pick up a two-handed
+    /// weapon — if he could, the weapon he picked up would turn into a fist in his hand and the walk would be wasted.
     /// </remarks>
     private GroundWeapon? NearestDropped(Combatant c)
     {
@@ -504,42 +504,42 @@ public sealed class Battle
         return best;
     }
 
-    /// <summary>Bu savaşçı bu silahı kullanabilir mi?</summary>
+    /// <summary>Can this warrior wield this weapon?</summary>
     private static bool CanWield(Combatant c, Weapon weapon) =>
         !weapon.TwoHanded || !c.Warrior.Disabilities.Any(d => d.BlocksTwoHandedWeapons);
 
     /// <summary>
-    /// Düşen silahın nereye savrulduğu: karşıdakinin <b>arkasına</b>.
+    /// Where the dropped weapon is flung: <b>behind</b> the other man.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Yön ölçümde belirlendi ve kuralın bedelini <b>tek başına</b> o taşıyor. Silah
-    /// sahibinin gerisine düşerse yerden alma yürüyüşü savaşçıyı dövüşten geri çeker ve
-    /// yavaş bir düşmanın önünde düşürme bedava bir nefes molası olur — ölçüldü, mesafe
-    /// arttıkça oyuncunun zaferi <b>yükseliyordu</b> (%94.30 → %94.55; kural yokken
-    /// %94.25). Yana savrulunca da aynı kapıya çıkıyor (%94.4): yavaş düşman hattı terk
-    /// eden savaşçıyı cezalandıramıyor.
+    /// The direction was decided by measurement and it carries the rule's cost <b>on its own</b>.
+    /// If the weapon falls behind its owner, the walk to pick it up pulls the warrior back out of
+    /// the fight and, in front of a slow enemy, disarming becomes a free breather — measured, the
+    /// player's victory <b>rose</b> as the distance grew (94.30% → 94.55%; 94.25% without the
+    /// rule). Flinging it sideways comes to the same thing (94.4%): a slow enemy cannot punish the
+    /// warrior who leaves the line.
     /// </para>
     /// <para>
-    /// Karşıdakinin arkasına düşünce bedel gerçek: silaha gitmek düşmanın içinden geçmek
-    /// demek ve kişisel alan buna izin vermez. Teke tekte silah pratikte gider (yerden
-    /// alma %7), kalabalıkta hedef bölündüğü için geri alınabilir (%41) — kuralın
-    /// ısırdığı yer tam olarak burası.
+    /// When it falls behind the other man the cost is real: going to the weapon means going
+    /// through the enemy, and personal space does not allow that. In a duel the weapon is
+    /// effectively gone (7% pickup), in a crowd it can be recovered because the target is split
+    /// (41%) — this is exactly where the rule bites.
     /// </para>
     /// </remarks>
     private ArenaPoint DropPoint(Combatant owner, Combatant past) =>
         past.Position.MovedAwayFrom(owner.Position, _tuning.WeaponDropDistance);
 
-    /// <summary>Arena sınırlarının içine çeker — silah sahanın dışına düşmez.</summary>
+    /// <summary>Pulls a point inside the arena bounds — a weapon does not fall off the field.</summary>
     private ArenaPoint Clamped(ArenaPoint point) => new(
         Math.Clamp(point.X, 0, _tuning.ArenaWidth),
         Math.Clamp(point.Y, 0, _tuning.ArenaDepth));
 
-    /// <summary>Ayağının dibindeki silahı alır.</summary>
+    /// <summary>Picks up the weapon at his feet.</summary>
     /// <remarks>
-    /// Alma anının kendi süresi yoktur: bedel zaten ödendi — savaşçı silaha <b>yürüdü</b>,
-    /// o süre boyunca yumruktan başka bir şeyi yoktu. Eğilme anına ayrıca bir pencere
-    /// koymak aynı bedeli ikinci kez almak olurdu.
+    /// The moment of picking up has no duration of its own: the price is already paid — the warrior
+    /// <b>walked</b> to the weapon and for that whole span he had nothing but his fists. Adding a
+    /// separate window for bending down would charge the same price twice.
     /// </remarks>
     private void TryPickUp(Combatant c)
     {
@@ -565,11 +565,11 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Bir savaşçının bu tick'te kat edeceği mesafe.
+    /// The distance a warrior covers this tick.
     /// </summary>
     /// <remarks>
-    /// Hız savaşçıdan savaşçıya değişir; kovalamacanın sonucunu belirleyen budur. Kaçan
-    /// ayrıca yavaşlar: sırtı dönük koşan biri karşısındakinden daha hızlı gidemez.
+    /// Speed differs from warrior to warrior; that is what decides the outcome of a chase. The fleer
+    /// also slows down: someone running with his back turned cannot go faster than the man facing him.
     /// </remarks>
     private double StepFor(Combatant c)
     {
@@ -589,7 +589,7 @@ public sealed class Battle
 
     private static double Lerp(double from, double to, double t) => from + ((to - from) * t);
 
-    /// <summary>Üst üste binen savaşçıları iter. Kaçan itilmez — yolu kesilemesin.</summary>
+    /// <summary>Pushes overlapping warriors apart. The fleer is not pushed — his path must not be blocked.</summary>
     private void Separate(Combatant c)
     {
         if (c.State is CombatState.Retreating)
@@ -610,15 +610,15 @@ public sealed class Battle
                 continue;
             }
 
-            // Tam üst üste düşen iki savaşçıyı ayırmak için sabit bir yön gerekir;
-            // aksi hâlde yön vektörü sıfır olur ve ikisi de kilitlenir.
+            // A fixed direction is needed to separate two warriors who land exactly on top of each
+            // other; otherwise the direction vector is zero and both lock up.
             c.Position = gap <= double.Epsilon
                 ? new ArenaPoint(c.Position.X - (_tuning.PersonalSpace / 2), c.Position.Y)
                 : c.Position.MovedAwayFrom(other.Position, _tuning.PersonalSpace - gap);
         }
     }
 
-    /// <summary>Derinlik arenanın dışına taşamaz; hat boyunca yalnızca kaçan çıkar.</summary>
+    /// <summary>Depth cannot spill outside the arena; along the line only the fleer leaves.</summary>
     private void Clamp(Combatant c)
     {
         if (c.State is CombatState.Retreating)
@@ -640,10 +640,10 @@ public sealed class Battle
         }
     }
 
-    /// <summary>Saldıran, savunanın arkasında mı?</summary>
+    /// <summary>Is the attacker behind the defender?</summary>
     /// <remarks>
-    /// Kuşatmanın mekanik karşılığı: çevrildiğinde birileri mutlaka arkanda kalır ve
-    /// onun vuruşu hem daha isabetli hem daha ağır olur.
+    /// The mechanical meaning of encircling: when you are surrounded someone is necessarily
+    /// behind you, and his strike is both more accurate and heavier.
     /// </remarks>
     private static bool IsFlanking(Combatant attacker, Combatant defender)
     {
@@ -651,20 +651,20 @@ public sealed class Battle
         return Math.Abs(dx) > double.Epsilon && Math.Sign(dx) != defender.Facing;
     }
 
-    /// <summary>Savaşçı hedefine vurabilecek kadar yakın mı?</summary>
+    /// <summary>Is the warrior close enough to strike his target?</summary>
     private static bool InReach(Combatant attacker, Combatant target) =>
         attacker.Position.DistanceTo(target.Position) <= attacker.Weapon.Reach;
 
     /// <summary>
-    /// Kaçan savaşçı arenayı gerçekten terk etti mi? Kadrajın kenarı yetmez — ekranda
-    /// gözden kaybolması için biraz daha gitmesi gerekir.
+    /// Has the fleeing warrior really left the arena? The edge of the frame is not enough — he
+    /// has to go a little further to disappear from the screen.
     /// </summary>
     private bool HasLeftArena(Combatant c) =>
         c.Team == PlayerTeam
             ? c.Position.X <= -_tuning.ExitMargin
             : c.Position.X >= _tuning.ArenaWidth + _tuning.ExitMargin;
 
-    // ---------------------------------------------------------------- durum
+    // ------------------------------------------------------------------ state
 
     private void AdvanceState(Combatant c)
     {
@@ -696,7 +696,7 @@ public sealed class Battle
 
             case CombatState.AttackRecovery:
             case CombatState.ThrowRecovery:
-                // Toparlanma bitti — buffer'lanmış kaçış komutu şimdi işlenir.
+                // Recovery is over — a buffered flee command is processed now.
                 if (c.RetreatRequested)
                 {
                     BeginRetreat(c);
@@ -707,8 +707,8 @@ public sealed class Battle
                 break;
 
             case CombatState.Blocking:
-                // Duruş bitti: savaşçı karar döngüsüne döner ve yeniden seçer — bloğu
-                // sürdürmek de bir seçenek, ama her seferinde zar yeniden atılır.
+                // The stance is over: the warrior returns to the decision loop and chooses again —
+                // holding the block is one option, but the die is rolled anew every time.
                 if (c.RetreatRequested)
                 {
                     BeginRetreat(c);
@@ -728,8 +728,8 @@ public sealed class Battle
 
             case CombatState.Stunned:
             case CombatState.WeaponBound:
-                // Sersemleme ya da kenetlenme bitti: savaşçı normal karar döngüsüne
-                // döner. Bu arada verilmiş kaçış komutu yutulmaz, burada işlenir.
+                // The stun or the bind is over: the warrior returns to the normal decision loop.
+                // A flee command given in the meantime is not swallowed, it is processed here.
                 if (c.RetreatRequested)
                 {
                     BeginRetreat(c);
@@ -740,8 +740,8 @@ public sealed class Battle
                 break;
 
             case CombatState.Retreating:
-                // Kaçış artık sayaçla değil mesafeyle biter: gerçekten arenayı
-                // terk etmesi gerekiyor.
+                // The escape now ends by distance, not by a timer: he really has to leave the
+                // arena.
                 if (HasLeftArena(c))
                 {
                     RollEscapeMishap(c);
@@ -764,8 +764,8 @@ public sealed class Battle
 
     private void StartAttack(Combatant attacker)
     {
-        // Karar adımı: hedef burada yeniden tartılır. Yaralanan, kuşamı dağılan ya da
-        // takım arkadaşlarının üstüne yığıldığı düşman ancak burada fark edilir.
+        // The decision step: the target is weighed again here. An enemy who is wounded, whose
+        // armour has broken, or on whom teammates have piled up is only noticed here.
         Combatant? target = ChooseTarget(attacker);
 
         if (target is null)
@@ -774,15 +774,15 @@ public sealed class Battle
             return;
         }
 
-        // Açıklık her karar adımında tazelenir — menzilde olsa bile. Menzildeyken
-        // açıklık yoktur, dolayısıyla dövüşten çıkıp yeniden mesafe açıldığında
-        // bu yeni bir açıklık sayılır ve savaşçı kararını yeniden verir.
+        // The opening is refreshed at every decision step — even while in reach. There is no
+        // opening while in reach, so when he leaves the fight and distance opens again, that
+        // counts as a new opening and the warrior makes his decision anew.
         bool hadOpening = attacker.SawChargeOpening;
         attacker.SawChargeOpening = HasRoomToGather(attacker);
         bool openingIsNew = attacker.SawChargeOpening && !hadOpening;
 
-        // Menzil dışındaysa yaklaşmaya devam eder — ama atacak bir şeyi varsa atar.
-        // Fırlatmanın asıl işi bu boşluğu doldurmak: yaklaşma ve kaçış artık bedava değil.
+        // If out of reach he keeps closing — but if he has something to throw, he throws it.
+        // Throwing's real job is filling this gap: closing and fleeing are no longer free.
         if (!InReach(attacker, target))
         {
             if (InThrowRange(attacker, target))
@@ -801,8 +801,8 @@ public sealed class Battle
             return;
         }
 
-        // Menzildeki savaşçının üçüncü seçeneği: vurmak yerine beklemek. Karar Savunma
-        // statından çıkar — hücumun Saldırganlık'tan çıkması gibi (docs/GDD.md §5).
+        // The third option of a warrior in reach: waiting instead of striking. The decision comes
+        // out of the Defence stat — the way the charge comes out of Aggression (docs/GDD.md §5).
         if (ShouldBlock(attacker))
         {
             attacker.JustBlocked = true;
@@ -820,23 +820,23 @@ public sealed class Battle
         Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
     }
 
-    /// <summary>Savaşçı bu karar adımında blok duruşuna geçer mi?</summary>
+    /// <summary>Does the warrior go into a block stance at this decision step?</summary>
     /// <remarks>
     /// <para>
-    /// Duruşa geçmenin şartı tehdit değil <b>okunan hamledir</b>: menzilde bir düşmanın
-    /// bulunması yetmez, o düşmanın kılıcı toplanmış olmalı. Şart yalnızca yakınlık
-    /// olsaydı duruş körlemesine alınırdı — ölçüldü, savaşçı başına yalnızca 0.20 darbe
-    /// karşılıyordu; geri kalan duruşlar hiçbir şey durdurmadan saldırı döngüsünü yiyordu.
-    /// Blok o hâliyle Savunma statının cezasıydı, karşılığı değil.
+    /// The condition for taking the stance is not a threat but a <b>move that is read</b>: an
+    /// enemy being in reach is not enough, that enemy's sword must be gathered. Had the condition
+    /// been proximity alone, the stance would be taken blindly — measured, it met only 0.20 blows
+    /// per warrior; the remaining stances ate the attack cycle without stopping anything. In that
+    /// form the block was the Defence stat's punishment, not its return.
     /// </para>
     /// <para>
-    /// Şart kendi menzilinden okunmaz, <b>ikisinin büyüğünden</b>: uzun saplı düşmanın
-    /// karşısında duran kısa bıçaklı savaşçı da tehdit altındadır, ve asıl bloklaması
-    /// gereken odur. Koşan hücum da toplanma sayılır — varış darbesi de bir vuruştur.
+    /// The condition is read not from his own reach but from <b>the larger of the two</b>: the
+    /// warrior with a short knife standing against a long-hafted enemy is under threat too, and he
+    /// is the one who most needs to block. A running charge counts as gathering — the arrival blow is a strike too.
     /// </para>
     /// <para>
-    /// Çekilmek isteyen savaşçı bloklamaz: tuş bir çıkış emridir, duruşa geçmek onu
-    /// geciktirirdi (docs/GDD.md §5 kesme tablosu).
+    /// A warrior who wants to pull out does not block: the key is an order to leave, and taking
+    /// the stance would delay it (docs/GDD.md §5 interruption table).
     /// </para>
     /// </remarks>
     private bool ShouldBlock(Combatant c)
@@ -855,7 +855,7 @@ public sealed class Battle
                 continue;
             }
 
-            // Okunan şey toplanma penceresi: kılıç geriye gitti ve henüz inmedi.
+            // What is read is the gathering window: the sword went back and has not come down yet.
             if (enemy.State is not (CombatState.AttackWindup or CombatState.Charging))
             {
                 continue;
@@ -871,7 +871,7 @@ public sealed class Battle
         return swingIncoming && _rng.Chance(BlockChanceFor(c));
     }
 
-    /// <summary>Bu savaşçının blok duruşuna geçme olasılığı — kimliğinden çıkar.</summary>
+    /// <summary>This warrior's probability of taking a block stance — it comes out of his identity.</summary>
     private double BlockChanceFor(Combatant c) =>
         Math.Clamp(c.Warrior.EffectiveStats.Defense / 100.0, 0, 1) * _tuning.MaxBlockChance;
 
@@ -883,8 +883,8 @@ public sealed class Battle
             attacker.Stamina = Math.Max(0, attacker.Stamina - _tuning.AttackStaminaCost);
             attacker.AttacksMade++;
 
-            // Hedef hamle sırasında menzilden çıktıysa kılıç boşluğa iner. Vuruşa
-            // kilitlenmenin bedeli: hedef kaçarken sen yerinde çakılısın.
+            // If the target left reach during the move, the sword lands on empty air. The price of
+            // committing to a strike: while the target flees you are nailed in place.
             if (InReach(attacker, target))
             {
                 ResolveStrike(attacker, target);
@@ -903,36 +903,36 @@ public sealed class Battle
         }
     }
 
-    // ----------------------------------------------------------------- hücum
+    // ---------------------------------------------------------------- charge
 
     /// <summary>
-    /// Savaşçı bu karar anında hücuma kalkar mı?
+    /// Does the warrior launch a charge at this decision moment?
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Yalnızca açıklık <b>yeni doğduysa</b> ve zar tutarsa (docs/GDD.md §4). Kaçış komutu
-    /// almış savaşçı hücum etmez — kendini iki taahhüdün arasında bırakmak istemeyiz.
+    /// Only if the opening has <b>just appeared</b> and the die holds (docs/GDD.md §4). A warrior
+    /// under a flee command does not charge — we do not want him caught between two commitments.
     /// </para>
     /// <para>
-    /// <b>Zar açıklık başına atılır, saniye başına değil.</b> Açıklık sürdüğü sürece her
-    /// karar adımında yeniden atılsaydı, hücum sıklığı savaşçının açıklıkta ne kadar
-    /// oyalandığına bağlı olurdu; oyalanma süresi de mesafeyi kapatma hızıdır. Ölçüldü:
-    /// böyle bir savaşçı hızlandıkça <b>daha seyrek</b> hücum ediyordu (Hız 0'da dövüş
-    /// başına 2.20, Hız 100'de 1.20) ve bu düşüş, hıza bağlanan hasar artışını tam olarak
-    /// götürüyordu — <c>Speed</c> ekseni ölçümde atıl çıkıyordu. Fırsatı gördüğünde bir
-    /// kez karar vermek, hem daha inandırıcı hem de hızdan bağımsız.
+    /// <b>The die is rolled per opening, not per second.</b> If it were rolled again at every
+    /// decision step for as long as the opening lasted, charge frequency would depend on how long
+    /// the warrior loitered in the opening; and loitering time is the speed at which he closes
+    /// distance. Measured: such a warrior charged <b>less often</b> the faster he was (2.20 per
+    /// fight at Speed 0, 1.20 at Speed 100) and that fall exactly cancelled the damage increase
+    /// tied to speed — the <c>Speed</c> axis measured as inert. Deciding once when he sees the
+    /// opportunity is both more believable and independent of speed.
     /// </para>
     /// <para>
-    /// <b>Kaçan hedefe hücum edilmez</b> ve hedef hücum sırasında kaçmaya başlarsa hamle
-    /// boşa gider. Ölçüldü: aksi hâlde hücum bir hamle değil bir <b>kovalama aracı</b>
-    /// oluyor, 1.6 kat hız kaçışın tek ayar düğmesini (<c>RetreatSpeedMultiplier</c>)
-    /// devre dışı bırakıyor ve docs/GDD.md §5'in merdiveni <b>ters dönüyordu</b> —
-    /// erken basmak geç basmaktan ölümcül hâle geliyordu.
+    /// <b>A fleeing target is not charged</b>, and if the target starts fleeing during the charge
+    /// the move is wasted. Measured: otherwise the charge is not a move but a <b>chasing tool</b>,
+    /// the 1.6x speed disables escape's only tuning knob (<c>RetreatSpeedMultiplier</c>) and
+    /// docs/GDD.md §5's ladder <b>inverted</b> — pressing early became more lethal than pressing
+    /// late.
     /// </para>
     /// <para>
-    /// <b>Fırlatma önceliklidir:</b> atacak mermisi olan savaşçı atar, hücuma kalkmaz.
-    /// Mesafeyi kapatmak menzilli savaşçının çözmesi gereken sorun değil; hücum,
-    /// uzaktan vuramayanın mesafeye verdiği cevaptır.
+    /// <b>Throwing takes priority:</b> a warrior with a projectile throws it, he does not charge.
+    /// Closing distance is not the ranged warrior's problem to solve; the charge is the answer
+    /// given to distance by the one who cannot hit from afar.
     /// </para>
     /// </remarks>
     private bool ShouldCharge(Combatant c, Combatant target, bool openingIsNew) =>
@@ -942,33 +942,33 @@ public sealed class Battle
         && _rng.Chance(ChargeChanceFor(c));
 
     /// <summary>
-    /// Birikmeyi tamamlayacak kadar boşluk var mı?
+    /// Is there enough room to finish the windup?
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Hücumun tetiği <b>sabit bir mesafe eşiği değil, bir fırsat değerlendirmesidir</b>
-    /// (docs/GDD.md §4): "şu an kimse bana vuramıyor ve birikmemi tamamlayacak kadar vaktim
-    /// var." Her aktif düşman için sorulan şey, ona vurabilir hale gelmesinin ne kadar
-    /// süreceği: <c>(mesafe − menzili) ÷ hızı</c>. Biri bunu birikme süresinden kısa
-    /// sürede yapabiliyorsa boşluk yoktur.
+    /// The charge's trigger is <b>not a fixed distance threshold but an assessment of the
+    /// opportunity</b> (docs/GDD.md §4): "nobody can hit me right now and I have time to finish my
+    /// windup." What is asked of every active enemy is how long it would take him to become able
+    /// to strike: <c>(distance − his reach) ÷ his speed</c>. If anyone can do that in less than the
+    /// windup, there is no opening.
     /// </para>
     /// <para>
-    /// Gereken mesafe böylece <b>türetilir</b>: <c>menzil + hız × birikme</c>. Elle
-    /// seçilmiş bir eşik, bir de ayrı bir kalabalık kısıntısı gerekmez — üç düşman
-    /// yetişiyorsa zaten boşluk yoktur. Ölçüldü: eski elle kilitlenmiş 320, bu formülün
-    /// mevcut kadro için ürettiği 287-327 bandının ortasıydı.
+    /// The distance needed is thus <b>derived</b>: <c>reach + speed × windup</c>. No hand-picked
+    /// threshold is needed, and no separate crowd restriction either — if three enemies can reach
+    /// you there is no opening anyway. Measured: the old hand-locked 320 was the middle of the
+    /// 287-327 band this formula produces for the current roster.
     /// </para>
     /// <para>
-    /// <b>Kasıtlı kör nokta:</b> hesap yalnızca yürüyerek gelen tehdidi görür. Mermisi olan
-    /// düşman mesafeden bağımsız vurabildiği için birikmeyi bozabilir, ve savaşçının bunu
-    /// önceden bilmesini istemiyoruz — menzilli yokai'yi hücumun doğal karşıtı yapan şey bu.
+    /// <b>A deliberate blind spot:</b> the calculation only sees threats that come on foot. An
+    /// enemy with a projectile can break the windup regardless of distance, and we do not want the
+    /// warrior to know that in advance — this is what makes the ranged yokai the charge's natural counter.
     /// </para>
     /// </remarks>
     private bool HasRoomToGather(Combatant c)
     {
         foreach (Combatant enemy in _combatants)
         {
-            // Kaçmakta olan tehdit değildir: sana değil, çıkışa gidiyor.
+            // Someone fleeing is not a threat: he is going to the exit, not to you.
             if (enemy.Team == c.Team || !enemy.IsActive || enemy.State is CombatState.Retreating)
             {
                 continue;
@@ -985,22 +985,22 @@ public sealed class Battle
         return true;
     }
 
-    /// <summary>Bu savaşçının durum çarpanları olmadan saniyedeki yol alışı.</summary>
+    /// <summary>This warrior's travel per second without state multipliers.</summary>
     private double BaseMoveSpeed(Combatant c) => Lerp(
         _tuning.MoveSpeedAtZeroSpeed,
         _tuning.MoveSpeedAtMaxSpeed,
         Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
 
-    /// <summary>Kuşamın ağırlığıyla uzamış saldırı döngüsü.</summary>
+    /// <summary>The attack cycle stretched by the weight of the armour.</summary>
     private double AttackCycleSeconds(Combatant c) => c.Weapon.AttackSeconds
         * (1 + (ArmorLoad(c) * _tuning.ArmorAttackSlowdownAtFullWeight));
 
-    /// <summary>Kuşamın tam ağırlığa oranı (0-1). Cezaların tamamı buradan okunur.</summary>
+    /// <summary>The armour's ratio to full weight (0-1). All penalties are read from this.</summary>
     private double ArmorLoad(Combatant c) => _tuning.ArmorWeightAtFullPenalty <= 0
         ? 0
         : Math.Clamp(c.ArmorWeight / _tuning.ArmorWeightAtFullPenalty, 0, 1);
 
-    /// <summary>Bu savaşçının hücuma kalkma olasılığı — kimliğinden çıkar.</summary>
+    /// <summary>This warrior's probability of launching a charge — it comes out of his identity.</summary>
     private double ChargeChanceFor(Combatant c) => Lerp(
         _tuning.ChargeChanceAtZeroAggression,
         _tuning.ChargeChanceAtMaxAggression,
@@ -1010,9 +1010,9 @@ public sealed class Battle
     {
         c.ClearCharge();
 
-        // Açıklık harcandı. Hücum bittiğinde ortada hâlâ boşluk varsa bu yeni bir
-        // açıklıktır ve savaşçı kararını yeniden verir — hedefini devirip önünde
-        // boşluk bulan savaşçının sıradakine kalkabilmesi buna bağlı.
+        // The opening is spent. If there is still a gap when the charge ends, that is a new
+        // opening and the warrior decides again — a warrior who cuts down his target and finds a
+        // gap in front of him being able to launch at the next one depends on this.
         c.SawChargeOpening = false;
 
         FaceToward(c, target);
@@ -1034,7 +1034,7 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Birikme doldu: koşu başlar. Hedef bu arada elden gittiyse hamle boşa gider.
+    /// The windup is full: the run starts. If the target was lost in the meantime the move is wasted.
     /// </summary>
     private void LaunchCharge(Combatant c)
     {
@@ -1052,15 +1052,15 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Ağır darbe birikmeyi dağıtır: koşu hiç başlamaz, hasar çarpanı kazanılmaz.
+    /// A heavy blow scatters the windup: the run never starts, the damage multiplier is not earned.
     /// </summary>
     /// <remarks>
-    /// <b>Eşik yok: isabet eden her darbe dağıtır.</b> Önce ağır darbe eşiği
-    /// (<see cref="CombatTuning.GrievousSeverityThreshold"/>) denendi ve ölçümde
-    /// <b>%0.0</b> çıktı — taze bir savaşçıya inen darbeler o eşiğe hemen hiç ulaşmıyor,
-    /// kural yazılı olup hiç işlemiyordu. İsabet ölçütüyle birikmenin %23.6'sı dağılıyor.
-    /// Savaşçı bu sırada zaten kaçınamıyor, yani "vuruldu mu, dağıldı" tek kuralla okunur
-    /// ve yeni bir denge sayısı doğurmaz.
+    /// <b>No threshold: every blow that lands scatters it.</b> The heavy-blow threshold
+    /// (<see cref="CombatTuning.GrievousSeverityThreshold"/>) was tried first and measured at
+    /// <b>0.0%</b> — blows landing on a fresh warrior almost never reach that threshold, so the
+    /// rule was written down and never fired. With the hit criterion, 23.6% of windups scatter.
+    /// The warrior cannot evade during it anyway, so "was he hit, then it scattered" reads as a
+    /// single rule and spawns no new balance number.
     /// </remarks>
     private void BreakChargeWindup(Combatant c)
     {
@@ -1078,11 +1078,11 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Hücumu bir tick ilerletir: yol boyunca yenen bedava vuruşlar, varış ve ıskalama.
+    /// Advances a charge by one tick: the free hits taken along the way, arrival, and missing.
     /// </summary>
     /// <remarks>
-    /// Çekilme gibi tick tick yeniden kurulur; hücumun ne zaman biteceğini süre değil
-    /// <b>mesafe</b> belirler.
+    /// Like pulling out, it is rebuilt tick by tick; what decides when the charge ends is not
+    /// duration but <b>distance</b>.
     /// </remarks>
     private void AdvanceCharge(Combatant c)
     {
@@ -1107,8 +1107,8 @@ public sealed class Battle
             c.ChargeOpportunists.Clear();
             c.ChargeBonusPending = !c.ChargeMomentumBroken;
 
-            // Vuruş bir sonraki tick'lerde çözülüyor; o zaman savaşçı artık koşmuyor
-            // olacak. Momentum bu yüzden çarpma anında yakalanır.
+            // The strike resolves on later ticks, by which time the warrior is no longer running.
+            // That is why momentum is captured at the moment of impact.
             c.ChargeImpactSpeed = BaseMoveSpeed(c) * _tuning.ChargeSpeedMultiplier;
             c.ChargesConnected++;
             Emit(new ChargeConnected(ElapsedSeconds, c.Id, target.Id));
@@ -1133,20 +1133,20 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Hücum eden savaşçının yanından geçtiği düşmanların bedava vuruşu.
+    /// The free hit of the enemies the charging warrior runs past.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kaçış penceresiyle (bkz. <see cref="BeginRetreat"/>) aynı mekanik: savunmayı
-    /// bırakan savaşçı menziline girdiği herkese bir vuruş borçlanır. Hücum başına düşman
-    /// başına <b>bir kez</b> — yoksa yanından geçilen düşman her tick'te vururdu.
+    /// The same mechanic as the escape window (see <see cref="BeginRetreat"/>): a warrior who
+    /// drops his defence owes a hit to everyone whose reach he enters. <b>Once</b> per enemy per
+    /// charge — otherwise the enemy run past would strike on every tick.
     /// </para>
     /// <para>
-    /// <b>Hedef ayrıdır.</b> Yoldan geçilen düşman vuruşunu her zaman alır; hücumun
-    /// hedefi ise ancak <see cref="CombatTuning.ChargeTargetCounterChance"/> tutarsa
-    /// karşılık verebilir. Yandan geçen gövdeye vurmak kolay, üstüne gelen gövdeyi tam
-    /// anında karşılamak zordur (docs/GDD.md §4). Zar hücum başına bir kez atılır: kaçıran
-    /// hedef aynı koşuda ikinci bir şans bulmaz.
+    /// <b>The target is separate.</b> An enemy passed on the way always gets his hit; the charge's
+    /// target can only answer if <see cref="CombatTuning.ChargeTargetCounterChance"/> holds.
+    /// Hitting a body going past you is easy, meeting a body coming at you at exactly the right
+    /// moment is hard (docs/GDD.md §4). The die is rolled once per charge: a target who misses it
+    /// finds no second chance in the same run.
     /// </para>
     /// </remarks>
     private void RollChargeOpportunities(Combatant c)
@@ -1161,7 +1161,7 @@ public sealed class Battle
                 continue;
             }
 
-            // Cepheden karşılamak zor: hedefin karşı vuruşu seyrek, yoldan geçenlerinki değil.
+            // Meeting it head-on is hard: the target's counter-hit is rare, the passers-by's is not.
             if (hunter.Id == c.ChargeTarget && !_rng.Chance(_tuning.ChargeTargetCounterChance))
             {
                 continue;
@@ -1179,8 +1179,8 @@ public sealed class Battle
         }
     }
 
-    /// <summary>Hücum hedefe varmadan bitti — bonus harcanmaz, savaşçı açıkta kalır.</summary>
-    /// <summary>Hücumun taahhüt ettiği hedef — ölmüşse de döner, ıskalamayı çağıran görsün.</summary>
+    /// <summary>The charge ended without reaching the target — the bonus is not spent, the warrior is left exposed.</summary>
+    /// <summary>The target the charge committed to — returned even if dead, so the caller can report the miss.</summary>
     private Combatant? ChargeTargetOf(Combatant c)
     {
         if (c.ChargeTarget is not WarriorId id)
@@ -1218,18 +1218,18 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Kaçış başlar; <b>menzilinde bulunan her düşman</b> bedava bir vuruş kazanır.
+    /// The escape begins; <b>every enemy in reach</b> earns a free hit.
     /// </summary>
     /// <remarks>
-    /// "Tuşa bastım = güvendeyim" olmasın diye vardı; uzam gelince asıl anlamını
-    /// kazandı: <b>çevrildiysen kaçmanın bedeli üç bedava vuruştur.</b> Kuşatılmadan
-    /// önce çekilmek artık gerçek bir karar.
+    /// It existed so that "I pressed the key = I am safe" would not hold; with space it gained its
+    /// real meaning: <b>if you are surrounded, the price of fleeing is three free hits.</b> Pulling
+    /// out before being encircled is now a real decision.
     /// </remarks>
     private void BeginRetreat(Combatant c)
     {
         if (c.State is CombatState.Charging or CombatState.ChargeWindup)
         {
-            // Hamle yarıda kesildi: bonus harcanmaz, yenen vuruşlar geri gelmez.
+            // The move was cut short: the bonus is not spent, the hits taken do not come back.
             c.ClearCharge();
             Emit(new ChargeMissed(ElapsedSeconds, c.Id));
         }
@@ -1257,12 +1257,12 @@ public sealed class Battle
         }
     }
 
-    /// <summary>Vuracak kimse yok — kısa bir süre bekleyip yeniden bakar.</summary>
+    /// <summary>There is nobody to strike — he waits a short while and looks again.</summary>
     private static void Wait(Combatant c) => c.BeginState(CombatState.Idle, 0.2);
 
-    // ---------------------------------------------------------------- fırlatma
+    // -------------------------------------------------------------- throwing
 
-    /// <summary>Hedef yakın dövüş menzilinin dışında ama atış menzilinde mi?</summary>
+    /// <summary>Is the target outside melee reach but inside throwing range?</summary>
     private static bool InThrowRange(Combatant attacker, Combatant target) =>
         attacker.CanThrow
         && attacker.Warrior.UsableThrown is ThrownWeapon t
@@ -1277,7 +1277,7 @@ public sealed class Battle
         Emit(new AttackStarted(ElapsedSeconds, attacker.Id, target.Id));
     }
 
-    /// <summary>Hamle bitti: mermi havalanır. Buradan sonrası uçuşun işi.</summary>
+    /// <summary>The move is over: the projectile takes off. From here on it is the flight's job.</summary>
     private void ReleaseThrow(Combatant attacker)
     {
         ThrownWeapon? thrown = attacker.Warrior.UsableThrown;
@@ -1311,11 +1311,11 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Havadaki mermileri bir tick ilerletir ve varanları çözer.
+    /// Advances the projectiles in the air by one tick and resolves the ones that arrive.
     /// </summary>
     /// <remarks>
-    /// Liste sırası korunur: aynı tick'te iki mermi varırsa hangisinin önce işleneceği
-    /// atılış sırasına bağlıdır. Rastgele olsaydı aynı seed aynı dövüşü vermezdi.
+    /// The list order is preserved: if two projectiles arrive on the same tick, which is handled
+    /// first depends on the order they were thrown. Were it random, the same seed would not give the same fight.
     /// </remarks>
     private void AdvanceProjectiles()
     {
@@ -1340,12 +1340,12 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Varan merminin sonucu.
+    /// The outcome of an arriving projectile.
     /// </summary>
     /// <remarks>
-    /// Uçuş sırasında hedef ölmüş, kaçmış ya da menzilden çıkmış olabilir — mermi o zaman
-    /// boşa gider. Kaçınma yok: gelen şeyi göremeyen savaşçı ondan sıyrılamaz, savunması
-    /// yalnızca zırhı ve mesafedir.
+    /// During the flight the target may have died, fled or left range — the projectile is then
+    /// wasted. There is no evasion: a warrior who cannot see what is coming cannot slip it, his
+    /// defence is only his armour and the distance.
     /// </remarks>
     private void ResolveProjectile(Projectile p)
     {
@@ -1377,7 +1377,7 @@ public sealed class Battle
             return;
         }
 
-        // Güç fırlatmaya karışmaz: kargıyı iten kol değil, atışın kendisi.
+        // Strength does not enter into throwing: what drives the javelin is the throw itself, not the arm.
         ApplyBlow(
             attacker,
             target,
@@ -1388,7 +1388,7 @@ public sealed class Battle
             BlowSource.Projectile);
     }
 
-    // -------------------------------------------------------------- çözümleme
+    // ------------------------------------------------------------- resolution
 
     private void ResolveStrike(Combatant attacker, Combatant defender)
     {
@@ -1401,18 +1401,18 @@ public sealed class Battle
         WarriorStats defStats = defender.Warrior.EffectiveStats;
         double staminaFactor = StaminaFactor(attacker);
 
-        // Hücum bonusu ıskalansa da harcanır: momentum bir kez kullanılır. Kaçmaya
-        // başlamış bir hedefe ise hiç uygulanmaz — momentum karşısında duran düşmana
-        // çarpmaktan gelir, sırtını dönene değil. Ölçüldü: bonus kaçana da işlerken
-        // hücum, ilk temasta basılan tuşu geç basmaktan ölümcül yapıyor ve GDD §5'in
-        // merdivenini ters çeviriyordu.
+        // The charge bonus is spent even on a miss: momentum is used once. It is never applied to
+        // a target who has started fleeing — momentum comes from crashing into an enemy who stands
+        // his ground, not into one who turns his back. Measured: with the bonus applying to fleers
+        // too, the charge made the key pressed at first contact more lethal than pressing late and
+        // inverted GDD §5's ladder.
         double impactSpeed = attacker.ChargeImpactSpeed;
         double chargeMultiplier =
             attacker.ConsumeChargeBonus() && defender.State is not CombatState.Retreating
                 ? 1 + (impactSpeed / _tuning.MoveSpeedAtMaxSpeed * _tuning.ChargeDamageAtFullSpeed)
                 : 1.0;
 
-        // 1) İsabet
+        // 1) Hit
         bool flanking = IsFlanking(attacker, defender);
         double hitChance = (_tuning.BaseHitChance + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
                            * staminaFactor;
@@ -1433,22 +1433,22 @@ public sealed class Battle
             return;
         }
 
-        // 2) Yakalama — kaçınmadan ÖNCE denenir. Yakalama taahhütlü savunmadır: savaşçı
-        // gelen silahın üstüne gider. Kaçınmadan sonra gelseydi kural hiç ısırmazdı;
-        // kaçınma zaten tutmuş olurdu ve jitte yalnızca "kaçınamayanın son çaresi"
-        // olarak kalırdı — oysa asıl karşılığı saldıranı kilitlemek.
+        // 2) Catching — tried BEFORE evasion. Catching is committed defence: the warrior goes into
+        // the incoming weapon. Had it come after evasion the rule would never bite; evasion would
+        // already have held and the jitte would stay "the last resort of the one who cannot evade" —
+        // whereas its real return is locking the attacker down.
         if (TryCatch(attacker, defender, flanking))
         {
             return;
         }
 
-        // 3) Blok — duruşta olan savaşçı kaçınmaz, karşılar. Kaçınmadan ÖNCE gelir çünkü
-        // blok bir zar değil bir taahhüttür: savaşçı hamlesini çoktan seçmiştir. Sonrasına
-        // konsaydı bloğun tuttuğu darbelerin bir kısmını kaçınma zaten silmiş olurdu ve
-        // duruşun ölçülen değeri kendi bedelinin altında kalırdı.
+        // 3) Block — a warrior in the stance does not evade, he meets the blow. It comes BEFORE
+        // evasion because a block is not a die but a commitment: the warrior has already chosen his
+        // move. Placed after, evasion would already have erased some of the blows the block holds
+        // and the stance's measured value would fall below its own cost.
         bool blocking = !flanking && defender.State is CombatState.Blocking;
 
-        // 4) Kaçınma — çekilirken kaçınılamaz, arkadan gelen vuruş da kaçınılamaz
+        // 4) Evasion — no evading while pulling out, and no evading a strike from behind
         if (!blocking && !flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
         {
             double evasionChance = defStats.Evasion / 100.0 * _tuning.MaxEvasionChance;
@@ -1461,7 +1461,7 @@ public sealed class Battle
             }
         }
 
-        // 5) Hasar — darbe önce bir bölgeye iner (zırh ve kopma oradan okunur)
+        // 5) Damage — the blow first lands on a region (armour and dismemberment are read from it)
         Weapon weapon = attacker.Weapon;
         double raw = weapon.Damage
                      * (1 + (atkStats.Strength / 100.0 * _tuning.StrengthDamageBonusAtMax))
@@ -1469,8 +1469,8 @@ public sealed class Battle
                      * (flanking ? _tuning.FlankDamageMultiplier : 1.0)
                      * chargeMultiplier;
 
-        // Duruşun ne kadar tuttuğu savaşçının elindeki silahtan okunur: uzun sap darbeyi
-        // gövdesiyle karşılar, yumruk hemen hiç karşılamaz.
+        // How much the stance holds is read from the weapon in the warrior's hand: a long haft meets
+        // the blow with its shaft, a fist meets almost nothing.
         double dismemberment = weapon.DismembermentFactor;
         double stun = weapon.StunFactor;
 
@@ -1498,24 +1498,24 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Yakalama zarını atar; tuttuysa vuruşu siler ve saldıranı kilitler.
+    /// Rolls the catch die; if it holds, it erases the strike and binds the attacker.
     /// </summary>
-    /// <returns>Vuruş yakalandıysa true — çağıran orada durur.</returns>
+    /// <returns>True if the strike was caught — the caller stops there.</returns>
     /// <remarks>
     /// <para>
-    /// GDD §4'ün kalkanı reddederken bıraktığı boşluk budur: elde taşınan kalkan Japon
-    /// savaşında yaygın değildi, ama gelen kılıcı <b>durduran</b> bir alet vardı. Zar üç
-    /// şeyden beslenir — savunanın aletinin kavrayışı (<c>CatchSkill</c>), saldıranın
-    /// silahının yakalanabilirliği (<c>CatchFactor</c>) ve savunanın <b>İsabet</b>'i.
-    /// Kaçınma Kaçınma'ya bağlıyken yakalamanın İsabet'e bağlanması bilinçli: iki savunma
-    /// ekseni aynı stattan beslenseydi ekipman kararı stat kararının kopyası olurdu.
+    /// This is the gap GDD §4 left when it rejected the shield: a hand-carried shield was not common
+    /// in Japanese warfare, but there was an implement that <b>stopped</b> the incoming sword. The die
+    /// feeds on three things — the grip of the defender's implement (<c>CatchSkill</c>), how catchable
+    /// the attacker's weapon is (<c>CatchFactor</c>) and the defender's <b>Accuracy</b>. Evasion hangs
+    /// on Evasion while catching hangs on Accuracy deliberately: if both defensive axes fed off the
+    /// same stat, the equipment decision would be a copy of the stat decision.
     /// </para>
     /// <para>
-    /// Üç koruma kuralı var. <b>Yalnızca yakın dövüş yakalanır</b> — havada gelen mermi
-    /// çengele oturmaz. <b>Arkadan gelen vuruş yakalanmaz</b>: görülmeyen silah tutulamaz,
-    /// ve kural burada da işleseydi kuşatmanın (§5) bedeli silinirdi. <b>Çekilen savaşçı
-    /// yakalamaz</b> — sırtı dönük koşan biri karşısındakinin silahına gitmez, ve
-    /// sersemletmede olduğu gibi kaçış vaadinin üstüne yeni bir zar konmaz.
+    /// There are three protective rules. <b>Only melee is caught</b> — a projectile in the air does
+    /// not seat in the hook. <b>A strike from behind is not caught</b>: a weapon you cannot see cannot
+    /// be held, and if the rule worked here too the price of being encircled (§5) would be erased.
+    /// <b>A warrior pulling out does not catch</b> — someone running with his back turned does not go
+    /// into the other man's weapon, and as with stun no new die is placed on top of the escape promise.
     /// </para>
     /// </remarks>
     private bool TryCatch(Combatant attacker, Combatant defender, bool flanking)
@@ -1550,14 +1550,14 @@ public sealed class Battle
         defender.CatchesMade++;
         attacker.TimesCaught++;
 
-        // Yakalanan savaşçı hücumunu da kaybeder — kenetlenen kol momentum taşımaz.
+        // The warrior who is caught loses his charge too — a bound arm carries no momentum.
         attacker.ClearCharge();
 
-        // Çengel yalnızca tutmaz: kaldıraç yapıp silahı avuçtan söker. Düşürme kilidin
-        // ÜSTÜNE binmez, YERİNE geçer — elden çıkan silahla birlikte kenetlenme de
-        // çözülür, saldıran serbest kalır ama silahsız. Üst üste binseydi yakalama aleti
-        // tek zarda hem pencereyi hem silahı alır, hasarda kaybettiğinin karşılığı
-        // fazlasıyla ödenirdi.
+        // The hook does not only hold: it levers the weapon out of the palm. Disarming does not stack
+        // ON TOP OF the bind, it takes its PLACE — with the weapon gone the bind is released too, and
+        // the attacker is free but unarmed. Stacked, the catching implement would take both the window
+        // and the weapon on a single die, and what it loses in damage would be more than repaid.
+
         double disarmChance = _tuning.CatchDisarmChance * caught.DisarmFactor;
         if (disarmChance > 0 && _rng.Chance(Math.Clamp(disarmChance, 0, 1)))
         {
@@ -1572,7 +1572,7 @@ public sealed class Battle
         return true;
     }
 
-    /// <summary>Darbenin kaynağı — yalnızca hangi olayın yayınlanacağını belirler.</summary>
+    /// <summary>The source of the blow — it only decides which event is emitted.</summary>
     private enum BlowSource
     {
         Melee,
@@ -1580,12 +1580,12 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// İsabet etmiş bir darbenin sonucunu uygular: bölge, zırh, hasar, kopma ağacı.
+    /// Applies the outcome of a blow that has landed: region, armour, damage, dismemberment tree.
     /// </summary>
     /// <remarks>
-    /// Yakın dövüş ve fırlatma <b>aynı</b> yoldan geçer. Ayrı yazılsalardı zırhın bölgeye
-    /// göre okunması ya da ağır darbe ağacı iki yerde ayrı ayrı bakım isterdi ve biri
-    /// sessizce geride kalırdı.
+    /// Melee and throwing go through the <b>same</b> path. Written separately, reading armour by
+    /// region or the heavy-blow tree would need maintenance in two places and one of them would
+    /// quietly fall behind.
     /// </remarks>
     private void ApplyBlow(
         Combatant attacker,
@@ -1607,8 +1607,8 @@ public sealed class Battle
             _tuning.MinimumDamage,
             afterDefense - struckPiece.DamageReduction);
 
-        // Parça durdurduğu kadar yıpranır. Zar yok: emdiği her puan havuzundan düşer ve
-        // havuz bitince parça dağılıp KALICI olarak gider (docs/GDD.md §7).
+        // A piece wears as much as it stops. No die: every point it absorbs comes off its pool, and
+        // when the pool runs out the piece breaks and is gone PERMANENTLY (docs/GDD.md §7).
         WearArmor(defender, location, struckPiece, afterDefense - damage);
 
         defender.Health -= damage;
@@ -1619,34 +1619,34 @@ public sealed class Battle
 
         double remaining = Math.Max(0, defender.Health);
 
-        // Bloklanan darbe ayrı bir olaydır, "isabet" değil: sunum katmanı sarsılan duruşu
-        // kanlı isabetten ayırmak zorunda. Sayaçlar yine de artar — darbe indi.
+        // A blocked blow is a separate event, not a "hit": the presentation layer has to tell a
+        // shaken stance from a bloody hit. The counters still rise — the blow landed.
         Emit(blocked
             ? new AttackBlocked(ElapsedSeconds, attacker.Id, defender.Id, damage)
             : source == BlowSource.Melee
                 ? new AttackLanded(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining)
                 : new ProjectileHit(ElapsedSeconds, attacker.Id, defender.Id, damage, remaining));
 
-        // İlk isabet kaçış tuşunu açar; hangi taraf vurursa vursun.
+        // The first hit unlocks the flee key; whichever side strikes.
         _contactMade = true;
 
-        // İsabet biriken hücumu dağıtır (docs/GDD.md §4). Uzuv kopma zarından önce
-        // bakılır: darbe öldürse de dağılma zaten gerçekleşmiştir, ve ölüm durumu
-        // buradaki Idle'ı ezer.
+        // A hit scatters a gathering charge (docs/GDD.md §4). It is checked before the dismemberment
+        // die: even if the blow kills, the scattering has already happened, and the death state
+        // overrides the Idle set here.
         if (defender.State is CombatState.ChargeWindup)
         {
             BreakChargeWindup(defender);
         }
 
-        // Koşmakta olan hücumu isabet dağıtmaz — ama cepheden karşılayan hedefin nadir
-        // karşı vuruşu MOMENTUMU söndürür: varış vuruşu sıradan bir vuruşa iner.
-        // Yoldan geçenin darbesi bunu yapamaz; zorluk da değeri de tam anında karşılamakta.
+        // A hit does not scatter a charge already running — but the rare counter-hit of the target
+        // meeting it head-on KILLS THE MOMENTUM: the arrival blow drops to an ordinary strike.
+        // A passer-by's blow cannot do this; both the difficulty and the value are in meeting it in time.
         if (defender.State is CombatState.Charging && defender.ChargeTarget == attacker.Id)
         {
             defender.ChargeMomentumBroken = true;
         }
 
-        // Ağır darbe → uzuv kopma zarı (düşük can ÖN KOŞUL DEĞİL)
+        // Heavy blow → dismemberment die (low health is NOT A PRECONDITION)
         bool grievous =
             TryGrievousBlow(defender, damage, defStats, location, struckPiece, dismembermentFactor);
 
@@ -1655,23 +1655,23 @@ public sealed class Battle
             Die(defender, DeathCause.Wounds);
         }
 
-        // Zehir zardan geçmez: namlu deriyi çizdiyse doz girmiştir. Ölen savaşçıya
-        // zehir işlenmez — zehrin karşılığı zaman, ölünün zamanı yok.
+        // Poison does not go through a die: if the blade scratched skin, the dose is in. Poison is not
+        // applied to a dying warrior — poison's currency is time, and the dead have none.
         if (defender.IsActive && defender.Health > 0 && poison > 0)
         {
             ApplyPoison(attacker, defender, poison);
         }
 
-        // Sersemletme zarı en sonda: ayakta kalmayan savaşçının donacak bir şeyi yok.
-        // Kopma zarından SONRA atılır ki aynı ağır darbenin iki sonucu belirli bir
-        // sırada çözülsün — seed aynıysa dövüş de aynı kalır.
+        // The stun die comes last: a warrior who is not on his feet has nothing left to freeze.
+        // It is rolled AFTER the dismemberment die so that the two outcomes of the same heavy blow
+        // resolve in a fixed order — with the same seed, the fight stays the same.
         if (defender.IsActive && defender.Health > 0)
         {
             TryStun(attacker, defender, damage, defStats, location, struckPiece, stunFactor);
         }
 
-        // Düşürme zarı en sonda ve yalnızca yakın dövüşte: kavrayışı bozan şey silahın
-        // plakaya çarpıp geri tepmesidir. Mermi zaten elden çıkmıştır.
+        // The disarm die comes last and only in melee: what breaks the grip is the weapon striking
+        // plate and bouncing back. A projectile has already left the hand.
         if (source == BlowSource.Melee)
         {
             TryDisarmOnArmor(attacker, defender, struckPiece);
@@ -1679,12 +1679,12 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Vurulan parçayı yıpratır; havuzu bitmişse parçayı dağıtır.
+    /// Wears the struck piece; if its pool is spent, breaks the piece.
     /// </summary>
     /// <remarks>
-    /// Silahla arasındaki fark bilinçli: düşen silah dövüş sonunda geri gelir, dağılan
-    /// zırh parçası gelmez. Zırh oyunun sarf malzemesidir — ve en çok emen kuşam en
-    /// çabuk tükenendir.
+    /// The difference from the weapon is deliberate: a dropped weapon comes back at the end of the
+    /// fight, a broken armour piece does not. Armour is the game's consumable — and the armour that
+    /// absorbs the most is the one that runs out the fastest.
     /// </remarks>
     private void WearArmor(
         Combatant defender,
@@ -1704,19 +1704,19 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Zırha inen vuruşta saldıranın kendi silahının elden düşme zarını atar.
+    /// Rolls the die for the attacker's own weapon being knocked out of his hand on a strike that lands on armour.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Zırhın ikinci cevabı budur. Çıplak bölgeye inen vuruş <b>hiç</b> düşürmez: sertlik,
-    /// vurulan parçanın kopma direncinden okunur (<see cref="CombatTuning.ArmorHardnessShare"/>),
-    /// ve çıplak bölgenin direnci sıfırdır. Kural böylece kendi kendini sınırlar —
-    /// zırhsız düşmanla dövüşen savaşçı silahını asla elinden kaçırmaz.
+    /// This is armour's second answer. A strike landing on a bare region <b>never</b> disarms:
+    /// hardness is read from the struck piece's dismemberment resistance
+    /// (<see cref="CombatTuning.ArmorHardnessShare"/>), and a bare region's resistance is zero. The
+    /// rule thus limits itself — a warrior fighting an unarmoured enemy never loses his weapon.
     /// </para>
     /// <para>
-    /// Zar <b>saldıranın</b> silahına atılır, savunanınkine değil: kavrayışı bozan şey
-    /// plakadan dönen darbedir. Künt sınıfın üçüncü kazancı burada — geri tepen sopa
-    /// avuçta kalır.
+    /// The die is rolled on the <b>attacker's</b> weapon, not the defender's: what breaks the grip is
+    /// the blow bouncing off plate. The blunt class's third gain is here — a club that rebounds stays
+    /// in the palm.
     /// </para>
     /// </remarks>
     private void TryDisarmOnArmor(Combatant attacker, Combatant defender, ArmorPiece struckPiece)
@@ -1738,31 +1738,31 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Silahı elden düşürür: savaşçı dövüşün geri kalanını yumrukla geçirir.
+    /// Drops the weapon out of the hand: the warrior spends the rest of the fight with his fists.
     /// </summary>
     /// <remarks>
-    /// Yumruğa düşmek yalnızca hasar kaybı değildir — menzil 150/130'dan 100'e iner,
-    /// saldırı döngüsü kısalır, yumruk yakalanamaz. Kaybın büyüklüğü bu yüzden silahtan
-    /// silaha değişir: nodachi'sini düşüren savaşçı mesafesini de kaybeder. Kayıp kalıcı
-    /// değil: silah yerde durur ve savaşçı ona yürüyebilir (bkz. <see cref="TryPickUp"/>).
+    /// Falling back on fists is not only a loss of damage — reach drops from 150/130 to 100, the
+    /// attack cycle shortens, a fist cannot be caught. The size of the loss therefore differs from
+    /// weapon to weapon: a warrior who drops his nodachi loses his distance too. The loss is not
+    /// permanent: the weapon lies on the ground and he can walk to it (see <see cref="TryPickUp"/>).
     /// </remarks>
     /// <param name="past">
-    /// Silahın üzerinden savrulduğu savaşçı — silah <b>onun arkasına</b> düşer.
+    /// The warrior the weapon is flung past — it falls <b>behind him</b>.
     /// </param>
     /// <remarks>
-    /// Yönün önemi ölçümde ortaya çıktı: silah sahibinin gerisine düşerse yerden alma
-    /// yürüyüşü savaşçıyı dövüşten <b>geri</b> çeker ve yavaş bir düşmanın önünde
-    /// düşürme bir bedel değil, bedava bir nefes molası olur (ölçüldü: mesafe arttıkça
-    /// oyuncunun zaferi <b>yükseliyordu</b>). Karşıdakinin arkasına düşünce bedel gerçek:
-    /// silahına gitmek düşmanın içinden geçmek demek.
+    /// The importance of the direction came out of measurement: if the weapon falls behind its owner,
+    /// the walk to pick it up pulls the warrior <b>back</b> out of the fight and, in front of a slow
+    /// enemy, disarming becomes not a cost but a free breather (measured: the player's victory
+    /// <b>rose</b> as the distance grew). When it falls behind the other man the cost is real: going
+    /// to his weapon means going through the enemy.
     /// </remarks>
     private void DropWeapon(Combatant owner, Combatant? disarmer, Combatant past)
     {
         Weapon lost = owner.Weapon;
         string name = lost.Name;
 
-        // Silah yok olmaz, yere düşer: silahsız kalan herkes — düşüren, takım arkadaşı,
-        // düşman — ona yürüyebilir. Kırılma yerine düşme seçilmesinin karşılığı bu.
+        // The weapon is not destroyed, it falls to the ground: anyone left unarmed — the disarmer, a
+        // teammate, an enemy — can walk to it. That is what choosing dropping over breaking buys.
         _dropped.Add(new GroundWeapon(lost, Clamped(DropPoint(owner, past))));
 
         owner.HeldWeapon = null;
@@ -1778,19 +1778,19 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Zehirli vuruşun dozunu savunana işler.
+    /// Applies the dose of a poisoned strike to the defender.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Zar atılmaz: zehir namlunun üstündedir, vuruş deriyi çizdiyse doz da girmiştir.
-    /// Zırh burada da hiçbir şey yapmaz — kuralın tamamı bunun üzerine kurulu
+    /// No die is rolled: the poison is on the blade, and if the strike scratched skin the dose is in.
+    /// Armour does nothing here either — the whole rule is built on that
     /// (<see cref="CombatTuning.PoisonDamagePerTick"/>).
     /// </para>
     /// <para>
-    /// Doz <b>birikir</b> (tavanı <see cref="CombatTuning.PoisonMaxDose"/>), süre ise her
-    /// vuruşta baştan kurulur. Süre birikseydi zehirli silah tek bir dövüşte sonsuza kadar
-    /// uzayan bir hasar kuyruğu üretirdi; doz birikmeseydi ilk vuruştan sonraki vuruşların
-    /// zehri hiçbir şeye yaramazdı.
+    /// The dose <b>accumulates</b> (capped by <see cref="CombatTuning.PoisonMaxDose"/>), while the
+    /// timer is restarted on every strike. Were the timer to accumulate, a poisoned weapon would
+    /// produce an endlessly extending damage tail in a single fight; were the dose not to accumulate,
+    /// the poison of every strike after the first would be worth nothing.
     /// </para>
     /// </remarks>
     private void ApplyPoison(Combatant attacker, Combatant defender, double potency)
@@ -1801,8 +1801,8 @@ public sealed class Battle
         defender.PoisonSecondsLeft = _tuning.PoisonSeconds;
         defender.PoisonSource = attacker;
 
-        // Saat yalnızca temiz kana ilk doz girerken kurulur: her yeni vuruşta sıfırlansaydı
-        // hızlı vuran zehirli silah, hasarı sürekli erteleyerek kendi zehrini iptal ederdi.
+        // The clock is only started when the first dose enters clean blood: reset on every strike, a
+        // fast poisoned weapon would cancel its own poison by endlessly postponing the damage.
         if (wasClean)
         {
             defender.PoisonTickTimer = _tuning.PoisonTickSeconds;
@@ -1820,22 +1820,22 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Zehrin saatini ilerletir ve sırası geldiyse hasarı uygular.
+    /// Advances poison's clock and applies the damage when its turn comes.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Zehir hasarı <b>zırhtan da Savunma statından da geçmez</b>: doz kana girmiştir,
-    /// arada plaka yoktur. Zehirli silahın açık dövüşteki düşük hasarı bunun bedelidir.
+    /// Poison damage goes through <b>neither armour nor the Defence stat</b>: the dose is in the
+    /// blood, there is no plate in between. The poisoned weapon's low damage in an open fight is the price.
     /// </para>
     /// <para>
-    /// Zehir uzuv koparmaz ve sersemletmez — ikisi de <b>darbenin</b> sonucudur, oysa
-    /// burada vuran kimse yok. Öldürebilir; ölüm sebebi ayrı tutulur
-    /// (<see cref="DeathCause.Poison"/>) çünkü savaşçıyı sahadaki hiçbir vuruş düşürmemiştir.
+    /// Poison neither takes limbs nor stuns — both are outcomes of a <b>blow</b>, and here nobody is
+    /// striking. It can kill; the cause of death is kept separate (<see cref="DeathCause.Poison"/>)
+    /// because no strike on the field brought the warrior down.
     /// </para>
     /// <para>
-    /// <b>Çekilen savaşçının zehri durmaz.</b> Sersemletme ve yakalama, kaçış vaadinin
-    /// üstüne yeni bir zar konmasın diye çekilene işlemez; zehir yeni bir zar değil, çoktan
-    /// ödenmiş bir bedelin devamıdır — tuş bir panzehir değildir.
+    /// <b>The poison of a warrior pulling out does not stop.</b> Stun and catching do not apply to a
+    /// fleeing warrior so that no new die is placed on top of the escape promise; poison is not a new
+    /// die but the continuation of a price already paid — the key is not an antidote.
     /// </para>
     /// </remarks>
     private void TickPoison(Combatant c)
@@ -1886,21 +1886,21 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Sersemletme zarını atar ve tuttuysa savaşçıyı dondurur.
+    /// Rolls the stun die and, if it holds, freezes the warrior.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kural künt silahın var oluş sebebidir: kesici uzuv koparır, künt savaşçıyı
-    /// donduran darbeyi indirir (docs/GDD.md §7). Direnç, kopmada olduğu gibi darbenin
-    /// <b>indiği</b> bölgenin zırhından okunur — ama tamamı değil, yalnızca bir payı
-    /// (<see cref="CombatTuning.ArmorStunResistanceShare"/>): plaka kesiği durdurduğu
-    /// kadar künt kuvveti durdurmaz.
+    /// The rule is the blunt weapon's reason to exist: a blade takes limbs, a blunt weapon lands the
+    /// blow that freezes the warrior (docs/GDD.md §7). As with dismemberment, resistance is read from
+    /// the armour of the region the blow <b>landed on</b> — but not all of it, only a share
+    /// (<see cref="CombatTuning.ArmorStunResistanceShare"/>): plate does not stop blunt force the way
+    /// it stops a cut.
     /// </para>
     /// <para>
-    /// <b>Çekilen savaşçı sersemlemez.</b> Sersemletme onu donduracağı için, künt silahlı
-    /// bir düşman oyuncunun tek müdahalesini (docs/GDD.md §5) tek zarla iptal edebilirdi;
-    /// "Kaç" tuşunun ölümü düşürme vaadi buna dayanamaz. Sersemleyen savaşçı zaten
-    /// savunmasız olduğundan üst üste sersemletme de yoktur — süre yenilenmez.
+    /// <b>A warrior pulling out is not stunned.</b> Since a stun would freeze him, an enemy with a
+    /// blunt weapon could cancel the player's only intervention (docs/GDD.md §5) with a single die;
+    /// the "Flee" key's promise to reduce death cannot bear that. Because a stunned warrior is already
+    /// defenceless there is no stun stacking either — the duration is not refreshed.
     /// </para>
     /// </remarks>
     private void TryStun(
@@ -1934,9 +1934,9 @@ public sealed class Battle
             return;
         }
 
-        // Sersemleyen savaşçı hücumunu da kaybeder: koşuysa yarıda kalır, birikmeyse
-        // dağılır. Sayaçlar BreakChargeWindup'ta değil burada tutulmaz — orası isabetin
-        // hücumu dağıtma kuralı, burası darbenin savaşçıyı dondurma kuralı.
+        // A stunned warrior loses his charge too: a run is cut short, a windup scatters. The counters
+        // are not kept here rather than in BreakChargeWindup — that is the rule about a hit scattering
+        // a charge, this is the rule about a blow freezing the warrior.
         defender.ClearCharge();
 
         defender.TimesStunned++;
@@ -1946,14 +1946,14 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Ağır darbe sonucunu çözer.
+    /// Resolves the outcome of a heavy blow.
     /// </summary>
-    /// <returns>Ağır darbe tetiklendiyse (ölüm veya uzuv kaybı) true.</returns>
+    /// <returns>True if a heavy blow was triggered (death or limb loss).</returns>
     /// <remarks>
-    /// Direnç, darbenin <b>indiği</b> bölgenin zırhından okunur — koparılan uzvun
-    /// değil. Zar "bu vuruş kesip geçti mi" sorusudur; kolu örten kote, gövdeye inen
-    /// darbeyi durduramaz. Gövde vuruşunun yine de bir uzva mal olması ayrı bir kural
-    /// (bkz. <see cref="SeverablePart"/>).
+    /// Resistance is read from the armour of the region the blow <b>landed on</b> — not of the limb
+    /// that comes off. The die asks "did this strike cut through"; a kote covering the arm cannot stop
+    /// a blow landing on the torso. A torso hit still costing a limb is a separate rule
+    /// (see <see cref="SeverablePart"/>).
     /// </remarks>
     private bool TryGrievousBlow(
         Combatant defender,
@@ -1978,18 +1978,18 @@ public sealed class Battle
             return false;
         }
 
-        // Sonuç ağacı (docs/GDD.md §7): belirleyici olan darbenin öldürücü olup olmadığı.
+        // The outcome tree (docs/GDD.md §7): what decides is whether the blow was lethal.
         bool severed = TrySever(defender, location);
 
-        // Öldürmeyen ağır darbe: uzuv gider, savaşçı sahada kalır ve dövüşmeye devam
-        // eder. Tuş gerekmez — böylece uzuv kaybederek KAZANMAK mümkün olur.
+        // A heavy blow that does not kill: the limb goes, the warrior stays on the field and keeps
+        // fighting. No key is needed — which makes WINNING while losing a limb possible.
         if (defender.Health > 0)
         {
             return true;
         }
 
-        // Öldürücü darbe: tuşa basmak ölümü uzuv kaybına çevirir. Koparacak uzuv
-        // kalmadıysa çevirecek bir şey de yoktur — savaşçı ölür.
+        // A lethal blow: pressing the key turns death into limb loss. If there is no limb left to
+        // take there is nothing to turn either — the warrior dies.
         if (defender.PlayerIntervened && severed)
         {
             defender.Health = _tuning.SurvivalHealthAfterIntervention;
@@ -2000,8 +2000,8 @@ public sealed class Battle
         return true;
     }
 
-    /// <summary>Koparılabilecek bir uzuv varsa koparır.</summary>
-    /// <returns>Uzuv koptuysa true.</returns>
+    /// <summary>Takes a limb if there is one that can be taken.</summary>
+    /// <returns>True if a limb came off.</returns>
     private bool TrySever(Combatant defender, HitLocation location)
     {
         if (SeverablePart(defender, location) is not BodyPart part)
@@ -2016,23 +2016,23 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Ölümden dönen savaşçının hangi uzvunu kaybettiği. Kaybedecek uzvu kalmadıysa
-    /// <c>null</c>.
+    /// Which limb the warrior brought back from death lost. <c>null</c> if he has no limb left to
+    /// lose.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Darbe gövdeye inmişse bile <b>bir uzuv gider</b>: bölge yalnızca hasarı ve zırhı
-    /// ilgilendirir, sonuç ağacını değil. Aksi hâlde gövdeye inen darbelerde "çek" tuşu
-    /// <b>bedava</b> olurdu — ölümden dönersin, hiçbir şey kaybetmezsin. GDD §7'nin
-    /// vaadi tam tersi: "tuşa basmak hayat kurtarır ama bedelsiz değildir".
+    /// Even if the blow landed on the torso, <b>a limb goes</b>: the region concerns only damage and
+    /// armour, not the outcome tree. Otherwise the "pull out" key would be <b>free</b> on torso blows
+    /// — you come back from death and lose nothing. GDD §7's promise is the opposite: "pressing the
+    /// key saves a life but is not free".
     /// </para>
     /// <para>
-    /// Ölçüldü: gövde vuruşları koparmasın denince oyuncu zaferi %36'dan %53'e çıktı,
-    /// yani müdahale neredeyse risksiz hâle geldi.
+    /// Measured: with torso hits made not to take limbs, player victory rose from 36% to 53%, that is,
+    /// intervention became almost riskless.
     /// </para>
     /// <para>
-    /// Kalan uzuvlar arasında seçim, bölge ağırlıklarının kendisiyle yapılır — gövde
-    /// hariç. Aynı uzuv iki kez kopmaz.
+    /// The choice among the remaining limbs is made with the region weights themselves — torso
+    /// excluded. The same limb does not come off twice.
     /// </para>
     /// </remarks>
     private BodyPart? SeverablePart(Combatant defender, HitLocation location)
@@ -2052,7 +2052,7 @@ public sealed class Battle
             return hit;
         }
 
-        // Gövdeye indi ya da o uzuv zaten yok: kalanlardan ağırlıklı seçim.
+        // It landed on the torso, or that limb is already gone: a weighted choice among the rest.
         Span<double> weights =
         [
             Weight(BodyPart.SwordArm, _tuning.ArmHitWeight),
@@ -2093,7 +2093,7 @@ public sealed class Battle
         defender.Warrior.HasDisability(part)
         || _lostParts.GetValueOrDefault(defender.Id).Has(part);
 
-    /// <summary>Darbenin nereye indiği — ağırlıklı zar, tek RNG çağrısı.</summary>
+    /// <summary>Where the blow lands — a weighted die, a single RNG call.</summary>
     private HitLocation RollHitLocation()
     {
         double torso = _tuning.TorsoHitWeight;
@@ -2135,7 +2135,7 @@ public sealed class Battle
         Emit(new WarriorDied(ElapsedSeconds, c.Id, cause));
     }
 
-    // ------------------------------------------------------------- yardımcılar
+    // ------------------------------------------------------------------ helpers
 
     private void RegenerateStamina(Combatant c)
     {
@@ -2152,8 +2152,8 @@ public sealed class Battle
 
         if (!_contactMade)
         {
-            // Politika oyuncunun tuşunu taklit eder; tuş temastan önce kapalıysa politika
-            // da susar. Aksi hâlde reddedilen basış sayacı simülasyonda şişerdi.
+            // The policy imitates the player's key; if the key is off before contact, the policy is
+            // silent too. Otherwise the refused-press counter would inflate in simulation.
             return;
         }
 
@@ -2168,8 +2168,8 @@ public sealed class Battle
 
         if (_setup.RetreatPolicy.ShouldRetreat(in context))
         {
-            // Politika tek bir savaşçıya bakar ama komut ekibin tamamını kapsar —
-            // oyuncunun tuşuyla aynı kural (bkz. docs/GDD.md §5).
+            // The policy looks at a single warrior but the command covers the whole team — the same
+            // rule as the player's key (see docs/GDD.md §5).
             CommandRetreat();
         }
     }
@@ -2188,34 +2188,34 @@ public sealed class Battle
     }
 
     /// <remarks>
-    /// LINQ yerine düz döngü: bu iki yardımcı her tick'te her savaşçı için çağrılıyor
-    /// ve lambda'ların yakaladığı değişkenler dövüş başına yüz binlerce bayt ayırıyordu.
-    /// Toplu simülasyon on binlerce dövüş koşturuyor; sıcak döngü ayırma yapmamalı
-    /// (bkz. <c>ThroughputTests</c>).
+    /// A plain loop instead of LINQ: these two helpers are called for every warrior on every tick, and
+    /// the variables the lambdas captured allocated hundreds of thousands of bytes per fight. Batch
+    /// simulation runs tens of thousands of fights; the hot loop must not allocate
+    /// (see <c>ThroughputTests</c>).
     /// </remarks>
     /// <summary>
-    /// Saldıranın hedefi: elindeki hedef hâlâ ayaktaysa o, değilse <b>en yakın</b> düşman.
+    /// The attacker's target: the one he has if it is still standing, otherwise the <b>nearest</b> enemy.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Hedef <b>yapışkandır</b>: bir kez seçilince düşman ölene ya da kaçana kadar
-    /// korunur. Her tick'te en yakına dönseydi savaşçılar iki düşman arasında salınır,
-    /// hiç vuramazdı.
+    /// The target is <b>sticky</b>: once chosen it is kept until the enemy dies or flees. Returning to
+    /// the nearest on every tick would make warriors oscillate between two enemies and never land a
+    /// hit.
     /// </para>
     /// <para>
-    /// Uzam gelmeden önce hedef rastgele seçiliyordu — mesafe diye bir şey olmadığı için
-    /// başka anlamlı kural yoktu. Artık kural Domina'daki gibi uzamdan çıkıyor: kılıcın
-    /// erişebileceği en yakın düşman.
+    /// Before space existed the target was chosen at random — with no such thing as distance, there
+    /// was no other meaningful rule. Now the rule comes out of space as it does in Domina: the nearest
+    /// enemy the sword can reach.
     /// </para>
     /// </remarks>
     /// <summary>
-    /// Savaşçının şu anki hedefi; yoksa yeniden seçtirir.
+    /// The warrior's current target; if he has none, makes him choose again.
     /// </summary>
     /// <remarks>
-    /// Hedef <b>karar adımlarında</b> seçilir (<see cref="ChooseTarget"/>), her tikte
-    /// değil. Yürüyüş döngüsü de burayı okur ve seçimi olduğu gibi devralır: puanlama
-    /// tik başına koşsaydı hem seçim her karede oynardı hem de maliyeti savaşçı sayısının
-    /// karesiyle büyürdü — ölçüldü, 10.000 dövüş bütçenin iki katına çıkıyordu.
+    /// The target is chosen at <b>decision steps</b> (<see cref="ChooseTarget"/>), not on every tick.
+    /// The movement loop reads here too and takes the choice as it is: were the scoring to run per
+    /// tick, the choice would flicker every frame and the cost would grow with the square of the
+    /// warrior count — measured, 10,000 fights went to twice the budget.
     /// </remarks>
     private Combatant? FindTarget(Combatant attacker) =>
         attacker.Target is { IsActive: true } current ? current : ChooseTarget(attacker);
@@ -2247,53 +2247,53 @@ public sealed class Battle
     }
 
     /// <summary>
-    /// Bir düşmanın bu savaşçı için çekiciliği. Yüksek olan seçilir.
+    /// How attractive an enemy is to this warrior. The highest is chosen.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kural, "en yakını seç ve ölene kadar ona sadık kal"ın yerini alır. Eski hâl bir
-    /// karar değildi: yaralı düşman fark edilmiyor, zırhı dağılmış açık bölge fark
-    /// edilmiyor, üç savaşçı aynı hedefe yığılıp yığılmadıklarını bilmiyordu.
+    /// The rule replaces "pick the nearest and stay loyal to him until he dies". The old form was not
+    /// a decision: a wounded enemy went unnoticed, a region exposed by broken armour went unnoticed,
+    /// and three warriors did not know whether they had piled onto the same target.
     /// </para>
     /// <para>
-    /// Zar yok — puanlama <b>deterministik</b>. Rastgelelik kararın kendisinde değil,
-    /// savaşçının kimliğinde: aynı sahada duran iki savaşçı farklı statlarla farklı
-    /// hedefler seçer. Zar atılsaydı seçim her tikte titrer ve ölçüm gürültüye boğulurdu.
+    /// No die — the scoring is <b>deterministic</b>. The randomness is not in the decision itself but
+    /// in the warrior's identity: two warriors standing on the same field choose different targets with
+    /// different stats. With a die, the choice would jitter every tick and measurement would drown in noise.
     /// </para>
     /// <para>
-    /// <b>Yapışkanlık şart:</b> mevcut hedef fazladan puan alır. Almasaydı iki düşman
-    /// arasında kalan savaşçı her karar adımında yön değiştirir, hiçbirine varamazdı —
-    /// hedef değiştirmenin bedeli, gidilen yolun boşa gitmesidir.
+    /// <b>Stickiness is required:</b> the current target gets extra points. Without it, a warrior
+    /// caught between two enemies would change direction at every decision step and reach neither —
+    /// the price of switching targets is that the road already walked is wasted.
     /// </para>
     /// </remarks>
     private double TargetScore(Combatant attacker, Combatant enemy)
     {
         WarriorStats stats = enemy.Warrior.EffectiveStats;
 
-        // 1) Mesafe — tek başına eski kuralın kendisi. Menzil içindeki düşman ceza almaz;
-        // ceza yalnızca yürünecek yol için ödenir.
+        // 1) Distance — on its own, the old rule itself. An enemy within reach takes no penalty;
+        // the penalty is paid only for the road to be walked.
         double gap = Math.Max(0, attacker.Position.DistanceTo(enemy.Position) - attacker.Weapon.Reach);
         double score = -gap * _tuning.TargetDistanceWeight;
 
-        // Fırsat yalnızca ulaşılabildiği kadar fırsattır: yara da açık bölge de savaşçının
-        // önündeyken sayılır, arenanın öbür ucundayken sayılmaz. Sınır olmadan ölçüm
-        // kuralı düpedüz zorluk artışına çeviriyordu — savaşçı yanındaki sağlam düşmanı
-        // bırakıp uzaktaki yaralıya yürüyor ve yol boyunca bedava vuruş yiyordu.
+        // An opportunity is only an opportunity as far as it can be reached: a wound and an exposed
+        // region count while they are in front of the warrior, not at the far end of the arena.
+        // Without the bound, measurement turned the rule into an outright difficulty increase — the
+        // warrior left the healthy enemy beside him and walked to the distant wounded one, taking free hits along the way.
         double opportunity = _tuning.TargetOpportunityRange <= 0
             ? 0
             : 1 - Math.Clamp(gap / _tuning.TargetOpportunityRange, 0, 1);
 
-        // 2) Yara — bitirilmeye yakın düşman önce bitirilir. Sayıca üstünlük dövüşün
-        // kendisini çözer: bir düşmanı devirmek, üçünü birden yaralamaktan iyidir.
+        // 2) Wound — an enemy close to being finished is finished first. A numbers advantage settles
+        // the fight itself: felling one enemy is better than wounding three.
         double missing = stats.MaxHealth <= 0 ? 0 : 1 - Math.Clamp(enemy.Health / stats.MaxHealth, 0, 1);
         score += missing * opportunity * _tuning.TargetWoundedWeight;
 
-        // 3) Açık bölge — kuşamı dağılmış düşman daha yumuşaktır ve savaşçı bunu görür.
-        // Zırh yıpranmasının dövüş içi karşılığı burada kapanır (docs/GDD.md §7).
+        // 3) Exposed region — an enemy whose armour has broken is softer and the warrior sees it.
+        // Armour wear's in-combat meaning closes here (docs/GDD.md §7).
         score += enemy.DestroyedArmor.Count() / 6.0 * opportunity * _tuning.TargetExposedWeight;
 
-        // 4) Kalabalık — aynı hedefe yığılmak ilk üç maddenin doğal sonucu, ama sınırsız
-        // bırakılırsa takım tek düşmanı kovalarken diğer ikisi bedava vurur.
+        // 4) Crowd — piling onto the same target is the natural result of the first three items, but
+        // left unbounded, the team chases one enemy while the other two strike for free.
         int engaged = 0;
 
         foreach (Combatant mate in _combatants)
@@ -2306,7 +2306,7 @@ public sealed class Battle
 
         score -= engaged * _tuning.TargetCrowdPenalty;
 
-        // 5) Yapışkanlık — yön değiştirmenin bedeli.
+        // 5) Stickiness — the price of changing direction.
         if (attacker.Target == enemy)
         {
             score += _tuning.TargetStickiness;
@@ -2315,10 +2315,10 @@ public sealed class Battle
         return score;
     }
 
-    /// <summary>Karşı taraftaki ayakta savaşçılardan rastgele biri; yoksa <c>null</c>.</summary>
+    /// <summary>A random one of the standing warriors on the other side; <c>null</c> if there is none.</summary>
     /// <remarks>
-    /// İki geçiş yapar ve dizi ayırmaz — sıcak döngüde çağrıldığı için
-    /// (bkz. <c>ThroughputTests.PerBattleAllocationStaysSmallWithoutEvents</c>).
+    /// It makes two passes and allocates no array — because it is called in the hot loop
+    /// (see <c>ThroughputTests.PerBattleAllocationStaysSmallWithoutEvents</c>).
     /// </remarks>
     private Combatant? RandomEnemy(int team)
     {
@@ -2375,7 +2375,7 @@ public sealed class Battle
     {
         if (CountActive(PlayerTeam) == 0)
         {
-            // Çekilmekle kırılmak aynı şey değil: biri seferi harcar, diğeri roster'ı.
+            // Withdrawing and being wiped out are not the same: one spends the expedition, the other the roster.
             bool anyoneEscaped = _combatants.Exists(
                 c => c.Team == PlayerTeam && c.State == CombatState.Escaped);
 
@@ -2396,8 +2396,8 @@ public sealed class Battle
     {
         IsFinished = true;
 
-        // Dövüş biterken havada kalan mermiler ıska sayılır. Sessizce yok olsalardı
-        // görselleştirmede ekranda asılı kalırlardı: atıldıkları olay var, sonuçları yok.
+        // Projectiles still in the air when the fight ends count as misses. Had they vanished silently
+        // they would hang on screen in the visualisation: the launch event exists, the outcome does not.
         foreach (Projectile p in _projectiles)
         {
             Emit(new ProjectileMissed(ElapsedSeconds, p.Attacker.Id, p.Target.Id));
