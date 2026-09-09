@@ -1,6 +1,6 @@
 using Domina.Sim;
 
-// Faz 1.6 — toplu simülasyon aracı. Motor açmadan on binlerce dövüş koşturup
-// ölüm/sakatlık/kazanma oranlarını ölçer; denge çalışmasının tamamı buna dayanır
+// Phase 1.6 — the batch simulation tool. It runs tens of thousands of fights without opening the
+// engine and measures death/maiming/victory rates; all balance work rests on it.
 // (bkz. docs/ROADMAP.md → Faz 1.6).
 return SimCli.Run(args, Console.Out, Console.Error);

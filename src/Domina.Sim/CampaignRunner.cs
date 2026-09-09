@@ -6,19 +6,19 @@ using Domina.Core.Rng;
 
 namespace Domina.Sim;
 
-/// <summary>Bir dojo'nun gün gün oynatılmış hâli.</summary>
+/// <summary>A dojo played out day by day.</summary>
 /// <remarks>
 /// <para>
-/// Ekonomi sayıları (Açık Karar #5) tek bir dövüşe bakarak kilitlenemez: zırhın bedeli
-/// <b>seferler boyunca</b> birikir, revir günü geliri değil <b>zamanı</b> yer, ölen
-/// savaşçının yerine alınan yeni savaşçı da kasadan çıkar. Bu yüzden ölçüm birimi dövüş
-/// değil, <b>sefer dizisi</b>dir: aynı kadro aynı düşmanla günlerce karşılaşır ve kasanın
-/// eğrisine bakılır.
+/// The economy numbers (Open Decision #5) cannot be locked in by looking at a single fight: armour's
+/// price accumulates <b>across expeditions</b>, an infirmary day eats <b>time</b> rather than income,
+/// and the new warrior hired to replace a dead one also comes out of the treasury. So the unit of
+/// measurement is not the fight but the <b>expedition series</b>: the same roster meets the same enemy
+/// for days on end and the treasury's curve is examined.
 /// </para>
 /// <para>
-/// Oyuncu yerine sabit bir <b>politika</b> oynar (onar, yenile, adam al, sefere çık).
-/// Politika akıllı olmak zorunda değil; <b>aynı</b> olmak zorunda — iki fiyat ayarı ancak
-/// aynı davranışın altında karşılaştırılabilir.
+/// A fixed <b>policy</b> plays in the player's place (repair, replace, hire, go on an expedition). The
+/// policy does not have to be smart; it has to be <b>the same</b> — two price settings can only be
+/// compared under the same behaviour.
 /// </para>
 /// </remarks>
 internal sealed record CampaignOptions(
@@ -54,45 +54,45 @@ internal sealed record CampaignOptions(
     public const int DefaultRosterTarget = 4;
     public const int DefaultStartingGold = 600;
 
-    /// <summary>Kaç günlük yiyecek parası çeliğe yatırılmadan bekletilir.</summary>
+    /// <summary>How many days' worth of food money is held back from being spent on steel.</summary>
     public const int DefaultReserveDays = 10;
 
     /// <summary>
-    /// Hangi yıpranma payından sonra onarım yapılır.
+    /// The wear share after which a repair is made.
     /// </summary>
     /// <remarks>
-    /// Politikanın tek gerçek kararı budur: erken onarmak parayı erken harcar, geç
-    /// onarmak parçayı dövüşün ortasında dağıtır. Yarı yol, iki ucun da ölçülebileceği
-    /// nötr başlangıçtır.
+    /// This is the policy's only real decision: repairing early spends the money early, repairing late
+    /// lets the piece break in the middle of a fight. Halfway is the neutral starting point from which
+    /// both ends can be measured.
     /// </remarks>
     public const double DefaultRepairAtWearShare = 0.5;
 }
 
-/// <summary>Pazardan aday seçme politikası.</summary>
+/// <summary>The policy for picking a candidate from the market.</summary>
 /// <remarks>
-/// İki uç kasten ayrı tutulur: "ucuz ham adayı al" ile "parası yeten en iyisini al"
-/// tasarımın rakip olmasını istediği iki strateji. Ölçüm ancak ikisi ayrı koşturulursa
-/// hangisinin kazandığını söyleyebilir.
+/// The two extremes are kept apart on purpose: "buy the cheap raw candidate" and "buy the best you can
+/// afford" are two strategies the design wants to be rivals. Measurement can only say which one wins if
+/// the two are run separately.
 /// </remarks>
 internal enum MarketPick
 {
-    /// <summary>Altın başına en çok stat — ucuz ve ham tarafa kayar.</summary>
+    /// <summary>The most stat per gold — it leans to the cheap and raw side.</summary>
     Value,
 
-    /// <summary>Parası yeten en yüksek statlı aday — pahalı ve hazır taraf.</summary>
+    /// <summary>The highest-stat candidate you can afford — the expensive, ready-made side.</summary>
     Best,
 
-    /// <summary>Parası yeten en yetenekli aday — vaade yatıran taraf.</summary>
+    /// <summary>The most talented candidate you can afford — the side that invests in promise.</summary>
     /// <remarks>
-    /// Üçüncü ucu ölçüm <b>gerektirdi</b>: "ucuz ham adayı al, eğit" stratejisinin gerçek
-    /// dayanağı ucuzluk değil <see cref="RecruitOffer.Talent"/>. Altın başına stata bakan
-    /// politika yeteneği hiç okumaz, yani antrenman yazıldıktan sonra bile o stratejiyi
-    /// temsil etmiyordu.
+    /// Measurement <b>required</b> a third extreme: the real basis of the "buy the cheap raw candidate
+    /// and train him" strategy is not cheapness but <see cref="RecruitOffer.Talent"/>. A policy that
+    /// looks at stat per gold never reads talent, so even after training was written it did not
+    /// represent that strategy.
     /// </remarks>
     Talent,
 }
 
-/// <summary>Bir dojo'yu gün gün oynatır.</summary>
+/// <summary>Plays one dojo day by day.</summary>
 internal sealed class CampaignRunner(CampaignOptions options)
 {
     private readonly CampaignOptions _options = options
@@ -121,8 +121,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             _options.Market);
         state.Resources = new Resources(Gold: _options.StartingGold);
 
-        // Kadro senaryonun kendi kadrosundan çoğaltılır: ekonomiyi ölçerken dövüş
-        // dengesinin ölçüldüğü kadronun dışına çıkmak, iki ölçümü kıyaslanamaz yapardı.
+        // The roster is cloned from the scenario's own roster: while measuring the economy, stepping
+        // outside the roster combat balance was measured on would make the two measurements incomparable.
         IReadOnlyList<Warrior> template = _options.Scenario.Build().PlayerSide;
         for (int i = 0; i < _options.RosterTarget; i++)
         {
@@ -186,7 +186,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         return row;
     }
 
-    /// <summary>Sabit senaryo kipi: kadro yeterse dövüş, yetmezse antrenman.</summary>
+    /// <summary>Fixed-scenario mode: fight if the roster is enough, train if it is not.</summary>
     private DayReport FightScenarioOrRest(DojoState state, ulong seed, CampaignRow row)
     {
         List<RosterEntry> party = [.. state.Roster.FitForCampaign.Take(_options.PartySize)];
@@ -200,14 +200,14 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
-    /// Teklif kipi: günün teklifi gelir, ekip yetiyorsa girilir, yetmiyorsa gün dojo'da geçer.
+    /// Offer mode: the day's offer arrives, it is entered if the party is enough, otherwise the day passes in the dojo.
     /// </summary>
     /// <remarks>
-    /// Politikanın teklifi eleme hakkı <see cref="CampaignOptions.AcceptUpTo"/> ile açılır.
-    /// Varsayılan her teklifi kabul eder: eğrinin dikliğini ölçmek istiyorsak politikanın
-    /// eğriden kaçmaması gerekir — "Dire gördüm, girmedim" diyen bir dojo eğrinin sert ucunu
-    /// hiç ölçmez. Elemenin <b>kendisi</b> ölçülmek istendiğinde (GDD §10'un "al ya da bırak"
-    /// kararı gerçekten hayat kurtarıyor mu) bant düşürülür.
+    /// The policy's right to filter offers is unlocked with <see cref="CampaignOptions.AcceptUpTo"/>.
+    /// The default accepts every offer: if we want to measure the steepness of the curve, the policy
+    /// must not run away from the curve — a dojo that says "I saw Dire, I did not go in" never measures
+    /// the hard end of the curve. When the filtering <b>itself</b> is what we want to measure (does
+    /// GDD §10's "take it or leave it" decision really save lives), the band is lowered.
     /// </remarks>
     private DayReport TakeOfferOrRest(DojoState state, ulong seed, CampaignRow row)
     {
@@ -255,12 +255,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
-    /// Açık sözleşme varsa ve kadro yetiyorsa kelle avına gider; gitmezse <c>null</c>.
+    /// Goes bounty hunting if there is an open contract and the roster is enough; <c>null</c> if it does not go.
     /// </summary>
     /// <remarks>
-    /// Politika kasten <b>basit</b>: sözleşme bandı kabul sınırının içindeyse ve tam ekip
-    /// çıkarılabiliyorsa girilir. Ölçülmek istenen şey oyuncunun ne kadar iyi seçtiği
-    /// değil, sözleşmenin <b>kendisinin</b> ekonomiye ne kattığı.
+    /// The policy is deliberately <b>simple</b>: if the contract's band is within the acceptance limit
+    /// and a full party can be sent, it goes in. What we want to measure is not how well the player
+    /// chooses but what the contract <b>itself</b> adds to the economy.
     /// </remarks>
     private DayReport? TakeBounty(DojoState state, ulong seed, CampaignRow row)
     {
@@ -303,13 +303,13 @@ internal sealed class CampaignRunner(CampaignOptions options)
         return result.Day;
     }
 
-    /// <summary>Teklif kadroya göre fazla ağır mı?</summary>
+    /// <summary>Is the offer too heavy for the roster?</summary>
     /// <remarks>
-    /// İki eleme kipi var. <b>Bant</b> kipi sabit bir eşiktir (GDD §10'un tehdit işareti);
-    /// <b>oran</b> kipi teklifi kadronun kendi gücüyle karşılaştırır. İkisinin ayrı olması
-    /// ölçümün asıl sorusu: sabit bant, gün geçtikçe büyüyen bir eğride er ya da geç her
-    /// teklifi geri çevirir ve dojo işsizlikten iflas eder — bunun eğrinin mi yoksa sabit
-    /// politikanın mı kusuru olduğu ancak uyum sağlayan bir politikayla görülür.
+    /// There are two filtering modes. <b>Band</b> mode is a fixed threshold (GDD §10's threat mark);
+    /// <b>ratio</b> mode compares the offer with the roster's own strength. Keeping them separate is the
+    /// measurement's real question: on a curve that grows as the days pass, a fixed band sooner or later
+    /// declines every offer and the dojo goes bankrupt from idleness — whether that is the fault of the
+    /// curve or of the fixed policy can only be seen with a policy that adapts.
     /// </remarks>
     private bool Declines(DojoState state, EncounterOffer offer)
     {
@@ -328,7 +328,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
             return true;
         }
 
-        // Kadro eksikken ağır teklife girmek, eksik kadroyu daha da eksiltir.
+        // Entering a heavy offer while the roster is thin thins the roster further.
         return _options.CautiousWhenThin
             && offer.Threat >= ThreatBand.Heavy
             && state.Roster.Living.Count() < _options.RosterTarget;
@@ -342,8 +342,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             row.DeclinedOffers++;
         }
 
-        // Talim politikası kasten sabit: en geri stat çalışılır. Ölçülmek istenen şey
-        // oyuncunun ne kadar iyi seçtiği değil, antrenmanın <b>kendisinin</b> ne kattığı.
+        // The drill policy is deliberately fixed: the weakest stat is worked. What we want to measure is
+        // not how well the player chooses but what training <b>itself</b> adds.
         foreach (RosterEntry entry in state.Roster.FitForCampaign)
         {
             entry.Train(TrainingGround.Weakest(entry.Warrior.BaseStats, state.Tuning.Training));
@@ -383,12 +383,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
-    /// Kuşamı ayakta tutar: eşiği geçen yuvayı onarır, dağılmış yuvaya yenisini takar.
+    /// Keeps the kit standing: repairs a slot past the threshold, fits a new piece to a broken slot.
     /// </summary>
     /// <remarks>
-    /// Sıra önemli — önce onarım, sonra yenileme. Tersi olsaydı politika, parası kısıtlıyken
-    /// ucuz onarım yerine pahalı parçayı alır ve fiyat ölçümü politikanın hatasını ölçerdi.
-    /// </remarks>
+    /// The order matters — repair first, replacement second. The other way round, a policy short of
+    /// money would buy the expensive piece instead of the cheap repair and the price measurement would
+    /// measure the policy's mistake.
     private int Maintain(DojoState state, IReadOnlyList<Warrior> template)
     {
         int before = state.Resources.Gold;
@@ -448,7 +448,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         RosterEntry? entry = state.Quartermaster.Hire(
             state,
-            $"Yedek {++hired}",
+            $"Reserve {++hired}",
             proto.BaseStats,
             proto.Weapon,
             proto.Armor);
@@ -457,12 +457,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
-    /// Pazardan <b>en çok stat/altın</b> veren adayı alır.
+    /// Buys the candidate from the market who gives the <b>most stat per gold</b>.
     /// </summary>
     /// <remarks>
-    /// Politikanın burada da akıllı olması gerekmiyor, <b>tutarlı</b> olması gerekiyor:
-    /// ölçülmek istenen şey "ucuz ham aday mı, pahalı hazır aday mı" sorusunun kendisi,
-    /// politikanın zekâsı değil. Değer başına seçim, iki ucu da doğal olarak yoklar.
+    /// The policy does not have to be smart here either, it has to be <b>consistent</b>: what we want to
+    /// measure is the question "cheap raw candidate or expensive ready-made one" itself, not the
+    /// policy's intelligence. Choosing by value naturally probes both ends.
     /// </remarks>
     private static bool HireFromMarket(DojoState state, Warrior proto, int reserve, MarketPick pick)
     {
@@ -491,28 +491,28 @@ internal sealed class CampaignRunner(CampaignOptions options)
             }
         }
 
-        // Alım DojoState.HireRecruit üzerinden geçiyor: ölçüm oyuncunun oynadığı
-        // kapıdan geçmezse ölçtüğü şey oyun olmaz (aynı aday iki kez alınamaz).
+        // The purchase goes through DojoState.HireRecruit: if the measurement does not go through the
+        // door the player plays, what it measures is not the game (the same candidate cannot be bought twice).
         return best >= 0 && state.HireRecruit(best, proto.Weapon, proto.Armor) is not null;
     }
 
     /// <summary>
-    /// Parası yettikçe okuldan tesis alır.
+    /// Buys facilities from the school as long as it can afford them.
     /// </summary>
     /// <remarks>
-    /// Politika basit ve <b>aynı</b>: açık düğümlerin en ucuzu alınır.
-    /// <see cref="CampaignOptions.SchoolOnly"/> verildiğinde yalnızca o kol alınır —
-    /// ölçümün asıl sorusu bu, çünkü bir kolun kendi bedelini ödeyip ödemediği ancak
-    /// tek başına koşturulunca görünür.
+    /// The policy is simple and <b>the same</b>: the cheapest of the open nodes is bought. When
+    /// <see cref="CampaignOptions.SchoolOnly"/> is given, only that branch is bought — that is the
+    /// measurement's real question, because whether a branch pays for itself can only be seen when it is
+    /// run on its own.
     /// </remarks>
     private int BuildSchool(DojoState state, CampaignRow row)
     {
         int before = state.Resources.Gold;
 
-        // Okulun tamponu günlük tampondan <b>kalın</b>: yiyecek parasının üstüne bir de
-        // savaşçı alacak kadar. Tesis isteğe bağlı, ambar ve ölen savaşçının yerine
-        // konması değil — ince tamponla ölçüm ağacı değil, politikanın aç kalmasını
-        // ölçüyordu (dojo başına aç gün %47'den %67'ye çıkıyordu).
+        // The school's buffer is <b>thicker</b> than the daily buffer: enough to buy a warrior on top of
+        // the food money. A facility is optional, the store and replacing a dead warrior are not — with a
+        // thin buffer the measurement was measuring the policy going hungry rather than the tree (hungry
+        // days per dojo went from 47% to 67%).
         int reserve = Reserve(state) + _options.Economy.RecruitPrice;
 
         while (true)
@@ -536,11 +536,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
-    /// Kilidi açılan savaşçıya <b>zaten güçlü olduğu</b> yolu seçtirir.
+    /// Makes an unlocked warrior choose the path he is <b>already strong in</b>.
     /// </summary>
     /// <remarks>
-    /// Üstüne koymak, oyuncunun doğal hamlesi: zayıf tarafı kapatmak antrenmanın işi,
-    /// yol ise savaşçının kim olduğunu keskinleştirir.
+    /// Building on strength is the player's natural move: closing the weak side is training's job, while
+    /// the path sharpens who the warrior is.
     /// </remarks>
     private static int ChoosePaths(DojoState state)
     {
@@ -568,11 +568,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
         return chosen;
     }
 
-    /// <summary>Kadronun en iyi savaşçısının stat skoru — pazar tavanı da bunu izler.</summary>
+    /// <summary>The stat score of the roster's best warrior — the market ceiling tracks this too.</summary>
     /// <remarks>
-    /// Ortalama değil <b>en iyi</b>: antrenmanın ürettiği şey kadronun düzgün dağılmış
-    /// ortalaması değil, oyuncunun üstüne yatırım yaptığı savaşçıdır. Ortalamaya
-    /// bakılsaydı ölen veteranın yerine alınan acemi, eğitimin kazancını gizlerdi.
+    /// Not the average but the <b>best</b>: what training produces is not the roster's evenly spread
+    /// average but the warrior the player invested in. Looking at the average, the recruit hired to
+    /// replace a dead veteran would hide training's gain.
     /// </remarks>
     private static double BestScore(DojoState state)
     {
@@ -589,20 +589,20 @@ internal sealed class CampaignRunner(CampaignOptions options)
         + stats.Speed
         + stats.Aggression;
 
-    /// <summary>Kadroyu senaryonun kadrosundan çoğaltır — silahı ve kuşamıyla.</summary>
+    /// <summary>Clones the roster from the scenario's roster — with its weapon and kit.</summary>
     private static void Enlist(DojoState state, IReadOnlyList<Warrior> template, int index)
     {
         Warrior proto = template[index % template.Count];
-        state.Roster.Recruit($"Savaşçı {index + 1}", proto.BaseStats, proto.Weapon, proto.Armor);
+        state.Roster.Recruit($"Warrior {index + 1}", proto.BaseStats, proto.Weapon, proto.Armor);
     }
 
     /// <summary>
-    /// Elden çıkarılmayacak altın: kadronun birkaç günlük yiyeceği.
+    /// The gold that is not to be spent: a few days' food for the roster.
     /// </summary>
     /// <remarks>
-    /// Politikanın son kuruşunu çeliğe yatırması ekonomiyi değil, politikanın aptallığını
-    /// ölçerdi: aç kalan savaşçı iyileşmez, iyileşmeyen kadro sefere çıkamaz, ve dojo
-    /// onarılmış zırhla açlıktan kilitlenir. Gerçek oyuncu da ambarı boşaltmaz.
+    /// A policy that put its last coin into steel would measure not the economy but the policy's
+    /// stupidity: a hungry warrior does not heal, a roster that does not heal cannot go on an expedition,
+    /// and the dojo locks up from starvation with repaired armour. A real player does not empty the store either.
     /// </remarks>
     private int Reserve(DojoState state)
     {
@@ -617,7 +617,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         price > 0 && state.Resources.Gold - price >= reserve;
 }
 
-/// <summary>Tek bir dojo'nun ömrü.</summary>
+/// <summary>The life of a single dojo.</summary>
 internal sealed class CampaignRow
 {
     public int DaysSurvived { get; set; }
@@ -628,13 +628,13 @@ internal sealed class CampaignRow
 
     public int IdleDays { get; set; }
 
-    /// <summary>Ağır bulunup geri çevrilen teklif sayısı.</summary>
+    /// <summary>The number of offers found too heavy and declined.</summary>
     public int DeclinedOffers { get; set; }
 
-    /// <summary>Başa gelen aksilik sayısı.</summary>
+    /// <summary>The number of mishaps suffered.</summary>
     public int Mishaps { get; set; }
 
-    /// <summary>Aksiliklerin kasadan doğrudan aldığı altın.</summary>
+    /// <summary>The gold the mishaps took straight out of the treasury.</summary>
     public int MishapGold { get; set; }
 
     public int HungryDays { get; set; }
@@ -643,20 +643,20 @@ internal sealed class CampaignRow
 
     public int Hires { get; set; }
 
-    /// <summary>Girilen kelle avı sayısı.</summary>
+    /// <summary>The number of bounty hunts entered.</summary>
     public int Bounties { get; set; }
 
-    /// <summary>Kellesi alınan sözleşme sayısı.</summary>
+    /// <summary>The number of contracts whose head was taken.</summary>
     public int BountiesClaimed { get; set; }
 
     public int RecoveryDays { get; set; }
 
     public int ArmorPiecesLost { get; set; }
 
-    /// <summary>Savaşçı-dövüş sayısı — ölüm oranının paydası.</summary>
+    /// <summary>The number of warrior-fights — the denominator of the death rate.</summary>
     public int WarriorBattles { get; set; }
 
-    /// <summary>Karşılaşılan düşman canının toplamı — eğrinin dikliği buradan okunur.</summary>
+    /// <summary>The total enemy health met — the steepness of the curve is read from this.</summary>
     public double PowerSum { get; set; }
 
     public int GoldEarned { get; set; }
@@ -669,37 +669,37 @@ internal sealed class CampaignRow
 
     public int SurvivingWarriors { get; set; }
 
-    /// <summary>Kadronun en iyi savaşçısının ilk gündeki stat skoru.</summary>
+    /// <summary>The stat score of the roster's best warrior on the first day.</summary>
     public double StartScore { get; set; }
 
-    /// <summary>Aynı skorun son gündeki hâli — aradaki fark antrenmanın ürünü.</summary>
+    /// <summary>The same score on the last day — the difference is training's product.</summary>
     public double EndScore { get; set; }
 
-    /// <summary>Canlı kadronun toplam antrenman günü.</summary>
+    /// <summary>The living roster's total training days.</summary>
     public int TrainingDays { get; set; }
 
-    /// <summary>Alınmış okul tesisi sayısı.</summary>
+    /// <summary>The number of school facilities bought.</summary>
     public int SchoolNodes { get; set; }
 
-    /// <summary>Okula giden altın.</summary>
+    /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
 
-    /// <summary>Ölenin yerine alınan savaşçılara giden altın.</summary>
+    /// <summary>The gold that went to warriors hired to replace the dead.</summary>
     /// <remarks>
-    /// Ayrı bir kalem: ekonominin bağlayıcı kısıtı kadro olduğu için (GDD §11) yerine
-    /// koyma bedeli kuşam ya da ambar giderinin içinde kaybolmamalı. Net hesabına da
-    /// girer — girmediği sürece "dövüş başına kâr" pozitif görünürken kasa boşalıyordu.
+    /// A separate item: because the economy's binding constraint is the roster (GDD §11), the
+    /// replacement cost must not be lost inside kit or store spending. It also enters the net figure —
+    /// until it did, "profit per fight" looked positive while the treasury emptied.
     /// </remarks>
     public int GoldSpentOnHires { get; set; }
 
-    /// <summary>Yolunu seçen savaşçı sayısı.</summary>
+    /// <summary>The number of warriors who chose a path.</summary>
     public int Paths { get; set; }
 
-    /// <summary>Kadroda kimse kalmadı — dojo kapandı.</summary>
+    /// <summary>Nobody is left on the roster — the dojo has closed.</summary>
     public bool Collapsed { get; set; }
 }
 
-/// <summary>Bir sürü dojo ömrünün toplamı.</summary>
+/// <summary>The sum of many dojo lifetimes.</summary>
 internal sealed class CampaignReport(int days)
 {
     private readonly List<CampaignRow> _rows = [];
@@ -718,13 +718,13 @@ internal sealed class CampaignReport(int days)
 
     public double IdleDayShare => Share(r => r.IdleDays);
 
-    /// <summary>Geri çevrilen teklifin gün payı (GDD §10: al ya da bırak).</summary>
+    /// <summary>The share of days an offer was declined (GDD §10: take it or leave it).</summary>
     public double DeclinedShare => Share(r => r.DeclinedOffers);
 
-    /// <summary>Aksilik çıkan günlerin payı.</summary>
+    /// <summary>The share of days a mishap occurred.</summary>
     public double MishapDayShare => Share(r => r.Mishaps);
 
-    /// <summary>Aksiliklerin doğrudan götürdüğü günlük altın.</summary>
+    /// <summary>The daily gold the mishaps took directly.</summary>
     public double MishapGoldPerDay => Share(r => r.MishapGold);
 
     public double HungryDayShare => Share(r => r.HungryDays);
@@ -733,10 +733,10 @@ internal sealed class CampaignReport(int days)
 
     public double AverageDeaths => Average(r => r.Deaths);
 
-    /// <summary>Dojo'nun ayakta kaldığı gün — kapanmayanlar için planlanan gün sayısı.</summary>
+    /// <summary>The days the dojo stayed standing — the planned number of days for those that did not close.</summary>
     public double AverageDaysSurvived => Average(r => r.DaysSurvived);
 
-    /// <summary>Dojoların yarısının kapandığı gün; hiçbiri kapanmadıysa planlanan gün.</summary>
+    /// <summary>The day by which half the dojos closed; the planned day if none closed.</summary>
     public int MedianDaysSurvived
     {
         get
@@ -753,10 +753,10 @@ internal sealed class CampaignReport(int days)
 
     public double AverageHires => Average(r => r.Hires);
 
-    /// <summary>Dojo başına girilen kelle avı.</summary>
+    /// <summary>Bounty hunts entered, per dojo.</summary>
     public double AverageBounties => Average(r => r.Bounties);
 
-    /// <summary>Girilen kelle avlarının kaçının kellesi alındı.</summary>
+    /// <summary>How many of the bounty hunts entered had their head taken.</summary>
     public double BountyClaimRate
     {
         get
@@ -768,36 +768,36 @@ internal sealed class CampaignReport(int days)
 
     public double AverageEndingGold => Average(r => r.EndingGold);
 
-    /// <summary>Ayakta kalan dojolarda en iyi savaşçının stat skoru — antrenmanın ürünü.</summary>
+    /// <summary>The best warrior's stat score in the dojos still standing — training's product.</summary>
     /// <remarks>
-    /// Kapanan dojolar dışarıda bırakılır: kadrosu ölmüş dojonun skoru sıfırdır ve
-    /// ortalamaya karışsaydı ölçüm antrenmanı değil hayatta kalmayı ölçerdi.
+    /// Closed dojos are left out: a dojo whose roster is dead has a score of zero and, mixed into the
+    /// average, the measurement would be measuring survival rather than training.
     /// </remarks>
     public double AverageBestScore => Standing(r => r.EndScore);
 
-    /// <summary>Aynı skorun ilk günden bugüne kazandığı puan.</summary>
+    /// <summary>The points the same score gained from the first day to today.</summary>
     public double AverageScoreGain => Standing(r => r.EndScore - r.StartScore);
 
-    /// <summary>Dojo başına antrenman günü (canlı kadro toplamı).</summary>
+    /// <summary>Training days per dojo (the living roster's total).</summary>
     public double AverageTrainingDays => Standing(r => r.TrainingDays);
 
-    /// <summary>Yerine koymaya giden altın, dövüş başına.</summary>
+    /// <summary>The gold spent on replacements, per fight.</summary>
     public double HireGoldPerBattle => PerBattle(r => r.GoldSpentOnHires);
 
-    /// <summary>Dojo başına alınmış okul tesisi.</summary>
+    /// <summary>School facilities bought, per dojo.</summary>
     public double AverageSchoolNodes => Standing(r => r.SchoolNodes);
 
-    /// <summary>Okula giden altın (dojo başına).</summary>
+    /// <summary>The gold that went to the school (per dojo).</summary>
     public double AverageSchoolGold => Standing(r => r.GoldSpentOnSchool);
 
-    /// <summary>Yolunu seçen savaşçı (dojo başına).</summary>
+    /// <summary>Warriors who chose a path (per dojo).</summary>
     public double AveragePaths => Standing(r => r.Paths);
 
     public double AverageArmorPiecesLost => Average(r => r.ArmorPiecesLost);
 
     public double RecoveryDaysPerBattle => PerBattle(r => r.RecoveryDays);
 
-    /// <summary>Savaşçı-dövüş başına ölüm — ekonominin bağlayıcı kısıtı (GDD §11).</summary>
+    /// <summary>Deaths per warrior-fight — the economy's binding constraint (GDD §11).</summary>
     public double DeathPerWarriorBattle
     {
         get
@@ -807,7 +807,7 @@ internal sealed class CampaignReport(int days)
         }
     }
 
-    /// <summary>Karşılaşma başına düşman canı — eğrinin ortalama yüksekliği.</summary>
+    /// <summary>Enemy health per encounter — the curve's average height.</summary>
     public double EnemyHealthPerBattle
     {
         get
@@ -823,7 +823,7 @@ internal sealed class CampaignReport(int days)
 
     public double UpkeepGoldPerDay => Share(r => r.GoldSpentOnUpkeep);
 
-    /// <summary>Dövüş başına net kâr — ekonominin tek cümlelik cevabı.</summary>
+    /// <summary>Net profit per fight — the economy's one-sentence answer.</summary>
     public double NetGoldPerBattle
     {
         get
@@ -844,12 +844,12 @@ internal sealed class CampaignReport(int days)
         }
     }
 
-    /// <summary>Kasası artan dojo oranı — başlangıç sermayesini koruyanlar.</summary>
+    /// <summary>The share of dojos whose treasury grew — those that kept their starting capital.</summary>
     public double SolventRate(int startingGold) => Campaigns == 0
         ? 0
         : (double)_rows.Count(r => !r.Collapsed && r.EndingGold >= startingGold) / Campaigns;
 
-    /// <summary>Yalnızca ayakta kalan dojolar üzerinden ortalama.</summary>
+    /// <summary>An average over the dojos still standing only.</summary>
     private double Standing(Func<CampaignRow, double> pick)
     {
         List<CampaignRow> standing = [.. _rows.Where(r => !r.Collapsed)];

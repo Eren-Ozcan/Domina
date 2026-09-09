@@ -3,48 +3,48 @@ using Domina.Core.Model;
 
 namespace Domina.Sim;
 
-/// <summary>Toplu simülasyonda koşturulan adlandırılmış eşleşme.</summary>
-/// <param name="Name">Komut satırında verilen ad.</param>
-/// <param name="Description">Listede görünen açıklama.</param>
-/// <param name="Build">Eşleşmenin kadrosunu kuran fabrika.</param>
+/// <summary>A named matchup run in batch simulation.</summary>
+/// <param name="Name">The name given on the command line.</param>
+/// <param name="Description">The description shown in the list.</param>
+/// <param name="Build">The factory that builds the matchup's roster.</param>
 internal sealed record Scenario(string Name, string Description, Func<BattleSetup> Build);
 
 /// <summary>
-/// Dengeye bakılacak standart eşleşmeler.
+/// The standard matchups balance is examined on.
 /// </summary>
 /// <remarks>
-/// Denge çalışması "şu senaryoda ölüm oranı ne" sorusuyla ilerler; senaryolar
-/// kodda sabit durur ki iki farklı ölçüm aynı kadroyu karşılaştırsın. Sayılar
-/// tahmini başlangıç noktalarıdır (bkz. <see cref="CombatTuning"/>).
+/// Balance work proceeds with the question "what is the death rate in this scenario"; the scenarios
+/// stay fixed in code so that two different measurements compare the same roster. The numbers are
+/// estimated starting points (see <see cref="CombatTuning"/>).
 /// </remarks>
 internal static class Scenarios
 {
     public static IReadOnlyList<Scenario> All { get; } =
     [
-        new("duel", "acemi vs kappa (1v1)", Duel),
-        new("3v3", "dojo takımı vs yokai takımı (3v3)", ThreeVsThree),
-        new("veteran", "donanımlı veteran vs oni (1v1)", Veteran),
-        new("ambush", "veteran pusuya düşüyor (1v3)", Ambush),
-        new("blade", "kesici usta vs oni (1v1) — künt/kesici takasının kesici ucu", Blade),
-        new("club", "künt usta vs oni (1v1) — aynı dövüş, yalnızca silah sınıfı farklı", Club),
-        new("katana", "tek el usta vs oni (1v1) — kılıç yakalamanın kontrolü", KatanaControl),
-        new("jitte", "aynı dövüş, yalnızca silah jitte — yakalamanın ucu", JitteCatch),
-        new("sai", "aynı dövüş, sai ile — daha iyi kavrayış, daha düşük hasar", SaiCatch),
-        new("jitte-heavy", "jitte vs çift el nodachi taşıyan oni — yakalamanın cevabı", JitteVsTwoHanded),
-        new("katana-heavy", "jitte-heavy'nin kontrolü: aynı düşman, katana ile", KatanaVsTwoHanded),
-        new("3v3-jitte", "3v3, acemi katana yerine jitte taşıyor — kilidin takım değeri", ThreeVsThreeJitte),
-        new("tanto", "kısa bıçaklı usta vs oni (1v1) — zehrin kontrolü", TantoControl),
-        new("poison", "aynı dövüş, bıçağın namlusu zehirli — zehrin ucu", PoisonedTanto),
-        new("tanto-armored", "kısa bıçak vs zırhlı oni — zırh duvarının kontrolü", TantoVsArmored),
-        new("poison-armored", "zehirli bıçak vs zırhlı oni — zehir duvarı aşıyor mu", PoisonedVsArmored),
-        new("katana-armored", "katana vs zırhlı oni — zehrin karşısındaki gerçek seçenek", KatanaVsArmored),
-        new("3v3-poison", "3v3, tengu zehirli shuriken atıyor — zehir oyuncunun üstüne dönünce", ThreeVsThreePoison),
-        new("blade-armored", "kesici usta vs zırhlı oni — düşürmenin kesici ucu", BladeVsArmored),
-        new("club-armored", "aynı dövüş, künt silahla — plakaya vuran çelik", ClubVsArmored),
-        new("spear-armored", "aynı dövüş, delici silahla — üçüncü sınıfın yeri", SpearVsArmored),
-        new("jitte-armored", "jitte vs zırhlı oni — yakalama aletinin duvarı", JitteVsArmored),
-        new("3v3-armored", "3v3, yokai'lerin hepsi tam kuşam — düşürmenin takım bedeli", ThreeVsThreeArmored),
-        new("patrol", "günlük devriye (3v3) — ekonominin ölçüldüğü sıradan karşılaşma", Patrol),
+        new("duel", "recruit vs kappa (1v1)", Duel),
+        new("3v3", "dojo team vs yokai team (3v3)", ThreeVsThree),
+        new("veteran", "equipped veteran vs oni (1v1)", Veteran),
+        new("ambush", "a veteran is ambushed (1v3)", Ambush),
+        new("blade", "blade master vs oni (1v1) — the cutting end of the blunt/cutting trade", Blade),
+        new("club", "blunt master vs oni (1v1) — the same fight, only the weapon class differs", Club),
+        new("katana", "one-handed master vs oni (1v1) — the control for sword catching", KatanaControl),
+        new("jitte", "the same fight, only the weapon is a jitte — the catching end", JitteCatch),
+        new("sai", "the same fight with a sai — better grip, lower damage", SaiCatch),
+        new("jitte-heavy", "jitte vs an oni carrying a two-handed nodachi — catching's answer", JitteVsTwoHanded),
+        new("katana-heavy", "the control for jitte-heavy: the same enemy, with a katana", KatanaVsTwoHanded),
+        new("3v3-jitte", "3v3, the recruit carries a jitte instead of a katana — the bind's team value", ThreeVsThreeJitte),
+        new("tanto", "short-knife master vs oni (1v1) — the control for poison", TantoControl),
+        new("poison", "the same fight, the knife's blade poisoned — the poison end", PoisonedTanto),
+        new("tanto-armored", "short knife vs armoured oni — the control for the armour wall", TantoVsArmored),
+        new("poison-armored", "poisoned knife vs armoured oni — does poison get through the wall", PoisonedVsArmored),
+        new("katana-armored", "katana vs armoured oni — the real alternative to poison", KatanaVsArmored),
+        new("3v3-poison", "3v3, the tengu throws poisoned shuriken — when poison turns on the player", ThreeVsThreePoison),
+        new("blade-armored", "blade master vs armoured oni — disarming's cutting end", BladeVsArmored),
+        new("club-armored", "the same fight with a blunt weapon — steel striking plate", ClubVsArmored),
+        new("spear-armored", "the same fight with a piercing weapon — where the third class sits", SpearVsArmored),
+        new("jitte-armored", "jitte vs armoured oni — the catching implement's wall", JitteVsArmored),
+        new("3v3-armored", "3v3, every yokai in full armour — disarming's team price", ThreeVsThreeArmored),
+        new("patrol", "the daily patrol (3v3) — the ordinary encounter the economy is measured on", Patrol),
     ];
 
     public static Scenario? Find(string name) =>
@@ -52,7 +52,7 @@ internal static class Scenarios
 
     private static BattleSetup Duel() => new(
         [
-            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana()),
+            new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), Weapon.Katana()),
         ],
         [
             Yokai(101, "Kappa", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35, speed: 55),
@@ -61,28 +61,28 @@ internal static class Scenarios
     private static BattleSetup ThreeVsThree() => ThreeVsThreeWith(Weapon.Katana());
 
     /// <summary>
-    /// Ekonominin ölçüldüğü <b>sıradan</b> karşılaşma.
+    /// The <b>ordinary</b> encounter the economy is measured on.
     /// </summary>
     /// <remarks>
-    /// Diğer senaryolar birer denge sondasıdır: bir kuralın ucunu görebilmek için kasten
-    /// ağır kurulmuşlardır ve savaşçı-dövüş başına ölüm oranları %38-49 bandındadır. Böyle
-    /// bir dövüş <b>her gün</b> yapılamaz — kadro günde bir cenaze kaldıramaz, ve o kadroyla
-    /// ölçülen fiyat aslında savaşçı fiyatını ölçer, zırhın ya da ilacın fiyatını değil.
-    /// Devriye bu yüzden ayrı durur: aynı dojo kadrosu, zayıflatılmış bir yokai üçlüsüne
-    /// karşı. Ekonomi sayıları (Açık Karar #5) bunun üstünde ölçülür.
+    /// The other scenarios are balance probes: they are deliberately built heavy so the edge of a rule
+    /// can be seen, and their deaths per warrior-fight sit in the 38-49% band. Such a fight cannot be
+    /// fought <b>every day</b> — a roster cannot bear a funeral a day, and the price measured with that
+    /// roster actually measures the price of warriors, not of armour or medicine. That is why the patrol
+    /// stands apart: the same dojo roster against a weakened trio of yokai. The economy numbers (Open
+    /// Decision #5) are measured on top of it.
     /// </remarks>
     private static BattleSetup Patrol() => new(
         [
-            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana(), Armor.Light()),
+            new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), Weapon.Katana(), Armor.Light()),
             new Warrior(
                 new WarriorId(2),
-                "Kıdemli",
+                "Senior",
                 WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
                 Weapon.Nodachi(),
                 Armor.Medium()),
             new Warrior(
                 new WarriorId(3),
-                "Mızrakçı",
+                "Spearman",
                 WarriorStats.Recruit() with { Evasion = 50, Aggression = 50 },
                 Weapon.Yari(),
                 Armor.Light()),
@@ -94,24 +94,24 @@ internal static class Scenarios
         ]);
 
     /// <summary>
-    /// Kilit süresinin (<c>CatchBindSeconds</c>) asıl ölçüldüğü yer.
+    /// Where the bind duration (<c>CatchBindSeconds</c>) is really measured.
     /// </summary>
     /// <remarks>
-    /// 1v1'de kilit neredeyse hiçbir şey yapmaz: açılan pencere savaşçının zaten kendi
-    /// saldırı döngüsünde beklediği boşluğa denk gelir. Kilidin vaadi <b>takım</b>
-    /// vaadidir — yakalayanın açtığı pencereyi yakalayan değil, <b>yanındakiler</b>
-    /// kullanır. Ölçüm bunu görebilmek için üç kişilik kadroda yapılır; kontrol
-    /// <c>3v3</c>, tek fark acemi'nin silahı.
+    /// In 1v1 the bind does almost nothing: the window it opens falls into the gap the warrior was
+    /// waiting in anyway, in his own attack cycle. The bind's promise is a <b>team</b> promise — the
+    /// window the catcher opens is used not by the catcher but by <b>the men beside him</b>. To see that,
+    /// the measurement is made with a party of three; the control is <c>3v3</c>, the only difference
+    /// being the recruit's weapon.
     /// </remarks>
     private static BattleSetup ThreeVsThreeJitte() => ThreeVsThreeWith(Weapon.Jitte());
 
     /// <summary>
-    /// Zehrin <b>oyuncu tarafına</b> döndüğü ölçüm: tengu zehirli shuriken atar.
+    /// The measurement where poison turns on <b>the player's side</b>: the tengu throws poisoned shuriken.
     /// </summary>
     /// <remarks>
-    /// Zehir çekilen savaşçıda da işlemeye devam eder — kaçış bir panzehir değildir.
-    /// Kuralın §5'in merdivenini bozup bozmadığı ancak burada görünür: kontrol
-    /// <c>3v3</c>, tek fark tengu'nun merisinin ucundaki doz.
+    /// Poison keeps working on a warrior who is pulled out too — escape is not an antidote. Whether the
+    /// rule breaks §5's ladder can only be seen here: the control is <c>3v3</c>, the only difference
+    /// being the dose on the tengu's projectile.
     /// </remarks>
     private static BattleSetup ThreeVsThreePoison()
     {
@@ -123,16 +123,16 @@ internal static class Scenarios
 
     private static BattleSetup ThreeVsThreeWith(Weapon recruitWeapon) => new(
         [
-            new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), recruitWeapon, Armor.Light()),
+            new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), recruitWeapon, Armor.Light()),
             new Warrior(
                 new WarriorId(2),
-                "Kıdemli",
+                "Senior",
                 WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
                 Weapon.Nodachi(),
                 Armor.Medium()),
             new Warrior(
                 new WarriorId(3),
-                "Mızrakçı",
+                "Spearman",
                 WarriorStats.Recruit() with { Evasion = 50, Aggression = 50 },
                 Weapon.Yari(),
                 Armor.Light()),
@@ -174,14 +174,14 @@ internal static class Scenarios
         ]);
 
     /// <summary>
-    /// Künt/kesici takasının iki ucu. <see cref="Blade"/> ile <see cref="Club"/>
-    /// arasındaki <b>tek</b> fark savaşçının silahıdır — statlar, kuşam, düşman aynı.
+    /// The two ends of the blunt/cutting trade. The <b>only</b> difference between <see cref="Blade"/>
+    /// and <see cref="Club"/> is the warrior's weapon — stats, kit and enemy are the same.
     /// </summary>
     /// <remarks>
-    /// Açık Karar #4-B'nin ölçülebilir sorusu bu: künt silah, kaybettiği uzuv kopma
-    /// çarpanının karşılığını sersemletmeden alıyor mu? Nodachi (kesici 34/1.60) ile
-    /// Tetsubo (künt 30/1.55) oyunun gerçek çift el seçimi olduğu için karşılaştırma
-    /// yapay bir laboratuvar silahıyla değil bu ikisiyle yapılır.
+    /// This is Open Decision #4-B's measurable question: does the blunt weapon collect through stun what
+    /// it loses on the dismemberment multiplier? Because the nodachi (cutting 34/1.60) and the tetsubo
+    /// (blunt 30/1.55) are the game's real two-handed choice, the comparison is made with those two
+    /// rather than with an artificial laboratory weapon.
     /// </remarks>
     private static BattleSetup Blade() => Trade(Weapon.Nodachi());
 
@@ -189,19 +189,19 @@ internal static class Scenarios
     private static BattleSetup Club() => Trade(Weapon.Tetsubo());
 
     /// <summary>
-    /// Kılıç yakalamanın ölçülebilir sorusu: yakalama aleti, kaybettiği hasarı ödüyor mu?
+    /// Sword catching's measurable question: does the catching implement pay for the damage it loses?
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kontrol katana (22/1.10), deney jitte (14/1.00) ve sai (13/1.05). Üçü de <b>tek
-    /// el</b>: karşılaştırma silah sınıfını değil <b>yakalamayı</b> yalıtsın diye el
-    /// sayısı sabit tutuldu. <see cref="Trade"/> ile aynı gövdeden kurulur, yani statlar,
-    /// kuşam ve düşman da aynıdır.
+    /// The control is the katana (22/1.10), the experiments the jitte (14/1.00) and the sai (13/1.05).
+    /// All three are <b>one-handed</b>: the number of hands was held fixed so the comparison isolates
+    /// <b>catching</b> rather than the weapon class. It is built from the same body as <see cref="Trade"/>,
+    /// so stats, kit and enemy are the same too.
     /// </para>
     /// <para>
-    /// Düşmanın silahı önemlidir: Oni burada varsayılan katana'yı taşır. Tetsubo taşısaydı
-    /// yakalanabilirlik 0.25'e inerdi ve ölçüm "yakalama işe yarıyor mu" sorusunu değil
-    /// "künt silaha karşı işe yarıyor mu" sorusunu cevaplardı.
+    /// The enemy's weapon matters: the Oni here carries the default katana. Carrying a tetsubo, its
+    /// catchability would drop to 0.25 and the measurement would answer "does catching work against a
+    /// blunt weapon" rather than "does catching work".
     /// </para>
     /// </remarks>
     private static BattleSetup KatanaControl() => Trade(Weapon.Katana());
@@ -213,13 +213,13 @@ internal static class Scenarios
     private static BattleSetup SaiCatch() => Trade(Weapon.Sai());
 
     /// <summary>
-    /// Yakalamanın kendi cevabının ölçüldüğü çift: düşman <b>çift el</b> nodachi taşır.
+    /// The pair where catching's own answer is measured: the enemy carries a <b>two-handed</b> nodachi.
     /// </summary>
     /// <remarks>
-    /// <c>CatchTwoHandedFactor</c> yalnızca burada görünür. Ölçülmeden bırakılsaydı jitte
-    /// her eşleşmede doğru seçim olur, ağır silah seçen düşmanın kaldıracı hiçbir şeye
-    /// karşılık gelmezdi. Kontrol (<see cref="KatanaVsTwoHanded"/>) aynı düşmanla katana
-    /// taşır — fark yalnızca yakalamadan gelsin diye.
+    /// <c>CatchTwoHandedFactor</c> only shows up here. Left unmeasured, the jitte would be the right
+    /// choice in every matchup and the leverage of an enemy who chose a heavy weapon would count for
+    /// nothing. The control (<see cref="KatanaVsTwoHanded"/>) carries a katana against the same enemy —
+    /// so that the difference comes only from catching.
     /// </remarks>
     private static BattleSetup JitteVsTwoHanded() => Trade(Weapon.Jitte(), Weapon.Nodachi());
 
@@ -227,24 +227,24 @@ internal static class Scenarios
     private static BattleSetup KatanaVsTwoHanded() => Trade(Weapon.Katana(), Weapon.Nodachi());
 
     /// <summary>
-    /// Zehrin ölçülebilir sorusu: doz, silahın kaybettiği hasarı ödüyor mu?
+    /// Poison's measurable question: does the dose pay for the damage the weapon loses?
     /// </summary>
     /// <remarks>
-    /// Kontrol temiz tantō (13/0.85), deney aynı bıçağın zehirli hâli. Tek fark namludaki
-    /// doz — hasar, hız, sınıf ve düşman aynı; <see cref="Trade"/> gövdesinden kurulur.
-    /// </remarks>
+    /// The control is a clean tantō (13/0.85), the experiment the same knife poisoned. The only
+    /// difference is the dose on the blade — damage, speed, class and enemy are the same; it is built
+    /// from the <see cref="Trade"/> body.
     private static BattleSetup TantoControl() => Trade(Weapon.Tanto());
 
     /// <inheritdoc cref="TantoControl"/>
     private static BattleSetup PoisonedTanto() => Trade(Weapon.PoisonedTanto());
 
     /// <summary>
-    /// Zehrin asıl iddiasının ölçüldüğü çift: düşman <b>tam kuşam</b> taşır.
+    /// The pair where poison's real claim is measured: the enemy wears <b>full armour</b>.
     /// </summary>
     /// <remarks>
-    /// Zehir, zırhın hasar azaltımının etrafından dolaşan tek yoldur. Kısa bıçağın 13
-    /// hasarı ō-yoroi'nin önünde neredeyse tamamen erir; doz erimez. Ölçülmeden bırakılsa
-    /// zehir yalnızca "biraz daha hasar" olurdu ve zırhın önündeki karşılığı hiç görünmezdi.
+    /// Poison is the only route around armour's damage reduction. The short knife's 13 damage almost
+    /// entirely melts in front of ō-yoroi; the dose does not melt. Left unmeasured, poison would be only
+    /// "a bit more damage" and its return against armour would never show.
     /// </remarks>
     private static BattleSetup TantoVsArmored() => Trade(Weapon.Tanto(), enemyArmor: Armor.Heavy());
 
@@ -253,25 +253,24 @@ internal static class Scenarios
         Trade(Weapon.PoisonedTanto(), enemyArmor: Armor.Heavy());
 
     /// <summary>
-    /// Zırhlı düşmanın karşısındaki <b>gerçek</b> alternatif: sıradan bir kılıç.
+    /// The <b>real</b> alternative against an armoured enemy: an ordinary sword.
     /// </summary>
     /// <remarks>
-    /// Temiz tantō, zırhın önünde zaten kaybeden bir silah; zehri yalnızca ona karşı
-    /// ölçmek "zehir işe yarıyor" diye yanıltıcı bir cevap verirdi. Zehirli bıçağın
-    /// gerçekten bir yere oturup oturmadığı, oyuncunun elindeki normal seçenekle
-    /// karşılaştırılınca görünür.
+    /// The clean tantō is a weapon that already loses in front of armour; measuring poison only
+    /// against it would give the misleading answer "poison works". Whether the poisoned knife really
+    /// has a place shows only when it is compared with the normal option in the player's hand.
     /// </remarks>
     private static BattleSetup KatanaVsArmored() =>
         Trade(Weapon.Katana(), enemyArmor: Armor.Heavy());
 
     /// <summary>
-    /// Silah düşürmenin ölçülebilir sorusu: plakaya vuran çelik neyi ödüyor?
+    /// Disarming's measurable question: what does steel striking plate pay?
     /// </summary>
     /// <remarks>
-    /// Üçü de <b>çift el</b> ve zırhlı düşmana karşı: nodachi (kesici, düşme eğilimi 1.0),
-    /// tetsubo (künt, 0.2) ve yari (delici, 0.6). Kural yalnızca zırha inen vuruşta
-    /// işlediği için düşmanın tam kuşam taşıması şart — zırhsız oni ile ölçüm
-    /// <c>blade</c>/<c>club</c> çiftinin aynısı olurdu.
+    /// All three are <b>two-handed</b> and against an armoured enemy: nodachi (cutting, drop tendency
+    /// 1.0), tetsubo (blunt, 0.2) and yari (piercing, 0.6). Because the rule only works on a strike
+    /// landing on armour, the enemy has to wear full armour — with an unarmoured oni the measurement
+    /// would be the same as the <c>blade</c>/<c>club</c> pair.
     /// </remarks>
     private static BattleSetup BladeVsArmored() =>
         Trade(Weapon.Nodachi(), enemyArmor: Armor.Heavy());
@@ -285,22 +284,22 @@ internal static class Scenarios
         Trade(Weapon.Yari(), enemyArmor: Armor.Heavy());
 
     /// <summary>
-    /// Yakalama aletinin kendi duvarı: hasarı zırhın önünde erir.
+    /// The catching implement's own wall: its damage melts in front of armour.
     /// </summary>
     /// <remarks>
-    /// Düşürme kuralı jitte'ye kılıç taşıyan düşmanın önünde açık bir üstünlük veriyor;
-    /// bunun bir bedeli olmalı, yoksa yakalama aleti her eşleşmede doğru seçim olur.
-    /// Kontrol <see cref="KatanaVsArmored"/> — aynı düşman, aynı statlar, tek fark silah.
+    /// The disarm rule gives the jitte a clear advantage in front of a sword-carrying enemy; that must
+    /// have a price, or the catching implement is the right choice in every matchup. The control is
+    /// <see cref="KatanaVsArmored"/> — the same enemy, the same stats, the only difference the weapon.
     /// </remarks>
     private static BattleSetup JitteVsArmored() =>
         Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy());
 
     /// <summary>
-    /// Düşürmenin <b>takım</b> bedeli: kontrol <c>3v3</c>, tek fark yokai'lerin kuşamı.
+    /// Disarming's <b>team</b> price: the control is <c>3v3</c>, the only difference the yokai's armour.
     /// </summary>
     /// <remarks>
-    /// 1v1'de düşen silah yalnızca bir savaşçının sorunudur; kalabalıkta kadronun
-    /// hangi ucunun çürüdüğü görünür — kesici taşıyan kıdemli mi, mızrakçı mı.
+    /// In 1v1 a dropped weapon is one warrior's problem; in a crowd it shows which end of the roster
+    /// rots — the senior carrying a blade, or the spearman.
     /// </remarks>
     private static BattleSetup ThreeVsThreeArmored()
     {
@@ -320,7 +319,7 @@ internal static class Scenarios
         [
             new Warrior(
                 new WarriorId(1),
-                "Usta",
+                "Master",
                 WarriorStats.Recruit() with
                 {
                     MaxHealth = 130,
@@ -371,9 +370,9 @@ internal static class Scenarios
     }
 
     /// <param name="speed">
-    /// Yokai'ler hızda kasıtlı olarak ayrışır: Oni ağır ve yavaş, Tengu hızlı. Kaçmanın
-    /// bedelini belirleyen şey budur — yavaş düşmandan temastan önce çekilmek bedelsize
-    /// yakındır, hızlı olan peşinden gelip yetişir.
+    /// The yokai differ in speed on purpose: the Oni is heavy and slow, the Tengu fast. This is what
+    /// sets the price of fleeing — pulling out from a slow enemy before contact is close to free, while
+    /// a fast one comes after you and catches up.
     /// </param>
     private static Warrior Yokai(
         int id,

@@ -6,9 +6,9 @@ using Domina.Core.Model;
 
 namespace Domina.Sim;
 
-/// <summary>Komut satırından çözülmüş çalıştırma ayarları.</summary>
+/// <summary>The run settings parsed from the command line.</summary>
 /// <param name="PlayerArmor">
-/// Verilmişse senaryodaki kuşamı ezer; <c>null</c> ise senaryonunki kullanılır.
+/// If given, it overrides the kit in the scenario; if <c>null</c> the scenario's own is used.
 /// </param>
 internal sealed record SimOptions(
     Scenario Scenario,
@@ -23,7 +23,7 @@ internal sealed record SimOptions(
     double? PlayerSpeed = null,
     CampaignOptions? Campaign = null);
 
-/// <summary>Ayrıştırma sonucu: ayarlar, yardım isteği veya hata.</summary>
+/// <summary>The parse result: settings, a help request, or an error.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
 {
     public static ParsedArgs Help() => new(null, null, HelpRequested: true);
@@ -50,7 +50,7 @@ internal static class SimArgs
         string? csvPath = null;
         CombatTuning tuning = CombatTuning.Default;
         Armor? playerArmor = null;
-        string armorLabel = "senaryodaki";
+        string armorLabel = "from the scenario";
         double? playerSpeed = null;
         bool campaign = false;
         int days = CampaignOptions.DefaultDays;
@@ -87,12 +87,12 @@ internal static class SimArgs
 
             if (!arg.StartsWith("--", StringComparison.Ordinal))
             {
-                return ParsedArgs.Fail($"Beklenmeyen argüman: {arg}");
+                return ParsedArgs.Fail($"Unexpected argument: {arg}");
             }
 
             if (i + 1 >= args.Count)
             {
-                return ParsedArgs.Fail($"{arg} bir değer bekliyor.");
+                return ParsedArgs.Fail($"{arg} expects a value.");
             }
 
             string value = args[++i];
@@ -107,7 +107,7 @@ internal static class SimArgs
                     if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out battles)
                         || battles <= 0)
                     {
-                        return ParsedArgs.Fail($"--battles pozitif bir tam sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--battles must be a positive integer: {value}");
                     }
 
                     break;
@@ -115,7 +115,7 @@ internal static class SimArgs
                 case "--seed":
                     if (!ulong.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out firstSeed))
                     {
-                        return ParsedArgs.Fail($"--seed negatif olmayan bir tam sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--seed must be a non-negative integer: {value}");
                     }
 
                     break;
@@ -131,7 +131,7 @@ internal static class SimArgs
                 case "--grievous":
                     if (!TryFraction(value, out double grievous))
                     {
-                        return ParsedArgs.Fail($"--grievous 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--grievous must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { GrievousSeverityThreshold = grievous };
@@ -140,7 +140,7 @@ internal static class SimArgs
                 case "--sever":
                     if (!TryFraction(value, out double sever))
                     {
-                        return ParsedArgs.Fail($"--sever 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--sever must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { BaseDismembermentChance = sever };
@@ -149,11 +149,11 @@ internal static class SimArgs
                 case "--charge-chance":
                     if (!TryFraction(value, out double chargeChance))
                     {
-                        return ParsedArgs.Fail($"--charge-chance 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-chance must be between 0 and 1: {value}");
                     }
 
-                    // Eksen düz kalsın diye Saldırganlık eğrisini bastırır: iki uç da aynı
-                    // değere çekilince olasılık savaşçıdan bağımsız sabitlenir.
+                    // Flattens the Aggression curve so the axis stays flat: pulling both ends to the
+                    // same value fixes the probability independently of the warrior.
                     tuning = tuning with
                     {
                         ChargeChanceAtZeroAggression = chargeChance,
@@ -166,7 +166,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double speedValue)
                         || speedValue is < 0 or > 100)
                     {
-                        return ParsedArgs.Fail($"--speed 0-100 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--speed must be between 0 and 100: {value}");
                     }
 
                     playerSpeed = speedValue;
@@ -175,7 +175,7 @@ internal static class SimArgs
                 case "--charge-chance-min":
                     if (!TryFraction(value, out double chanceMin))
                     {
-                        return ParsedArgs.Fail($"--charge-chance-min 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-chance-min must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { ChargeChanceAtZeroAggression = chanceMin };
@@ -184,7 +184,7 @@ internal static class SimArgs
                 case "--charge-chance-max":
                     if (!TryFraction(value, out double chanceMax))
                     {
-                        return ParsedArgs.Fail($"--charge-chance-max 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-chance-max must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { ChargeChanceAtMaxAggression = chanceMax };
@@ -195,7 +195,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeWindup)
                         || chargeWindup < 0)
                     {
-                        return ParsedArgs.Fail($"--charge-windup negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-windup must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { ChargeWindupSeconds = chargeWindup };
@@ -204,7 +204,7 @@ internal static class SimArgs
                 case "--charge-speed":
                     if (!TryMultiplier(value, out double chargeSpeed))
                     {
-                        return ParsedArgs.Fail($"--charge-speed 1 veya üstü olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-speed must be 1 or more: {value}");
                     }
 
                     tuning = tuning with { ChargeSpeedMultiplier = chargeSpeed };
@@ -215,7 +215,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeDamage)
                         || chargeDamage < 0)
                     {
-                        return ParsedArgs.Fail($"--charge-damage negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-damage must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { ChargeDamageAtFullSpeed = chargeDamage };
@@ -226,7 +226,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeCounter)
                         || chargeCounter is < 0 or > 1)
                     {
-                        return ParsedArgs.Fail($"--charge-counter 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--charge-counter must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { ChargeTargetCounterChance = chargeCounter };
@@ -237,7 +237,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double armorAttack)
                         || armorAttack < 0)
                     {
-                        return ParsedArgs.Fail($"--armor-attack-penalty negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--armor-attack-penalty must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { ArmorAttackSlowdownAtFullWeight = armorAttack };
@@ -246,7 +246,7 @@ internal static class SimArgs
                 case "--stun-chance":
                     if (!TryFraction(value, out double stunChance))
                     {
-                        return ParsedArgs.Fail($"--stun-chance 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--stun-chance must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { BaseStunChance = stunChance };
@@ -255,7 +255,7 @@ internal static class SimArgs
                 case "--stun-threshold":
                     if (!TryFraction(value, out double stunThreshold))
                     {
-                        return ParsedArgs.Fail($"--stun-threshold 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--stun-threshold must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { StunSeverityThreshold = stunThreshold };
@@ -266,7 +266,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double stunSeconds)
                         || stunSeconds < 0)
                     {
-                        return ParsedArgs.Fail($"--stun-seconds negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--stun-seconds must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { StunSeconds = stunSeconds };
@@ -275,7 +275,7 @@ internal static class SimArgs
                 case "--stun-head":
                     if (!TryMultiplier(value, out double stunHead))
                     {
-                        return ParsedArgs.Fail($"--stun-head 1 veya üstü olmalı: {value}");
+                        return ParsedArgs.Fail($"--stun-head must be 1 or more: {value}");
                     }
 
                     tuning = tuning with { StunHeadMultiplier = stunHead };
@@ -284,7 +284,7 @@ internal static class SimArgs
                 case "--stun-armor-share":
                     if (!TryFraction(value, out double stunArmorShare))
                     {
-                        return ParsedArgs.Fail($"--stun-armor-share 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--stun-armor-share must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { ArmorStunResistanceShare = stunArmorShare };
@@ -293,7 +293,7 @@ internal static class SimArgs
                 case "--catch-chance":
                     if (!TryFraction(value, out double catchChance))
                     {
-                        return ParsedArgs.Fail($"--catch-chance 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--catch-chance must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { BaseCatchChance = catchChance };
@@ -304,7 +304,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double catchBind)
                         || catchBind < 0)
                     {
-                        return ParsedArgs.Fail($"--catch-bind negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--catch-bind must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { CatchBindSeconds = catchBind };
@@ -313,7 +313,7 @@ internal static class SimArgs
                 case "--catch-two-handed":
                     if (!TryFraction(value, out double catchTwoHanded))
                     {
-                        return ParsedArgs.Fail($"--catch-two-handed 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--catch-two-handed must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { CatchTwoHandedFactor = catchTwoHanded };
@@ -324,7 +324,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double catchStamina)
                         || catchStamina < 0)
                     {
-                        return ParsedArgs.Fail($"--catch-stamina negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--catch-stamina must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { CatchStaminaCost = catchStamina };
@@ -333,7 +333,7 @@ internal static class SimArgs
                 case "--catch-accuracy":
                     if (!TryFraction(value, out double catchAccuracy))
                     {
-                        return ParsedArgs.Fail($"--catch-accuracy 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--catch-accuracy must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { CatchAccuracyBonusAtMax = catchAccuracy };
@@ -344,7 +344,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonDamage)
                         || poisonDamage < 0)
                     {
-                        return ParsedArgs.Fail($"--poison-damage negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--poison-damage must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { PoisonDamagePerTick = poisonDamage };
@@ -355,7 +355,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonSeconds)
                         || poisonSeconds < 0)
                     {
-                        return ParsedArgs.Fail($"--poison-seconds negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--poison-seconds must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { PoisonSeconds = poisonSeconds };
@@ -366,7 +366,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonTick)
                         || poisonTick <= 0)
                     {
-                        return ParsedArgs.Fail($"--poison-tick pozitif bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--poison-tick must be a positive number: {value}");
                     }
 
                     tuning = tuning with { PoisonTickSeconds = poisonTick };
@@ -377,7 +377,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double poisonDose)
                         || poisonDose < 0)
                     {
-                        return ParsedArgs.Fail($"--poison-dose negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--poison-dose must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { PoisonMaxDose = poisonDose };
@@ -388,7 +388,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double durability)
                         || durability < 0)
                     {
-                        return ParsedArgs.Fail($"--armor-durability negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--armor-durability must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { ArmorDurabilityScale = durability };
@@ -397,7 +397,7 @@ internal static class SimArgs
                 case "--block-chance":
                     if (!TryFraction(value, out double blockChance))
                     {
-                        return ParsedArgs.Fail($"--block-chance 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--block-chance must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { MaxBlockChance = blockChance };
@@ -408,7 +408,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double blockSeconds)
                         || blockSeconds < 0)
                     {
-                        return ParsedArgs.Fail($"--block-seconds negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--block-seconds must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { BlockSeconds = blockSeconds };
@@ -417,7 +417,7 @@ internal static class SimArgs
                 case "--block-reduction":
                     if (!TryFraction(value, out double blockReduction))
                     {
-                        return ParsedArgs.Fail($"--block-reduction 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--block-reduction must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { BlockDamageReduction = blockReduction };
@@ -428,7 +428,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetWounded)
                         || targetWounded < 0)
                     {
-                        return ParsedArgs.Fail($"--target-wounded negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--target-wounded must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { TargetWoundedWeight = targetWounded };
@@ -439,7 +439,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetExposed)
                         || targetExposed < 0)
                     {
-                        return ParsedArgs.Fail($"--target-exposed negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--target-exposed must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { TargetExposedWeight = targetExposed };
@@ -450,7 +450,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetCrowd)
                         || targetCrowd < 0)
                     {
-                        return ParsedArgs.Fail($"--target-crowd negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--target-crowd must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { TargetCrowdPenalty = targetCrowd };
@@ -461,7 +461,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double targetSticky)
                         || targetSticky < 0)
                     {
-                        return ParsedArgs.Fail($"--target-sticky negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--target-sticky must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { TargetStickiness = targetSticky };
@@ -470,7 +470,7 @@ internal static class SimArgs
                 case "--disarm-chance":
                     if (!TryFraction(value, out double disarmChance))
                     {
-                        return ParsedArgs.Fail($"--disarm-chance 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--disarm-chance must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { BaseDisarmChance = disarmChance };
@@ -479,7 +479,7 @@ internal static class SimArgs
                 case "--disarm-catch":
                     if (!TryFraction(value, out double disarmCatch))
                     {
-                        return ParsedArgs.Fail($"--disarm-catch 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--disarm-catch must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { CatchDisarmChance = disarmCatch };
@@ -488,7 +488,7 @@ internal static class SimArgs
                 case "--disarm-armor-share":
                     if (!TryFraction(value, out double disarmArmorShare))
                     {
-                        return ParsedArgs.Fail($"--disarm-armor-share 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--disarm-armor-share must be between 0 and 1: {value}");
                     }
 
                     tuning = tuning with { ArmorHardnessShare = disarmArmorShare };
@@ -499,7 +499,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double dropDistance)
                         || dropDistance < 0)
                     {
-                        return ParsedArgs.Fail($"--drop-distance negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--drop-distance must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { WeaponDropDistance = dropDistance };
@@ -510,7 +510,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double pickupRadius)
                         || pickupRadius < 0)
                     {
-                        return ParsedArgs.Fail($"--pickup-radius negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--pickup-radius must be a non-negative number: {value}");
                     }
 
                     tuning = tuning with { WeaponPickupRadius = pickupRadius };
@@ -520,7 +520,7 @@ internal static class SimArgs
                     if (!TryParseArmor(value, out playerArmor))
                     {
                         return ParsedArgs.Fail(
-                            $"Bilinmeyen kuşam: {value} (none | light | medium | heavy)");
+                            $"Unknown kit: {value} (none | light | medium | heavy)");
                     }
 
                     armorLabel = playerArmor!.Name;
@@ -530,7 +530,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "battle", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "campaign", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--mode battle veya campaign olmali: {value}");
+                        return ParsedArgs.Fail($"--mode must be battle or campaign: {value}");
                     }
 
                     campaign = string.Equals(value, "campaign", StringComparison.OrdinalIgnoreCase);
@@ -539,7 +539,7 @@ internal static class SimArgs
                 case "--days":
                     if (!TryCount(value, out days))
                     {
-                        return ParsedArgs.Fail($"--days pozitif bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--days must be a positive integer: {value}");
                     }
 
                     break;
@@ -547,7 +547,7 @@ internal static class SimArgs
                 case "--campaigns":
                     if (!TryCount(value, out campaigns))
                     {
-                        return ParsedArgs.Fail($"--campaigns pozitif bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--campaigns must be a positive integer: {value}");
                     }
 
                     break;
@@ -555,7 +555,7 @@ internal static class SimArgs
                 case "--party":
                     if (!TryCount(value, out partySize) || partySize > 4)
                     {
-                        return ParsedArgs.Fail($"--party 1-4 arasinda olmali: {value}");
+                        return ParsedArgs.Fail($"--party must be between 1 and 4: {value}");
                     }
 
                     break;
@@ -563,7 +563,7 @@ internal static class SimArgs
                 case "--roster":
                     if (!TryCount(value, out rosterTarget))
                     {
-                        return ParsedArgs.Fail($"--roster pozitif bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--roster must be a positive integer: {value}");
                     }
 
                     break;
@@ -571,7 +571,7 @@ internal static class SimArgs
                 case "--gold":
                     if (!TryAmount(value, out startingGold))
                     {
-                        return ParsedArgs.Fail($"--gold negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--gold must be a non-negative integer: {value}");
                     }
 
                     break;
@@ -579,7 +579,7 @@ internal static class SimArgs
                 case "--repair-at":
                     if (!TryFraction(value, out repairAt))
                     {
-                        return ParsedArgs.Fail($"--repair-at 0-1 arasinda olmali: {value}");
+                        return ParsedArgs.Fail($"--repair-at must be between 0 and 1: {value}");
                     }
 
                     break;
@@ -587,7 +587,7 @@ internal static class SimArgs
                 case "--reserve-days":
                     if (!TryAmount(value, out reserveDays))
                     {
-                        return ParsedArgs.Fail($"--reserve-days negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--reserve-days must be a non-negative integer: {value}");
                     }
 
                     break;
@@ -596,7 +596,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--offers on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--offers must be on or off: {value}");
                     }
 
                     useOffers = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -606,7 +606,7 @@ internal static class SimArgs
                     if (!Enum.TryParse(value, ignoreCase: true, out acceptUpTo))
                     {
                         return ParsedArgs.Fail(
-                            $"--accept-up-to faint | rising | heavy | dire olmali: {value}");
+                            $"--accept-up-to must be faint | rising | heavy | dire: {value}");
                     }
 
                     break;
@@ -615,7 +615,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--cautious on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--cautious must be on or off: {value}");
                     }
 
                     cautiousWhenThin = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -625,7 +625,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--market on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--market must be on or off: {value}");
                     }
 
                     useMarket = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -635,7 +635,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--bounty on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--bounty must be on or off: {value}");
                     }
 
                     useBounties = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -645,7 +645,7 @@ internal static class SimArgs
                     if (!TryCount(value, out int refreshDays))
                     {
                         return ParsedArgs.Fail(
-                            $"--market-refresh pozitif bir tam sayi olmali: {value}");
+                            $"--market-refresh must be a positive integer: {value}");
                     }
 
                     marketTuning = marketTuning with { RefreshDays = refreshDays };
@@ -655,7 +655,7 @@ internal static class SimArgs
                     if (!TryCount(value, out int candidates))
                     {
                         return ParsedArgs.Fail(
-                            $"--market-candidates pozitif bir tam sayi olmali: {value}");
+                            $"--market-candidates must be a positive integer: {value}");
                     }
 
                     marketTuning = marketTuning with { Candidates = candidates };
@@ -667,7 +667,7 @@ internal static class SimArgs
                         || ceiling < 0)
                     {
                         return ParsedArgs.Fail(
-                            $"--market-ceiling negatif olmayan bir sayı olmalı: {value}");
+                            $"--market-ceiling must be a non-negative number: {value}");
                     }
 
                     marketTuning = marketTuning with { BestFollowCeiling = ceiling };
@@ -678,7 +678,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double premium)
                         || premium < 0)
                     {
-                        return ParsedArgs.Fail($"--risk-premium negatif olmayan bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--risk-premium must be a non-negative number: {value}");
                     }
 
                     economy = economy with { RiskPremium = premium };
@@ -689,7 +689,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double riskFree)
                         || riskFree <= 0)
                     {
-                        return ParsedArgs.Fail($"--risk-free-health pozitif bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--risk-free-health must be a positive number: {value}");
                     }
 
                     economy = economy with { RiskFreeEnemyHealth = riskFree };
@@ -700,7 +700,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double ratio)
                         || ratio <= 0)
                     {
-                        return ParsedArgs.Fail($"--accept-ratio pozitif bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--accept-ratio must be a positive number: {value}");
                     }
 
                     acceptRatio = ratio;
@@ -710,7 +710,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--school on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--school must be on or off: {value}");
                     }
 
                     useSchool = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -726,7 +726,7 @@ internal static class SimArgs
                     if (!Enum.TryParse(value, ignoreCase: true, out SchoolBranch branch))
                     {
                         return ParsedArgs.Fail(
-                            $"--school-only training | infirmary | steward | any olmali: {value}");
+                            $"--school-only must be training | infirmary | steward | any: {value}");
                     }
 
                     schoolOnly = branch;
@@ -736,7 +736,7 @@ internal static class SimArgs
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
                     {
-                        return ParsedArgs.Fail($"--paths on veya off olmali: {value}");
+                        return ParsedArgs.Fail($"--paths must be on or off: {value}");
                     }
 
                     usePaths = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
@@ -745,7 +745,7 @@ internal static class SimArgs
                 case "--path-days":
                     if (!TryCount(value, out int pathDays))
                     {
-                        return ParsedArgs.Fail($"--path-days pozitif bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--path-days must be a positive integer: {value}");
                     }
 
                     training = training with { PathTrainingDays = pathDays };
@@ -754,7 +754,7 @@ internal static class SimArgs
                 case "--train-rate":
                     if (!TryFraction(value, out double trainRate))
                     {
-                        return ParsedArgs.Fail($"--train-rate 0-1 arasında olmalı: {value}");
+                        return ParsedArgs.Fail($"--train-rate must be between 0 and 1: {value}");
                     }
 
                     training = training with { GapClosedPerDay = trainRate };
@@ -765,7 +765,7 @@ internal static class SimArgs
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainCeiling)
                         || trainCeiling <= 0)
                     {
-                        return ParsedArgs.Fail($"--train-ceiling pozitif bir sayı olmalı: {value}");
+                        return ParsedArgs.Fail($"--train-ceiling must be a positive number: {value}");
                     }
 
                     training = training with { SkillCeiling = trainCeiling };
@@ -774,7 +774,7 @@ internal static class SimArgs
                 case "--market-pick":
                     if (!Enum.TryParse(value, ignoreCase: true, out marketPick))
                     {
-                        return ParsedArgs.Fail($"--market-pick value veya best olmali: {value}");
+                        return ParsedArgs.Fail($"--market-pick must be value or best: {value}");
                     }
 
                     break;
@@ -782,7 +782,7 @@ internal static class SimArgs
                 case "--event-chance":
                     if (!TryFraction(value, out double eventChance))
                     {
-                        return ParsedArgs.Fail($"--event-chance 0-1 arasinda olmali: {value}");
+                        return ParsedArgs.Fail($"--event-chance must be between 0 and 1: {value}");
                     }
 
                     events = events with { ChancePerDay = eventChance };
@@ -792,7 +792,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double powerStart)
                         || powerStart <= 0)
                     {
-                        return ParsedArgs.Fail($"--power-start pozitif bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--power-start must be a positive number: {value}");
                     }
 
                     encounters = encounters with { StartingPower = powerStart };
@@ -802,7 +802,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double perDay)
                         || perDay < 0)
                     {
-                        return ParsedArgs.Fail($"--power-per-day negatif olmayan bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--power-per-day must be a non-negative number: {value}");
                     }
 
                     encounters = encounters with { PowerPerDay = perDay };
@@ -811,7 +811,7 @@ internal static class SimArgs
                 case "--power-variance":
                     if (!TryFraction(value, out double variance))
                     {
-                        return ParsedArgs.Fail($"--power-variance 0-1 arasinda olmali: {value}");
+                        return ParsedArgs.Fail($"--power-variance must be between 0 and 1: {value}");
                     }
 
                     encounters = encounters with { DailyVariance = variance };
@@ -821,7 +821,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double powerMax)
                         || powerMax <= 0)
                     {
-                        return ParsedArgs.Fail($"--power-max pozitif bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--power-max must be a positive number: {value}");
                     }
 
                     encounters = encounters with { MaxPower = powerMax };
@@ -830,7 +830,7 @@ internal static class SimArgs
                 case "--duel-chance":
                     if (!TryFraction(value, out double duelChance))
                     {
-                        return ParsedArgs.Fail($"--duel-chance 0-1 arasinda olmali: {value}");
+                        return ParsedArgs.Fail($"--duel-chance must be between 0 and 1: {value}");
                     }
 
                     encounters = encounters with { DuelChance = duelChance };
@@ -840,7 +840,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double reward)
                         || reward < 0)
                     {
-                        return ParsedArgs.Fail($"--reward negatif olmayan bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--reward must be a non-negative number: {value}");
                     }
 
                     economy = economy with { VictoryGoldPerEnemyHealth = reward };
@@ -850,7 +850,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double armorGold)
                         || armorGold < 0)
                     {
-                        return ParsedArgs.Fail($"--armor-gold negatif olmayan bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--armor-gold must be a non-negative number: {value}");
                     }
 
                     economy = economy with { ArmorGoldPerDurability = armorGold };
@@ -860,7 +860,7 @@ internal static class SimArgs
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double repairGold)
                         || repairGold < 0)
                     {
-                        return ParsedArgs.Fail($"--repair-gold negatif olmayan bir sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--repair-gold must be a non-negative number: {value}");
                     }
 
                     economy = economy with { RepairGoldPerWear = repairGold };
@@ -869,7 +869,7 @@ internal static class SimArgs
                 case "--food-price":
                     if (!TryAmount(value, out int foodPrice))
                     {
-                        return ParsedArgs.Fail($"--food-price negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--food-price must be a non-negative integer: {value}");
                     }
 
                     economy = economy with { FoodPrice = foodPrice };
@@ -878,7 +878,7 @@ internal static class SimArgs
                 case "--water-price":
                     if (!TryAmount(value, out int waterPrice))
                     {
-                        return ParsedArgs.Fail($"--water-price negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--water-price must be a non-negative integer: {value}");
                     }
 
                     economy = economy with { WaterPrice = waterPrice };
@@ -887,7 +887,7 @@ internal static class SimArgs
                 case "--medicine-price":
                     if (!TryAmount(value, out int medicinePrice))
                     {
-                        return ParsedArgs.Fail($"--medicine-price negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--medicine-price must be a non-negative integer: {value}");
                     }
 
                     economy = economy with { MedicinePrice = medicinePrice };
@@ -896,14 +896,14 @@ internal static class SimArgs
                 case "--recruit-price":
                     if (!TryAmount(value, out int recruitPrice))
                     {
-                        return ParsedArgs.Fail($"--recruit-price negatif olmayan bir tam sayi olmali: {value}");
+                        return ParsedArgs.Fail($"--recruit-price must be a non-negative integer: {value}");
                     }
 
                     economy = economy with { RecruitPrice = recruitPrice };
                     break;
 
                 default:
-                    return ParsedArgs.Fail($"Bilinmeyen seçenek: {arg}");
+                    return ParsedArgs.Fail($"Unknown option: {arg}");
             }
         }
 
@@ -911,14 +911,14 @@ internal static class SimArgs
         if (scenario is null)
         {
             string known = string.Join(", ", Scenarios.All.Select(s => s.Name));
-            return ParsedArgs.Fail($"Bilinmeyen senaryo: {scenarioName} (bilinenler: {known})");
+            return ParsedArgs.Fail($"Unknown scenario: {scenarioName} (known: {known})");
         }
 
         if (!TryParsePolicy(policySpec, out IRetreatPolicy? policy, out string label))
         {
             return ParsedArgs.Fail(
-                $"Bilinmeyen kaçış politikası: {policySpec} "
-                + "(never | below:<0-1> | losing:<0-1> | at:<saniye>)");
+                $"Unknown retreat policy: {policySpec} "
+                + "(never | below:<0-1> | losing:<0-1> | at:<seconds>)");
         }
 
         CampaignOptions? campaignOptions = campaign
@@ -956,11 +956,11 @@ internal static class SimArgs
     }
 
     /// <summary>
-    /// Oyuncu tarafına zorlanacak kuşamı çözer.
+    /// Parses the kit to be forced onto the player's side.
     /// </summary>
     /// <remarks>
-    /// Zırh artık yuva yuva olduğu için "iyi zırh = düşük uzuv kaybı" iddiası ancak
-    /// senaryonun geri kalanı sabitken ölçülebilir. Bu seçenek o ölçümün aracıdır.
+    /// Because armour is now slot by slot, the claim "good armour = less limb loss" can only be measured
+    /// while the rest of the scenario is held fixed. This option is that measurement's tool.
     /// </remarks>
     private static bool TryParseArmor(string spec, out Armor? armor)
     {
@@ -976,7 +976,7 @@ internal static class SimArgs
         return armor is not null;
     }
 
-    /// <summary>Çarpan eksenleri: 1'in altı hücumu cezaya çevirirdi, oradan aşağısı yok.</summary>
+    /// <summary>Multiplier axes: below 1 would turn a charge into a punishment, so there is nothing below that.</summary>
     private static bool TryMultiplier(string text, out double value) =>
         double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
         && value >= 1;
@@ -986,20 +986,20 @@ internal static class SimArgs
         && value is >= 0 and <= 1;
 
     /// <summary>
-    /// Kaçış politikasını çözer.
+    /// Parses the retreat policy.
     /// </summary>
     /// <remarks>
-    /// Oyunda kaçış kararı oyuncunun tuşundan gelir; burada onun yerine bir politika
-    /// geçer. "Hiç çekilmeyen" ile "canı %30'a düşünce çeken" oyuncu arasındaki ölüm
-    /// ve sakatlık farkını ölçmek, uzuv kaybı mekaniğinin dengesinin tek yoludur —
-    /// uzuv kaybı yalnızca zamanında müdahale edilen dövüşlerde oluşur.
+    /// In the game the retreat decision comes from the player's key; here a policy stands in for it.
+    /// Measuring the difference in death and maiming between a player who "never pulls out" and one who
+    /// "pulls out at 30% health" is the only way to balance the limb-loss mechanic — limb loss only
+    /// happens in fights where you intervene in time.
     /// </remarks>
     private static bool TryParsePolicy(string spec, out IRetreatPolicy? policy, out string label)
     {
         if (string.Equals(spec, "never", StringComparison.OrdinalIgnoreCase))
         {
             policy = NeverRetreat.Instance;
-            label = "hiç çekilme";
+            label = "never pull out";
             return true;
         }
 
@@ -1012,7 +1012,7 @@ internal static class SimArgs
             && atSecond >= 0)
         {
             policy = new RetreatAtSecond(atSecond);
-            label = string.Create(CultureInfo.InvariantCulture, $"{atSecond:0.##}. saniyede çek");
+            label = string.Create(CultureInfo.InvariantCulture, $"pull out at second {atSecond:0.##}");
             return true;
         }
 
@@ -1022,7 +1022,7 @@ internal static class SimArgs
             policy = new RetreatWhenLosing(losingAt);
             label = string.Create(
                 CultureInfo.InvariantCulture,
-                $"sayıca gerideyken canı %{losingAt * 100:0.#} altına düşünce çek");
+                $"pull out when outnumbered and health falls below {losingAt * 100:0.#}%");
             return true;
         }
 
@@ -1035,7 +1035,7 @@ internal static class SimArgs
                 policy = new RetreatBelowHealth(fraction);
                 label = string.Create(
                     CultureInfo.InvariantCulture,
-                    $"can %{fraction * 100:0.#} altına düşünce çek");
+                    $"pull out when health falls below {fraction * 100:0.#}%");
                 return true;
             }
         }
@@ -1055,79 +1055,79 @@ internal static class SimArgs
     {
         ArgumentNullException.ThrowIfNull(writer);
 
-        writer.WriteLine("Domina toplu dövüş simülasyonu — denge ölçümü için.");
+        writer.WriteLine("Domina batch combat simulation — for balance measurement.");
         writer.WriteLine();
-        writer.WriteLine("Kullanım:");
+        writer.WriteLine("Usage:");
         writer.WriteLine("  Domina.Sim [--scenario <ad>] [--battles <N>] [--seed <S>]");
-        writer.WriteLine("             [--policy never|below:<oran>|losing:<oran>|at:<sn>]");
-        writer.WriteLine("             [--out <dosya.csv>]");
+        writer.WriteLine("             [--policy never|below:<share>|losing:<share>|at:<sec>]");
+        writer.WriteLine("             [--out <file.csv>]");
         writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
         writer.WriteLine("             [--armor none|light|medium|heavy] [--speed <0-100>]");
         writer.WriteLine("             [--charge-chance <0-1>] [--charge-chance-min/-max <0-1>]");
         writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=0>]");
-        writer.WriteLine("             [--charge-windup <sn>] [--charge-counter <0-1>]");
+        writer.WriteLine("             [--charge-windup <sec>] [--charge-counter <0-1>]");
         writer.WriteLine("             [--armor-attack-penalty <>=0>]");
         writer.WriteLine("             [--stun-chance <0-1>] [--stun-threshold <0-1>]");
-        writer.WriteLine("             [--stun-seconds <sn>] [--stun-head <>=1>]");
+        writer.WriteLine("             [--stun-seconds <sec>] [--stun-head <>=1>]");
         writer.WriteLine("             [--stun-armor-share <0-1>]");
-        writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sn>]");
-        writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <sayı>]");
+        writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sec>]");
+        writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <number>]");
         writer.WriteLine("             [--catch-accuracy <0-1>]");
-        writer.WriteLine("             [--poison-damage <sayı>] [--poison-seconds <sn>]");
-        writer.WriteLine("             [--poison-tick <sn>] [--poison-dose <sayı>]");
-        writer.WriteLine("             [--armor-durability <çarpan>]");
-        writer.WriteLine("             [--target-wounded <puan>] [--target-exposed <puan>]");
-        writer.WriteLine("             [--target-crowd <puan>] [--target-sticky <puan>]");
-        writer.WriteLine("             [--block-chance <0-1>] [--block-seconds <sn>]");
+        writer.WriteLine("             [--poison-damage <number>] [--poison-seconds <sec>]");
+        writer.WriteLine("             [--poison-tick <sec>] [--poison-dose <number>]");
+        writer.WriteLine("             [--armor-durability <multiplier>]");
+        writer.WriteLine("             [--target-wounded <points>] [--target-exposed <points>]");
+        writer.WriteLine("             [--target-crowd <points>] [--target-sticky <points>]");
+        writer.WriteLine("             [--block-chance <0-1>] [--block-seconds <sec>]");
         writer.WriteLine("             [--block-reduction <0-1>]");
         writer.WriteLine("             [--disarm-chance <0-1>] [--disarm-catch <0-1>]");
-        writer.WriteLine("             [--disarm-armor-share <0-1>] [--drop-distance <birim>]");
-        writer.WriteLine("             [--pickup-radius <birim>]");
+        writer.WriteLine("             [--disarm-armor-share <0-1>] [--drop-distance <units>]");
+        writer.WriteLine("             [--pickup-radius <units>]");
         writer.WriteLine();
-        writer.WriteLine("Seçenekler:");
-        writer.WriteLine($"  --scenario  Koşturulacak eşleşme (varsayılan: {DefaultScenario})");
-        writer.WriteLine($"  --battles   Dövüş sayısı (varsayılan: {DefaultBattles})");
-        writer.WriteLine($"  --seed      İlk seed; sonrakiler birer artar (varsayılan: {DefaultSeed})");
-        writer.WriteLine("  --policy    never | below:<oran> | losing:<oran> | at:<sn>");
-        writer.WriteLine("              (varsayılan: never)");
-        writer.WriteLine("              below   = canı düşen olunca çek (kaba taban)");
-        writer.WriteLine("              losing  = sayıca gerideyken canı düşünce çek (oyuncu modeli)");
-        writer.WriteLine("              at      = verilen saniyede, olan bitene bakmadan çek");
-        writer.WriteLine("  --out       Dövüş başına satır yazılacak CSV dosyası");
-        writer.WriteLine("  --grievous  Ağır darbe eşiği (darbe/azami can oranı)");
-        writer.WriteLine("  --sever     Ağır darbede taban uzuv kopma şansı");
-        writer.WriteLine("  --armor     Oyuncu tarafının kuşamını ezer (zırh eksenini izole eder)");
-        writer.WriteLine("  --speed     Oyuncu tarafının Hız stat'ını ezer (hız eksenini izole eder)");
-        writer.WriteLine("  --charge-chance    Hücum olasılığını sabitler (Saldırganlık eğrisini bastırır)");
-        writer.WriteLine("  --charge-chance-min/-max  Saldırganlık eğrisinin iki ucu");
-        writer.WriteLine("  --charge-windup    Koşu öncesi birikme süresi (0 = birikme yok)");
-        writer.WriteLine("  --charge-speed     Hücum sırasındaki hız çarpanı");
-        writer.WriteLine("  --charge-damage    Azami hızda varış vuruşuna eklenen hasar oranı");
-        writer.WriteLine("  --charge-counter   Hücumun hedefinin karşı vuruş olasılığı");
-        writer.WriteLine("  --armor-speed-penalty    Tam kuşamda yürüme hızından düşen oran");
-        writer.WriteLine("  --armor-attack-penalty   Tam kuşamda saldırı döngüsünün uzama oranı");
-        writer.WriteLine("  --stun-chance      Ağır darbede taban sersemletme şansı");
-        writer.WriteLine("  --stun-threshold   Sersemletme zarının atıldığı darbe/azami can oranı");
-        writer.WriteLine("  --stun-seconds     Sersemleyen savaşçının donduğu süre");
-        writer.WriteLine("  --stun-head        Kafaya inen darbenin sersemletme çarpanı");
-        writer.WriteLine("  --stun-armor-share Zırhın kopma direncinin sersemletmeye sayılan payı");
-        writer.WriteLine("  --catch-chance     Yakalama aletiyle gelen vuruşu tutma taban şansı");
-        writer.WriteLine("  --catch-bind       Silahı yakalanan saldıranın açıkta kaldığı süre");
-        writer.WriteLine("  --catch-two-handed Çift el silahın yakalanma şansına uygulanan çarpan");
-        writer.WriteLine("  --catch-stamina    Yakalamanın stamina bedeli");
-        writer.WriteLine("  --catch-accuracy   İsabet 100 iken yakalama şansına eklenen oran");
-        writer.WriteLine("  --poison-damage    Zehrin bir tikte verdiği hasar (doz 1 iken)");
-        writer.WriteLine("  --poison-seconds   Bir dozun ömrü");
-        writer.WriteLine("  --poison-tick      Zehrin hasar verme aralığı");
-        writer.WriteLine("  --poison-dose      Bir savaşçıda birikebilecek azami doz");
-        writer.WriteLine("  --armor-durability Zırh dayanıklılık havuzlarının çarpanı (0 = yıpranmaz)");
-        writer.WriteLine("  --disarm-chance    Zırha inen vuruşta silahın elden düşme taban şansı");
-        writer.WriteLine("  --disarm-catch     Yakalanan silahın avuçtan çıkma şansı");
-        writer.WriteLine("  --disarm-armor-share Vurulan parçanın kopma direncinin sertlik payı");
-        writer.WriteLine("  --drop-distance    Düşen silahın savaşçıdan uzağa savrulma mesafesi");
-        writer.WriteLine("  --pickup-radius    Yerdeki silahın alınabildiği mesafe");
+        writer.WriteLine("Options:");
+        writer.WriteLine($"  --scenario  The matchup to run (default: {DefaultScenario})");
+        writer.WriteLine($"  --battles   Number of fights (default: {DefaultBattles})");
+        writer.WriteLine($"  --seed      The first seed; the rest increment by one (default: {DefaultSeed})");
+        writer.WriteLine("  --policy    never | below:<share> | losing:<share> | at:<sec>");
+        writer.WriteLine("              (default: never)");
+        writer.WriteLine("              below   = pull out when health drops (a crude baseline)");
+        writer.WriteLine("              losing  = pull out when outnumbered and health drops (player model)");
+        writer.WriteLine("              at      = pull out at the given second, whatever is happening");
+        writer.WriteLine("  --out       CSV file to write one line per fight to");
+        writer.WriteLine("  --grievous  Heavy-blow threshold (blow/max health ratio)");
+        writer.WriteLine("  --sever     Base dismemberment chance on a heavy blow");
+        writer.WriteLine("  --armor     Overrides the player side's kit (isolates the armour axis)");
+        writer.WriteLine("  --speed     Overrides the player side's Speed stat (isolates the speed axis)");
+        writer.WriteLine("  --charge-chance    Fixes the charge probability (flattens the Aggression curve)");
+        writer.WriteLine("  --charge-chance-min/-max  The two ends of the Aggression curve");
+        writer.WriteLine("  --charge-windup    The windup before the run (0 = no windup)");
+        writer.WriteLine("  --charge-speed     The speed multiplier during a charge");
+        writer.WriteLine("  --charge-damage    Damage share added to the arrival blow at maximum speed");
+        writer.WriteLine("  --charge-counter   The charge target's counter-hit probability");
+        writer.WriteLine("  --armor-speed-penalty    Walking speed lost at full armour");
+        writer.WriteLine("  --armor-attack-penalty   How much the attack cycle stretches at full armour");
+        writer.WriteLine("  --stun-chance      Base stun chance on a heavy blow");
+        writer.WriteLine("  --stun-threshold   The blow/max health ratio at which the stun die is rolled");
+        writer.WriteLine("  --stun-seconds     How long a stunned warrior is frozen");
+        writer.WriteLine("  --stun-head        The stun multiplier for a blow to the head");
+        writer.WriteLine("  --stun-armor-share The share of armour's dismemberment resistance counted against stun");
+        writer.WriteLine("  --catch-chance     Base chance of catching an incoming strike with a catching implement");
+        writer.WriteLine("  --catch-bind       How long the attacker whose weapon is caught stays exposed");
+        writer.WriteLine("  --catch-two-handed The multiplier applied to a two-handed weapon's catch chance");
+        writer.WriteLine("  --catch-stamina    The stamina cost of a catch");
+        writer.WriteLine("  --catch-accuracy   The share added to catch chance at Accuracy 100");
+        writer.WriteLine("  --poison-damage    Damage poison deals in one tick (at dose 1)");
+        writer.WriteLine("  --poison-seconds   The lifetime of one dose");
+        writer.WriteLine("  --poison-tick      The interval at which poison deals damage");
+        writer.WriteLine("  --poison-dose      The maximum dose that can accumulate on one warrior");
+        writer.WriteLine("  --armor-durability The multiplier for armour durability pools (0 = no wear)");
+        writer.WriteLine("  --disarm-chance    Base chance of the weapon falling on a strike landing on armour");
+        writer.WriteLine("  --disarm-catch     The chance a caught weapon leaves the palm");
+        writer.WriteLine("  --disarm-armor-share The hardness share of the struck piece's dismemberment resistance");
+        writer.WriteLine("  --drop-distance    How far a dropped weapon is flung from the warrior");
+        writer.WriteLine("  --pickup-radius    The distance at which a weapon on the ground can be picked up");
         writer.WriteLine();
-        writer.WriteLine("Senaryolar:");
+        writer.WriteLine("Scenarios:");
         foreach (Scenario s in Scenarios.All)
         {
             writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"  {s.Name,-10} {s.Description}"));
