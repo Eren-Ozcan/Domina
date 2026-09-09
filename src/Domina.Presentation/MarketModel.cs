@@ -3,42 +3,42 @@ using Domina.Core.Model;
 
 namespace Domina.Presentation;
 
-/// <summary>Yeteneğin okunabilir bandı.</summary>
+/// <summary>The readable band of talent.</summary>
 /// <remarks>
-/// Yetenek ekranda <b>sayı olarak</b> gösterilmez. Stat elde olandır ve tam sayısıyla
-/// yazılır; yetenek ise bir <b>vaat</b> — "1.23" yazmak onu ölçülmüş bir stat gibi
-/// gösterir ve pazarı hesap tablosuna çevirir. Bant, kararı verecek kadar bilgi verir.
+/// Talent is not shown <b>as a number</b> on screen. A stat is what you have and is written with its
+/// exact figure; talent is a <b>promise</b> — writing "1.23" makes it look like a measured stat and
+/// turns the market into a spreadsheet. A band gives just enough information to decide.
 /// </remarks>
 public enum TalentBand
 {
-    /// <summary>Ortalamanın belirgin altında.</summary>
+    /// <summary>Clearly below average.</summary>
     Dull,
 
-    /// <summary>Ortalama civarı.</summary>
+    /// <summary>Around average.</summary>
     Fair,
 
-    /// <summary>Ortalamanın üstünde.</summary>
+    /// <summary>Above average.</summary>
     Promising,
 
-    /// <summary>Pazarın üst ucu.</summary>
+    /// <summary>The market's top end.</summary>
     Rare,
 }
 
-/// <summary>Pazardaki tek satır — bir aday ve bugünkü hükmü.</summary>
+/// <summary>A single row in the market — one candidate and today's verdict on him.</summary>
 /// <param name="Index">
-/// Adayın <see cref="DojoState.Recruits"/> içindeki yeri; ekran satın alırken bunu geri
-/// verir. İsim eşsiz değil (aynı isim iki adayda çıkabilir), o yüzden kimlik sıradır.
+/// The candidate's place within <see cref="DojoState.Recruits"/>; the screen returns it when buying.
+/// The name is not unique (the same name can appear on two candidates), so the identity is the index.
 /// </param>
-/// <param name="Name">Adayın adı.</param>
-/// <param name="Stats">Görünen statlar — pazarlıkta gizli bir şey yok.</param>
-/// <param name="Band">Yeteneğin bandı.</param>
-/// <param name="Price">İstenen altın.</param>
-/// <param name="Affordable">Kasadaki altın yetiyor mu?</param>
-/// <param name="Bought">Bugün alındı mı? Alınan aday tezgâhta durur ama satılmaz.</param>
-/// <param name="Score">Toplam stat skoru — satırların kıyaslandığı tek sayı.</param>
+/// <param name="Name">The candidate's name.</param>
+/// <param name="Stats">The visible stats — nothing is hidden in the bargaining.</param>
+/// <param name="Band">The talent band.</param>
+/// <param name="Price">The gold asked.</param>
+/// <param name="Affordable">Is there enough gold in the treasury?</param>
+/// <param name="Bought">Was he bought today? A bought candidate stays at the stall but is not sold.</param>
+/// <param name="Score">The total stat score — the single number the rows are compared by.</param>
 /// <param name="BetterInRoster">
-/// Kadroda bu adaydan iyi <b>kaç canlı</b> savaşçı var. Sıfırsa aday bugün elindeki
-/// herkesten iyi.
+/// <b>How many living</b> warriors on the roster are better than this candidate. If zero, he is
+/// better than everyone you have today.
 /// </param>
 public readonly record struct MarketRow(
     int Index,
@@ -51,15 +51,15 @@ public readonly record struct MarketRow(
     double Score,
     int BetterInRoster);
 
-/// <summary>Pazarın tepesinde duran sayılar.</summary>
-/// <param name="Gold">Kasadaki altın.</param>
-/// <param name="Candidates">Bugün pazarda duran aday sayısı.</param>
-/// <param name="Affordable">Bugün alınabilecek aday sayısı — alınmış olanlar sayılmaz.</param>
-/// <param name="Bought">Bugün alınmış aday sayısı.</param>
+/// <summary>The numbers standing at the top of the market.</summary>
+/// <param name="Gold">The gold in the treasury.</param>
+/// <param name="Candidates">The number of candidates standing in the market today.</param>
+/// <param name="Affordable">The number of candidates that can be bought today — those already bought do not count.</param>
+/// <param name="Bought">The number of candidates bought today.</param>
 /// <param name="DaysToRefresh">
-/// Kaç gün sonra pazar yenilenir; bugün yenilendiyse tam bir dönem.
+/// In how many days the market refreshes; a full period if it refreshed today.
 /// </param>
-/// <param name="BestLivingScore">Kadrodaki en iyi canlının skoru; kadro boşsa 0.</param>
+/// <param name="BestLivingScore">The score of the best living warrior on the roster; 0 if the roster is empty.</param>
 public readonly record struct MarketSummary(
     int Gold,
     int Candidates,
@@ -69,21 +69,21 @@ public readonly record struct MarketSummary(
     double BestLivingScore);
 
 /// <summary>
-/// Pazar ekranının okuduğu model. Kıyaslamayı ve hükmü hesaplar, çizim yapmaz.
+/// The model the market screen reads. It computes the comparison and the verdict; it does not draw.
 /// </summary>
 /// <remarks>
-/// Ekran <see cref="DojoState.Recruits"/>'i doğrudan okusaydı iki iş sızardı: adayın
-/// <b>kadroya göre</b> nerede durduğu ve yeteneğin nasıl okunacağı. Birincisi pazarın
-/// asıl sorusu ("bu adam elimdekinden iyi mi"), ikincisi ise bilerek bulanık tutulan
-/// tek kalem.
+/// If the screen read <see cref="DojoState.Recruits"/> directly, two jobs would leak: where the
+/// candidate stands <b>relative to the roster</b>, and how talent should be read. The first is the
+/// market's real question ("is this man better than what I have"), the second is deliberately kept
+/// vague.
 /// </remarks>
 public static class MarketModel
 {
-    /// <summary>Bugünkü pazar, ucuzdan pahalıya.</summary>
+    /// <summary>Today's market, from cheapest to most expensive.</summary>
     /// <remarks>
-    /// Sıra <b>fiyata</b> göredir, kasaya göre değil: alınabilirlik altın harcandıkça
-    /// değişir, sıra da her alımda kayardı. Pazar tezgâhı oyuncunun cebine göre yeniden
-    /// dizilmemeli — hangi adayın nerede durduğu gün boyu sabit kalsın.
+    /// The order is by <b>price</b>, not by the treasury: affordability changes as gold is spent, and the
+    /// order would shift with every purchase. The market stall must not be rearranged to fit the player's
+    /// pocket — which candidate stands where should stay fixed all day.
     /// </remarks>
     public static IReadOnlyList<MarketRow> Describe(DojoState dojo)
     {
@@ -104,12 +104,12 @@ public static class MarketModel
             .ToList();
     }
 
-    /// <summary>Tek adayın satırı.</summary>
+    /// <summary>A single candidate's row.</summary>
     /// <param name="offer">Pazardaki aday.</param>
-    /// <param name="index">Adayın stok içindeki yeri.</param>
-    /// <param name="gold">Kasadaki altın.</param>
-    /// <param name="livingScores">Kadrodaki canlıların skorları.</param>
-    /// <param name="bought">Aday bugün alındı mı?</param>
+    /// <param name="index">The candidate's place in the stock.</param>
+    /// <param name="gold">The gold in the treasury.</param>
+    /// <param name="livingScores">The scores of the living warriors on the roster.</param>
+    /// <param name="bought">Was the candidate bought today?</param>
     public static MarketRow Describe(
         RecruitOffer offer,
         int index,
@@ -134,7 +134,7 @@ public static class MarketModel
             BetterInRoster: livingScores.Count(s => s > score));
     }
 
-    /// <summary>Pazarın tepesindeki sayılar.</summary>
+    /// <summary>The numbers at the top of the market.</summary>
     public static MarketSummary Summarize(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -153,12 +153,12 @@ public static class MarketModel
             BestLivingScore: living.Count == 0 ? 0 : living.Max());
     }
 
-    /// <summary>Pazarın yenilenmesine kalan gün — bugün dahil değil.</summary>
+    /// <summary>The days left until the market refreshes — today not included.</summary>
     /// <remarks>
-    /// Varsayılan ayarda tezgâh her gün yenilenir, yani bu sayı 1'dir; ölçüm ayarında
-    /// (<see cref="MarketTuning.RefreshDays"/>) büyüyebilir. Ekranda yazması gerekir:
-    /// tezgâhın kaç gün duracağını bilmeyen oyuncu, beğenmediği listeyi "yarın değişir"
-    /// diye geçer ve durgun bir tezgâhta kararı boşuna erteler.
+    /// With the default setting the stall refreshes every day, so this number is 1; in a measurement
+    /// setting (<see cref="MarketTuning.RefreshDays"/>) it can grow. It has to be written on screen: a
+    /// player who does not know how many days the stall will stand passes over a list he does not like
+    /// thinking "it changes tomorrow" and postpones the decision for nothing at a stall that is not moving.
     /// </remarks>
     public static int DaysToRefresh(DojoState dojo)
     {
@@ -168,12 +168,12 @@ public static class MarketModel
         return period - ((dojo.Day - 1) % period);
     }
 
-    /// <summary>Adayların kıyaslandığı toplam stat skoru.</summary>
+    /// <summary>The total stat score the candidates are compared by.</summary>
     /// <remarks>
-    /// Formül <see cref="RecruitMarket"/>'in tavan hesabıyla <b>aynı</b> olmalı: pazar
-    /// bir adayı tavana takıldığı için kırpıyorsa, ekranda o adayın neden kadronun
-    /// en iyisini geçemediği aynı sayıdan okunabilsin. Stamina dışarıda — tavan da onu
-    /// saymıyor.
+    /// The formula must be <b>the same</b> as <see cref="RecruitMarket"/>'s ceiling calculation: if the
+    /// market is clipping a candidate because he hit the ceiling, why he cannot pass the roster's best
+    /// should be readable on screen from the same number. Stamina is left out — the ceiling does not
+    /// count it either.
     /// </remarks>
     public static double Score(WarriorStats stats) =>
         stats.MaxHealth

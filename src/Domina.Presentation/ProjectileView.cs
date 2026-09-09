@@ -7,13 +7,13 @@ namespace Domina.Presentation;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Mermi savaşçı değildir: rig'i, duruşu, tepkisi yoktur. Tek ihtiyacı iki uç nokta ve
-/// bir ilerleme oranı. Bu yüzden <see cref="RigAnimator"/> yerine ayrı bir sahne nesnesi
-/// olarak taşınır.
+/// A projectile is not a warrior: it has no rig, no pose, no reactions. All it needs is two endpoints
+/// and a progress ratio. That is why it is carried as a separate scene object rather than through
+/// <see cref="RigAnimator"/>.
 /// </para>
 /// <para>
-/// Çekirdek merminin nerede olduğunu <b>tutmaz</b> — yalnızca ne zaman varacağını bilir
-/// (bkz. <c>Projectile</c>). Aradaki konum saf görselleştirmedir; simülasyona geri
+/// The core <b>does not hold</b> where the projectile is — it only knows when it will arrive (see
+/// <c>Projectile</c>). The position in between is pure visualisation; it does not feed back into the
 /// beslenmez.
 /// </para>
 /// </remarks>
@@ -27,16 +27,16 @@ public sealed class ProjectileView(ProjectileLaunched launched)
 
     public ArenaPoint To { get; } = launched.To;
 
-    /// <summary>Havalanmasından beri geçen süre.</summary>
+    /// <summary>The time since it took off.</summary>
     public double Elapsed { get; private set; }
 
-    /// <summary>Uçuşun tamamlanma oranı (0-1).</summary>
+    /// <summary>How far the flight has progressed (0-1).</summary>
     public double Progress => Math.Clamp(Elapsed / _flightSeconds, 0, 1);
 
-    /// <summary>Varmış mı? Varan mermi sahneden kaldırılır.</summary>
+    /// <summary>Has it arrived? An arrived projectile is removed from the scene.</summary>
     public bool HasLanded => Progress >= 1;
 
-    /// <summary>Merminin arena düzlemindeki anlık yeri.</summary>
+    /// <summary>The projectile's current place on the arena plane.</summary>
     public ArenaPoint Position
     {
         get
@@ -52,24 +52,24 @@ public sealed class ProjectileView(ProjectileLaunched launched)
 }
 
 /// <summary>
-/// Sahnedeki mermileri olay akışından sürer.
+/// Drives the projectiles in the scene from the event stream.
 /// </summary>
 /// <remarks>
-/// <see cref="ReactionReader"/> ile aynı desen: olaylar tek seferliktir, okunan yer
-/// sayaçla takip edilir. Ayrı tutulmalarının sebebi ömürlerinin farklı olması —
-/// tepki bir kare sürer, mermi uçuşu boyunca yaşar.
+/// The same pattern as <see cref="ReactionReader"/>: events are one-off and the read position is
+/// tracked with a counter. The reason they are kept apart is that their lifetimes differ — a reaction
+/// lasts a frame, a projectile lives for the whole flight.
 /// </remarks>
 public sealed class ProjectileTracker
 {
     private readonly List<ProjectileView> _inFlight = [];
 
-    /// <summary>Şimdiye kadar okunan olay sayısı.</summary>
+    /// <summary>The number of events read so far.</summary>
     public int Consumed { get; private set; }
 
     /// <summary>Halen havada olan mermiler.</summary>
     public IReadOnlyList<ProjectileView> InFlight => _inFlight;
 
-    /// <summary>Yeni atışları alır, havadakileri ilerletir, varanları düşürür.</summary>
+    /// <summary>Takes the new throws, advances those in the air, drops those that arrive.</summary>
     public void Advance(IReadOnlyList<BattleEvent> events, double delta)
     {
         ArgumentNullException.ThrowIfNull(events);

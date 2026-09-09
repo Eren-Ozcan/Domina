@@ -1,29 +1,29 @@
 namespace Domina.Presentation;
 
 /// <summary>
-/// Bir savaşçının tek karedeki duruşu: her kemiğin açısı, radyan cinsinden.
+/// A warrior's pose in a single frame: every bone's angle, in radians.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Kilitlenmiş rig'in birebir karşılığı (bkz. <c>docs/PROGRESS.md</c> → "Kilitlenen rig").
-/// <b>Yakın</b> taraf oyuncuya dönük olan, silahı tutan taraftır; <b>uzak</b> taraf
-/// gövdenin arkasında kalır. Kopma noktaları omuz ve kalçadır, bu yüzden kol ve bacak
-/// zincirleri ayrı ayrı adreslenir.
+/// The exact counterpart of the locked rig (see <c>docs/PROGRESS.md</c> → "The locked rig"). The
+/// <b>near</b> side is the one facing the player, the one holding the weapon; the <b>far</b> side stays
+/// behind the body. The severing points are the shoulder and the hip, which is why the arm and leg
+/// chains are addressed separately.
 /// </para>
 /// <para>
-/// Alan eklemek ucuz değildir: yeni bir alan, tüm duruşların yeniden gözden geçirilmesi
-/// demektir. Sanat geldiğinde bu tip aynı kalır, yalnızca kemiğe asılı çizim değişir.
+/// Adding a field is not cheap: a new field means reviewing every pose. When art arrives this type
+/// stays the same, only the drawing hung on the bone changes.
 /// </para>
 /// </remarks>
 public readonly record struct RigPose
 {
-    /// <summary>Tüm gövdenin devrilmesi — yalnızca ölümde kullanılır.</summary>
+    /// <summary>The whole body toppling — used only in death.</summary>
     public float RootRotation { get; init; }
 
-    /// <summary>Kalçanın dayanma noktasından yatay kayması (topallamada dolar).</summary>
+    /// <summary>The hip's horizontal shift from its resting point (filled while limping).</summary>
     public float HipOffsetX { get; init; }
 
-    /// <summary>Kalçanın çökmesi; artı değer aşağı iner (topallamada dolar).</summary>
+    /// <summary>The hip sinking; a positive value goes down (filled while limping).</summary>
     public float HipOffsetY { get; init; }
 
     public float Torso { get; init; }
@@ -48,9 +48,9 @@ public readonly record struct RigPose
 
     public float Weapon { get; init; }
 
-    /// <summary>Acı rengine karışma oranı (0-1) — vuruş yeme anında yükselir.</summary>
+    /// <summary>The blend ratio toward the pain colour (0-1) — it rises at the moment of taking a hit.</summary>
     public float HurtBlend { get; init; }
 
-    /// <summary>Savaşçı sahnede görünüyor mu? Arenayı terk edince kapanır.</summary>
+    /// <summary>Is the warrior visible in the scene? It switches off when he leaves the arena.</summary>
     public bool Visible { get; init; }
 }

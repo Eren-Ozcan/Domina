@@ -5,31 +5,31 @@ using Domina.Core.Model;
 namespace Domina.Presentation;
 
 /// <summary>
-/// Arenanın geçici kadrosu.
+/// The arena's temporary roster.
 /// </summary>
 /// <remarks>
-/// Faz 3'te gerçek roster meta katmandan gelecek; şimdilik görselleştirmeyi
-/// çalıştırmaya yetecek kadarı burada duruyor. Motor katmanında değil burada olması,
-/// aynı kadronun motor açmadan da (test, toplu simülasyon) kurulabilmesi içindir —
-/// "aynı seed hem arenada hem <c>Domina.Sim</c>'de aynı dövüşü verir" iddiası ancak
-/// iki taraf aynı kadroyu kurabildiğinde doğrulanabilir.
+/// In phase 3 the real roster will come from the meta layer; for now just enough to run the
+/// visualisation stands here. It is here rather than in the engine layer so the same roster can be
+/// built without opening the engine too (tests, batch simulation) — the claim "the same seed gives the
+/// same fight both in the arena and in <c>Domina.Sim</c>" can only be verified when both sides can
+/// build the same roster.
 /// </remarks>
 public static class DemoRoster
 {
-    /// <summary>Arenada oynanan dövüşün girdileri.</summary>
-    /// <remarks>Oyuncu tuşuyla oynanıyor: politika yok.</remarks>
+    /// <summary>The inputs of the fight played in the arena.</summary>
+    /// <remarks>Played with the player's key: no policy.</remarks>
     public static BattleSetup Setup() => new(
         [
             new Warrior(new WarriorId(1), "Acemi", WarriorStats.Recruit(), Weapon.Katana(), Armor.Light()),
             new Warrior(
                 new WarriorId(2),
-                "Kıdemli",
+                "Senior",
                 WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
                 Weapon.Nodachi(),
                 Armor.Medium()),
             new Warrior(
                 new WarriorId(3),
-                "Mızrakçı",
+                "Spearman",
                 WarriorStats.Recruit() with { Evasion = 50, Aggression = 50 },
                 Weapon.Yari(),
                 Armor.Light()),
@@ -43,11 +43,11 @@ public static class DemoRoster
         RetreatPolicy = null,
     };
 
-    /// <summary>Kadro ekranını sürecek geçici dojo.</summary>
+    /// <summary>The temporary dojo that drives the roster screen.</summary>
     /// <remarks>
-    /// Ekranın göstermesi gereken dört hâli birden taşır: hazır, antrenmandaki, revirdeki
-    /// ve ölü savaşçı. Oynanan oyunun dojo'su buradan gelmez — o ya kayıttan yüklenir
-    /// ya da <c>NewGame.Create</c> ile kurulur; bu yalnızca tek başına açılan ekranlar için.
+    /// It carries all four states the screen has to show at once: ready, training, in the infirmary and
+    /// dead. The dojo of the game being played does not come from here — that is either loaded from a
+    /// save or built with <c>NewGame.Create</c>; this is only for screens opened on their own.
     /// </remarks>
     public static DojoState Dojo()
     {
@@ -56,13 +56,13 @@ public static class DemoRoster
         dojo.Roster.Recruit("Acemi", weapon: Weapon.Katana(), armor: Armor.Light());
 
         RosterEntry senior = dojo.Roster.Recruit(
-            "Kıdemli",
+            "Senior",
             WarriorStats.Recruit() with { Strength = 55, Accuracy = 62, Defense = 45 },
             Weapon.Nodachi(),
             Armor.Medium());
         senior.Train(Drill.Guard);
 
-        RosterEntry wounded = dojo.Roster.Recruit("Mızrakçı", weapon: Weapon.Yari(), armor: Armor.Light());
+        RosterEntry wounded = dojo.Roster.Recruit("Spearman", weapon: Weapon.Yari(), armor: Armor.Light());
         wounded.Warrior.AddDisability(BodyPart.OffArm);
         wounded.Injure(4);
 

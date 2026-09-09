@@ -2,32 +2,32 @@ using Domina.Core.Dojo;
 
 namespace Domina.Presentation;
 
-/// <summary>Bir okul düğümünün bugünkü hâli.</summary>
+/// <summary>A school node's state today.</summary>
 public enum SchoolNodeState
 {
-    /// <summary>Alınmış; bonusu işliyor.</summary>
+    /// <summary>Bought; its bonus is in effect.</summary>
     Owned,
 
-    /// <summary>Sırası geldi ve para yetiyor.</summary>
+    /// <summary>Its turn has come and there is enough money.</summary>
     Affordable,
 
-    /// <summary>Sırası geldi ama kasa yetmiyor.</summary>
+    /// <summary>Its turn has come but the treasury is short.</summary>
     TooExpensive,
 
-    /// <summary>Önündeki düğüm alınmadı.</summary>
+    /// <summary>The node before it has not been bought.</summary>
     Locked,
 }
 
-/// <summary>Ağaçtaki tek satır.</summary>
-/// <param name="Id">Düğümün kimliği; ekran komutu bunu geri verir.</param>
-/// <param name="Branch">Bağlı olduğu kol.</param>
-/// <param name="Name">Görünen ad.</param>
-/// <param name="Cost">Altın bedeli.</param>
-/// <param name="Tier">Kol içindeki kademe (1 tabandan başlar).</param>
-/// <param name="State">Bugünkü hâli.</param>
-/// <param name="Requires">Önce alınması gereken düğüm; kolun ilkinde <c>null</c>.</param>
+/// <summary>A single row in the tree.</summary>
+/// <param name="Id">The node's identity; the screen's command returns it.</param>
+/// <param name="Branch">The branch it belongs to.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="Cost">The cost in gold.</param>
+/// <param name="Tier">The tier within the branch (1 starts at the base).</param>
+/// <param name="State">Its state today.</param>
+/// <param name="Requires">The node that must be bought first; <c>null</c> for a branch's first.</param>
 /// <param name="GoldShort">
-/// Kilidi açık ama parası yetmeyen düğümde eksik altın; diğer hâllerde 0.
+/// The gold missing on a node that is unlocked but unaffordable; 0 in the other states.
 /// </param>
 public readonly record struct SchoolNodeRow(
     SchoolNodeId Id,
@@ -39,22 +39,22 @@ public readonly record struct SchoolNodeRow(
     SchoolNodeId? Requires,
     int GoldShort);
 
-/// <summary>Bir kol — düğümleri alınma sırasıyla.</summary>
+/// <summary>One branch — its nodes in the order they are bought.</summary>
 /// <param name="Branch">Kolun kendisi.</param>
-/// <param name="Nodes">Kademe sırasıyla düğümler.</param>
-/// <param name="Owned">Bu koldan alınmış düğüm sayısı.</param>
+/// <param name="Nodes">The nodes in tier order.</param>
+/// <param name="Owned">The number of nodes bought from this branch.</param>
 public readonly record struct SchoolBranchColumn(
     SchoolBranch Branch,
     IReadOnlyList<SchoolNodeRow> Nodes,
     int Owned);
 
-/// <summary>Okulun tepesinde duran sayılar.</summary>
-/// <param name="Gold">Kasadaki altın.</param>
-/// <param name="Owned">Alınmış düğüm sayısı.</param>
-/// <param name="Total">Ağaçtaki toplam düğüm.</param>
-/// <param name="Affordable">Bugün satın alınabilecek düğüm sayısı.</param>
+/// <summary>The numbers standing at the top of the school.</summary>
+/// <param name="Gold">The gold in the treasury.</param>
+/// <param name="Owned">The number of nodes bought.</param>
+/// <param name="Total">The total nodes in the tree.</param>
+/// <param name="Affordable">The number of nodes that can be bought today.</param>
 /// <param name="NextCost">
-/// Bugün alınabilecek en ucuz düğümün bedeli; kilidi açık düğüm kalmadıysa <c>null</c>.
+/// The cost of the cheapest node that can be bought today; <c>null</c> if no unlocked node is left.
 /// </param>
 public readonly record struct SchoolSummary(
     int Gold,
@@ -64,22 +64,21 @@ public readonly record struct SchoolSummary(
     int? NextCost);
 
 /// <summary>
-/// Okul ekranının okuduğu model. Hangi düğümün neden kapalı olduğunu hesaplar,
-/// çizim yapmaz.
+/// The model the school screen reads. It computes why a node is closed; it does not draw.
 /// </summary>
 /// <remarks>
-/// Kapalı düğümün <b>iki ayrı sebebi</b> var — sırası gelmemiş olmak ve parasının
-/// yetmemesi — ve ekran ikisini aynı sönük tuşla gösteremez: biri beklemekle,
-/// diğeri kazanmakla açılır. <see cref="School.Available"/> yalnızca sırayı bilir,
-/// kasayı bilmez; ayrımı burası yapar.
+/// A closed node has <b>two separate reasons</b> — its turn not having come and not being affordable —
+/// and the screen cannot show both with the same dimmed button: one opens by waiting, the other by
+/// earning. <see cref="School.Available"/> only knows the order, not the treasury; the distinction is
+/// made here.
 /// </remarks>
 public static class SchoolModel
 {
-    /// <summary>Ağaç, kol kol ve kol içinde ucuzdan pahalıya.</summary>
+    /// <summary>The tree, branch by branch and cheapest to most expensive within a branch.</summary>
     /// <remarks>
-    /// Sıra <b>kataloğun</b> sırasıdır, dojo'nun durumuna göre değişmez: ağacın şekli
-    /// oyuncunun kafasında sabit kalmalı. Alınan düğüm listenin başına taşınsaydı ya da
-    /// kilitliler gizlenseydi, oyuncu neye doğru para biriktirdiğini göremezdi.
+    /// The order is <b>the catalogue's</b> order and does not change with the dojo's state: the shape of
+    /// the tree must stay fixed in the player's head. If a bought node moved to the top of the list, or
+    /// locked ones were hidden, the player could not see what he was saving toward.
     /// </remarks>
     public static IReadOnlyList<SchoolBranchColumn> Describe(DojoState dojo)
     {
@@ -104,11 +103,11 @@ public static class SchoolModel
         return columns;
     }
 
-    /// <summary>Tek düğümün satırı.</summary>
-    /// <param name="node">Katalogdaki düğüm.</param>
-    /// <param name="tier">Kol içindeki kademe (1'den başlar).</param>
+    /// <summary>A single node's row.</summary>
+    /// <param name="node">The node in the catalogue.</param>
+    /// <param name="tier">The tier within the branch (starting at 1).</param>
     /// <param name="school">Dojo'nun okulu.</param>
-    /// <param name="gold">Kasadaki altın.</param>
+    /// <param name="gold">The gold in the treasury.</param>
     public static SchoolNodeRow Describe(SchoolNode node, int tier, School school, int gold)
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -127,7 +126,7 @@ public static class SchoolModel
             GoldShort: state == SchoolNodeState.TooExpensive ? node.Cost - gold : 0);
     }
 
-    /// <summary>Okulun tepesindeki sayılar.</summary>
+    /// <summary>The numbers at the top of the school.</summary>
     public static SchoolSummary Summarize(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
