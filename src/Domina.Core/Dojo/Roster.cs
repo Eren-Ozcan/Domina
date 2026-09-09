@@ -3,17 +3,17 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Dojo'nun kadrosu — ölüler dahil, bütün savaşçılar.</summary>
+/// <summary>The dojo's roster — all the warriors, the dead included.</summary>
 /// <remarks>
 /// <para>
-/// Ölen savaşçı kadrodan <b>silinmez</b>: permadeath kalıcıdır ama savaşçının geçmişi
-/// (onur, sakatlıklar, adı) kayıtta durur. Canlı olup olmadığı
+/// A dead warrior is <b>not removed</b> from the roster: permadeath is permanent, but the warrior's
+/// history (honour, disabilities, his name) stays on record. Whether he is alive
 /// <see cref="Model.Warrior.IsAlive"/> ile okunur.
 /// </para>
 /// <para>
-/// İsim eşsizliği yalnızca <b>canlılar</b> arasında zorlanır — GDD §6'nın kuralı bu:
-/// bir isim aynı anda tek bir canlı savaşçınındır, o ölünce isim havuza döner.
-/// Chat komutu (<c>!ronin-&lt;isim&gt;</c>) bu sayede tek bir hedefe çözülür.
+/// Name uniqueness is enforced only among <b>the living</b> — that is GDD §6's rule: a name belongs to
+/// a single living warrior at a time, and when he dies the name returns to the pool. That is how a chat
+/// command (<c>!ronin-&lt;name&gt;</c>) resolves to a single target.
 /// </para>
 /// </remarks>
 public sealed class Roster
@@ -21,18 +21,18 @@ public sealed class Roster
     private readonly Dictionary<WarriorId, RosterEntry> _entries = [];
     private int _nextId;
 
-    /// <summary>Kadrodaki bütün kayıtlar — ölüler dahil, eklenme sırasıyla.</summary>
+    /// <summary>All the records on the roster — the dead included, in the order they were added.</summary>
     public IReadOnlyCollection<RosterEntry> Entries => _entries.Values;
 
     public IEnumerable<RosterEntry> Living => _entries.Values.Where(e => e.Warrior.IsAlive);
 
-    /// <summary>Bugün sefere gönderilebilecek savaşçılar.</summary>
+    /// <summary>The warriors who can be sent on an expedition today.</summary>
     public IEnumerable<RosterEntry> FitForCampaign => _entries.Values.Where(e => e.IsFitForCampaign);
 
     public int Count => _entries.Count;
 
-    /// <summary>Yeni savaşçı alır ve ona benzersiz bir kimlik verir.</summary>
-    /// <exception cref="InvalidOperationException">İsim canlı bir savaşçıda kullanılıyorsa.</exception>
+    /// <summary>Hires a new warrior and gives him a unique identity.</summary>
+    /// <exception cref="InvalidOperationException">If the name is in use by a living warrior.</exception>
     public RosterEntry Recruit(
         string name,
         WarriorStats? stats = null,
@@ -58,7 +58,7 @@ public sealed class Roster
         return entry;
     }
 
-    /// <summary>Kimliği önceden verilmiş bir savaşçıyı kadroya koyar (kayıt yüklerken).</summary>
+    /// <summary>Puts a warrior with an already-assigned identity onto the roster (when loading a save).</summary>
     /// <exception cref="InvalidOperationException">Kimlik zaten kadroda varsa.</exception>
     public RosterEntry Add(Warrior warrior)
     {
@@ -78,8 +78,8 @@ public sealed class Roster
     public RosterEntry? Find(WarriorId id) => _entries.GetValueOrDefault(id);
 
     /// <summary>
-    /// Chat'in yazdığı ismi tek bir canlı savaşçıya çözer. Bulunamazsa <c>null</c> —
-    /// GDD §6 gereği bu sessiz bir sonuçtur, hata değil.
+    /// Resolves the name chat wrote to a single living warrior. <c>null</c> if it is not found — per
+    /// GDD §6 this is a silent outcome, not an error.
     /// </summary>
     public RosterEntry? FindLiving(string name) =>
         string.IsNullOrWhiteSpace(name)
@@ -89,8 +89,8 @@ public sealed class Roster
 
     public bool IsNameTaken(string name) => FindLiving(name) is not null;
 
-    /// <summary>Savaşçının adını değiştirir. Oyuncu bunu her zaman yapabilir (GDD §8).</summary>
-    /// <exception cref="InvalidOperationException">Yeni ad başka bir canlıdaysa.</exception>
+    /// <summary>Changes the warrior's name. The player can always do this (GDD §8).</summary>
+    /// <exception cref="InvalidOperationException">If the new name belongs to another living warrior.</exception>
     public void Rename(WarriorId id, string newName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(newName);
@@ -107,8 +107,8 @@ public sealed class Roster
     }
 
     /// <summary>
-    /// Savaşçıyı kalıcı olarak öldürür — dövüşte ölüm, seppuku, hepsi buradan geçer.
-    /// Kayıt kadroda kalır; adı o anda havuza döner.
+    /// Kills the warrior permanently — death in a fight, seppuku, all of it goes through here.
+    /// The record stays on the roster; his name returns to the pool at that moment.
     /// </summary>
     public bool Kill(WarriorId id)
     {
@@ -133,7 +133,7 @@ public sealed class Roster
     {
         if (IsNameTaken(name))
         {
-            throw new InvalidOperationException($"'{name}' adı canlı bir savaşçıda kullanılıyor.");
+            throw new InvalidOperationException($"The name '{name}' is in use by a living warrior.");
         }
     }
 }

@@ -3,54 +3,54 @@ using Domina.Core.Rng;
 
 namespace Domina.Core.Campaign;
 
-/// <summary>Zorluk eğrisinin ayarlanabilir sayıları.</summary>
+/// <summary>The difficulty curve's tunable numbers.</summary>
 /// <remarks>
-/// Sayılar <b>kilitli değil</b>: GDD §10 yalnızca "zorluk tek eğri üzerinde artar, boss
-/// yapısı kurulmuyor" diyor. Eğrinin dikliği ancak sefer dizisi ölçümüyle kapanır — ekonomi
-/// turunun ortaya çıkardığı sınır burada geçerli: savaşçı-dövüş başına ölüm %20'yi aşınca
-/// hiçbir fiyat dojo'yu ayakta tutmuyor (GDD §11).
+/// The numbers are <b>not locked</b>: GDD §10 only says "difficulty rises along a single curve, no boss
+/// structure is built". The curve's steepness can only be settled by an expedition-series measurement —
+/// the limit the economy pass revealed holds here: once deaths per warrior-fight pass 20%, no price
+/// keeps a dojo standing (GDD §11).
 /// </remarks>
 public sealed record EncounterTuning
 {
-    /// <summary>1. günün gücü.</summary>
+    /// <summary>Day 1's power.</summary>
     public double StartingPower { get; init; } = 0.9;
 
-    /// <summary>Her günün eklediği güç.</summary>
+    /// <summary>The power each day adds.</summary>
     public double PowerPerDay { get; init; } = 0.02;
 
-    /// <summary>Eğrinin tavanı — sonsuza kadar sertleşmez.</summary>
+    /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>
-    /// <b>2.2'de kilitlendi</b> (400 dojo × 180 gün, ölçüm GDD §11). Tavan, tam büyümüş bir
-    /// dojo'nun hâlâ kâr edebildiği yerde durmak zorunda: dojo'nun kendi büyümesinin sınırı
-    /// var (stat tavanı, dört kişilik kadro, kuşam kademeleri) ama eğrinin yoktu, ve 3.0'da
-    /// uzun vadede dövüş başına net sıfırın altına iniyordu (−0.1), teklif reddi %62'ye,
-    /// kapanan dojo %11.2'ye çıkıyordu. 2.2'de net 25.6, ret %53.7, kapanan %2.5. Daha
-    /// alçak tavan (1.4) kararı öldürüyor: dojo tekliflerin %96'sını kabul ediyor.
-    /// Tavan <see cref="DireThreshold"/> ile aynı: <b>Dire eğrinin varış noktası değil,
-    /// tepesindeki dalgalanma.</b> İlk 60 günü hiç etkilemez — eğri 66. güne kadar tavana
-    /// değmiyor, yani daha önce kilitlenen sayılar yerinde kalıyor.
+    /// <b>Locked at 2.2</b> (400 dojos × 180 days, measurement GDD §11). The ceiling has to stop where a
+    /// fully grown dojo can still make a profit: the dojo's own growth has a limit (the stat ceiling, a
+    /// roster of four, the armour tiers) but the curve had none, and at 3.0 it fell below zero net per
+    /// fight in the long run (−0.1), offer refusals rose to 62% and closed dojos to 11.2%. At 2.2 the net
+    /// is 25.6, refusals 53.7% and closures 2.5%. A lower ceiling (1.4) kills the decision: the dojo
+    /// accepts 96% of the offers. The ceiling is the same as <see cref="DireThreshold"/>: <b>Dire is not
+    /// the curve's destination but the fluctuation at its top.</b> It does not affect the first 60 days
+    /// at all — the curve does not touch the ceiling until day 66, so the numbers locked earlier stay in
+    /// place.
     /// </remarks>
     public double MaxPower { get; init; } = 2.2;
 
     /// <summary>
-    /// Günün gücüne binen dalgalanma payı.
+    /// The fluctuation share laid on top of the day's power.
     /// </summary>
     /// <remarks>
-    /// Eğri düz bir çizgi olsaydı her gün aynı teklif gelirdi ve "al ya da bırak" kararı
-    /// kendiliğinden ortadan kalkardı: bırakmanın anlamı, yarının farklı olabilmesi.
+    /// If the curve were a straight line the same offer would arrive every day and the "take it or leave
+    /// it" decision would disappear on its own: the point of leaving it is that tomorrow can be different.
     /// </remarks>
     public double DailyVariance { get; init; } = 0.25;
 
-    /// <summary>Kadronun büyümeye başladığı güç.</summary>
+    /// <summary>The power at which the enemy party starts to grow.</summary>
     public double SecondEnemyAtPower { get; init; } = 1.1;
 
-    /// <summary>Üçüncü düşmanın eklendiği güç.</summary>
+    /// <summary>The power at which a third enemy is added.</summary>
     public double ThirdEnemyAtPower { get; init; } = 1.6;
 
-    /// <summary>Tek savaşçı dayatan düello teklifinin çıkma olasılığı.</summary>
+    /// <summary>The chance of a duel offer that imposes a single warrior.</summary>
     /// <remarks>
-    /// GDD §10: bazı karşılaşmalar tam bir sayı dayatır. Düello o kuralın en ucuz
-    /// gösterimi — kadro değil, <b>bir</b> savaşçı seçtiriyor.
+    /// GDD §10: some encounters impose an exact number. The duel is that rule's cheapest showing — it
+    /// makes you choose <b>one</b> warrior, not a party.
     /// </remarks>
     public double DuelChance { get; init; } = 0.12;
 
@@ -61,36 +61,36 @@ public sealed record EncounterTuning
     public double RisingThreshold { get; init; } = 1.1;
 }
 
-/// <summary>Günün teklifini üretir.</summary>
+/// <summary>Produces the day's offer.</summary>
 /// <remarks>
 /// <para>
-/// Üretim <b>saf</b>: aynı seed ve aynı gün daima aynı teklifi verir. Böylece teklif
-/// kayıtta saklanmak zorunda kalmaz — dosyada gün ve seed durur, teklif yüklerken yeniden
-/// hesaplanır. Kaydı yükleyip teklifi beğenmeyince yeniden yüklemek de bir şey değiştirmez.
+/// The generation is <b>pure</b>: the same seed and the same day always give the same offer. So the
+/// offer does not have to be stored in the save — the file holds the day and the seed, and the offer is
+/// recomputed on load. Reloading the save because you did not like the offer changes nothing either.
 /// </para>
 /// <para>
-/// Motor bilmez, rastgeleliği <see cref="IRandomSource"/>'tan alır (CLAUDE.md → mimari kuralı).
+/// It knows nothing of the engine and takes its randomness from <see cref="IRandomSource"/> (CLAUDE.md → architecture rule).
 /// </para>
 /// </remarks>
 public sealed class EncounterGenerator(EncounterTuning? tuning = null)
 {
-    /// <summary>Düşman kimlikleri kadroyla çakışmasın diye buradan başlar.</summary>
+    /// <summary>Enemy ids start here so they do not collide with the roster.</summary>
     /// <remarks>
-    /// <see cref="Dojo.BattleAftermath"/> takım filtresiyle zaten korunuyor ama kimliklerin
-    /// ayrı bir bantta durması, günlüğe bakan insanın hangi tarafı okuduğunu da ayırır.
+    /// <see cref="Dojo.BattleAftermath"/> is already protected by the team filter, but keeping the ids
+    /// in a separate band also tells a person reading the log which side they are looking at.
     /// </remarks>
     public const int FirstEnemyId = 100_000;
 
     public EncounterTuning Tuning { get; } = tuning ?? new EncounterTuning();
 
-    /// <summary>Verilen günün teklifi.</summary>
+    /// <summary>The given day's offer.</summary>
     public EncounterOffer Offer(int day, ulong campaignSeed)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
         return Offer(day, new SeededRandom(Mix(campaignSeed, day)));
     }
 
-    /// <summary>Akışı dışarıdan verilen teklif — ölçüm ve test için.</summary>
+    /// <summary>An offer whose stream is supplied from outside — for measurement and tests.</summary>
     public EncounterOffer Offer(int day, IRandomSource random)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
@@ -103,9 +103,9 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
 
         List<Warrior> enemies = [];
 
-        // Kalabalık gücü <b>bölmez</b>: üç düşman üç kat düşman demek. Bölseydi kalabalık
-        // teklif, aynı tehdidi daha az canla taşırdı — yani aynı riski daha az ödülle
-        // satardı, çünkü ödül düşman canına bağlı (GDD §11).
+        // A crowd does <b>not</b> divide the power: three enemies mean three times the enemy. If it
+        // divided, a crowd offer would carry the same threat with less health — that is, it would sell
+        // the same risk for less reward, because the reward depends on enemy health (GDD §11).
         double each = power;
         for (int i = 0; i < count; i++)
         {
@@ -121,7 +121,7 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
             duel ? 1 : null);
     }
 
-    /// <summary>Günün ham gücü — eğri artı o güne düşen dalgalanma.</summary>
+    /// <summary>The day's raw power — the curve plus that day's fluctuation.</summary>
     public double PowerFor(int day, IRandomSource random)
     {
         ArgumentNullException.ThrowIfNull(random);
@@ -153,8 +153,8 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
             most = 3;
         }
 
-        // Kalabalık üst sınıra yapışmaz: aynı güç bazen tek ağır düşman, bazen üç zayıf
-        // düşman demek. İki durum aynı dövüş değil — biri hedef seçimini, diğeri dayanmayı sınar.
+        // A crowd does not stick to the upper bound: the same power sometimes means one heavy enemy and
+        // sometimes three weak ones. The two are not the same fight — one tests target selection, the other endurance.
         return most == 1 ? 1 : 1 + random.NextInt(most);
     }
 
@@ -181,20 +181,20 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
         return pool[^1];
     }
 
-    /// <summary>Girmeden önce okunan kaba tanım — tür ve sayı, stat yok.</summary>
+    /// <summary>The rough description read before going in — kind and count, no stats.</summary>
     private static string Sighting(IReadOnlyList<Warrior> enemies, bool duel)
     {
         string names = string.Join(
             " ve ",
             enemies.GroupBy(e => e.Name).Select(g => g.Count() == 1 ? g.Key : $"{g.Count()} {g.Key}"));
 
-        return duel ? $"{names} düelloya çağırıyor" : names;
+        return duel ? $"{names} calls you to a duel" : names;
     }
 
-    /// <summary>Seed ve günü tek bir akışa karıştırır.</summary>
+    /// <summary>Mixes the seed and the day into a single stream.</summary>
     /// <remarks>
-    /// Gün doğrudan seed'e eklenseydi, ardışık günlerin akışları birbirinin kaydırılmış
-    /// hâli olurdu ve teklifler gözle görülür şekilde tekrarlardı.
+    /// If the day were added straight to the seed, consecutive days' streams would be shifted copies of
+    /// each other and the offers would repeat visibly.
     /// </remarks>
     private static ulong Mix(ulong seed, int day)
     {

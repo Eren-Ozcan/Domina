@@ -1,21 +1,21 @@
 namespace Domina.Core.Rng;
 
 /// <summary>
-/// Çekirdeğin kullandığı TEK rastgelelik kaynağı.
+/// The ONLY randomness source the core uses.
 /// </summary>
 /// <remarks>
-/// Kural: <c>Domina.Core</c> içinde <see cref="System.Random"/> doğrudan
-/// kullanılmaz. Her rastgelelik bu arayüzden geçer ki dövüşler seed ile
-/// tekrar üretilebilsin (bkz. CLAUDE.md → "Mimari kuralı").
+/// The rule: <see cref="System.Random"/> is not used directly inside <c>Domina.Core</c>. All
+/// randomness goes through this interface so that fights can be reproduced from a seed
+/// (see CLAUDE.md → "Architecture rule").
 /// </remarks>
 public interface IRandomSource
 {
-    /// <summary>[0.0, 1.0) aralığında bir değer.</summary>
+    /// <summary>A value in the range [0.0, 1.0).</summary>
     double NextDouble();
 
-    /// <summary>[0, exclusiveMax) aralığında bir tam sayı.</summary>
+    /// <summary>An integer in the range [0, exclusiveMax).</summary>
     int NextInt(int exclusiveMax);
 
-    /// <summary><paramref name="probability"/> olasılıkla true (0.0 asla, 1.0 daima).</summary>
+    /// <summary>True with probability <paramref name="probability"/> (0.0 never, 1.0 always).</summary>
     bool Chance(double probability);
 }

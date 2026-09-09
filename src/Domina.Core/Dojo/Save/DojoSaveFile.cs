@@ -4,17 +4,17 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo.Save;
 
-/// <summary>Dojo'nun kaydını yazar ve okur.</summary>
+/// <summary>Writes and reads the dojo's save.</summary>
 /// <remarks>
 /// <para>
-/// Üç kural GDD §2'den gelir: <b>versiyonlu</b> (dosya kendi biçimini söyler),
-/// <b>merge-on-load</b> (eksik alan varsayılanla doldurulur, tanınmayan alan yok sayılır)
-/// ve <b>try/catch</b> (bozuk dosya oyunu çökertmez, taşıyabildiğini taşır).
+/// Three rules come from GDD §2: <b>versioned</b> (the file states its own format),
+/// <b>merge-on-load</b> (a missing field is filled with its default, an unrecognised field is ignored)
+/// and <b>try/catch</b> (a corrupted file does not crash the game, it carries what it can).
 /// </para>
 /// <para>
-/// Yükleme bu yüzden hiçbir zaman <b>istisna fırlatmaz</b>: <see cref="LoadResult"/>
-/// döner ve neyi kurtaramadığını uyarı listesinde yazar. Tek bir bozuk savaşçı kaydı
-/// kadronun geri kalanını götürmez — kalan herkes yüklenir, o savaşçı atlanır.
+/// Loading therefore <b>never throws</b>: it returns a <see cref="LoadResult"/> and writes what it
+/// could not rescue into the warning list. A single corrupted warrior record does not take the rest of
+/// the roster with it — everyone else loads and that warrior is skipped.
 /// </para>
 /// </remarks>
 public static class DojoSaveFile
@@ -28,7 +28,7 @@ public static class DojoSaveFile
         Converters = { new JsonStringEnumConverter() },
     };
 
-    /// <summary>Yaşayan durumdan kayıt nesnesi çıkarır.</summary>
+    /// <summary>Produces a save object from the live state.</summary>
     public static DojoSnapshot Capture(DojoState state)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -71,13 +71,13 @@ public static class DojoSaveFile
         JsonSerializer.Serialize(Capture(state), _options);
 
     /// <summary>
-    /// Kayıt metnini okur. <b>Fırlatmaz</b>: okuyamadığında başarısız bir sonuç döner.
+    /// Reads the save text. It <b>does not throw</b>: when it cannot read, it returns a failed result.
     /// </summary>
     public static LoadResult Load(string? json, DojoTuning? tuning = null)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            return LoadResult.Failed("Kayıt boş.");
+            return LoadResult.Failed("The save is empty.");
         }
 
         DojoSnapshot? snapshot;
@@ -87,15 +87,15 @@ public static class DojoSaveFile
         }
         catch (JsonException e)
         {
-            return LoadResult.Failed($"Kayıt okunamadı: {e.Message}");
+            return LoadResult.Failed($"The save could not be read: {e.Message}");
         }
 
         return snapshot is null
-            ? LoadResult.Failed("Kayıt boş bir nesneye çözüldü.")
+            ? LoadResult.Failed("The save resolved to an empty object.")
             : Restore(snapshot, tuning);
     }
 
-    /// <summary>Kayıt nesnesini yaşayan duruma çevirir, kurtaramadığını uyarı olarak yazar.</summary>
+    /// <summary>Turns the save object into live state, writing what it could not rescue as warnings.</summary>
     public static LoadResult Restore(DojoSnapshot snapshot, DojoTuning? tuning = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -104,8 +104,8 @@ public static class DojoSaveFile
         if (snapshot.Version > DojoSnapshot.CurrentVersion)
         {
             warnings.Add(
-                $"Kayıt daha yeni bir sürümden ({snapshot.Version} > {DojoSnapshot.CurrentVersion}); "
-                + "tanınmayan alanlar yok sayıldı.");
+                $"The save is from a newer version ({snapshot.Version} > {DojoSnapshot.CurrentVersion}); "
+                + "unrecognised fields were ignored.");
         }
 
         DojoState state = new(tuning)
@@ -115,7 +115,7 @@ public static class DojoSaveFile
 
         if (snapshot.Day < 1)
         {
-            warnings.Add($"Gün sayacı geçersizdi ({snapshot.Day}); 1. güne çekildi.");
+            warnings.Add($"The day counter was invalid ({snapshot.Day}); it was pulled back to day 1.");
         }
 
         state.RestoreDay(Math.Max(1, snapshot.Day));
@@ -132,7 +132,7 @@ public static class DojoSaveFile
             }
             catch (Exception e) when (e is ArgumentException or InvalidOperationException)
             {
-                warnings.Add($"Savaşçı kaydı atlandı (Id {record.Id}): {e.Message}");
+                warnings.Add($"A warrior record was skipped (Id {record.Id}): {e.Message}");
             }
         }
 
@@ -144,14 +144,14 @@ public static class DojoSaveFile
         string name = record.Name;
         if (string.IsNullOrWhiteSpace(name))
         {
-            name = $"İsimsiz {record.Id}";
-            warnings.Add($"Id {record.Id} adsızdı; '{name}' verildi.");
+            name = $"Nameless {record.Id}";
+            warnings.Add($"Id {record.Id} had no name; it was given '{name}'.");
         }
 
         if (record.IsAlive && state.Roster.IsNameTaken(name))
         {
             string unique = $"{name} ({record.Id})";
-            warnings.Add($"'{name}' adı iki canlıda görünüyordu; ikincisi '{unique}' oldu.");
+            warnings.Add($"The name '{name}' appeared on two living warriors; the second became '{unique}'.");
             name = unique;
         }
 
@@ -186,10 +186,10 @@ public static class DojoSaveFile
     }
 }
 
-/// <summary>Bir yükleme denemesinin sonucu.</summary>
+/// <summary>The result of a load attempt.</summary>
 /// <remarks>
-/// Uyarılar <b>sessiz kalmasın</b> diye taşınır: merge-on-load'ın bedeli, dosyanın
-/// sessizce eksik yüklenmesidir. Arayüz bunları oyuncuya gösterebilmeli.
+/// The warnings are carried so that they <b>do not stay silent</b>: the price of merge-on-load is the
+/// file loading incompletely without a word. The interface must be able to show them to the player.
 /// </remarks>
 public sealed record LoadResult(DojoState? State, IReadOnlyList<string> Warnings)
 {

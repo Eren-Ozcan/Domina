@@ -4,95 +4,95 @@ using Domina.Core.Rng;
 
 namespace Domina.Core.Campaign;
 
-/// <summary>Kelle avı sözleşmelerinin ayarlanabilir sayıları.</summary>
+/// <summary>The bounty contracts' tunable numbers.</summary>
 /// <remarks>
-/// Sayılar <b>kilitli değil</b>. Ölçümün sorusu belli: sözleşme, günlük teklifin daha
-/// pahalı bir kopyası olmamalı — riski de ödülü de belirgin şekilde farklı olmalı ki
-/// "bugün ucuz işe mi gideyim, üç gün sonraki büyük iş için taze mi kalayım" diye bir
-/// soru doğsun.
+/// The numbers are <b>not locked</b>. The measurement's question is clear: a contract must not be a
+/// more expensive copy of the daily offer — both its risk and its reward have to be clearly different,
+/// so that the question "do I take the cheap job today, or stay fresh for the big one in three days"
+/// can arise.
 /// </remarks>
 public sealed record BountyTuning
 {
-    /// <summary>Kaç günde bir yeni sözleşme asılır.</summary>
+    /// <summary>How often a new contract is posted, in days.</summary>
     /// <remarks>
-    /// Her gün yeni sözleşme asılsaydı beğenilmeyen hedef bir gün beklenerek değişirdi ve
-    /// sözleşme günlük teklifin ikinci bir kopyası olurdu.
+    /// If a new contract were posted every day, a target you did not like could be swapped by waiting a
+    /// day and the contract would be a second copy of the daily offer.
     /// </remarks>
     public int PostingDays { get; init; } = 4;
 
-    /// <summary>Sözleşmenin asıldığı günden itibaren kaç gün açık kaldığı.</summary>
+    /// <summary>How many days the contract stays open from the day it was posted.</summary>
     /// <remarks>
-    /// Süre, kampanyaya bugüne kadar olmayan tek şeyi verir: <b>planlanabilir gelecek</b>.
-    /// Süresiz sözleşme bir karar değil bir depo olurdu — oyuncu onu kadro mükemmel olana
-    /// kadar bekletirdi.
+    /// The deadline gives the campaign the one thing it has not had until now: a <b>plannable future</b>.
+    /// An open-ended contract would be a warehouse rather than a decision — the player would keep it on
+    /// hold until his roster was perfect.
     /// </remarks>
     public int OpenDays { get; init; } = 3;
 
-    /// <summary>Hedefin, aynı günün sıradan teklifine göre gücü.</summary>
+    /// <summary>The target's strength relative to the same day's ordinary offer.</summary>
     public double PowerMultiplier { get; init; } = 1.8;
 
-    /// <summary>Ödülün, aynı canlı sıradan bir düşmana göre katı.</summary>
+    /// <summary>The reward's multiple relative to an ordinary enemy with the same health.</summary>
     /// <remarks>
-    /// Birden büyük olmak zorunda: hedef tek ve güçlü olduğu için ekip sayıca üstün
-    /// giremez, yani aynı can daha çok risk demek. Çarpan 1'de kalsaydı sözleşme
-    /// matematiksel olarak her zaman kötü bir anlaşma olurdu.
+    /// It has to be greater than one: because the target is single and strong, the party cannot go in
+    /// with a numbers advantage, so the same health means more risk. Left at 1, the contract would
+    /// mathematically always be a bad deal.
     /// </remarks>
     public double RewardMultiplier { get; init; } = 1.6;
 
-    /// <summary>Sözleşmeyi tamamlayan ekibin kazandığı onur.</summary>
+    /// <summary>The honour the party earns for completing the contract.</summary>
     public double HonorReward { get; init; } = 6;
 
-    /// <summary>Kabul edilip süresi dolan sözleşmenin onur bedeli.</summary>
+    /// <summary>The honour price of a contract accepted and left to expire.</summary>
     /// <remarks>
-    /// Kabul etmek bir <b>söz</b>dür. Bedeli olmasaydı her sözleşme kabul edilir, sonra
-    /// uygun gün gelmezse sessizce unutulurdu — süre de karar da anlamını kaybederdi.
-    /// </remarks>
+    /// Accepting is a <b>promise</b>. Without a price every contract would be accepted and then, if the
+    /// right day never came, quietly forgotten — both the deadline and the decision would lose their
+    /// meaning.
     public double BrokenHonorPenalty { get; init; } = 10;
 
-    /// <summary>Hedefin lakabı — adın kendisi bestiary'den, lakap buradan gelir.</summary>
+    /// <summary>The target's epithet — the name itself comes from the bestiary, the epithet from here.</summary>
     /// <remarks>
-    /// Geçici: GDD §8'e göre yayın açıkken hedef adı chat'ten gelecek (Faz 5) ve adını
-    /// veren izleyici dövüş boyunca düşman tarafını tutacak. Havuz o zaman buradan değil
-    /// izleyici listesinden okunacak; sözleşmenin kendisi değişmeyecek.
+    /// Temporary: per GDD §8 the target's name will come from chat while streaming (phase 5) and the
+    /// viewer who named him will support the enemy side throughout the fight. The pool will then be read
+    /// from the viewer list rather than from here; the contract itself will not change.
     /// </remarks>
     public IReadOnlyList<string> Epithets { get; init; } =
     [
-        "Kaburga Kıran", "Sisin Ağzı", "Dokuz Yara", "Kızıl Bataklı", "Kemik Toplayan",
-        "Gece Yürüyen", "Tapınak Yakan", "İki Yüzlü", "Sessiz Adım", "Kör Öfke",
+        "Rib-Breaker", "Mouth of the Mist", "Nine Wounds", "The Red Marsh", "Bone-Gatherer",
+        "Night-Walker", "Temple-Burner", "Two-Faced", "Silent Step", "Blind Fury",
     ];
 
-    /// <summary>Sözleşmeyi veren taraf — hedefin niçin arandığı.</summary>
+    /// <summary>The party that issued the contract — why the target is wanted.</summary>
     /// <remarks>
-    /// İşveren yalnızca metin değil: GDD §6'daki onur ekseninin sözleşmeye giriş
-    /// noktasıdır. Şimdilik ödülü değiştirmez, ton taşır.
+    /// The patron is not only text: it is the entry point of GDD §6's honour axis into the contract. For
+    /// now it does not change the reward, it carries tone.
     /// </remarks>
     public IReadOnlyList<string> Patrons { get; init; } =
     [
-        "köy muhtarı", "tapınak rahibi", "tüccar loncası", "bölge lordu", "dul bir çiftçi",
+        "a village headman", "a temple priest", "the merchants' guild", "the regional lord", "a widowed farmer",
     ];
 }
 
-/// <summary>Asılmış bir kelle avı sözleşmesi.</summary>
+/// <summary>A posted bounty contract.</summary>
 /// <remarks>
 /// <para>
-/// Günlük tekliften (<see cref="EncounterOffer"/>) üç şeyle ayrılır: hedef <b>isimlidir</b>,
-/// sözleşmenin bir <b>süresi</b> vardır, ve kabul edip dönmemenin ayrı bir <b>bedeli</b>
-/// vardır. Üçü birlikte kararı "bugün gireyim mi" olmaktan çıkarıp "hangi gün gireyim"e
-/// çevirir.
+/// It differs from the daily offer (<see cref="EncounterOffer"/>) in three ways: the target is
+/// <b>named</b>, the contract has a <b>deadline</b>, and there is a separate <b>price</b> for accepting
+/// and not coming back. Together the three turn the decision from "shall I go in today" into "which day
+/// shall I go in".
 /// </para>
 /// <para>
-/// Sözleşme kendi <see cref="EncounterOffer"/>'ını üretir, çünkü sefer katmanı yalnızca
-/// teklif tanır. Ayrı bir sefer yolu açmak, dövüşe giden iki farklı kapı demek olurdu.
+/// A contract produces its own <see cref="EncounterOffer"/>, because the expedition layer only knows
+/// offers. Opening a separate expedition route would mean two different doors into a fight.
 /// </para>
 /// </remarks>
-/// <param name="PostedDay">Sözleşmenin asıldığı gün.</param>
-/// <param name="Deadline">Son geçerli gün — bu gün dahil.</param>
-/// <param name="Target">Hedef; tek ve güçlü.</param>
-/// <param name="Threat">Girmeden önce okunabilen bant.</param>
-/// <param name="Reward">Söz verilen altın.</param>
-/// <param name="Patron">Sözleşmeyi veren taraf.</param>
-/// <param name="HonorReward">Tamamlanınca ekibin kazandığı onur.</param>
-/// <param name="BrokenHonorPenalty">Kabul edilip süresi dolarsa kadronun kaybettiği onur.</param>
+/// <param name="PostedDay">The day the contract was posted.</param>
+/// <param name="Deadline">The last valid day — this day included.</param>
+/// <param name="Target">The target; single and strong.</param>
+/// <param name="Threat">The band that can be read before going in.</param>
+/// <param name="Reward">The gold promised.</param>
+/// <param name="Patron">The party that issued the contract.</param>
+/// <param name="HonorReward">The honour the party earns on completion.</param>
+/// <param name="BrokenHonorPenalty">The honour the roster loses if it is accepted and expires.</param>
 public sealed record BountyContract(
     int PostedDay,
     int Deadline,
@@ -103,47 +103,46 @@ public sealed record BountyContract(
     double HonorReward,
     double BrokenHonorPenalty)
 {
-    /// <summary>Sözleşme bu gün hâlâ açık mı?</summary>
+    /// <summary>Is the contract still open on this day?</summary>
     public bool IsOpenOn(int day) => day >= PostedDay && day <= Deadline;
 
-    /// <summary>Son gün dahil kaç gün kaldı.</summary>
+    /// <summary>How many days are left, the last day included.</summary>
     public int DaysLeft(int day) => Math.Max(0, Deadline - day + 1);
 
-    /// <summary>Sözleşmenin dövüşü — sefer katmanının tanıdığı biçim.</summary>
+    /// <summary>The contract's fight — the form the expedition layer knows.</summary>
     /// <remarks>
-    /// Hedef tek olduğu için ekip büyüklüğü dayatılmaz: kaç kişiyle gideceğin
-    /// sözleşmenin asıl kararıdır. Tek kişi gönderip kadroyu evde tutmak da, dördünü
-    /// birden yığmak da geçerli — biri riski, diğeri o gün dojo'yu savunmasız bırakır.
+    /// Because the target is single, no party size is imposed: how many you take is the contract's real
+    /// decision. Sending one man and keeping the roster at home is valid, and so is piling all four in —
+    /// one takes the risk, the other leaves the dojo undefended that day.
     /// </remarks>
     public EncounterOffer AsOffer(int day) =>
-        new(day, [Target], Threat, $"{Target.Name} — {Patron} arıyor");
+        new(day, [Target], Threat, $"{Target.Name} — wanted by {Patron}");
 }
 
-/// <summary>Sözleşme tahtası: hangi gün hangi sözleşmenin asılı olduğunu üretir.</summary>
+/// <summary>The contract board: it produces which contract is posted on which day.</summary>
 /// <remarks>
 /// <para>
-/// Teklif ve pazar gibi <b>saf</b>: aynı tohum ve aynı gün daima aynı sözleşmeyi verir.
-/// Sözleşme kayda yazılmaz, günden ve tohumdan yeniden hesaplanır — kaydı yükleyip
-/// beğenilmeyen sözleşmeyi değiştirmek işe yaramaz.
+/// <b>Pure</b> like the offer and the market: the same seed and the same day always give the same
+/// contract. The contract is not written to the save, it is recomputed from the day and the seed —
+/// loading the save to change a contract you did not like does not work.
 /// </para>
 /// <para>
-/// Tahta <b>dönem</b> numarasıyla çalışır: sözleşme
-/// <see cref="BountyTuning.PostingDays"/> günde bir asılır ve
-/// <see cref="BountyTuning.OpenDays"/> gün açık kalır. İkisi ayrı sayı olduğu için
-/// sözleşmesiz günler vardır — sözleşme her gün asılı olsaydı sıradan teklif
-/// anlamsızlaşırdı.
+/// The board works with <b>period</b> numbers: a contract is posted every
+/// <see cref="BountyTuning.PostingDays"/> days and stays open for
+/// <see cref="BountyTuning.OpenDays"/> days. Because the two are separate numbers there are days
+/// with no contract — if a contract were posted every day, the ordinary offer would become pointless.
 /// </para>
 /// </remarks>
 public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? encounters = null)
 {
-    /// <summary>Hedef kimlikleri düşman bandının üstünde ayrı bir bantta durur.</summary>
+    /// <summary>Target ids live in their own band above the enemy band.</summary>
     public const int FirstTargetId = 200_000;
 
     public BountyTuning Tuning { get; } = tuning ?? new BountyTuning();
 
     private EncounterTuning Encounters { get; } = encounters ?? new EncounterTuning();
 
-    /// <summary>Verilen gün asılı olan sözleşme; yoksa <c>null</c>.</summary>
+    /// <summary>The contract posted on the given day; <c>null</c> if there is none.</summary>
     public BountyContract? Posted(int day, ulong seed, EconomyTuning economy)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
@@ -162,7 +161,7 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         return Build(postedDay, deadline, new SeededRandom(Mix(seed, period)), economy);
     }
 
-    /// <summary>Akışı dışarıdan verilen sözleşme — ölçüm ve test için.</summary>
+    /// <summary>A contract whose stream is supplied from outside — for measurement and tests.</summary>
     public BountyContract Build(
         int postedDay,
         int deadline,
@@ -172,8 +171,8 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         ArgumentNullException.ThrowIfNull(random);
         ArgumentNullException.ThrowIfNull(economy);
 
-        // Hedefin gücü, sözleşmenin asıldığı günün eğrisinden çıkar: sözleşme takvimin
-        // dışında bir şey değil, aynı eğrinin daha sert bir noktası.
+        // The target's strength comes out of the curve of the day the contract was posted: a contract is
+        // not something outside the calendar, it is a harder point on the same curve.
         double power = new EncounterGenerator(Encounters).PowerFor(postedDay, random)
             * Math.Max(1, Tuning.PowerMultiplier);
 
@@ -181,7 +180,7 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         Warrior target = kind.Spawn(new WarriorId(FirstTargetId + postedDay), power);
 
         string epithet = Tuning.Epithets.Count == 0
-            ? "Adsız"
+            ? "Nameless"
             : Tuning.Epithets[random.NextInt(Tuning.Epithets.Count)];
         string patron = Tuning.Patrons.Count == 0
             ? "bilinmeyen bir taraf"
@@ -221,15 +220,15 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
             return Bestiary.Oni;
         }
 
-        // Sözleşme hedefi eğrinin <b>üst</b> ucundan seçilir: kelle avının anlamı, o gün
-        // sıradan devriyede karşına çıkmayacak bir şeyle karşılaşmak.
+        // The contract target is picked from the <b>top</b> end of the curve: the point of a bounty hunt
+        // is meeting something you would not run into on an ordinary patrol that day.
         double highest = pool.Max(k => k.MinPower);
         List<YokaiKind> top = [.. pool.Where(k => k.MinPower >= highest)];
 
         return top[random.NextInt(top.Count)];
     }
 
-    /// <summary>Tohumu dönemle karıştırır — teklif, olay ve pazar akışlarından ayrı tuzla.</summary>
+    /// <summary>Mixes the seed with the period — with a different salt from the offer, event and market streams.</summary>
     private static ulong Mix(ulong seed, int period)
     {
         ulong x = seed ^ ((ulong)period * 0xD6E8FEB86659FD93) ^ 0x27D4EB2F165667C5;

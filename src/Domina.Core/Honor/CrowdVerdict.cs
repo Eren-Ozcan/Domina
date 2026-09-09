@@ -1,16 +1,15 @@
 namespace Domina.Core.Honor;
 
-/// <summary>Chat'in bir dövüşe verdiği tepkinin sayımı.</summary>
-/// <param name="Bushi">"Gerçek bir savaşçı gibi dövüştü" diyenler.</param>
+/// <summary>The tally of chat's reaction to a fight.</summary>
+/// <param name="Bushi">Those who say "he fought like a real warrior".</param>
 /// <param name="Ronin">"Onursuz" diyenler.</param>
 /// <remarks>
 /// <para>
-/// Ham sayı değil <b>oran</b> kullanılır. 5 kişilik bir chat'te 3 ronin ile 5000
-/// kişilik bir chat'te 3 ronin aynı şey değildir; oran, küçük ve büyük yayınlar
-/// arasında adaleti sağlar.
+/// A <b>ratio</b> is used, not the raw count. Three ronin in a chat of 5 and three ronin in a chat of
+/// 5000 are not the same thing; a ratio keeps small and large streams fair to each other.
 /// </para>
 /// <para>
-/// Çarpanın alt/üst sınırı olması da spam'in sonucu uçlara çekmesini engeller
+/// The multiplier having a lower and an upper bound also stops spam from pulling the result to the extremes
 /// (bkz. docs/GDD.md §6).
 /// </para>
 /// </remarks>
@@ -20,16 +19,16 @@ public readonly record struct CrowdVerdict(int Bushi, int Ronin)
 
     public int Total => Bushi + Ronin;
 
-    /// <summary>Tek bir oy bile geldiyse gerçek oy sayılır — asgari katılım eşiği yok.</summary>
+    /// <summary>Even a single vote counts as a real vote — there is no minimum turnout threshold.</summary>
     public bool HasVotes => Total > 0;
 
-    /// <summary>Oy yoksa nötr (0.5).</summary>
+    /// <summary>With no votes it is neutral (0.5).</summary>
     public double BushiRatio => Total == 0 ? 0.5 : (double)Bushi / Total;
 
-    /// <summary>Chat'in çoğunluğu affetmekten yana mı?</summary>
+    /// <summary>Is the majority of chat in favour of pardoning?</summary>
     public bool FavorsMercy => Bushi > Ronin;
 
-    /// <summary>Dövüş ödülüne uygulanacak altın çarpanı.</summary>
+    /// <summary>The gold multiplier to apply to the fight reward.</summary>
     public double RewardMultiplier(HonorTuning tuning)
     {
         ArgumentNullException.ThrowIfNull(tuning);

@@ -3,19 +3,18 @@ using Domina.Core.Rng;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Günün başına gelebilecek aksilikler.</summary>
+/// <summary>The mishaps that can befall a day.</summary>
 /// <remarks>
 /// <para>
-/// GDD §11'in son kalemi: rastgele olaylar kaynak eksiltebilir, bu da <b>tampon tutma</b>
-/// baskısı yaratır. Baskının işe yaraması için olayların ambara değil <b>kasaya</b> ve
-/// <b>takvime</b> vurması gerekiyor: günlük alışveriş ambarı tam ihtiyaç kadar doldurduğu
-/// için (bkz. <see cref="Quartermaster.Restock"/>) çalınan üç ölçek pirincin karşılığı
-/// zaten sıfırdır. Bu yüzden olaylar ya altını götürür, ya o günün ihtiyacını büyütür,
-/// ya da bir savaşçının gününü alır.
+/// GDD §11's last item: random events can subtract resources, which creates <b>buffer-keeping</b>
+/// pressure. For the pressure to work, the events have to hit <b>the treasury</b> and <b>the
+/// calendar</b> rather than the store: because the daily shopping fills the store to exactly what is
+/// needed (see <see cref="Quartermaster.Restock"/>), three stolen measures of rice already amount to
+/// nothing. So the events either take gold, or grow that day's need, or take a warrior's day.
 /// </para>
 /// <para>
-/// Hepsi <b>eksiltir</b>. Bağış, hazine, iyi haber yok — GDD §11 olayları tampon baskısı
-/// olarak tarif ediyor; çift yönlü bir olay tablosu baskıyı ortadan kaldırırdı.
+/// They all <b>subtract</b>. There are no donations, treasures or good news — GDD §11 describes events
+/// as buffer pressure; a two-way event table would remove the pressure.
 /// </para>
 /// </remarks>
 public enum DayEventKind
@@ -23,27 +22,27 @@ public enum DayEventKind
     /// <summary>Kasadan para gitti.</summary>
     Theft,
 
-    /// <summary>Erzak bozuldu: o günün yiyeceği pahalandı.</summary>
+    /// <summary>The provisions spoiled: that day's food got more expensive.</summary>
     Spoilage,
 
-    /// <summary>Kuyu bulandı: o günün suyu pahalandı.</summary>
+    /// <summary>The well got muddy: that day's water got more expensive.</summary>
     FoulWell,
 
-    /// <summary>İlaç işe yaramadı: o gün revirdekiler ilaçsız kaldı.</summary>
+    /// <summary>The medicine did not work: that day the infirmary went without it.</summary>
     SpoiledMedicine,
 
-    /// <summary>Bir savaşçı hastalandı: dövüşmeden revire düştü.</summary>
+    /// <summary>A warrior fell ill: he landed in the infirmary without fighting.</summary>
     Illness,
 }
 
-/// <summary>O gün ne olduğu.</summary>
-/// <param name="Kind">Olayın türü.</param>
-/// <param name="Description">Günlükte görünen cümle.</param>
-/// <param name="Gold">Kasadan giden altın.</param>
-/// <param name="Target">Olay bir savaşçıya değdiyse o savaşçı.</param>
-/// <param name="RecoveryDays">Hastalığın yatırdığı gün.</param>
-/// <param name="FoodFactor">O günün yiyecek ihtiyacının çarpanı (1 = normal).</param>
-/// <param name="WaterFactor">O günün su ihtiyacının çarpanı (1 = normal).</param>
+/// <summary>What happened that day.</summary>
+/// <param name="Kind">The kind of event.</param>
+/// <param name="Description">The sentence shown in the log.</param>
+/// <param name="Gold">The gold that left the treasury.</param>
+/// <param name="Target">The warrior the event touched, if it touched one.</param>
+/// <param name="RecoveryDays">The days the illness put him down for.</param>
+/// <param name="FoodFactor">The multiplier on that day's food need (1 = normal).</param>
+/// <param name="WaterFactor">The multiplier on that day's water need (1 = normal).</param>
 public sealed record DayEvent(
     DayEventKind Kind,
     string Description,
@@ -53,43 +52,43 @@ public sealed record DayEvent(
     double FoodFactor = 1,
     double WaterFactor = 1)
 {
-    /// <summary>O gün ilaç kullanılabiliyor mu?</summary>
+    /// <summary>Can medicine be used that day?</summary>
     public bool MedicineWorks => Kind != DayEventKind.SpoiledMedicine;
 }
 
-/// <summary>Rastgele olayların ayarlanabilir sayıları.</summary>
+/// <summary>The random events' tunable numbers.</summary>
 /// <remarks>
-/// Sayılar <b>kilitli değil</b>: GDD §11 yalnızca "rastgele olaylar kaynak eksiltebilir"
-/// diyor, sıklık ve şiddet ölçümle kapanacak. Ölçümün sorusu belli — olaylar tamponu
-/// zorlamalı ama tek başına dojo kapatmamalı.
+/// The numbers are <b>not locked</b>: GDD §11 only says "random events can subtract resources",
+/// frequency and severity will be settled by measurement. The measurement's question is clear — the
+/// events must strain the buffer but must not close a dojo on their own.
 /// </remarks>
 public sealed record EventTuning
 {
-    /// <summary>Bir günde olay çıkma olasılığı.</summary>
+    /// <summary>The probability of an event occurring in a day.</summary>
     public double ChancePerDay { get; init; } = 0.15;
 
-    /// <summary>Hırsızlığın kasadan alabileceği <b>en büyük</b> pay.</summary>
+    /// <summary>The <b>largest</b> share a theft can take from the treasury.</summary>
     /// <remarks>
-    /// Gerçek pay her seferinde sıfır ile bu sayı arasında çekilir. Sabit oran, aksiliği
-    /// hesaplanabilir bir vergiye çevirirdi: oyuncu kayıp miktarını baştan bilirse tampon
-    /// tutmak bir karar değil, bir aritmetik olurdu.
+    /// The actual share is drawn between zero and this number each time. A fixed rate would turn the
+    /// mishap into a calculable tax: if the player knows the loss up front, keeping a buffer is not a
+    /// decision but arithmetic.
     /// </remarks>
     public double MaxTheftShare { get; init; } = 0.12;
 
-    /// <summary>Bozulan erzağın o günün faturasına ekleyebileceği <b>en büyük</b> pay.</summary>
-    /// <remarks>1.0 = fatura en kötü ihtimalle iki katına çıkar.</remarks>
+    /// <summary>The <b>largest</b> share spoiled provisions can add to that day's bill.</summary>
+    /// <remarks>1.0 = at worst the bill doubles.</remarks>
     public double MaxSpoilageShare { get; init; } = 1.0;
 
-    /// <summary>Bulanan kuyunun o günün su faturasına ekleyebileceği <b>en büyük</b> pay.</summary>
+    /// <summary>The <b>largest</b> share a muddy well can add to that day's water bill.</summary>
     public double MaxFoulWellShare { get; init; } = 1.0;
 
-    /// <summary>Hastalığın yatırdığı <b>en çok</b> gün; gerçek süre 1 ile bu sayı arasında.</summary>
+    /// <summary>The <b>most</b> days an illness puts a warrior down; the real duration is between 1 and this.</summary>
     public int MaxIllnessDays { get; init; } = 3;
 
-    /// <summary>Olay türlerinin çekiliş ağırlıkları.</summary>
+    /// <summary>The draw weights of the event kinds.</summary>
     /// <remarks>
-    /// Hırsızlık en ağır kalem: doğrudan tampona vuran tek olay o. Diğerleri günü ya da
-    /// bir savaşçıyı pahalılaştırır — tamponu değil, planı bozar.
+    /// Theft is the heaviest item: it is the only event that hits the buffer directly. The others make
+    /// the day or a warrior more expensive — they upset the plan, not the buffer.
     /// </remarks>
     public IReadOnlyList<(DayEventKind Kind, double Weight)> Weights { get; init; } =
     [
@@ -101,24 +100,24 @@ public sealed record EventTuning
     ];
 }
 
-/// <summary>Günün olayını çeker.</summary>
+/// <summary>Draws the day's event.</summary>
 /// <remarks>
-/// Karşılaşma teklifi gibi <b>saf</b>: aynı gün ve aynı tohum daima aynı olayı verir.
-/// Böylece olay da kayda yazılmaz ve kaydı yeniden yükleyerek başa gelen aksilik
-/// değiştirilemez.
+/// <b>Pure</b> like the encounter offer: the same day and the same seed always give the same event. So
+/// the event is not written to the save either, and the mishap that befalls you cannot be changed by
+/// reloading the save.
 /// </remarks>
 public sealed class DayEventTable(EventTuning? tuning = null)
 {
     public EventTuning Tuning { get; } = tuning ?? new EventTuning();
 
-    /// <summary>O günün olayı; olay yoksa <c>null</c>.</summary>
+    /// <summary>That day's event; <c>null</c> if there is none.</summary>
     public DayEvent? Roll(DojoState state, int day)
     {
         ArgumentNullException.ThrowIfNull(state);
         return Roll(state, new SeededRandom(Mix(state.Seed, day)));
     }
 
-    /// <summary>Akışı dışarıdan verilen çekiliş — ölçüm ve test için.</summary>
+    /// <summary>A draw whose stream is supplied from outside — for measurement and tests.</summary>
     public DayEvent? Roll(DojoState state, IRandomSource random)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -137,9 +136,9 @@ public sealed class DayEventTable(EventTuning? tuning = null)
         DayEventKind.Theft => Theft(state, random),
         DayEventKind.Spoilage => Spoilage(random),
         DayEventKind.FoulWell => FoulWell(random),
-        DayEventKind.SpoiledMedicine => new DayEvent(kind, "İlaç küflenmiş; revir bugün boş elle çalıştı."),
+        DayEventKind.SpoiledMedicine => new DayEvent(kind, "The medicine went mouldy; the infirmary worked empty-handed today."),
         DayEventKind.Illness => Illness(state, random),
-        _ => new DayEvent(kind, "Sıradan bir aksilik."),
+        _ => new DayEvent(kind, "An ordinary mishap."),
     };
 
     private DayEvent Theft(DojoState state, IRandomSource random)
@@ -147,7 +146,7 @@ public sealed class DayEventTable(EventTuning? tuning = null)
         int purse = Math.Max(0, state.Resources.Gold);
         int taken = Math.Min(purse, (int)Math.Round(purse * random.NextDouble() * Tuning.MaxTheftShare));
 
-        // Kasada para varken hırsız eli boş dönmez: yuvarlama sıfıra düşse de bir altın gider.
+        // While there is money in the treasury the thief does not leave empty-handed: even if the rounding falls to zero, one gold goes.
         if (taken == 0 && purse > 0)
         {
             taken = 1;
@@ -155,7 +154,7 @@ public sealed class DayEventTable(EventTuning? tuning = null)
 
         return new DayEvent(
             DayEventKind.Theft,
-            taken > 0 ? $"Kasadan {taken} altın çalındı." : "Hırsız girdi ama kasada bir şey yoktu.",
+            taken > 0 ? $"{taken} gold was stolen from the treasury." : "A thief got in but the treasury was empty.",
             Gold: taken);
     }
 
@@ -164,7 +163,7 @@ public sealed class DayEventTable(EventTuning? tuning = null)
         double factor = 1 + (random.NextDouble() * Tuning.MaxSpoilageShare);
         return new DayEvent(
             DayEventKind.Spoilage,
-            "Ambardaki erzağın bir kısmı bozuldu.",
+            "Part of the provisions in the store spoiled.",
             FoodFactor: factor);
     }
 
@@ -173,30 +172,30 @@ public sealed class DayEventTable(EventTuning? tuning = null)
         double factor = 1 + (random.NextDouble() * Tuning.MaxFoulWellShare);
         return new DayEvent(
             DayEventKind.FoulWell,
-            "Kuyu bulandı, su uzaktan taşındı.",
+            "The well went muddy, water had to be carried from afar.",
             WaterFactor: factor);
     }
 
     /// <summary>
-    /// Hastalık <b>sağlam</b> savaşçıya değer.
+    /// An illness touches a <b>healthy</b> warrior.
     /// </summary>
     /// <remarks>
-    /// Zaten revirde yatan birini hastalandırmak görünmez bir olay olurdu: revir günü
-    /// sayacı uzun olanı ezmiyor (bkz. <see cref="RosterEntry.Injure"/>), yani olay çoğu
-    /// zaman hiçbir şey yapmazdı.
+    /// Making someone already lying in the infirmary ill would be an invisible event: the infirmary-day
+    /// counter does not overwrite a longer one (see <see cref="RosterEntry.Injure"/>), so the event would
+    /// mostly do nothing.
     /// </remarks>
     private DayEvent Illness(DojoState state, IRandomSource random)
     {
         RosterEntry? victim = PickWarrior(state, random, e => e.IsFitForCampaign);
         if (victim is null)
         {
-            return new DayEvent(DayEventKind.Illness, "Dojo'da hastalık dolaştı ama kimseyi yatıramadı.");
+            return new DayEvent(DayEventKind.Illness, "Illness went round the dojo but put nobody in bed.");
         }
 
         int days = 1 + random.NextInt(Math.Max(1, Tuning.MaxIllnessDays));
         return new DayEvent(
             DayEventKind.Illness,
-            $"{victim.Name} hastalandı; {days} gün revirde.",
+            $"{victim.Name} fell ill; {days} days in the infirmary.",
             Target: victim.Id,
             RecoveryDays: days);
     }
@@ -232,11 +231,11 @@ public sealed class DayEventTable(EventTuning? tuning = null)
     }
 
     /// <summary>
-    /// Tohumu günle karıştırır — teklif akışından <b>ayrı</b> bir tuzla.
+    /// Mixes the seed with the day — with a <b>different</b> salt from the offer stream.
     /// </summary>
     /// <remarks>
-    /// Aynı tuz kullanılsaydı olay ile teklif birbirine kilitlenirdi: ağır teklifin geldiği
-    /// gün daima hırsızlık da olurdu ve iki sistem tek bir sisteme dönüşürdü.
+    /// With the same salt the event and the offer would be locked to each other: on the day a heavy offer
+    /// arrived there would always be a theft too, and two systems would turn into one.
     /// </remarks>
     private static ulong Mix(ulong seed, int day)
     {

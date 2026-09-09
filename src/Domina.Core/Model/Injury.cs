@@ -1,40 +1,40 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace Domina.Core.Model;
 
-/// <summary>Kalıcı olarak kaybedilebilecek uzuvlar.</summary>
+/// <summary>The limbs that can be lost permanently.</summary>
 /// <remarks>
-/// Uzuvlar <b>tek tek</b> durur: sağ kol, sol kol, sağ bacak, sol bacak. Tek bir "kol"
-/// kaydı zırhı da kaybı da çift temsil ediyordu — oysa kolun biri gidince diğeri hâlâ
-/// yerinde, ve zırh yuva yuvaysa (§7) kolluk da yuva yuva olmalı.
+/// The limbs stand <b>one by one</b>: right arm, left arm, right leg, left leg. A single "arm" record
+/// represented both the armour and the loss twice over — yet when one arm goes the other is still
+/// there, and if armour is slot by slot (§7) arm pieces must be slot by slot too.
 /// </remarks>
 public enum BodyPart
 {
-    /// <summary>Kılıç tutan kol — gücü ve iki elli silah kullanımını en çok etkileyen kayıp.</summary>
+    /// <summary>The sword arm — the loss that most affects strength and the use of two-handed weapons.</summary>
     SwordArm,
 
-    /// <summary>Boştaki kol. Kaybı iki elli silahı yine bitirir, gücü az düşürür.</summary>
+    /// <summary>The off arm. Losing it still ends two-handed weapons, and lowers strength a little.</summary>
     OffArm,
 
-    /// <summary>Sağ bacak — hareket kabiliyeti.</summary>
+    /// <summary>The right leg — mobility.</summary>
     RightLeg,
 
     /// <summary>Sol bacak — hareket kabiliyeti.</summary>
     LeftLeg,
 
-    /// <summary>Derinlik algısı — isabeti etkiler.</summary>
+    /// <summary>Depth perception — it affects accuracy.</summary>
     Eye,
 }
 
 /// <summary>
-/// Kaybedilmiş uzuvların kümesi.
+/// The set of limbs lost.
 /// </summary>
 /// <remarks>
-/// Liste değil <b>küme</b>: aynı uzuv iki kez kaybedilemez, tip bu kuralı taşısın.
-/// Küme aynı zamanda değer eşitliğine sahiptir — dövüş özetleri record olduğu için
-/// bu şart: liste tutulsaydı iki özdeş koşu referans farkı yüzünden farklı sayılır ve
-/// determinizm testleri anlamsızlaşırdı. Kayıpların <b>sırası</b> gerekiyorsa olay
-/// akışındaki <c>WarriorDismembered</c> zaten sıralı.
+/// A <b>set</b>, not a list: the same limb cannot be lost twice, and the type should carry that rule.
+/// A set also has value equality — required because the fight summaries are records: with a list, two
+/// identical runs would count as different because of a reference difference and the determinism tests
+/// would become meaningless. If the <b>order</b> of the losses is needed,
+/// <c>WarriorDismembered</c> in the event stream is already ordered.
 /// </remarks>
 [Flags]
 public enum BodyPartSet
@@ -63,13 +63,13 @@ public static class BodyPartSetExtensions
     public static bool IsArm(this BodyPart part) =>
         part is BodyPart.SwordArm or BodyPart.OffArm;
 
-    /// <summary>Uzuv bir bacak mı?</summary>
+    /// <summary>Is the limb a leg?</summary>
     public static bool IsLeg(this BodyPart part) =>
         part is BodyPart.RightLeg or BodyPart.LeftLeg;
 
     public static bool Has(this BodyPartSet set, BodyPart part) => (set & part.AsFlag()) != 0;
 
-    /// <summary>Kümedeki uzuvlar, <see cref="BodyPart"/> sırasıyla.</summary>
+    /// <summary>The limbs in the set, in <see cref="BodyPart"/> order.</summary>
     public static IEnumerable<BodyPart> Parts(this BodyPartSet set)
     {
         foreach (BodyPart part in Enum.GetValues<BodyPart>())
@@ -82,10 +82,10 @@ public static class BodyPartSetExtensions
     }
 }
 
-/// <summary>Zırh yuvalarının kümesi — hangi parçaların dağıldığını taşır.</summary>
+/// <summary>The set of armour slots — it carries which pieces broke.</summary>
 /// <remarks>
-/// <see cref="BodyPartSet"/>'in eşi ama ayrı: kaybedilen uzuvla dağılan zırh parçası
-/// aynı şey değildir (gövdelik dağılabilir, gövde kopmaz) ve ikisi ayrı ayrı sayılır.
+/// The counterpart of <see cref="BodyPartSet"/> but separate: a lost limb and a broken armour piece
+/// are not the same thing (a cuirass can break, a torso does not come off) and the two are counted separately.
 /// </remarks>
 public enum HitLocationSet
 {
@@ -114,7 +114,7 @@ public static class HitLocationSetExtensions
     public static bool Has(this HitLocationSet set, HitLocation location) =>
         (set & location.AsFlag()) != 0;
 
-    /// <summary>Kümedeki yuvalar, <see cref="HitLocation"/> sırasıyla.</summary>
+    /// <summary>The slots in the set, in <see cref="HitLocation"/> order.</summary>
     public static IEnumerable<HitLocation> Slots(this HitLocationSet set)
     {
         foreach (HitLocation location in Enum.GetValues<HitLocation>())
@@ -126,25 +126,24 @@ public static class HitLocationSetExtensions
         }
     }
 
-    /// <summary>Kümedeki yuva sayısı.</summary>
+    /// <summary>The number of slots in the set.</summary>
     /// <remarks>
-    /// Bit sayımıyla yapılır, <see cref="Slots"/> üzerinden değil: hedef seçimi bunu
-    /// karar adımı başına okuyor ve iterator ile <c>Enum.GetValues</c> dövüş başına
-    /// kilobaytlarca ayırma demekti (<c>ThroughputTests</c> yakaladı).
+    /// It is done by bit counting, not through <see cref="Slots"/>: target selection reads this once per
+    /// decision step, and an iterator with <c>Enum.GetValues</c> meant kilobytes of allocation per fight
+    /// (<c>ThroughputTests</c> caught it).
     /// </remarks>
     public static int Count(this HitLocationSet set) => BitOperations.PopCount((uint)set);
 }
 
-/// <summary>Darbenin indiği bölge.</summary>
+/// <summary>The region a blow lands on.</summary>
 /// <remarks>
 /// <para>
-/// <see cref="BodyPart"/>'tan ayrıdır: her bölge kaybedilebilir bir uzuv değildir.
-/// Gövdeye inen ağır darbe savaşçıyı öldürebilir ama koparacak bir şeyi yoktur.
+/// It is separate from <see cref="BodyPart"/>: not every region is a limb that can be lost. A heavy
+/// blow to the torso can kill the warrior but has nothing to take off.
 /// </para>
 /// <para>
-/// Bölgelerin olasılığı eşit değildir (bkz. <c>CombatTuning</c>). Eşit olsaydı gövde
-/// zırhı değersizleşir, zırh yatırımı "hepsini eşit dağıt" gibi düz bir optimizasyona
-/// dönerdi.
+/// The regions are not equally likely (see <c>CombatTuning</c>). Were they equal, torso armour would
+/// become worthless and armour investment would turn into the flat optimisation "spread it evenly".
 /// </para>
 /// </remarks>
 public enum HitLocation
@@ -158,22 +157,22 @@ public enum HitLocation
 }
 
 /// <summary>
-/// Bir savaşçının kalıcı sakatlığı. Ölümden dönüldüğünde kalır ve geri alınamaz.
+/// A warrior's permanent disability. It remains after coming back from death and cannot be undone.
 /// </summary>
 /// <remarks>
-/// Domina'da uzuv kopması yalnızca ölüm anının görsel efektiydi; burada
-/// <b>hayatta kalıp sakat yaşamaya devam etme</b> mekaniğidir (bkz. docs/GDD.md §7).
+/// In Domina, dismemberment was only the visual effect of the moment of death; here it is the mechanic
+/// of <b>surviving and living on maimed</b> (see docs/GDD.md §7).
 /// </remarks>
 public sealed record Disability(BodyPart Part)
 {
     /// <summary>
-    /// Saldırı gücüne uygulanan çarpan.
+    /// The multiplier applied to attack strength.
     /// </summary>
     /// <remarks>
-    /// Kılıç tutan kol ile boştaki kol aynı şey değil: birincisi vuruşun kendisidir,
-    /// ikincisi dengedir. İkisi de iki elli silahı bitirir (bkz.
-    /// <see cref="BlocksTwoHandedWeapons"/>), ama tek elli dövüşen bir savaşçı için
-    /// boştaki kolun kaybı taşınabilir bir kayıptır.
+    /// The sword arm and the off arm are not the same thing: the first is the strike itself, the second
+    /// is balance. Both end two-handed weapons (see
+    /// <see cref="BlocksTwoHandedWeapons"/>), but for a warrior fighting one-handed the loss of the off
+    /// arm is a bearable one.
     /// </remarks>
     public double StrengthMultiplier => Part switch
     {
@@ -182,21 +181,21 @@ public sealed record Disability(BodyPart Part)
         _ => 1.0,
     };
 
-    /// <summary>Kaçınmaya uygulanan çarpan.</summary>
+    /// <summary>The multiplier applied to evasion.</summary>
     public double EvasionMultiplier => Part.IsLeg() ? 0.55 : 1.0;
 
     /// <summary>
-    /// Yürüme hızına uygulanan çarpan.
+    /// The multiplier applied to walking speed.
     /// </summary>
     /// <remarks>
-    /// Bacağını kaybeden savaşçı yalnızca kaçınmayı değil <b>kaçabilmeyi</b> de kaybeder:
-    /// topallayan biri kovalayandan uzaklaşamaz. Uzuv kaybının en ağır ikincil bedeli bu.
+    /// A warrior who loses a leg loses not only evasion but <b>the ability to flee</b>: a man who limps
+    /// cannot get away from a chaser. This is limb loss's heaviest secondary price.
     /// </remarks>
     public double SpeedMultiplier => Part.IsLeg() ? 0.60 : 1.0;
 
-    /// <summary>İsabet şansına uygulanan çarpan.</summary>
+    /// <summary>The multiplier applied to hit chance.</summary>
     public double AccuracyMultiplier => Part == BodyPart.Eye ? 0.75 : 1.0;
 
-    /// <summary>Hangi kol giderse gitsin iki elli silah kullanılamaz.</summary>
+    /// <summary>Whichever arm goes, a two-handed weapon cannot be used.</summary>
     public bool BlocksTwoHandedWeapons => Part.IsArm();
 }

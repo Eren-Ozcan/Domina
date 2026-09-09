@@ -1,60 +1,60 @@
 namespace Domina.Core.Dojo;
 
-/// <summary>Okulun üç kolu.</summary>
+/// <summary>The school's three branches.</summary>
 /// <remarks>
-/// Üç kol üç ayrı darboğaza bakar: talimhane <b>ilerlemeyi</b>, revir <b>zamanı</b>,
-/// kâhya <b>kasayı</b> hızlandırır. Aynı anda hepsine para yetmez — kolun kendisi bir
-/// karardır, sıra ise ikinci karar.
+/// The three branches look at three different bottlenecks: the training ground speeds up
+/// <b>progress</b>, the infirmary <b>time</b>, the steward <b>the treasury</b>. There is never enough
+/// money for all three at once — the branch itself is a decision, and the order is a second one.
 /// </remarks>
 public enum SchoolBranch
 {
-    /// <summary>Talimhane — antrenmanın hızı ve tavanı.</summary>
+    /// <summary>Training ground — the speed and ceiling of training.</summary>
     Training,
 
-    /// <summary>Revir — yaranın yediği gün.</summary>
+    /// <summary>Infirmary — the days a wound eats.</summary>
     Infirmary,
 
-    /// <summary>Kâhya — fiyatlar ve ödül.</summary>
+    /// <summary>Steward — prices and rewards.</summary>
     Steward,
 }
 
-/// <summary>Okulda satın alınabilecek bir tesis/kadro.</summary>
+/// <summary>A facility/staff member that can be bought at the school.</summary>
 public enum SchoolNodeId
 {
-    /// <summary>Talimhane: antrenman günü daha çok kazandırır.</summary>
+    /// <summary>Training ground: a training day earns more.</summary>
     TrainingGround,
 
-    /// <summary>Kata ustası: savaşçının yaklaşabildiği tavan yükselir.</summary>
+    /// <summary>Kata master: the ceiling a warrior can approach rises.</summary>
     FormsMaster,
 
-    /// <summary>İç dojo: antrenman ikinci kez hızlanır.</summary>
+    /// <summary>Inner dojo: training speeds up a second time.</summary>
     InnerDojo,
 
-    /// <summary>Revir: doğal iyileşme günde iki gün erir.</summary>
+    /// <summary>Infirmary: natural recovery burns two days a day.</summary>
     Infirmary,
 
-    /// <summary>Otacı: ilaç bir gün daha eritir.</summary>
+    /// <summary>Herbalist: medicine burns one more day.</summary>
     Herbalist,
 
-    /// <summary>Kırıkçı: sıyrık sayılan hasar payı büyür.</summary>
+    /// <summary>Bone setter: the share of damage counted as a scratch grows.</summary>
     BoneSetter,
 
-    /// <summary>Kâhya: günlük stok ucuzlar.</summary>
+    /// <summary>Steward: the daily stock gets cheaper.</summary>
     Steward,
 
-    /// <summary>Hami: zafer daha çok öder.</summary>
+    /// <summary>Patron: victory pays more.</summary>
     Patron,
 
-    /// <summary>Simsar: savaşçı alımı ve onarım ucuzlar.</summary>
+    /// <summary>Broker: hiring warriors and repairs get cheaper.</summary>
     Broker,
 }
 
-/// <summary>Ağaçtaki bir düğüm — bedeli, kolu ve kendinden önce geleni.</summary>
-/// <param name="Id">Kalıcı kimlik; kayda bu yazılır.</param>
-/// <param name="Branch">Bağlı olduğu kol.</param>
-/// <param name="Name">Görünen ad.</param>
-/// <param name="Cost">Altın bedeli.</param>
-/// <param name="Requires">Önce alınması gereken düğüm; kolun ilkinde <c>null</c>.</param>
+/// <summary>A node in the tree — its cost, its branch and what comes before it.</summary>
+/// <param name="Id">The permanent identity; this is what goes into the save.</param>
+/// <param name="Branch">The branch it belongs to.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="Cost">The cost in gold.</param>
+/// <param name="Requires">The node that must be bought first; <c>null</c> for a branch's first.</param>
 public sealed record SchoolNode(
     SchoolNodeId Id,
     SchoolBranch Branch,
@@ -62,65 +62,65 @@ public sealed record SchoolNode(
     int Cost,
     SchoolNodeId? Requires = null);
 
-/// <summary>Okul ağacının kataloğu ve sayıları.</summary>
+/// <summary>The school tree's catalogue and numbers.</summary>
 /// <remarks>
 /// <para>
-/// GDD §10'un kararı: <b>asıl uzun vadeli yatırım okulda</b> olacak, savaşçıda değil.
-/// Sebep permadeath — ölen savaşçı koca bir yatırımı da götürseydi oyuncu savaşçısını
-/// sahaya sürmekten kaçınırdı. Okul ölmez; kadro erir, okul kalır.
+/// GDD §10's decision: <b>the real long-term investment is in the school</b>, not in the warrior. The
+/// reason is permadeath — if a dead warrior also took a large investment with him, the player would
+/// avoid sending him into the field. The school does not die; the roster melts, the school stays.
 /// </para>
 /// <para>
-/// Bedeller kol içinde <b>artar</b> (200 / 400 / 700): ilk düğüm erken oyunda erişilir,
-/// üçüncüsü ancak ayakta kalmış bir dojo'nun işidir. Sayılar <b>kilitli değil</b>;
-/// ölçümün sorusu hangi kolun kendi bedelini ödediği.
+/// The costs <b>rise</b> within a branch (200 / 400 / 700): the first node is reachable early, the
+/// third is the business of a dojo that has survived. The numbers are <b>not locked</b>; the
+/// measurement's question is which branch pays for itself.
 /// </para>
 /// </remarks>
 public sealed record SchoolTuning
 {
-    /// <summary>Talimhanenin ve iç dojonun antrenman hızı çarpanı.</summary>
+    /// <summary>The training-speed multiplier of the training ground and the inner dojo.</summary>
     public double TrainingRateStep { get; init; } = 1.30;
 
-    /// <summary>Kata ustasının yüzdelik stat tavanına eklediği.</summary>
+    /// <summary>What the kata master adds to the percentage stat ceiling.</summary>
     public double CeilingBonus { get; init; } = 4;
 
-    /// <summary>Kata ustasının can/stamina tavanına eklediği.</summary>
+    /// <summary>What the kata master adds to the health/stamina ceiling.</summary>
     public double PoolCeilingBonus { get; init; } = 20;
 
-    /// <summary>Revirin günde erittiği fazladan revir günü.</summary>
+    /// <summary>The extra infirmary day the infirmary burns per day.</summary>
     public int RecoveryBonus { get; init; } = 1;
 
-    /// <summary>Otacının ilaca eklediği revir günü.</summary>
+    /// <summary>The infirmary day the herbalist adds to medicine.</summary>
     public int MedicineBonus { get; init; } = 1;
 
-    /// <summary>Kırıkçının sıyrık payına eklediği.</summary>
+    /// <summary>What the bone setter adds to the scratch share.</summary>
     public double FreeDamageBonus { get; init; } = 0.10;
 
-    /// <summary>Kâhyanın günlük stok fiyatlarına uyguladığı çarpan.</summary>
+    /// <summary>The multiplier the steward applies to daily stock prices.</summary>
     public double UpkeepPriceFactor { get; init; } = 0.80;
 
-    /// <summary>Haminin zafer ödülüne uyguladığı çarpan.</summary>
+    /// <summary>The multiplier the patron applies to the victory reward.</summary>
     public double RewardFactor { get; init; } = 1.15;
 
-    /// <summary>Simsarın savaşçı alımına uyguladığı çarpan.</summary>
+    /// <summary>The multiplier the broker applies to hiring a warrior.</summary>
     public double RecruitPriceFactor { get; init; } = 0.75;
 
-    /// <summary>Simsarın onarıma uyguladığı çarpan.</summary>
+    /// <summary>The multiplier the broker applies to repairs.</summary>
     public double RepairPriceFactor { get; init; } = 0.80;
 }
 
-/// <summary>Okul ağacının kendisi — düğümler ve sırası.</summary>
+/// <summary>The school tree itself — the nodes and their order.</summary>
 public static class SchoolTree
 {
-    /// <summary>Bütün düğümler, kol kol ve ucuzdan pahalıya.</summary>
+    /// <summary>All the nodes, branch by branch and from cheapest to most expensive.</summary>
     public static IReadOnlyList<SchoolNode> All { get; } =
     [
         new(SchoolNodeId.TrainingGround, SchoolBranch.Training, "Talimhane", 200),
-        new(SchoolNodeId.FormsMaster, SchoolBranch.Training, "Kata ustası", 400, SchoolNodeId.TrainingGround),
-        new(SchoolNodeId.InnerDojo, SchoolBranch.Training, "İç dojo", 700, SchoolNodeId.FormsMaster),
+        new(SchoolNodeId.FormsMaster, SchoolBranch.Training, "Kata master", 400, SchoolNodeId.TrainingGround),
+        new(SchoolNodeId.InnerDojo, SchoolBranch.Training, "Inner dojo", 700, SchoolNodeId.FormsMaster),
 
         new(SchoolNodeId.Infirmary, SchoolBranch.Infirmary, "Revir", 200),
-        new(SchoolNodeId.Herbalist, SchoolBranch.Infirmary, "Otacı", 400, SchoolNodeId.Infirmary),
-        new(SchoolNodeId.BoneSetter, SchoolBranch.Infirmary, "Kırıkçı", 700, SchoolNodeId.Herbalist),
+        new(SchoolNodeId.Herbalist, SchoolBranch.Infirmary, "Herbalist", 400, SchoolNodeId.Infirmary),
+        new(SchoolNodeId.BoneSetter, SchoolBranch.Infirmary, "Bone setter", 700, SchoolNodeId.Herbalist),
 
         new(SchoolNodeId.Steward, SchoolBranch.Steward, "Kâhya", 200),
         new(SchoolNodeId.Patron, SchoolBranch.Steward, "Hami", 400, SchoolNodeId.Steward),
@@ -129,17 +129,17 @@ public static class SchoolTree
 
     public static SchoolNode Find(SchoolNodeId id) => All.Single(n => n.Id == id);
 
-    /// <summary>Bir koldaki düğümler, alınması gereken sırayla.</summary>
+    /// <summary>The nodes in one branch, in the order they must be bought.</summary>
     public static IEnumerable<SchoolNode> Of(SchoolBranch branch) =>
         All.Where(n => n.Branch == branch);
 }
 
-/// <summary>Dojo'nun sahip olduğu tesisler.</summary>
+/// <summary>The facilities the dojo owns.</summary>
 /// <remarks>
-/// Durum tutar, karar vermez: parayı kasadan düşen ve etkileri ayarlara işleyen taraf
-/// <see cref="DojoState"/>. Ayrılmasının sebebi kayıt — dosyaya yalnızca <b>hangi
-/// düğümlerin alındığı</b> yazılır; bonusların büyüklüğü (denge sayısı) yazılmaz, yoksa
-/// eski kayıt yeni dengeyi geri getirirdi (GDD §2).
+/// It holds state, it does not decide: the side that deducts the money from the treasury and applies
+/// the effects to the settings is <see cref="DojoState"/>. The reason for the separation is the save —
+/// only <b>which nodes were bought</b> is written to the file; the size of the bonuses (a balance
+/// number) is not, or an old save would bring back the old balance (GDD §2).
 /// </remarks>
 public sealed class School
 {
@@ -149,20 +149,20 @@ public sealed class School
 
     public SchoolTuning Tuning { get; }
 
-    /// <summary>Alınmış düğümler.</summary>
+    /// <summary>The nodes bought.</summary>
     public IReadOnlyCollection<SchoolNodeId> Owned => _owned;
 
     public bool Has(SchoolNodeId id) => _owned.Contains(id);
 
-    /// <summary>Bugün satın alınabilecek düğümler — parası ayrı bir soru.</summary>
+    /// <summary>The nodes that can be bought today — affording them is a separate question.</summary>
     /// <remarks>
-    /// Kol içinde sıra zorunludur: kata ustası talimhanesiz gelmez. Sıra olmasaydı ağaç
-    /// bir ağaç değil, dokuz bağımsız düğmeden ibaret olurdu.
+    /// The order within a branch is compulsory: the kata master does not come without the training
+    /// ground. Without the order the tree would not be a tree but nine independent buttons.
     /// </remarks>
     public IEnumerable<SchoolNode> Available() =>
         SchoolTree.All.Where(n => !Has(n.Id) && (n.Requires is null || Has(n.Requires.Value)));
 
-    /// <summary>Düğümü sahiplenir. Sırası gelmediyse ya da zaten alındıysa <c>false</c>.</summary>
+    /// <summary>Takes ownership of the node. <c>false</c> if its turn has not come or it is already bought.</summary>
     internal bool Add(SchoolNodeId id)
     {
         SchoolNode node = SchoolTree.Find(id);
@@ -175,10 +175,10 @@ public sealed class School
         return true;
     }
 
-    /// <summary>Kayıttan gelen tesisleri yerine koyar.</summary>
+    /// <summary>Restores the facilities coming from the save.</summary>
     /// <remarks>
-    /// Sıra kontrolü burada da işler: bozuk bir kayıt "kata ustası var, talimhane yok"
-    /// diyemez. Düğümler katalog sırasıyla denenir, tutmayan sessizce düşer.
+    /// The order check works here too: a corrupted save cannot say "there is a kata master but no
+    /// training ground". The nodes are tried in catalogue order and one that does not hold is silently dropped.
     /// </remarks>
     internal void Restore(IEnumerable<SchoolNodeId> owned)
     {
@@ -193,7 +193,7 @@ public sealed class School
         }
     }
 
-    /// <summary>Alınmış tesislerin gün döngüsü ayarlarına işlenmiş hâli.</summary>
+    /// <summary>The facilities bought, applied to the day-loop settings.</summary>
     public DojoTuning Apply(DojoTuning tuning)
     {
         ArgumentNullException.ThrowIfNull(tuning);
@@ -235,12 +235,12 @@ public sealed class School
         };
     }
 
-    /// <summary>Alınmış tesislerin fiyat ve ödül ayarlarına işlenmiş hâli.</summary>
+    /// <summary>The facilities bought, applied to the price and reward settings.</summary>
     /// <remarks>
-    /// İndirim <b>aşağı</b> yuvarlanır ve en az 1'de durur. Yakına yuvarlansaydı ucuz
-    /// kalemlerde indirim tamamen kaybolurdu (2 altınlık yiyecek ×0.80 = 1.6, yuvarlanınca
-    /// yine 2): kâhya kolu ambara hiç dokunmamış olurdu. Alt sınır 1, indirimin bir kalemi
-    /// bedavaya çevirmesini engelliyor.
+    /// A discount is rounded <b>down</b> and stops at 1. Rounded to nearest, the discount would disappear
+    /// entirely on cheap items (2 gold of food ×0.80 = 1.6, which rounds back to 2): the steward branch
+    /// would never touch the store. The floor of 1 stops a discount from making an item
+    /// free.
     /// </remarks>
     public EconomyTuning Apply(EconomyTuning economy)
     {
