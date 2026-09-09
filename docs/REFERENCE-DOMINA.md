@@ -1,151 +1,150 @@
-# Referans oyun: Domina (Dolphin Barn, 2017)
+# The reference game: Domina (Dolphin Barn, 2017)
 
-Bu dosya **bizim oyunumuzu değil**, esinlendiğimiz oyunu anlatır: *Domina* — Dolphin Barn
-Incorporated'ın Roma gladyatör okulu yönetim oyunu (Steam, 3 Nisan 2017; 2021'de
-mağazadan kaldırıldı). Amaç oynanışını kalem kalem çıkarmak: hangi sistem hangi kararı
-üretiyor, hangi sayı neye bağlı, oyuncu bir günü neyle dolduruyor.
+This file describes **not our game** but the one we took inspiration from: *Domina* — Dolphin
+Barn Incorporated's Roman gladiator school management game (Steam, 3 April 2017; removed from
+the store in 2021). The aim is to work out its play item by item: which system produces which
+decision, which number depends on what, and what the player fills a day with.
 
-> **Neden var:** GDD §1'deki "Domina'dan ne alıyoruz / neyi kasten değiştiriyoruz" tablosu
-> dört satır. Dört satır bir referans değil. Bir mekaniği ödünç alırken onun **yanındaki**
-> mekaniği bilmemek, alınan parçanın neden çalıştığını da bilmemek demektir.
+> **Why it exists:** the "what we take from Domina / what we deliberately change" table in GDD
+> §1 is four lines. Four lines are not a reference. Borrowing a mechanic without knowing the
+> mechanic **next to it** means not knowing why the borrowed piece works either.
 
-## Kaynak ve güven seviyesi
+## Sources and confidence level
 
-Her madde bir işaret taşır:
+Every item carries a mark:
 
-| İşaret | Anlamı |
+| Mark | Meaning |
 |---|---|
-| **[K]** | Birden fazla kaynakta aynı şekilde geçiyor; güvenilir. |
-| **[T]** | Tek kaynak, çoğu zaman bir strateji rehberi — yani oyuncunun **stratejisi**, oyunun kuralı olmayabilir. |
-| **[?]** | Kaynaklar çelişiyor ya da sayı yok; oynayarak doğrulanacak. |
-| **[V]** | Oynanış videosundan; ekranda görülen ya da oynayanın anlattığı. |
+| **[K]** | It appears the same way in more than one source; reliable. |
+| **[T]** | A single source, usually a strategy guide — that is, a player's **strategy**, which may not be the game's rule. |
+| **[?]** | The sources contradict each other or there is no number; to be verified by playing. |
+| **[V]** | From a gameplay video; seen on screen or described by the player. |
 
-Kaynaklar (hepsi 2026-09-05'te okundu):
+The sources (all read on 2026-09-05):
 
 1. `steamcommunity.com/sharedfiles/filedetails/?id=1587630000` — "Beating Pro-Gamer
-   Difficulty" (2018 sonrası sürüm; en ayrıntılı sistem anlatımı).
+   Difficulty" (a post-2018 version; the most detailed account of the systems).
 2. `?id=1123035492` — "Complete guide to Domina".
 3. `?id=970561085` — "10 tips for new players".
-4. `?id=1948681614` — "Ways to Win the Game" (MEAT stratejisi).
+4. `?id=1948681614` — "Ways to Win the Game" (the MEAT strategy).
 5. `?id=2336870776` — "Brief Guide on Winning the Game (inc DLC Beta)".
 6. `?id=905549957` — "How to be a Pro Gamer".
-7. `?id=2507877258` — "Get Those Last 6 Achievements" (dosya/kayıt yapısı ve içerik listesi).
-8. `gameplay.tips/guides/1006-domina.html` ve `/6176-domina.html` (yukarıdakilerin
-   derlemeleri).
-9. Wikipedia — *Domina (video game)*; Steam tartışma başlıkları (stat açıklamaları,
-   Twitch).
-10. **Video:** "Domina Beginners Guide To Starting Right PLUS Tips & Tricks (2018
-    Edition)" — 15:48, 1280×720. Transkript ve ekran kareleri okundu. **[V]** işaretli
-    maddeler buradan. 2018 sürümü olduğu için bazı yerlerde daha yeni rehberlerle
-    (kaynak 1) çelişiyor; çelişkiler ayrıca yazıldı.
+7. `?id=2507877258` — "Get Those Last 6 Achievements" (the file/save structure and a content list).
+8. `gameplay.tips/guides/1006-domina.html` and `/6176-domina.html` (compilations of the above).
+9. Wikipedia — *Domina (video game)*; Steam discussion threads (stat explanations, Twitch).
+10. **A video:** "Domina Beginners Guide To Starting Right PLUS Tips & Tricks (2018 Edition)" —
+    15:48, 1280×720. The transcript and the screen frames were read. The items marked **[V]**
+    come from there. Because it is the 2018 version it contradicts newer guides (source 1) in
+    places; the contradictions are written down separately.
 
-**Önemli uyarı:** Kaynakların çoğu **strateji rehberi**. Rehber "şunu yap" der, "kural
-budur" demez; ayrıca oyun 2017-2021 arası çok değişti (rehberlerin kendisi "eski
-rehberler artık geçersiz" diyor — özellikle Faber ve EXP nerf'leri). Bu yüzden sayıların
-büyük kısmı **[T]**. Kesinleşmesi oynayarak olur.
+**An important warning:** most of the sources are **strategy guides**. A guide says "do this",
+not "this is the rule"; and the game changed a great deal between 2017 and 2021 (the guides
+themselves say "the old guides are no longer valid" — especially about the Faber and EXP
+nerfs). So most of the numbers are **[T]**. They can only be settled by playing.
 
 ---
 
-## 1. Çerçeve
+## 1. The frame
 
-- Oyuncu, babasından kalan **ludus**'u (gladyatör okulu) devralan bir kadındır (*domina* =
-  hanım). Hedef okulun itibarını geri kazanmak. **[K]**
-- Oyun **bir yıllık geri sayım**la işler ve bu **ekranda yazıyor**: sağ üstte
-  `Days Left`. Videonun ilk karesinde **364** — yani yıl **365 gün**. **[V]**
-- Sağ üstte ikinci bir sayaç var: `Next Battle: n` — **planlanmış dövüşe kaç gün kaldığı**.
-  Videoda 3'ten geri sayıp dövüşten sonra 7'ye dönüyor. Yani oyun iki ayrı takvim
-  taşıyor: yılın sonu ve **bir sonraki mecburi dövüş**. **[V]**
-- Rehberler günleri geri sayarak konuşuyor: "300 gün kala orta oyun", "50-60 gün kala geç
-  oyun", "6-10 gün kala Haruspex". **[T]**
-- Zaman **gerçek zamanlı akar ve durdurulabilir**; rehberlerin hepsi "oyuna girer girmez
-  duraklat" diye başlıyor. **[K]**
-- Zorluk kademeleri var; en üstü **Pro-Gamer**. **[K]**
-- Kayıp koşulu tek bir "game over" değil: en iyi gladyatörünü kaybetmek pratikte oyunu
-  bitirir ("basically it is game over"), çünkü final için hazır kadro kalmaz. **[T]**
+- The player is a woman who inherits her father's **ludus** (gladiator school) (*domina* = lady).
+  The goal is to win back the school's reputation. **[K]**
+- The game runs on **a one-year countdown** and that is **written on screen**: `Days Left` at the
+  top right. In the video's first frame it is **364** — so the year is **365 days**. **[V]**
+- There is a second counter at the top right: `Next Battle: n` — **how many days until the
+  scheduled fight**. In the video it counts down from 3 and returns to 7 after the fight. So the
+  game carries two separate calendars: the end of the year and **the next compulsory fight**. **[V]**
+- The guides talk in terms of counting days down: "the mid game at 300 days left", "the late game
+  at 50-60 days left", "the Haruspex at 6-10 days left". **[T]**
+- Time **flows in real time and can be paused**; every guide begins with "pause as soon as you
+  enter the game". **[K]**
+- There are difficulty tiers; the highest is **Pro-Gamer**. **[K]**
+- The loss condition is not a single "game over": losing your best gladiator effectively ends the
+  game ("basically it is game over"), because there is no roster ready for the final. **[T]**
 
-## 2. Gün ve ekran akışı
+## 2. The day and the screen flow
 
-- Tek ekranda ludus görünür: avlu, eğitim aletleri, personel, kapı. Gladyatörler
-  **sürüklenip** aletlerin yanına taşınır; alet de taşınabilir. **[K]**
-- `TAB` HUD'ı açar: kim çalışıyor, kim boşta. **[T]**
-- Dövüşler haritadan/masadan seçilir; pazar ekranı masadaki bir nesneden açılır. **[T]**
-- Jupiter kartları ayrı bir masada durur, kart **sürüklenerek** bir gladyatöre ya da
-  personele takılır. **[K]**
+- The ludus is visible on a single screen: the courtyard, the training equipment, the staff, the
+  gate. Gladiators are **dragged** next to the equipment; the equipment can be moved too. **[K]**
+- `TAB` opens the HUD: who is working, who is idle. **[T]**
+- Fights are chosen from the map/desk; the market screen opens from an object on the desk. **[T]**
+- The Jupiter cards sit on a separate desk, and a card is **dragged** onto a gladiator or a staff
+  member. **[K]**
 
-## 3. Kaynaklar ve ekonomi
+## 3. Resources and economy
 
-**Üst çubuk (HUD)** dört kaynağı sürekli gösteriyor: `Coin`, `Water`, `Food`, `Wine`;
-sağda `Next Battle` ve `Days Left`. Oyun akarken sağ üstte duraklat simgesi, duraklatınca
-ekranın ortasında **PAUSED** yazıyor. **[V]**
+**The top bar (HUD)** always shows four resources: `Coin`, `Water`, `Food`, `Wine`; on the right
+`Next Battle` and `Days Left`. While the game runs there is a pause symbol at the top right, and
+when paused **PAUSED** is written in the middle of the screen. **[V]**
 
-**Videodaki başlangıç durumu (2018 sürümü):** `Coin 1000 · Water 400 · Food 800 ·
+**The starting state in the video (the 2018 version):** `Coin 1000 · Water 400 · Food 800 ·
 Wine 80 · Next Battle 3 · Days Left 364`. **[V]**
 
-> Not: Bu, bizim 600 altınlık başlangıcımızla kıyaslanabilir tek sayı değil — Domina'da
-> yiyecek ve su **stok olarak** başlıyor (800/400), bizde ambar boş. Domina'nın ilk günü
-> "ne alacağım" değil, "neyi harcamayacağım" sorusuyla açılıyor.
+> Note: this is not the only number comparable with our 600-gold start — in Domina food and water
+> start **as stock** (800/400), whereas our store is empty. Domina's first day opens with the
+> question "what will I not spend", not "what will I buy".
 
-| Kaynak | Ne işe yarar | Not |
+| Resource | What it is for | Note |
 |---|---|---|
-| **Coin (altın)** | Köle, personel, araştırma, ekipman, iyileştirme, bahis | Tek para birimi **[K]** |
-| **Food / Water** | Kadronun günlük tüketimi | Depo yükseltmeleri tüketimi/masrafı düşürür **[K]** |
-| **Wine (şarap)** | Legate ve Magistrate'e rüşvet; gladyatör morali | Pazarda **günde 1 yenilenir, stok tavanı 2** **[T]** |
-| **Stone (taş)** | Architect'in eğitim aleti inşası | Architect sürekli taş toplar **[K]** |
+| **Coin (gold)** | Slaves, staff, research, equipment, healing, betting | The single currency **[K]** |
+| **Food / Water** | The roster's daily consumption | Storage upgrades lower the consumption/cost **[K]** |
+| **Wine** | Bribes for the Legate and the Magistrate; gladiator morale | In the market **1 is restocked a day, with a stock cap of 2** **[T]** |
+| **Stone** | The Architect's construction of training equipment | The Architect gathers stone continuously **[K]** |
 
-- Pazar **2 günde bir** yenilenir. **[T]** (Bir başka rehber şarabın **her gün** birer
-  birer geldiğini söylüyor — çelişki **[?]**.)
-- Rehberlerin ortak tavsiyesi: yiyecek/su stokunu ~1000 civarında tut. **[T]**
-- Gelir kalemleri: planlanmış dövüş ödülleri, **pit fight** ödülü + bahis, **exhibition**
-  ödülü (100-200 coin/dövüş **[T]**), bölge şampiyonu ödülleri, **kalabalık favorisi**
-  (aşağıda), fazla köle/at/araba satışı.
-- Gider kalemleri: köle alımı, personel maaşı/alım bedeli, araştırma, ekipman ve onarım,
-  iyileştirme, yiyecek/su, şarap.
-- **Personel de kaynak yiyor:** her personelin günlük **yiyecek/su tüketimi** var (aşağıdaki
-  tabloya bak) — yani personel almak sadece altın değil, **ambar** kararı. Sacerdos'un
-  tüketimi **hiç yok**; bu onu videonun gözünde ayrıca değerli yapıyor. **[V]**
-- **Kıtlık olayları var:** kuraklık ve sel yiyecek/su arzını vuruyor; bu yüzden kendi
-  üretimini kuran Architect kritik sayılıyor. **[V]**
-- **Yiyecek satılabiliyor:** fazlası pazarda paraya çevriliyor, **7 yiyecek ≈ 1 altın**
-  (video, 2018). Agricola günde ~20 yiyecek üretince bu günde ~3 altın demek — yani
-  üretim fazlası bir gelir kalemi ama küçük. **[V]**
-- **Ekipman fiyat eğrisi kademeli:** aynı parçayı defalarca yükseltirsin, fiyat normal
-  seyrederken **bir yükseltme aniden pahalı** gelir, sonrasında yine ucuzlar. Rehberin
-  sömürüsü: pahalı basamağı **Faber'e bedavaya yaptır**, sonra ucuz basamaklardan devam
-  et. **[T]**
+- The market refreshes **every 2 days**. **[T]** (Another guide says wine arrives **every day**,
+  one at a time — a contradiction **[?]**.)
+- The guides' shared advice: keep the food/water stock at around 1000. **[T]**
+- Income items: the rewards from scheduled fights, the **pit fight** reward + betting, the
+  **exhibition** reward (100-200 coin/fight **[T]**), regional champion rewards, **crowd favour**
+  (below), and selling surplus slaves/horses/chariots.
+- Spending items: buying slaves, staff wages/hiring costs, research, equipment and repairs,
+  healing, food/water, wine.
+- **The staff eat resources too:** every staff member has a daily **food/water consumption** (see
+  the table below) — so hiring staff is not only a **money** decision but a **store** decision.
+  The Sacerdos has **no** consumption at all; that makes him especially valuable in the video's
+  eyes. **[V]**
+- **There are scarcity events:** drought and flood hit the food/water supply; that is why an
+  Architect who sets up your own production is considered critical. **[V]**
+- **Food can be sold:** the surplus is turned into money at the market, **7 food ≈ 1 gold** (the
+  video, 2018). With the Agricola producing ~20 food a day that means ~3 gold a day — so surplus
+  production is an income item, but a small one. **[V]**
+- **The equipment price curve is stepped:** you upgrade the same piece many times, and while the
+  price runs normally **one upgrade is suddenly expensive**, after which it is cheap again. The
+  guide's exploit: have the **Faber do the expensive step for free**, then carry on with the
+  cheap steps. **[T]**
 
-## 4. Gladyatör: statlar
+## 4. The gladiator: stats
 
-Ekranda görünen değerler (Steam tartışmasından derlendi) **[K]**:
+The values visible on screen (compiled from the Steam discussion) **[K]**:
 
-- **HP / Vitality** — can havuzu. Başlangıç kölelerinde ~120-160 tipik; sonda 300-500,
-  sadece güç antrenmanına yatırılırsa 600+. **[T]**
-- **Strength** — hasar tabanı.
-- **Weapon skill** — silah yeterliliği.
-- **Agility** — çeviklik.
-- **Defense** — savunma.
-- **Meditate / AI skill** — **oyuncu müdahale etmediğinde** gladyatörün kendi kendini ne
-  kadar iyi yönettiği. Otomatik oynanış bunun üstünde durur. **[K]**
-- **Morale / temperament** — moral; **statları etkiler**. **[K]**
-- **Stamina** — salınan her vuruş yer; ağır iki elli silahlar 2-3 vuruşta nefesi bitirir
-  ve hasar düşer. **[K]**
-- **Weight / Final weight** — zırhın ağırlığı; ağır zırh yavaşlatır ve stamina yakar. **[K]**
-- **Aggressive / Defensive tendency (aggro / turtle) ve Evasion** — **davranış eğilimleri**,
-  yetenek değil:
-  - yüksek **aggro** → düşmana yürür, saldırıyı başlatır ve sürdürür;
-  - yüksek **turtle** → bekler, önce rakibin saldırmasını ister, bloklar;
-  - yüksek **evasion** → yuvarlanarak kaçar, açı arar. **[K]**
+- **HP / Vitality** — the health pool. ~120-160 is typical on starting slaves; 300-500 at the end,
+  600+ if only strength is trained. **[T]**
+- **Strength** — the damage base.
+- **Weapon skill** — weapon proficiency.
+- **Agility** — agility.
+- **Defense** — defence.
+- **Meditate / AI skill** — how well the gladiator manages himself **when the player does not
+  intervene**. Automatic play rests on this. **[K]**
+- **Morale / temperament** — morale; it **affects the stats**. **[K]**
+- **Stamina** — every swing eats it; heavy two-handed weapons run him out of breath in 2-3 swings
+  and the damage drops. **[K]**
+- **Weight / Final weight** — the armour's weight; heavy armour slows him down and burns stamina. **[K]**
+- **Aggressive / Defensive tendency (aggro / turtle) and Evasion** — **behavioural tendencies**,
+  not skills:
+  - high **aggro** → he walks at the enemy, starts the attack and keeps it up;
+  - high **turtle** → he waits, wants the opponent to attack first, blocks;
+  - high **evasion** → he rolls away and looks for an angle. **[K]**
 
-### Gladyatör paneli — ekrandaki tam alan listesi **[V]**
+### The gladiator panel — the full field list on screen **[V]**
 
-Videoda iki gladyatör açıldı; panel şunları gösteriyor:
+Two gladiators were opened in the video; the panel shows:
 
-- **Ad ve memleket:** "Vettius of Melitensium", "Granius of Helvetia"
-- **Sınıf:** THRAEX / MURMILLO (portrenin üstünde)
-- **Weight: 91kg · Total: 124kg** — vücut ağırlığı ve **kuşamla birlikte** toplam
-- **Temperament:** kaydırma çubuğu, etiketli ("Satisfied", "Neutral")
-- **Health: 145/145** (yeşil bar) + **Heal** tuşu (canı tamken kapalı)
-- **Training Balance** tablosu — sütunlar **Level** ve **Points**:
-  | Satır | Örnek (Vettius) | Örnek (Granius) |
+- **Name and homeland:** "Vettius of Melitensium", "Granius of Helvetia"
+- **Class:** THRAEX / MURMILLO (above the portrait)
+- **Weight: 91kg · Total: 124kg** — body weight and the total **including the kit**
+- **Temperament:** a slider, with a label ("Satisfied", "Neutral")
+- **Health: 145/145** (a green bar) + a **Heal** button (disabled at full health)
+- The **Training Balance** table — the columns are **Level** and **Points**:
+  | Row | Example (Vettius) | Example (Granius) |
   |---|---|---|
   | Agility | 13 / 62 | 2 / 60 |
   | Weapon | 14 / 34 | 4 / 26 |
@@ -154,176 +153,177 @@ Videoda iki gladyatör açıldı; panel şunları gösteriyor:
   | Meditate | **100** | 25 |
 - **Aggro: 79 · Turtle: 21 · Evasive: 56 · Stamina: 50** (Granius: 69 / 34 / 63 / 50)
 - **Victories: 3 · Losses: 1**
-- Tuşlar: **Reward Wine [n]**, **Reward Coin [n]**, **Award Private Room** (kapalı),
-  **Put to Death**, **Grant Freedom**, **Sell**, ileri/geri okları, **Close**
+- Buttons: **Reward Wine [n]**, **Reward Coin [n]**, **Award Private Room** (disabled),
+  **Put to Death**, **Grant Freedom**, **Sell**, forward/back arrows, **Close**
 
-> Üç şey dikkat çekiyor. Birincisi **Level ve Points ayrı** — yani eğitim iki katmanlı:
-> biriken puan ve ondan çıkan seviye. İkincisi **Strength satırının sağında puan değil
-> "145HP MAX" yazıyor**: güç doğrudan can tavanı. Üçüncüsü **Aggro/Turtle/Evasive
-> panelde sayı olarak duruyor** (79/21/56) — davranış eğilimi oyuncuya **açıkça** gösterilen
-> bir sayı, gizli bir kişilik değil.
+> Three things stand out. First, **Level and Points are separate** — so training is two-layered:
+> the points that accumulate and the level that comes out of them. Second, **to the right of the
+> Strength row it says not a point total but "145HP MAX"**: strength is directly the health
+> ceiling. Third, **Aggro/Turtle/Evasive sit in the panel as numbers** (79/21/56) — the
+> behavioural tendency is a number shown to the player **openly**, not a hidden personality.
 
-Oyunun kendi ipucu metni (Strength satırı): *"Increase Hitpoints, Attack Damage, and
-Defense Resiliance."* **[V]**
+The game's own tooltip text (the Strength row): *"Increase Hitpoints, Attack Damage, and Defense
+Resiliance."* **[V]**
 
-**Videodaki tanımlar (2018)** — rehberlerdekinden daha net **[V]**:
+**The definitions in the video (2018)** — clearer than the guides' **[V]**:
 
-| Stat | Ne yapıyor |
+| Stat | What it does |
 |---|---|
-| **Strength** | Tek başına üç şey: **can**, **vuruş hasarı** ve **hasara direnç**. Bu yüzden "sadece güç bas" stratejisi çalışıyor. |
-| **Agility** | **Hareket hızı**. |
-| **Weapon** | **Vuruş hasarı**. |
-| **Defense** | Saldırıya **direnme** yeteneği. |
-| **Meditation** | Videonun tavsiyesi: **hiç eğitme** — dövüşlerden zaten kendiliğinden geliyor. |
+| **Strength** | Three things on its own: **health**, **strike damage** and **resistance to damage**. That is why the "only pump strength" strategy works. |
+| **Agility** | **Movement speed**. |
+| **Weapon** | **Strike damage**. |
+| **Defense** | The ability to **resist** an attack. |
+| **Meditation** | The video's advice: **never train it** — it comes on its own from fights. |
 
-> Not: Strength'in üç işi birden yapması, bizim ayrı ayrı tuttuğumuz `MaxHealth`,
-> `Strength` ve `Defense` üçlüsünün Domina'da **tek slider**'a bağlı olduğu anlamına
-> geliyor. Eğitim kararını sığlaştıran şey de bu: baskın strateji "hep güç".
+> Note: Strength doing three jobs at once means that the trio we keep separate — `MaxHealth`,
+> `Strength` and `Defense` — hangs on a **single slider** in Domina. That is also what makes the
+> training decision shallow: the dominant strategy is "always strength".
 
-> Bizim §4'teki "davranış farkı ayrı kod değil, hedef seçimi ağırlıkları" kararının
-> referanstaki karşılığı tam olarak budur: Domina'da sınıf farkı **ayrı bir dövüş sistemi
-> değil**, aynı sistemde farklı eğilim sayılarıdır.
+> The counterpart in the reference to our §4 decision that "the behavioural difference is not
+> separate code but target-selection weights" is exactly this: in Domina the class difference is
+> **not a separate combat system** but different tendency numbers in the same system.
 
-## 5. Eğitim
+## 5. Training
 
-- Her gladyatörde stat başına **slider** var; oyuncu eğitim vaktini paylaştırır. **[K]**
-- **Auto-train** kutusu Doctore'da açılır; açıkken herkes durmadan çalışır. **[K]**
-- Yaygın açılış: önce **Meditate 100'e** (AI iyi olsun diye), sonra tamamen silaha. **[T]**
-  Bir rehber tam tersini söylüyor: "sliderlara dokunma, meditate'i maks etme, dengeyi
-  bozuyorsun; onun yerine bol bol exhibition koş" **[?]**.
-- **Dövüşmek antrenmandan hızlı öğretiyor.** Tekrarlanan iddia: AI becerisi 1 dövüşte,
-  10 günlük antrenman kadar artıyor. Doctore Emeritus'un *Master Mimic* becerisiyle bir
-  dövüşte **+100 AI**, **+10-30 silah/güç** görülebiliyor. **[T]**
-- Eğitim aletleri (Architect kurar): **palus** (talim direği), **coal pit**, **stones**,
-  **bath** (iyileşme hızı), apothecary. Rehber "15 palus" hedefi veriyor. **[T]**
-- Stat **tavanları** var ve Doctore/Doctore Emeritus araştırmalarıyla yükseliyor; eğitim
-  süresi **%75'e kadar** kısalabiliyor. **[T]**
-- **Sınıf eğitimi yalnızca sınıfsız kölelere yapılabiliyor**; sınıf seçildikten sonra
-  değiştirilemiyor. Video sınıf araştırmalarını (Murmillo/Retiarius açılışı) "pahalı ve
-  çok uzun, alma" diye eliyor: eğitilmiş sınıflı gladyatörler zaten **dövüş ödülü** ve
-  **Legate'ten satın alma** yoluyla geliyor. **[V]**
-- Video, sıfırdan köle eğitmenin **çok uzun** sürdüğünü söylüyor — hazır gladyatör almak
-  neredeyse her zaman daha hızlı. **[V]**
+- Every gladiator has a **slider** per stat; the player divides the training time. **[K]**
+- The **auto-train** checkbox is opened at the Doctore; when it is on, everyone works
+  continuously. **[K]**
+- A common opening: first **Meditate to 100** (so the AI is good), then entirely into weapon. **[T]**
+  One guide says the exact opposite: "do not touch the sliders, do not max meditate, you are
+  breaking the balance; run plenty of exhibitions instead" **[?]**.
+- **Fighting teaches faster than training.** A repeated claim: the AI skill rises as much in 1
+  fight as in 10 days of training. With the Doctore Emeritus's *Master Mimic* skill, **+100 AI**
+  and **+10-30 weapon/strength** can be seen in a single fight. **[T]**
+- The training equipment (built by the Architect): the **palus** (training post), the **coal pit**,
+  **stones**, the **bath** (healing speed), the apothecary. A guide sets a target of "15 palus". **[T]**
+- There are stat **ceilings** and they rise with the Doctore/Doctore Emeritus researches; training
+  time can be cut by **up to 75%**. **[T]**
+- **Class training can only be done on classless slaves**; once a class is chosen it cannot be
+  changed. The video rules out the class researches (unlocking Murmillo/Retiarius) as "expensive
+  and very long, do not take them": trained gladiators with a class already arrive through the
+  **fight reward** and by **buying from the Legate**. **[V]**
+- The video says training a slave from scratch takes **very long** — buying a ready gladiator is
+  almost always faster. **[V]**
 
-## 6. Sınıflar
+## 6. Classes
 
-Sınıf **sonradan atanır** (köle → gladyatör) ve ekipman şablonunu belirler. **[K]**
+A class is **assigned later** (slave → gladiator) and it sets the equipment template. **[K]**
 
-| Sınıf | Karakter | Eğilim profili |
+| Class | Character | Tendency profile |
 |---|---|---|
-| **Murmillo** | Kılıç + kalkan, hücumcu | yüksek aggro / düşük turtle / orta evasion **[K]** |
-| **Thraex** | Savunmacı | orta aggro / yüksek turtle / düşük evasion **[K]** |
-| **Retiarius** | Ağ + mızrak, mesafeli, ağ ile debuff | düşük aggro / orta turtle / yüksek evasion **[K]** |
-| **Scissor** | Çift el, hücumcu | **[T]** |
-| **Velite** | Uzun menzilli yakın dövüş | **[T]** |
-| **Sagittarius** | Okçu; çok-kişilikte destek, teke tekte zayıf | **[T]** |
-| **Charioteer** | Araba yarışı için | **[T]** |
-| **Behemoth** | Dev/canavar; ayrı bir düşman tipi ve başarım hedefi | **[T]** |
+| **Murmillo** | Sword + shield, offensive | high aggro / low turtle / medium evasion **[K]** |
+| **Thraex** | Defensive | medium aggro / high turtle / low evasion **[K]** |
+| **Retiarius** | Net + trident, at a distance, debuffs with the net | low aggro / medium turtle / high evasion **[K]** |
+| **Scissor** | Two-handed, offensive | **[T]** |
+| **Velite** | Long-reach melee | **[T]** |
+| **Sagittarius** | An archer; support in multi-fights, weak in a duel | **[T]** |
+| **Charioteer** | For chariot racing | **[T]** |
+| **Behemoth** | A giant/monster; a separate enemy type and an achievement target | **[T]** |
 
-- Sınıf atamanın bir maliyeti var: rehber "**dövüşmeyecek köleye sınıf verme**, yoksa
-  ajan/Faber onun ekipmanını yükseltmeye başlar ve asıl adamının parasını yer" diyor. **[T]**
+- Assigning a class has a cost: the guide says "**do not give a class to a slave who will not
+  fight**, or the agent/Faber starts upgrading his equipment and eats your real man's money". **[T]**
 
-### Sınıf seçimi ayrı bir ekran **[V]**
+### Class selection is a separate screen **[V]**
 
-Gladyatör panelinden **"SELECT GLADIATOR CLASS"** ekranı açılıyor: üç portre düğmesi —
-`Murmillo`, `Thraex`, `Retiarius`. Oyunun **ikon öncelikli** tek ekranı; geri kalan her
-yer metin düğmesi.
+The **"SELECT GLADIATOR CLASS"** screen opens from the gladiator panel: three portrait buttons —
+`Murmillo`, `Thraex`, `Retiarius`. The game's only **icon-first** screen; everywhere else uses
+text buttons.
 
-### Harita: "Map of Games" **[V]**
+### The map: "Map of Games" **[V]**
 
-İtalya haritası; bölgelerin çoğunda **asma kilit**, birinde **yeşil tik**. Yanında hedefi
-düz metinle yazan bir kutu:
+A map of Italy; most regions have a **padlock**, one has a **green tick**. Beside it a box that
+states the goal in plain text:
 
 > "You need to defeat at least **3 Regional Champions** to be considered for the Final
 > Championship in Rome. **1 / 3** have been defeated."
 
-Yani finale girmek bir **ön koşul**: en az 3 bölge şampiyonu. Rehberlerin "Big 3'ü erken
-bitir" demesinin sebebi strateji değil, **kapı**.
+So entering the final is a **precondition**: at least 3 regional champions. The reason the guides
+say "finish the Big 3 early" is not strategy but a **gate**.
 
-### Patron olayı — birebir metin **[V]**
+### The patron event — the exact text **[V]**
 
 > "Magistrate Atilius Antonius has agreed to become a patron of your ludus! He has adopted
 > **Tullus of Lechia**. The Magistrate will be responsible for this gladiator's **food and
 > water** until the day that he dies on the field of battle."
 
-Tuşsuz, "Press any key" ile kapanan bir bildirim. Patronaj tam olarak şu: **bir
-gladyatörün yiyecek ve suyunu NPC ödüyor, ölene kadar**.
+A notification with no buttons, closed with "Press any key". Patronage is exactly this: **an NPC
+pays a gladiator's food and water until he dies**.
 
-## 7. Personel (employees)
+## 7. Staff (employees)
 
-Personel **slot**larda durur; slot sayısı sınırlı ve parayla (1500 altın) genişletilebilir
-**[T]**. Kritik kural: **birini kovarsan onun araştırdığı bonuslar da gider** — Architect'in
-inşa ettiği binalar kalır, ama diğerlerinin pasif bonusları düşer. **[K]**
+Staff sit in **slots**; the number of slots is limited and can be expanded with money (1500 gold)
+**[T]**. The critical rule: **if you fire someone, the bonuses he researched go too** — the
+buildings the Architect built stay, but the others' passive bonuses fall away. **[K]**
 
-**Videodan alınan gerçek işe alım listesi (fiyat / günlük tüketim / vaat)** **[V]**:
+**The real hiring list taken from the video (price / daily consumption / promise)** **[V]**:
 
-| Personel | Fiyat | Günlük tüketim | Ekranda yazan |
+| Staff member | Price | Daily consumption | What the screen says |
 |---|---|---|---|
-| **Agent** | 13 | 1 yiyecek, 1 su | "Dirty work, free pit fights" |
-| **Bard** | 13 | 1 yiyecek, 1 su | "Morale..." (kesik) |
-| **Agricultor** | 25 | 1 su | "4 Food/day" |
-| **Educator** | 30 | 1 yiyecek, 2 su | "Morale, AI Proficiency" |
-| **Medicus** | 34 | 1 yiyecek, 1 su | "Gladiator Healing" |
-| **Emptor** | 45 | 2 yiyecek, 1 su | "Reduced costs on upgrades and resources." |
-| **Architect** | 65 | 2 yiyecek, 1 su | "Ludus upgrades" |
-| **Haruspex** | 72 | 1 yiyecek, 1 su | "Sacrifices to the Gods" |
-| **Faber** | 75 | 1 su, 1 yiyecek | "Inexpensive upgrades and equipment repairs." |
-| **Sacerdos** | 100 | **hiçbir şey** | "Healing, Training, and Morale Boost" |
-| **Vintner** | 100 | 1 su, 1 yiyecek | "Wine, Magistrate Favour" |
+| **Agent** | 13 | 1 food, 1 water | "Dirty work, free pit fights" |
+| **Bard** | 13 | 1 food, 1 water | "Morale..." (cut off) |
+| **Agricultor** | 25 | 1 water | "4 Food/day" |
+| **Educator** | 30 | 1 food, 2 water | "Morale, AI Proficiency" |
+| **Medicus** | 34 | 1 food, 1 water | "Gladiator Healing" |
+| **Emptor** | 45 | 2 food, 1 water | "Reduced costs on upgrades and resources." |
+| **Architect** | 65 | 2 food, 1 water | "Ludus upgrades" |
+| **Haruspex** | 72 | 1 food, 1 water | "Sacrifices to the Gods" |
+| **Faber** | 75 | 1 water, 1 food | "Inexpensive upgrades and equipment repairs." |
+| **Sacerdos** | 100 | **nothing** | "Healing, Training, and Morale Boost" |
+| **Vintner** | 100 | 1 water, 1 food | "Wine, Magistrate Favour" |
 
-> Fiyatlar **çok ucuz** (13-100 altın, başlangıç kasası 1000). Yani personel kararı bir
-> **para** kararı değil, **slot** kararı: aynı anda sınırlı sayıda personel tutulabiliyor
-> ve kovulan personelin araştırmaları gidiyor. Bizim okul ağacının fiyatla sınırlanması
-> (GDD §10) buradan **kasten** ayrılıyor.
+> The prices are **very cheap** (13-100 gold against a starting purse of 1000). So the staff
+> decision is not a **money** decision but a **slot** decision: only a limited number can be kept
+> at once, and a fired staff member's researches go. Our school tree being bounded by price
+> (GDD §10) departs from this **deliberately**.
 
-| Personel | Ne yapar | Notlar |
+| Staff member | What he does | Notes |
 |---|---|---|
-| **Doctore** | Eğitimi yönetir; auto-train; beceri ağacı (Humility, Deep Breathing, Blade Control, Net/Polearm Defense, Attack Vector/Rolling Attack, Interpretive Dance, Automatic Yield, sınıf açılışları, Mind Control) | Oyunun **bedava** başlangıç personeli **[K]** |
-| **Doctore Emeritus** | Pahalı üst sürüm: eğitim süresi **-%75**, dövüşten kazanılan EXP artışı, stat tavanı artışı, *Deeper Humility* (%20 canda otomatik teslim), *Master Mimic* (rakipten öğrenme), *Infinity Weapon* (tek vuruş birden çok düşmana), kritik şansı | Rehberlerin çoğunun **stratejik merkezi**; "300 gün kalaya kadar al" **[T]** |
-| **Medicus** | Otomatik iyileştirme; *wash hands*, *antiseptics* | Yaralı sayısı yüksekken **[K]** |
-| **Faber** | Ekipmanı **otomatik onarır ve yükseltir**; blueprint araştırmaları alım fiyatını düşürür | Otomatik yükseltme sıklığı nerf yedi **[T]** |
-| **Faber Emeritus** | Üst sürüm; iki Faber birlikte çalıştırılabiliyor | **[T]** |
-| **Architect** | Taş toplar, **palus/coal pit/bath/depo** inşa eder, avluyu ve personel alanını genişletir | Kadro kapasitesini **28'e** kadar çıkarır **[T]** |
-| **Architect Emeritus** | Üst sürüm; eğitim alanı ve depo yükseltmeleri | **[T]** |
-| **Agent (Sneaky)** | **Silah/zırh çalar**, **pit fight ayarlar**, bahis; yakalanırsa kaybedilir ve yeniden alınır | İtibarı "Dark Figure" olunca neredeyse hiç yakalanmıyor **[T]** |
-| **Sacerdos (rahip)** | Dualar: *Prayer to Venus* (ludus'ta ve **dövüş ortasında** yenilenme), *Prayer to Mars*, Neptune; pasif stat artışı | Erken oyunda hayatta kalma **[T]** |
-| **Bard** | Şarkılar: iyileştirme, silah, çeviklik, **moral** | Moral tavanı için ozan + hamam + Educator birlikte **[T]** |
-| **Educator** | *Philosophy*, *Anatomy*, *Focus*, dövüş yeterliliği, moral | Kovulursa bonusları gider — sonuna kadar tutulur **[T]** |
-| **Emptor** | Pazarlık: ekipman ve erzak indirimi (Faber indirimiyle **birikir**) | Son alışveriş turunda alınıp sonra kovuluyor **[T]** |
-| **Haruspex** | Düşmana **lanet**: canını yarıya indirme, Jupiter kartlarını söktürme, dövüş yeterliliğini düşürme | Lanetler **bir sonraki dövüşte tükenir** — final öncesi 6-10 gün hiç dövüşülmez **[T]** |
+| **Doctore** | Manages training; auto-train; the skill tree (Humility, Deep Breathing, Blade Control, Net/Polearm Defense, Attack Vector/Rolling Attack, Interpretive Dance, Automatic Yield, class unlocks, Mind Control) | The game's **free** starting staff member **[K]** |
+| **Doctore Emeritus** | The expensive upper version: training time **-75%**, more EXP earned from fights, higher stat ceilings, *Deeper Humility* (an automatic yield at 20% health), *Master Mimic* (learning from the opponent), *Infinity Weapon* (one strike hitting several enemies), a critical chance | The strategic centre of most guides; "buy him by 300 days left" **[T]** |
+| **Medicus** | Automatic healing; *wash hands*, *antiseptics* | When the number of wounded is high **[K]** |
+| **Faber** | **Automatically repairs and upgrades** equipment; blueprint researches lower the purchase price | The automatic-upgrade frequency was nerfed **[T]** |
+| **Faber Emeritus** | The upper version; two Fabers can be run together | **[T]** |
+| **Architect** | Gathers stone, builds the **palus/coal pit/bath/storage**, expands the courtyard and the staff area | Raises the roster capacity to **28** **[T]** |
+| **Architect Emeritus** | The upper version; training-area and storage upgrades | **[T]** |
+| **Agent (Sneaky)** | **Steals weapons/armour**, **arranges pit fights**, betting; if caught he is lost and has to be rehired | Once his reputation is "Dark Figure" he is almost never caught **[T]** |
+| **Sacerdos (the priest)** | Prayers: *Prayer to Venus* (regeneration in the ludus and **in the middle of a fight**), *Prayer to Mars*, Neptune; passive stat increases | Survival in the early game **[T]** |
+| **Bard** | Songs: healing, weapon, agility, **morale** | For the morale ceiling, the bard + the bath + the Educator together **[T]** |
+| **Educator** | *Philosophy*, *Anatomy*, *Focus*, combat proficiency, morale | If he is fired his bonuses go — he is kept to the end **[T]** |
+| **Emptor** | Bargaining: discounts on equipment and provisions (it **stacks** with the Faber's discount) | Hired for the last shopping round, then fired **[T]** |
+| **Haruspex** | **Curses** the enemy: halving his health, stripping his Jupiter cards, lowering his combat proficiency | The curses **are spent on the next fight** — so 6-10 days before the final no fights are taken **[T]** |
 
-### Videonun (2018) anlattığı ayrıntılar **[V]**
+### The details the video (2018) gives **[V]**
 
-- **Aynı anda yalnızca 3 personel** tutulabiliyor. (Daha yeni bir rehber 6 slot ve
-  1500 altınlık slot yükseltmesinden söz ediyor — sürüm farkı **[?]**.)
-- **Architect** videoya göre açılışın en önemli personeli, çünkü **yiyecek + su + şarap
-  üretimini tek başına** veren tek personel ve **kurduğu binalar o gittikten sonra da
-  kalıyor**. Kuraklık/sel olayları arzı vurduğu için kendi üretimin hayat kurtarıyor.
-  Kovulduktan sonra **geri alınamıyor** (videonun iddiası **[?]**), o yüzden her şeyi
-  kurmadan kovma.
-- **İnşa sırası (video):** önce **palus** (3 tur), sonra **stones**, sonra **coal pit**,
-  sonra **bath**. Etkiler: palus **eğitim süresini kısaltır**, stones **gücü artırır**,
-  coal pit **çevikliği** etkiler (transkript bulanık **[?]**), bath **morali artırır ve
-  sakatlanmayı azaltır**.
-- **Faber**: bedava onarım + bedava otomatik yükseltme. Asıl değer **blueprint**'lerde:
-  **kask ve kalkan dışındaki her parça "armor" sayılıyor** (omuzluk, göğüslük, etek,
-  bacaklık) — yani **tek bir armor blueprint dördünü birden ucuzlatıyor**. Ayrıca silah
-  blueprint'i, daha hızlı onarım ve **ağ (net) yenileme**.
-- **Sacerdos**: araştırmaları **1 tur** sürüyor (en hızlısı); **suyu şaraba çeviriyor**;
-  savunma, güç ve çevikliği artırıyor; iyileştiriyor; ara sıra silah yükseltiyor.
-- **Agricola** (videoda "agri-tower"): alır almaz **+4 yiyecek**, her araştırmayla
-  **+4 yiyecek** daha — videoda **günde 20 yiyecek**'e çıkıyor.
-- **Educator** araştırmaları: **Focus** (bütün eğitim sürelerini kısaltır, **4 tur**),
-  **Psychology** (kaybetmenin/teslim olmanın **utancını** azaltır), **Anatomy** (saldırı
-  hasarı ve **kritik şansı**), maksimum stamina ve **stamina yenilenme hızı**, daha hızlı
-  iyileşme, **AI dövüş yeterliliği**.
-- **Medicus** ve **Agent** videoya göre "ilginç ama zayıf": çoğu personel zaten taban
-  iyileştirme veriyor.
+- **Only 3 staff members** can be kept at once. (A newer guide talks about 6 slots and a 1500-gold
+  slot upgrade — a version difference **[?]**.)
+- **The Architect** is, according to the video, the opening's most important staff member, because
+  he is the only one who gives **food + water + wine production on his own** and **the buildings he
+  puts up stay after he is gone**. Because drought/flood events hit the supply, your own production
+  saves your life. He **cannot be rehired** after being fired (the video's claim **[?]**), so do
+  not fire him before he has built everything.
+- **The build order (the video):** first the **palus** (3 turns), then **stones**, then the
+  **coal pit**, then the **bath**. The effects: the palus **shortens the training time**, the
+  stones **raise strength**, the coal pit affects **agility** (the transcript is unclear **[?]**),
+  and the bath **raises morale and reduces injuries**.
+- **The Faber**: free repairs + free automatic upgrades. The real value is in the **blueprints**:
+  **every piece except the helmet and the shield counts as "armor"** (the pauldron, the chestplate,
+  the skirt, the greaves) — so **a single armor blueprint makes all four cheaper**. Plus a weapon
+  blueprint, faster repairs and **net rebuilding**.
+- **The Sacerdos**: his researches take **1 turn** (the fastest); he **turns water into wine**;
+  he raises defence, strength and agility; he heals; and he occasionally upgrades a weapon.
+- **The Agricola** (the "agri-tower" in the video): **+4 food** as soon as he is hired, another
+  **+4 food** with every research — in the video it reaches **20 food a day**.
+- **The Educator's** researches: **Focus** (shortens all training times, **4 turns**),
+  **Psychology** (reduces the **shame** of losing/yielding), **Anatomy** (attack damage and the
+  **critical chance**), maximum stamina and the **stamina regeneration rate**, faster healing, and
+  **AI combat proficiency**.
+- **The Medicus** and **the Agent** are, according to the video, "interesting but weak": most staff
+  already give some base healing.
 
-### Doctore beceri ağacı — ekrandaki tam düğüm listesi **[V]**
+### The Doctore skill tree — the full node list on screen **[V]**
 
-Panelin adı **"Special Training Maneuvers"**; 3 sütunlu bir ızgara, düğümler arasında
-bağlantı çizgileri var (ön koşul zinciri). Ekranda okunan bütün düğümler:
+The panel is called **"Special Training Maneuvers"**; a 3-column grid with connecting lines between
+the nodes (a prerequisite chain). All the nodes read on screen:
 
 `Wolf Courage` · `Attack Shuffle` · `Berserk` · `Attack Vector` · `Throw Weapons` ·
 `Weight Training` · `Critical Strike` · `Disarming Weapon` · `Mindfulness` ·
@@ -332,340 +332,342 @@ bağlantı çizgileri var (ön koşul zinciri). Ekranda okunan bütün düğüml
 `Defense Shuffle` · `Endurance Training` · `Evasive Roll` · `Grip Techniques` ·
 `Interpretive Dance` · `Aimed Defense` · `Deep Breathing` · `Net Defense` · `Aimed Attack` ·
 `Shield Control` · `Polearm Defense` · `Nimble Stance` · `Retiarius Training` ·
-`Humility` (en altta, ortada).
+`Humility` (at the bottom, in the middle).
 
-Panelin altında: **Fire Employee**, **Enable Automatic Gladiator Training** kutusu ve
-**Close**.
+At the bottom of the panel: **Fire Employee**, the **Enable Automatic Gladiator Training** checkbox
+and **Close**.
 
-**Ekranda görülen fiyat/süre örnekleri** — her düğüm hem **altın** hem **tur** (kum saati)
-istiyor, bazıları ayrıca yiyecek/su:
+**The price/duration examples seen on screen** — every node wants both **gold** and **turns** (an
+hourglass), and some also food/water:
 
-| Düğüm | Maliyet | İpucu metni |
+| Node | Cost | Tooltip text |
 |---|---|---|
-| `Murmillo Training` | **400 altın · 16 tur** | "Unlock the Murmillo Class" |
-| `Retiarius Training` | **500 altın · 17 tur** | (sınıf açar) |
-| `Disarming Weapon` | **67 altın · 6 tur** | "Gladiator has higher chance of disarming opponent during a successful attack." |
-| `Mind Control` | **31 altın · 6 tur · 10 yiyecek · 10 su** | "Allows you to directly control one gladiator on the field of battle." |
+| `Murmillo Training` | **400 gold · 16 turns** | "Unlock the Murmillo Class" |
+| `Retiarius Training` | **500 gold · 17 turns** | (unlocks a class) |
+| `Disarming Weapon` | **67 gold · 6 turns** | "Gladiator has higher chance of disarming opponent during a successful attack." |
+| `Mind Control` | **31 gold · 6 turns · 10 food · 10 water** | "Allows you to directly control one gladiator on the field of battle." |
 
-> Ölçek şu: sıradan bir beceri **67 altın**, sınıf açmak **400 altın ve 16 tur**. Rehberlerin
-> "sınıf araştırması alma" demesinin sebebi bu — 400 altın, başlangıç kasasının %40'ı.
-> **Mind control'ün 31 altın olması** ayrıca ilginç: oyunun en tartışmalı özelliği (elle
-> oynama) neredeyse bedava, ama kalabalık bundan hoşlanmıyor — maliyet parada değil,
-> **gelirde**.
+> The scale is this: an ordinary skill is **67 gold**, unlocking a class is **400 gold and 16
+> turns**. That is why the guides say "do not take the class researches" — 400 gold is 40% of the
+> starting purse. **Mind control costing 31 gold** is interesting too: the game's most
+> controversial feature (playing by hand) is almost free, but the crowd does not like it — the
+> cost is not in money but in **income**.
 
-### Diğer personelin araştırma listeleri (ekrandan) **[V]**
+### The other staff's research lists (from the screen) **[V]**
 
-- **Faber → araştırmalar (ekrandan):** `Automatic Upgrade`, `Improved Furnace`,
+- **Faber → researches (from the screen):** `Automatic Upgrade`, `Improved Furnace`,
   `Improved Anvil`, `Helmet Blueprints`, `Weapon Blueprints`, `Armor Blueprints`,
-  `Shield Blueprints`, `Rebuild Nets`; altında **iki onay kutusu**: `Auto Repair`
-  (işaretli) ve `Auto Upgrade`. İpucu: *"Automatically repair damaged equipment, free of
-  cost."* **[V]**
+  `Shield Blueprints`, `Rebuild Nets`; below them **two checkboxes**: `Auto Repair` (ticked) and
+  `Auto Upgrade`. The tooltip: *"Automatically repair damaged equipment, free of cost."* **[V]**
 - **Architect → "Building Tasks":** `Palus`, `Baths`, `Grain Shelter`, `Water Well`,
   `Wall Reinforcement`, `Private Gladiator Quarters`, `Dig Hot Coal Pit`, `Wine Cellar`,
-  `Apothecary`, `Gather Stones`. Kömür çukurunun ipucu: *"Hot coals under a gladiator's
-  feet will decrease agility training time."* — yani **çevikliğin eğitim süresini
-  kısaltıyor**, çevikliği artırmıyor (§19'daki soru kapandı). Kuyunun ipucu daha da net:
-  *"Building a well will make the ludus more resilient during droughts, and will produce
-  water. (**+2 to 5 Water/day**)"* — **30 altın · 30 su · 15 taş**. Bina, kıtlık olayına
-  karşı **sigorta** olarak açıkça pazarlanıyor. **[V]**
-- **Sacerdos → dualar:** `Prayer to Neptune`, `Juno`, `Apollo`, `Mars`, `Mercury`, `Venus`,
-  `Vulcan`. Mercury'nin maliyeti: **7 altın · 1 tur · 10 şarap · 30 yiyecek · 30 su**,
-  ipucu *"Occasional upgrade to gladiator weapon."* — yani duaların bedeli altından çok
-  **ambar**.
-- **Bard → şarkılar:** `Song of Venus`, `Juno`, `Minerva`, `Vesta`, `Diana`. Diana:
-  **11 altın · 6 tur · 10 şarap · 20 su**, *"boost gladiator weapon training speed"*.
-- **Educator:** `Teachings of Galen`, `Teachings of Dioscorides`, `Anatomy`,
-  `Psychology`, `Philosophy`, `Focus`.
+  `Apothecary`, `Gather Stones`. The coal pit's tooltip: *"Hot coals under a gladiator's feet will
+  decrease agility training time."* — so it **shortens agility's training time**, it does not raise
+  agility (the question in §19 is closed). The well's tooltip is even clearer: *"Building a well
+  will make the ludus more resilient during droughts, and will produce water. (**+2 to 5
+  Water/day**)"* — **30 gold · 30 water · 15 stone**. The building is openly sold as **insurance**
+  against the scarcity event. **[V]**
+- **Sacerdos → prayers:** `Prayer to Neptune`, `Juno`, `Apollo`, `Mars`, `Mercury`, `Venus`,
+  `Vulcan`. Mercury's cost: **7 gold · 1 turn · 10 wine · 30 food · 30 water**, tooltip
+  *"Occasional upgrade to gladiator weapon."* — so the prayers' price is the **store** more than
+  the gold.
+- **Bard → songs:** `Song of Venus`, `Juno`, `Minerva`, `Vesta`, `Diana`. Diana: **11 gold · 6
+  turns · 10 wine · 20 water**, *"boost gladiator weapon training speed"*.
+- **Educator:** `Teachings of Galen`, `Teachings of Dioscorides`, `Anatomy`, `Psychology`,
+  `Philosophy`, `Focus`.
   Dioscorides: *"cleanliness can help their body heal more quickly after injury"*.
 
-### Videonun anlattığı sıralama **[V]**
+### The order the video gives **[V]**
 
-Videonun sırası: **Humility → Aimed Attack → Blade Control → Aimed Defense → Evasive Roll
-→ Shield Control**. Sonrası tercihe kalıyor; videonun devamı: **Disarm Weapon**
-(silahsız kalan rakip pratikte ölü), **Weight Training** (ağır zırh/silah taşımak için),
-**Attack Vector** (**saldırı hızı**), **Polearm Defense**, **Deep Breathing**,
-**Grip Techniques** (silahının elinden alınmasına karşı), **Net Defense**.
+The video's order: **Humility → Aimed Attack → Blade Control → Aimed Defense → Evasive Roll →
+Shield Control**. After that it is a matter of preference; the video continues with **Disarm
+Weapon** (an opponent left unarmed is effectively dead), **Weight Training** (to carry heavy
+armour/weapons), **Attack Vector** (**attack speed**), **Polearm Defense**, **Deep Breathing**,
+**Grip Techniques** (against having your weapon taken) and **Net Defense**.
 
-İki önemli not:
+Two important notes:
 
-- **Automatic Yield ile Berserk birbirini dışlıyor** — birini alırsan diğerini alamıyorsun.
-  Yani "kaybederken teslim ol" ile "kaybederken çıldır" **aynı kararın iki ucu**. **[V]**
-- Bir beceri (transkriptte adı net değil, ~17 tur) gladyatörün **özgürlük istemeden önce
-  kaç zafer taşıyacağını** artırıyor. **[V]**
-- **Mind control** ayrı bir araştırma; videocu hiç kullanmamış. **[V]**
+- **Automatic Yield and Berserk exclude each other** — if you take one you cannot take the other.
+  So "yield when you are losing" and "go berserk when you are losing" are **two ends of the same
+  decision**. **[V]**
+- One skill (its name is unclear in the transcript, ~17 turns) raises **how many victories a
+  gladiator will carry before asking for freedom**. **[V]**
+- **Mind control** is a separate research; the video's author never used it. **[V]**
 
-## 8. Ekipman
+## 8. Equipment
 
-- Yuvalar: **silah, kalkan, kask, göğüs, omuz (pauldron), bel/etek, bacak (greaves)**,
-  ayrıca Retiarius için **ağ**. **[K]** Panelde yuvalar `PRIMARY` / `SECONDARY` diye
-  etiketli; çift silah kullanılabiliyor (videoda iki tane "Wooden Gladius"). **[V]**
-- **Her parçanın üç sayısı var:** saldırı, savunma, **kilogram** — ekranda
-  `A:+9 D:+9 2kg` biçiminde. Altında yeşil bir bar: **dayanıklılık**. **[V]**
-- **Yükseltme ekranda karşılaştırmalı:** parçanın üstüne gelince solda `DOWNGRADE
-  <L-Click>`, sağda `UPGRADE <R-Click>` çıkıyor ve **her iki yönün de fiyatı** görünüyor.
-  Videodaki örnek: *Improved Leather Chestplate (D:+9, 3kg)* → yükseltme *Centurion's Mail
-  (D:+11, **22kg**)* **-23 altın**; düşürme *Standard Leather Chest Plate (D:+8, 4kg)*
-  **+7 altın** (parça satılıyor). **[V]**
+- The slots: **weapon, shield, helmet, chest, shoulder (pauldron), waist/skirt, legs (greaves)**,
+  plus the **net** for the Retiarius. **[K]** In the panel the slots are labelled `PRIMARY` /
+  `SECONDARY`; two weapons can be used (two "Wooden Gladius" in the video). **[V]**
+- **Every piece has three numbers:** attack, defence and **kilograms** — on screen in the form
+  `A:+9 D:+9 2kg`. Below it a green bar: **durability**. **[V]**
+- **The upgrade is comparative on screen:** hovering over a piece shows `DOWNGRADE <L-Click>` on
+  the left and `UPGRADE <R-Click>` on the right, with **the price of both directions** visible.
+  The example in the video: *Improved Leather Chestplate (D:+9, 3kg)* → the upgrade *Centurion's
+  Mail (D:+11, **22kg**)* for **-23 gold**; the downgrade *Standard Leather Chest Plate (D:+8,
+  4kg)* for **+7 gold** (the piece is sold). **[V]**
 
-> Buradaki denge kolu bizde yok: **+2 savunma için 19 kilo**. Ağırlık stamina ve hız
-> demek olduğu için "daha iyi zırh" düz bir iyileşme değil, açık bir takas. Bizim
-> `ArmorPiece.Weight` alanı var ama karar ekranda bu kadar çıplak görünmüyor.
-- Her parçanın **yükseltme basamakları** var; Faber otomatik yükseltir, oyuncu parayla
-  atlar. Onarım ayrı bir iş. **[K]**
-- Rehberlerin "iyi fiyat/performans" seti: Gladius, Elite Roman Centurion Shield, Death's
-  Helmet, Centurion Mail, Centurion Leathers, Onyx Greaves. **[T]**
-- Fiyat örnekleri **[T]**: çift gladius 80 altın; tipik Murmillo takımı 412 altın; 13
-  kişilik temel kuşam 6.400 altın; 13 Zweihander 3.600 altın.
-- **Ağırlık gerçek bir maliyet:** ağır zırh yavaşlatır, stamina yakar; rehberler "ağır
-  zırhlı rakip 2-3 vuruşta nefessiz kalır" diye **düşmanın zırhını zayıflık** olarak
-  kullanıyor. **[K]**
-- Video, ekipman yatırımını **4-5 gladyatöre** dağıtmayı öneriyor: tek adama yatırmak,
-  birden çok kişilik dövüşlerde kadro bulunamamasına yol açıyor; herkese dağıtmak ise
-  parayı eritiyor. **[V]**
-- Ters teşvik: iyi ekipman **EXP'yi düşürür** — dövüş çabuk bitince öğrenme az olur. Bu
-  yüzden eğitimdeki gladyatörlere kasten zayıf kuşam veriliyor. **[T]**
+> The balance lever here does not exist in our game: **19 kilos for +2 defence**. Because weight
+> means stamina and speed, "better armour" is not a flat improvement but an open trade. We have an
+> `ArmorPiece.Weight` field, but the decision does not appear this nakedly on screen.
+- Every piece has **upgrade steps**; the Faber upgrades automatically, the player skips ahead with
+  money. Repair is a separate job. **[K]**
+- The guides' "good value" set: the Gladius, the Elite Roman Centurion Shield, Death's Helmet, the
+  Centurion Mail, the Centurion Leathers, the Onyx Greaves. **[T]**
+- Price examples **[T]**: two gladius for 80 gold; a typical Murmillo set 412 gold; basic kit for
+  13 men 6,400 gold; 13 Zweihanders 3,600 gold.
+- **Weight is a real cost:** heavy armour slows you and burns stamina; the guides use **the enemy's
+  armour as a weakness** — "a heavily armoured opponent is out of breath in 2-3 swings". **[K]**
+- The video suggests spreading the equipment investment over **4-5 gladiators**: investing in one
+  man means not finding a roster for multi-fighter battles, while spreading it over everyone melts
+  the money. **[V]**
+- A perverse incentive: good equipment **lowers EXP** — when a fight ends quickly, less is learnt.
+  That is why gladiators in training are deliberately given weak kit. **[T]**
 
-## 9. Dövüş türleri
+## 9. Fight types
 
-| Tür | Nasıl gelir | Ne verir | Risk |
+| Type | How it comes | What it gives | Risk |
 |---|---|---|---|
-| **Scheduled / forced fight** | Legate ve Magistrate ayarlar | Ödül + itibar | Ölüm **[K]** |
-| **Pit fight** | Agent ayarlar | Ödül + **bahis** (rehber: her dövüşe 150 altın) | Rakibin gücü **görünmez** **[T]** |
-| **Exhibition** | Legate/Magistrate'in gösteri maçı | EXP + coin; **teslim var, ölüm yok** | Kalıcı sakatlık (impediment) riski, *Deeper Humility* ile kapanır **[T]** |
-| **Regional champions ("Big 3" + 9 dövüş)** | Haritadaki sabit rakipler | Coin + **mavi Jupiter kartı** | Sabit ve **her oyunda aynı** **[K]** |
-| **Chariot race / Beast mode / Gravitas** | Özel etkinlikler (at, araba, aslan gerekir) | Coin, başarım | **[T]** |
-| **Final championship** | Yıl sonunda | Oyunun sonu | **15 iyi kuşanmış gladyatör**, hepsi her statta **100+** **[K]** |
+| **Scheduled / forced fight** | Arranged by the Legate and the Magistrate | Reward + reputation | Death **[K]** |
+| **Pit fight** | Arranged by the Agent | Reward + **betting** (the guide: 150 gold on every fight) | The opponent's strength is **invisible** **[T]** |
+| **Exhibition** | The Legate's/Magistrate's exhibition match | EXP + coin; **yielding allowed, no death** | The risk of a permanent impediment, closed by *Deeper Humility* **[T]** |
+| **Regional champions ("the Big 3" + 9 fights)** | Fixed opponents on the map | Coin + **a blue Jupiter card** | Fixed and **the same in every game** **[K]** |
+| **Chariot race / Beast mode / Gravitas** | Special events (they need a horse, a chariot, a lion) | Coin, achievements | **[T]** |
+| **The final championship** | At the end of the year | The end of the game | **15 well-equipped gladiators**, all **100+** in every stat **[K]** |
 
-- **Bölge şampiyonları sabit:** aynı statlar, aynı dövüş, her oyunda. Oyuncu ezberleyip
-  hazırlanabiliyor. **[K]**
-- Finalden sonra bir dövüş daha var ve o **daha kolay**; özgür bırakılan gladyatörler
-  buraya dönüyor. **[T]**
+- **The regional champions are fixed:** the same stats, the same fight, in every game. The player
+  can memorise them and prepare. **[K]**
+- There is one more fight after the final and it is **easier**; the gladiators who were freed come
+  back for it. **[T]**
 
-### Dövüş teklifi ekranı — "Arena Battle" **[V]**
+### The fight offer screen — "Arena Battle" **[V]**
 
-Dövüş bir **sözleşme kartı** olarak geliyor; ekranda şunlar yazıyor:
+A fight arrives as a **contract card**; the screen shows:
 
-| Alan | Videodaki örnekler |
+| Field | Examples from the video |
 |---|---|
 | **Host** | "The Emperor" |
 | **Game Type** | "Championship" / "1 vs 1" |
-| **Victory Reward** | 213 altın · 75 yiyecek · 12 su · 2 şarap · **2 köle** — ya da 131 altın · 166 yiyecek · 155 su · **2 köle** |
-| **Participation Cost** | "11 altın · 2 yiyecek · 1 su · **6 gün**" — ya da "None" |
+| **Victory Reward** | 213 gold · 75 food · 12 water · 2 wine · **2 slaves** — or 131 gold · 166 food · 155 water · **2 slaves** |
+| **Participation Cost** | "11 gold · 2 food · 1 water · **6 days**" — or "None" |
 | **Surrender Allowed** | **Yes / No** |
 | **Obstacles** | "It's a mystery." / "Lions" |
-| **Pick Your Gladiators** | "(Mind Control Not Researched)" uyarısı; her yuvada portre + `AI` etiketi; sayaç **Selected/MAX: 2/3** ya da **0/1** |
-| **Opponent Gladiators** | Rakip portresi, adı ("Ancus the Animal", "Clodius", "Dirkus Digglerus"), `AI` etiketi |
-| Tuşlar | **Pick Gladiators · Reject Terms · Accept Terms** (kimse seçilmeden Accept kapalı) |
+| **Pick Your Gladiators** | The "(Mind Control Not Researched)" warning; a portrait + an `AI` label in each slot; the counter **Selected/MAX: 2/3** or **0/1** |
+| **Opponent Gladiators** | The opponent's portrait, his name ("Ancus the Animal", "Clodius", "Dirkus Digglerus"), an `AI` label |
+| Buttons | **Pick Gladiators · Reject Terms · Accept Terms** (Accept is disabled until someone is selected) |
 
-> Dört tane doğrudan bizi ilgilendiren şey var:
-> 1. **Katılım bedeli gün yiyor** ("6 days") — bizim "gün tek iş yer" kuralının referanstaki
->    karşılığı; orada gün **dövüşün fiyatı**, sabit bir kural değil.
-> 2. **"Surrender Allowed: Yes/No" sözleşmenin bir alanı** — yani pes etme hakkı dövüş
->    başına değişiyor. Bizde çekilme her zaman açık; bu kapatılabilir bir kol olabilirdi.
-> 3. **Ödül sadece altın değil:** yiyecek, su, şarap ve **köle**. Ödül kadroyu doğrudan
->    büyütüyor.
-> 4. **Engeller (Obstacles) sözleşmede yazıyor** ve "It's a mystery" bile bir seçenek —
->    bilinmezlik açıkça satılıyor.
+> Four things concern us directly:
+> 1. **The participation cost eats days** ("6 days") — the reference's counterpart to our "a day
+>    takes one job" rule; there the day is **the fight's price**, not a fixed rule.
+> 2. **"Surrender Allowed: Yes/No" is a field on the contract** — so the right to surrender varies
+>    per fight. In our game pulling out is always available; this could have been a lever that can
+>    be switched off.
+> 3. **The reward is not only gold:** food, water, wine and **slaves**. The reward grows the roster
+>    directly.
+> 4. **The obstacles are written on the contract** and even "It's a mystery" is an option — the
+>    unknown is sold openly.
 
-### Dövüş ekranı **[V]**
+### The battle screen **[V]**
 
-- Üstten geniş açı arena zemini; ekranın alt üçte biri **kalabalık**.
-- Sağ üstte oyuncunun savaşçıları: portre + can barı, **sayı olarak** `141/141`, `24/145`.
-- Altında **geri sayan süre**: `2:49 → 2:29 → 2:09`. Yani dövüşün **süre sınırı** var.
-- Sağ altta rakip: `Ancus the Animal 470/550 → 325/550 → 106/550`.
-- Vuruşlarda **kırmızı hasar sayıları** havalanıyor (`-13`, `-10`) + kan efekti.
-- **Hiçbir yetenek tuşu, bekleme süresi ya da komut çubuğu yok** — mind control
-  araştırılmadıysa dövüş tamamen izleniyor.
+- A wide-angle view of the arena floor from above; the bottom third of the screen is **the crowd**.
+- At the top right, the player's fighters: a portrait + a health bar, **as numbers** `141/141`,
+  `24/145`.
+- Below it a **countdown timer**: `2:49 → 2:29 → 2:09`. So the fight has a **time limit**.
+- At the bottom right the opponent: `Ancus the Animal 470/550 → 325/550 → 106/550`.
+- On hits, **red damage numbers** float up (`-13`, `-10`) with a blood effect.
+- There is **no ability key, cooldown or command bar** — unless mind control has been researched
+  the fight is watched entirely.
 
-### Zafer ekranı **[V]**
+### The victory screen **[V]**
 
-Büyük **VICTORY** başlığı, altında iki kart — her savaşçı için **"AI Training MAX"** ve
-dövüşten kazanılan eğitim:
+A large **VICTORY** header, with two cards below — for each fighter an **"AI Training MAX"** and
+the training earned from the fight:
 
-- 1. savaşçı: `Agility +13 · Weapon +12 · Strength +8 · Defense +4`
-- 2. savaşçı: `Agility +10 · Weapon +11 · Strength +6 · Defense +1`
+- Fighter 1: `Agility +13 · Weapon +12 · Strength +8 · Defense +4`
+- Fighter 2: `Agility +10 · Weapon +11 · Strength +6 · Defense +1`
 
-Altında **Rewards**: `213 altın · 75 yiyecek · 2 şarap · 12 su` + iki köle portresi
-(`Papirianus`, `Granius`) + bir kart (`2X Production`) + `Weapon Master` kartı + ayrı bir
-kalem: **`73` — "Crowd Favour"**.
+Below it, **Rewards**: `213 gold · 75 food · 2 wine · 12 water` + two slave portraits
+(`Papirianus`, `Granius`) + a card (`2X Production`) + a `Weapon Master` card + a separate item:
+**`73` — "Crowd Favour"**.
 
-> İki çıkarım: (1) **Dövüş gerçekten eğitim veriyor** ve miktarı ekranda yazıyor — "dövüş
-> antrenmandan hızlı öğretir" iddiası burada görünür hâle geliyor. (2) **Kalabalık favorisi
-> ayrı bir ödül satırı** (73 altın), dövüş ödülünün yanında duruyor — yani "iyi dövüş"
-> ile "kazanmak" ayrı ödüllendiriliyor.
+> Two conclusions: (1) **Fighting really does give training** and the amount is written on screen —
+> the claim "fighting teaches faster than training" becomes visible here. (2) **Crowd favour is a
+> separate reward line** (73 gold) standing next to the fight reward — so "a good fight" and
+> "winning" are rewarded separately.
 
-## 10. Dövüşün kuralları
+## 10. The rules of a fight
 
-- Dövüş **gerçek zamanlı**. Oyuncu istersen **tek bir gladyatörü doğrudan sürer**
-  (saldırı, blok, kaçış); istemezsen hepsi AI ile dövüşür. **[K]**
-- **Kalabalık (crowd favor) bir sistem:** dövüş uzadıkça, sahada olay çoğaldıkça
-  kalabalık daha çok seviyor ve **daha çok para** ödüyor. Kalabalık, oyuncunun
-  gladyatörünü **elle sürmesinden hoşlanmıyor** ("mind control"). **[T]**
-- **Teslim (yield/missio):** `Automatic Yield` becerisinin **oyun içi ipucu metni**:
-  *"Gladiator will automatically yield and surrender if they are less than 10% HP."* —
-  taban eşik **%10**. Rehberlerin söylediği **%20**, Doctore Emeritus'un *Deeper Humility*
-  yükseltmesinden geliyor olmalı; iki sayı aynı kolun iki kademesi. **[V]**
-- Teslim eden gladyatör hem **kalıcı sakatlık** almıyor hem de kaybettiği maçtan sağ
-  çıkıyor. **[T]** Ayrıca teslim **her dövüşte mümkün değil**: sözleşmede
-  `Surrender Allowed: Yes/No` alanı var. **[V]**
-- **Kalıcı sakatlık (impediment)** var ve gladyatörü işe yaramaz hâle getirebiliyor;
-  sakatlanan köleler ya azat ediliyor ya da sakatlığın önemsiz olduğu bir sınıfa
-  (charioteer, sagittarius) kaydırılıyor. **[T]**
-- **Ölüm kalıcı.** Ölen gladyatör gider; oyuncular menüden çıkıp kaydı geri yükleyerek
-  hile yapıyor. **[T]**
-- **Aslan/canavar** sahaya girebiliyor; bloklanmazsa çok yüksek hasar veriyor ve
-  gladyatörler onu görmezden gelip birbirine saldırma hatası yapıyor. **[T]**
+- The fight is **real time**. If you want, the player **drives a single gladiator directly**
+  (attack, block, dodge); if not, they all fight with the AI. **[K]**
+- **The crowd (crowd favour) is a system:** the longer the fight and the more that happens on the
+  field, the more the crowd likes it and **the more money** it pays. The crowd **does not like** the
+  player driving his gladiator by hand ("mind control"). **[T]**
+- **Yielding (missio):** the **in-game tooltip** for the `Automatic Yield` skill:
+  *"Gladiator will automatically yield and surrender if they are less than 10% HP."* — the base
+  threshold is **10%**. The **20%** the guides mention must come from the Doctore Emeritus's
+  *Deeper Humility* upgrade; the two numbers are two tiers of the same lever. **[V]**
+- A gladiator who yields takes no **permanent impediment** and comes out of the lost match alive.
+  **[T]** And yielding is **not possible in every fight**: the contract has a
+  `Surrender Allowed: Yes/No` field. **[V]**
+- **A permanent impediment** exists and can make a gladiator useless; maimed slaves are either
+  freed or shifted to a class where the impediment does not matter (charioteer, sagittarius). **[T]**
+- **Death is permanent.** A dead gladiator is gone; players cheat by quitting to the menu and
+  reloading the save. **[T]**
+- **A lion/beast** can enter the field; unblocked it does very high damage, and the gladiators make
+  the mistake of ignoring it and attacking each other. **[T]**
 
-## 11. Zorluk ölçeklenmesi
+## 11. Difficulty scaling
 
-- Oyun **kazandıkça zorlaşıyor**: üst üste kazanılan (planlanmış) dövüşler ve
-  ludus'un genel gücü/ekipmanı zorluğu yukarı çekiyor. Ölünce **geri inmiyor**. **[T]**
-- Bunun doğurduğu oynanış: **kasten kaybetmek**. Rehberlerin hepsi "çıplak köleyi
-  gönder, maçı ver, kalabalığı memnun et, şampiyonu koru" diyor. **[K]**
-- Ludus **kalabalıksa** rakipler zayıflıyor ("çoğu pit dövüşçüsünde silah bile olmuyor").
-  **[T]** — bu ölçeklemenin ikinci ucu: oyuncu kadro büyüterek zorluğu aşağı çekiyor.
+- The game **gets harder as you win**: consecutive (scheduled) fights won and the ludus's overall
+  strength/equipment pull the difficulty up. It does **not** come back down when someone dies. **[T]**
+- The play that produces: **losing on purpose**. Every guide says "send a naked slave, throw the
+  match, please the crowd, protect your champion". **[K]**
+- If the ludus is **crowded**, the opponents get weaker ("most pit fighters do not even have a
+  weapon"). **[T]** — the second end of the same scaling: the player pulls the difficulty down by
+  growing his roster.
 
-> Bu, referansın en tartışmalı kolu: zorluk oyuncunun **başarısını** cezalandırıyor ve
-> optimal oynanış "kasten kaybet" oluyor. Bizim ölçümde bağlayıcı kaynağın kadro olması
-> (GDD §11) benzer bir yerden geliyor ama ceza mekaniği bizde **yok**.
+> This is the reference's most contentious lever: the difficulty punishes the player's **success**
+> and the optimal play becomes "lose on purpose". Our measurement's binding resource being the
+> roster (GDD §11) comes from a similar place, but we have **no** punishment mechanic.
 
-## 12. Jupiter kutsamaları (kartlar)
+## 12. Jupiter blessings (the cards)
 
-- Kart **sürüklenip** bir gladyatöre ya da personele takılır; **satılabilir** (erken oyunda
-  para lazımsa satmak öneriliyor). **[K]**
-- Etkiler: hasar, savunma, otomatik iyileşme, **araştırma maliyeti/süresi indirimi**
-  (%15 ve %33 gibi), Attack Stance, Riposte, çift silah ustalığı, AI yeterliliği...
-- **Mavi kartlar** şampiyonluk ödülü olarak geliyor ve en değerlileri bunlar. **[T]**
-- **Ekranda görülen kartlar ve birebir metinleri** **[V]**:
-  | Kart | Metin |
+- A card is **dragged** onto a gladiator or a staff member; it **can be sold** (selling is advised
+  in the early game if you need money). **[K]**
+- The effects: damage, defence, automatic healing, **research cost/time discounts** (15% and 33%,
+  say), Attack Stance, Riposte, dual-weapon mastery, AI proficiency...
+- **Blue cards** come as championship rewards and are the most valuable. **[T]**
+- **The cards seen on screen and their exact text** **[V]**:
+  | Card | Text |
   |---|---|
   | `Recover Cards` | "Place this card on any entity to recover applied cards." |
   | `Weapon Master` | "All attacks do 35% more damage." |
   | `Rebuff Tolerance` | "Gladiator recovers faster after hitting opponents defense" |
-  | `2X Production` (mavi çerçeve) | "Employees who produce resources will generate 2X more [does not stack]" |
-- Kart ekranında **SORT** ve **DISCARD** tuşları var — yani kartlar bir **el/deste**
-  olarak tutuluyor. **[V]**
-- Kartlar **dövüş ödülü olarak da** düşüyor (zafer ekranında `Weapon Master` göründü). **[V]**
-- Rakiplerin de kartları olabiliyor; Haruspex bunları söküyor. **[T]**
-- **Kart taşımanın bedeli yok:** kart bir gladyatörden alınıp başkasına, hatta bir
-  personele **serbestçe** takılabiliyor. Videonun kullanımı: "araştırma maliyetini %10
-  düşüren" kartı o an **araştırma yapan** personele tak, iş bitince başkasına geçir;
-  iyileşme kartını o an yaralı olana tak. **[V]**
-- Tutorial'ı oynarsan **Jupiter kartlarına erişemiyorsun** — rehber bu yüzden tutorial'ı
-  atlamayı öneriyor. **[T]**
+  | `2X Production` (a blue frame) | "Employees who produce resources will generate 2X more [does not stack]" |
+- The card screen has **SORT** and **DISCARD** buttons — so the cards are kept as a **hand/deck**. **[V]**
+- Cards also **drop as fight rewards** (`Weapon Master` appeared on the victory screen). **[V]**
+- The opponents can have cards too; the Haruspex strips them. **[T]**
+- **Moving a card costs nothing:** a card can be taken off one gladiator and put on another, or even
+  on a staff member, **freely**. The video's use: put the card that "lowers the research cost by
+  10%" on the staff member currently **researching**, and move it to someone else when the job is
+  done; put the healing card on whoever is wounded at the time. **[V]**
+- If you play the tutorial **you cannot access the Jupiter cards** — which is why the guide advises
+  skipping the tutorial. **[T]**
 
-## 13. Patronaj: şarap ve iki NPC
+## 13. Patronage: wine and two NPCs
 
-- **Legate** ve **Magistrate** dövüşleri ayarlayan iki NPC. Onlara **şarap** göndererek
-  gözüne girilir; memnun NPC daha iyi ve daha kârlı maçlar ayarlar. **[K]**
-- Rüşketin bedeli **her seferinde ikiye katlanır** ve **tam miktar** gönderilmelidir
-  (64, 128, 256...); eksik gönderirsen kızıyorlar. Rehber "4 kez gönder" diyor. **[T]**
-- Ayrıca bir gladyatöre **patron** olmaları istenebiliyor; patronun gladyatörü ölünce
-  yeniden istemek gerekiyor. **[T]**
-- **Legate paneli (ekrandan)** **[V]**: başlık "Legate Germanicus Terentius"; bir
-  **Temperament** çubuğu ("Neutral"); **Bribery: [1 ▲▼]** sayacı + **Send Wine** tuşu; ve
-  eylem listesi: **Suggest Gladiator Patronage**, **Purchase Gladiators**,
-  **Arrange Exhibition Match** (kapalı), **Sell Secret \<Magistrate\>** (kapalı),
-  **Blackmail \<Legate Secret\>** (kapalı).
+- The **Legate** and the **Magistrate** are the two NPCs who arrange fights. You get into their good
+  books by sending them **wine**; a satisfied NPC arranges better and more profitable matches. **[K]**
+- The bribe's price **doubles every time** and the **exact amount** has to be sent (64, 128,
+  256...); if you send less they get angry. The guide says "send it 4 times". **[T]**
+- They can also be asked to become a **patron** of a gladiator; when a patron's gladiator dies you
+  have to ask again. **[T]**
+- **The Legate panel (from the screen)** **[V]**: the title "Legate Germanicus Terentius"; a
+  **Temperament** bar ("Neutral"); the **Bribery: [1 ▲▼]** counter + a **Send Wine** button; and the
+  action list: **Suggest Gladiator Patronage**, **Purchase Gladiators**, **Arrange Exhibition
+  Match** (disabled), **Sell Secret \<Magistrate\>** (disabled), **Blackmail \<Legate Secret\>**
+  (disabled).
 
-  > Yani şarap tek kol değil: **sır satmak ve şantaj** ayrı bir sistem ve kilitli geliyor
-  > (Agent'in casusluğuyla açılıyor olmalı). Ayrıca **gösteri maçı ayarlamak** da bu
-  > panelden ve kapalı — ilişki seviyesine bağlı.
+  > So wine is not the only lever: **selling secrets and blackmail** are a separate system and
+  > arrive locked (they must be unlocked by the Agent's spying). And **arranging an exhibition
+  > match** is also on this panel and disabled — it depends on the relationship level.
 
-- **Videonun açılış hilesi:** başta **kullanmayacağın bütün gladyatörleri sat/kov**, elde
-  yalnızca iki ana gladyatör kalsın; sonra Legate memnun olana kadar şarap gönder ve
-  **patron ol** de — geriye iki kişi kaldığı için patronaj **kesin onlardan birine** düşer.
-  Aynısını Magistrate ile yap, ikinci gladyatör de patronlu olur. **Patronlu gladyatörün
-  yiyecek/suyunu patron karşılıyor** — yani bu, kaynak tasarrufu için yapılan bir seçim
-  daraltma numarası. **[V]**
-- Bir rehber tam tersini savunuyor: ilk rüşvetten sonra ilişkiyi umursama, nasılsa
-  memnun tutulamıyor **[?]**.
+- **The video's opening trick:** at the start **sell/fire every gladiator you will not use** so only
+  two main gladiators are left; then send wine until the Legate is satisfied and ask to **become a
+  patron** — because only two men are left, the patronage **certainly** falls on one of them. Do the
+  same with the Magistrate and the second gladiator gets a patron too. **A patroned gladiator's food
+  and water are covered by the patron** — so this is a choice-narrowing trick done to save
+  resources. **[V]**
+- One guide argues the opposite: after the first bribe, do not care about the relationship, it
+  cannot be kept satisfied anyway **[?]**.
 
-## 14. Olaylar
+## 14. Events
 
-- Rastgele olaylar var ve bazıları **büyük** hediyeler veriyor: satın alınabilen/ele
-  geçirilen gladyatör, Galyalıların baskınında Legate'in hediye ettiği asker (her statta
-  **100-150** ile gelebiliyor), aslan sahibi olma. **[T]**
-- Personel **ölebiliyor**; NPC'ler ölebiliyor (bu yüzden elde şarap tutulur). **[T]**
-- Kapının önünde başıboş gladyatör bulma olayı da var. **[T]**
+- There are random events and some give **large** gifts: a gladiator that can be bought or captured,
+  the soldier the Legate gives during a Gallic raid (he can arrive with **100-150** in every stat),
+  owning a lion. **[T]**
+- Staff **can die**; NPCs can die (which is why wine is kept in hand). **[T]**
+- There is also an event where a stray gladiator is found at the gate. **[T]**
 
-## 15. Moral
+## 15. Morale
 
-- Moral **statları etkiliyor**. Yükseltme yolları: **coin ya da şarap hediye etmek**
-  (ucuz), hamam, Bard şarkıları, Educator. **[K]**
-- **Kalabalıklaşma morali düşürüyor**: kadro fazla büyüyünce gladyatörler rahatsız oluyor;
-  Doctore Emeritus'un ilk becerisi bu cezayı yumuşatıyor (18 kişiye kadar rahat). **[T]**
+- Morale **affects the stats**. The ways to raise it: **gifting coin or wine** (cheap), the bath, the
+  Bard's songs, the Educator. **[K]**
+- **Crowding lowers morale**: when the roster grows too large the gladiators get uncomfortable; the
+  Doctore Emeritus's first skill softens this penalty (comfortable up to 18 men). **[T]**
 
-## 16. Özgürlük (freedom)
+## 16. Freedom
 
-- Gladyatörler yeterince dövüştükten sonra (rehber: ~10 dövüş) **özgürlük istiyor**;
-  verilmezse **kaçmaya kalkıyor**. **[T]**
-- Azat edilen dövüşçü **final sonrası dövüşte geri dönüyor**, o yüzden geç oyunda kadronun
-  yarısı bilerek azat ediliyor. **[T]**
-- Kadro tavana dayanınca yer açmak için de azat ediliyor. **[T]**
+- After fighting enough (the guide: ~10 fights) gladiators **ask for freedom**; if it is not given
+  they **try to escape**. **[T]**
+- A freed fighter **comes back in the post-final fight**, so in the late game half the roster is
+  freed on purpose. **[T]**
+- They are also freed to make room when the roster hits its cap. **[T]**
 
-## 17. Twitch entegrasyonu
+## 17. Twitch integration
 
-- Ayarlardan yayın adı girilerek bağlanılıyor; oyunun botu (`domina_bot`) sohbete girip
-  **oy istiyor** ve girdi topluyor. **[K]**
-- İzleyici adıyla **gladyatör isimlendirme**, olaylarda **oylama** ve izleyici tepkisine
-  göre **ödül artışı** anlatılıyor. **[T]** — Kaynak zinciri burada zayıf; ayrıntılı
-  komut listesi bulunamadı, oyun mağazadan kalktığı için resmî belge de yok. **[?]**
-- Entegrasyon **isteğe bağlı**; kapalıyken oynanış değişmiyor. **[K]**
+- You connect by entering the stream name in the settings; the game's bot (`domina_bot`) joins the
+  chat, **asks for votes** and collects input. **[K]**
+- **Naming gladiators** after viewers, **voting** on events and a **reward increase** based on
+  viewer reactions are described. **[T]** — The source chain is weak here; no detailed command list
+  could be found, and because the game was pulled from the store there is no official documentation
+  either. **[?]**
+- The integration is **optional**; with it off the play does not change. **[K]**
 
-> Bizim Faz 5'in girdisi tam olarak bu bölüm. GDD §8'de "isim havuzu chat'ten gelir,
-> herkes dahil, `!no` ile çıkış" kararı Domina modelini korumak üzere alınmıştı; ama
-> Domina'nın **oylama** tarafının ayrıntısı hâlâ bilinmiyor.
+> This section is exactly the input for our phase 5. The decision in GDD §8 ("the name pool comes
+> from chat, everyone is included, `!no` opts out") was made to preserve Domina's model; but the
+> detail of Domina's **voting** side is still unknown.
 
 ---
 
-## 18. Bizim oyunla eşleştirme
+## 18. Mapping onto our game
 
-| Domina'da | Bizde | Durum |
+| In Domina | In ours | Status |
 |---|---|---|
-| Gerçek zamanlı akan gün, duraklatmalı | Ayrık **gün** adımı, tek karar | Kasıtlı fark |
-| Doğrudan gladyatör sürme (mind control) | **Yok** — dövüş tam otomatik | Kasıtlı fark (GDD §1) |
-| Eğilim statları (aggro/turtle/evasion) | Hedef seçimi ağırlıkları (§4) | **Aynı fikir**; yokai profilleri buradan türeyecek |
-| Mash-QTE ile pes etme | **Tek tuş** çekilme kararı | Kasıtlı fark |
-| Teslim = sakatlıktan kaçış | Bizde çekilme ödülü siler, sakatlık ayrı | Farklı; ölçülmedi |
-| Kalabalık favorisi = para | **Yok** | Açık soru: onur bunun yerini tutuyor mu? |
-| Kazandıkça zorlaşma + kasten kaybetme | **Yok** | Bilinçli olarak alınmadı |
-| Personel + araştırma ağacı | Okul/tesis ağacı (§10) | Daralttık: personel yok, tesis var |
-| Sabit bölge şampiyonları | Kelle avı sözleşmeleri | Benzer rol, farklı çerçeve |
-| Yıl sonu tek final (15 rakip) | **Yok** | Açık soru: kampanyanın sonu ne? |
-| Azat etme / kaçma | **Yok** | Açık soru: seppuku eşiği bunun karşılığı mı? |
-| Ölüm kalıcı | Aynı | Ortak |
-| İsim havuzu chat'ten | Aynı (Faz 5) | Ortak |
+| A day that flows in real time, pausable | A discrete **day** step, one decision | A deliberate difference |
+| Driving a gladiator directly (mind control) | **None** — combat is fully automatic | A deliberate difference (GDD §1) |
+| Tendency stats (aggro/turtle/evasion) | Target-selection weights (§4) | **The same idea**; the yokai profiles will derive from it |
+| Surrendering with a mashed QTE | A **single key** withdrawal decision | A deliberate difference |
+| Yielding = escaping an impediment | In our game withdrawing erases the reward, and maiming is separate | Different; not measured |
+| Crowd favour = money | **None** | An open question: does honour take its place? |
+| Getting harder as you win + losing on purpose | **None** | Deliberately not taken |
+| Staff + a research tree | The school/facility tree (§10) | We narrowed it: no staff, facilities yes |
+| Fixed regional champions | Bounty contracts | A similar role, a different frame |
+| A single final at the end of the year (15 opponents) | **None** | An open question: what is the end of the campaign? |
+| Freeing / escaping | **None** | An open question: is the seppuku threshold its counterpart? |
+| Death is permanent | The same | Shared |
+| The name pool from chat | The same (phase 5) | Shared |
 
-## 19. Oynarken doğrulanacaklar
+## 19. To be verified by playing
 
-Video ilk turda şu soruları **kapattı**: takvim 365 gün (`Days Left 364` ilk karede),
-stat panelinin tam alan listesi, personelin günlük yiyecek/su tüketimi, kömür çukurunun
-ne yaptığı (çevikliğin **eğitim süresini** kısaltıyor), Doctore ağacının düğüm adları ve
-fiyat ölçeği, dövüş sözleşmesinin alanları, kalabalık favorisinin **ayrı bir ödül satırı**
-olduğu.
+The video **closed** these questions in the first pass: the calendar is 365 days (`Days Left 364`
+in the first frame), the full field list of the stat panel, the staff's daily food/water
+consumption, what the coal pit does (it shortens **agility's training time**), the node names and
+price scale of the Doctore tree, the fields of the fight contract, and that crowd favour is **a
+separate reward line**.
 
-Açık kalanlar:
+What remains open:
 
-1. Bir günde kaç iş yapılabiliyor? Dövüşün "6 gün" katılım bedeli var ama alışveriş,
-   araştırma ve eğitim aynı gün içinde nasıl sıralanıyor?
-2. Teslim eşiği gerçekten %20 mi; `Surrender Allowed: No` olan dövüşte teslim olmaya
-   çalışan ne oluyor?
-3. Kalıcı sakatlık (impediment) ekranda nasıl görünüyor, hangi statı ne kadar düşürüyor?
-4. Kalabalık favorisi nasıl hesaplanıyor — süre mi, vuruş sayısı mı, ölüm mü?
-5. Zorluk ölçeklemesi görünür bir sayı mı, yoksa yalnızca hissediliyor mu?
-6. Jupiter kartlarının tam listesi ve etkilerinin büyüklüğü (elimizde 4 tanesi var).
-7. Twitch tarafında chat'in gerçekten neyi oylayabildiği — hâlâ hiçbir ekran görüntüsü yok.
-8. Ekonominin gerçek eğrisi: ilk 10 günde ne kadar altın giriyor/çıkıyor? (Videoda kasa
-   1000'den 680'e iniyor, sonra dövüşle 954'e çıkıyor — tek örnek.)
-9. **Personel slotu kaç?** Video 3 diyor (2018), daha yeni rehber 6 + 1500 altınlık
-   genişletme diyor.
-10. **Architect gerçekten geri alınamıyor mu?**
-11. Sır satma / şantaj sistemi nasıl açılıyor ve ne veriyor?
-12. `Level` ile `Points` arasındaki dönüşüm ne? (Örn. Agility 13. seviye = 62 puan.)
-13. Sınıf araştırması (400 altın) ile dövüş ödülü olarak gelen sınıf arasındaki fark ne?
+1. How many jobs can be done in a day? A fight has a "6 days" participation cost, but how do
+   shopping, research and training order themselves within the same day?
+2. Is the yield threshold really 20%; and what happens to someone trying to yield in a fight with
+   `Surrender Allowed: No`?
+3. How does a permanent impediment appear on screen, and which stat does it lower by how much?
+4. How is crowd favour computed — duration, the number of strikes, or deaths?
+5. Is the difficulty scaling a visible number, or is it only felt?
+6. The full list of the Jupiter cards and the size of their effects (we have 4 of them).
+7. What chat can really vote on on the Twitch side — there is still not a single screenshot.
+8. The economy's real curve: how much gold comes in and goes out in the first 10 days? (In the
+   video the purse falls from 1000 to 680, then rises to 954 with a fight — a single sample.)
+9. **How many staff slots are there?** The video says 3 (2018), a newer guide says 6 + a 1500-gold
+   expansion.
+10. **Is the Architect really unrehirable?**
+11. How does the secret-selling / blackmail system unlock and what does it give?
+12. What is the conversion between `Level` and `Points`? (E.g. Agility level 13 = 62 points.)
+13. What is the difference between the class research (400 gold) and a class that arrives as a
+    fight reward?
 
 ---
 
-*Bu dosya oynanış ve video incelemesiyle güncellenecek; her güncellemede işaretler
-(**[K]/[T]/[?]/[V]**) yeniden gözden geçirilmeli.*
+*This file will be updated by playing and by further video review; at every update the marks
+(**[K]/[T]/[?]/[V]**) should be revisited.*
