@@ -7,9 +7,9 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kelle avı sözleşmeleri. Korunan dört karar: hedef isimli ve tek, sözleşmenin süresi
-/// var ve süre dolunca düşer, üretim gün ile tohumun saf bir fonksiyonu, ve kabul edip
-/// dönmemek kadroya onur olarak yazılır.
+/// Bounty contracts. Four decisions are protected: the target is named and single, the contract has a
+/// deadline and falls off when it expires, the generation is a pure function of the day and the seed,
+/// and accepting and not coming back is written to the roster as honour.
 /// </summary>
 public class BountyTests
 {
@@ -36,7 +36,7 @@ public class BountyTests
         Assert.Equal(first.Deadline, again.Deadline);
     }
 
-    /// <summary>Sözleşme birkaç gün açık kalır, sonra düşer — süresiz bir depo değil.</summary>
+    /// <summary>A contract stays open for a few days, then falls off — it is not an open-ended warehouse.</summary>
     [Fact]
     public void ContractsExpireAndLeaveDaysWithNoContract()
     {
@@ -48,11 +48,11 @@ public class BountyTests
         Assert.Null(board.Posted(3, seed: 3, economy));
         Assert.Null(board.Posted(4, seed: 3, economy));
 
-        // Yeni dönem, yeni sözleşme.
+        // A new period, a new contract.
         Assert.NotNull(board.Posted(5, seed: 3, economy));
     }
 
-    /// <summary>Aynı sözleşme açık kaldığı her gün aynı hedefi taşır.</summary>
+    /// <summary>The same contract carries the same target every day it stays open.</summary>
     [Fact]
     public void AnOpenContractKeepsItsTargetWhileItIsOpen()
     {
@@ -68,7 +68,7 @@ public class BountyTests
         Assert.Equal(1, day1.DaysLeft(3));
     }
 
-    /// <summary>Hedef, aynı günün sıradan teklifinden belirgin şekilde güçlü.</summary>
+    /// <summary>The target is clearly stronger than the same day's ordinary offer.</summary>
     [Fact]
     public void TheTargetIsStrongerThanTheOrdinaryOfferOfTheSameDay()
     {
@@ -80,11 +80,11 @@ public class BountyTests
         double ordinary = state.Offer.Enemies.Max(e => e.EffectiveStats.MaxHealth);
         Assert.True(
             contract.Target.EffectiveStats.MaxHealth > ordinary,
-            $"hedef sıradan düşmandan güçlü değil: {contract.Target.EffectiveStats.MaxHealth:F0}"
+            $"the target is not stronger than an ordinary enemy: {contract.Target.EffectiveStats.MaxHealth:F0}"
                 + $" / {ordinary:F0}");
     }
 
-    /// <summary>Ödül, aynı canlı sıradan bir düşmanın ödediğinden yüksek.</summary>
+    /// <summary>The reward is higher than an ordinary enemy with the same health pays.</summary>
     [Fact]
     public void TheContractPaysMoreThanTheSameHealthWouldPayOnAPatrol()
     {
@@ -109,7 +109,7 @@ public class BountyTests
         Assert.Equal(before, state.AcceptedBountyDay);
     }
 
-    /// <summary>Kabul edip dönmemek kadronun tamamına onur olarak yazılır.</summary>
+    /// <summary>Accepting and not coming back is written as honour to the whole roster.</summary>
     [Fact]
     public void BreakingThePromiseCostsTheWholeRosterHonor()
     {
@@ -125,7 +125,7 @@ public class BountyTests
         DayReport first = state.Decline();
         Assert.False(first.BountyBroken);
 
-        // Son gün de dövüşmeden kapanınca söz kırılır.
+        // When the last day too closes without a fight, the promise is broken.
         DayReport second = state.Decline();
         Assert.True(second.BountyBroken);
         Assert.Null(state.AcceptedBountyDay);
@@ -135,7 +135,7 @@ public class BountyTests
             e => Assert.True(e.Warrior.Honor < before, $"{e.Warrior.Name} onur kaybetmedi"));
     }
 
-    /// <summary>Kabul edilmemiş sözleşmenin süresi dolduğunda kimse cezalanmaz.</summary>
+    /// <summary>When an unaccepted contract expires, nobody is punished.</summary>
     [Fact]
     public void AnUnacceptedContractExpiresQuietly()
     {
@@ -149,7 +149,7 @@ public class BountyTests
         Assert.Equal(before, state.Roster.Living.Single().Warrior.Honor);
     }
 
-    /// <summary>Kelleyi getiren ekip söz verilen altını ve onuru alır.</summary>
+    /// <summary>The party that brings in the head takes the gold and the honour promised.</summary>
     [Fact]
     public void ClaimingTheHeadPaysThePromisedGoldAndHonor()
     {
@@ -173,9 +173,9 @@ public class BountyTests
         BountyResult result = new Expedition()
             .SendToBounty(state, contract, [hero], new SeededRandom(5));
 
-        // Kasa doğrudan ölçülemez: aynı gün stok gideri ödeniyor ve aksilik altın
-        // çalabiliyor. Ölçülen kalem sözleşmenin ödediği rakam.
-        Assert.True(result.Claimed, "usta hedefi düşüremedi");
+        // The treasury cannot be measured directly: the stock cost is paid the same day and a mishap can
+        // steal gold. The item measured is the figure the contract paid.
+        Assert.True(result.Claimed, "the master could not fell the target");
         Assert.Equal(contract.Reward, result.Reward);
         Assert.True(hero.Warrior.Honor > honorBefore);
         Assert.Null(state.AcceptedBountyDay);
@@ -196,7 +196,7 @@ public class BountyTests
             () => new Expedition().SendToBounty(state, contract, [hero], new SeededRandom(1)));
     }
 
-    /// <summary>Kellesi alınan sözleşme tahtadan iner — aynı hedef iki kez satılmaz.</summary>
+    /// <summary>A contract whose head is taken comes off the board — the same target is not sold twice.</summary>
     [Fact]
     public void AClaimedContractLeavesTheBoardForTheRestOfItsDays()
     {
@@ -219,7 +219,7 @@ public class BountyTests
             .SendToBounty(state, contract, [hero], new SeededRandom(5));
         Assert.True(result.Claimed);
 
-        // Sözleşmenin süresi hâlâ dolmadı ama hedef ölü.
+        // The contract has not expired yet but the target is dead.
         Assert.True(contract.IsOpenOn(state.Day));
         Assert.Null(state.Bounty);
     }

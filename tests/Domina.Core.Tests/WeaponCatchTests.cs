@@ -1,21 +1,21 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kılıç yakalama, GDD §4'ün kalkanı reddederken bıraktığı boşluğu doldurur: elde
-/// taşınan kalkan yerine, gelen silahı <b>durduran</b> bir alet. Bu testler kuralın iki
-/// ucunu da bağlar — yakalanan vuruş hasar vermez, yakalanan savaşçı açıkta kalır — ve
-/// kuralın ısırmaması gereken üç yeri (arka, mermi, kaçış) kapalı tutar.
+/// Sword catching fills the gap GDD §4 left when it rejected the shield: instead of a hand-carried
+/// shield, an implement that <b>stops</b> the incoming weapon. These tests tie down both ends of the
+/// rule — a caught strike does no damage, the caught warrior is left exposed — and keep the three
+/// places it must not bite (from behind, projectiles, fleeing) closed.
 /// </summary>
 public class WeaponCatchTests
 {
-    /// <summary>Yakalama zarı her zaman tutsun; ölçülen şey sayı değil kural.</summary>
+    /// <summary>The catch die always holds; what is measured is not the number but the rule.</summary>
     /// <remarks>
-    /// Kopma ve sersemletme dalları kapatılır: üç zar da aynı vuruştan atılıyor ve açık
-    /// bırakılsalardı test, yakalamanın değil sonuç ağacının davranışını ölçerdi.
+    /// The dismemberment and stun branches are switched off: all three dice are rolled from the same
+    /// strike, and left open the test would measure the outcome tree's behaviour rather than catching's.
     /// </remarks>
     private static CombatTuning CatchOnly { get; } = TestBuilders.PointBlank with
     {
@@ -23,16 +23,16 @@ public class WeaponCatchTests
         BaseDismembermentChance = 0,
         BaseStunChance = 0,
 
-        // Silahın elden düşmesi de aynı yakalamadan çıkar ve kilidin YERİNE geçer; açık
-        // bırakılsaydı bu dosyadaki testler kilidi hiç göremezdi. Düşürmenin kendisi
+        // The weapon falling out of the hand comes out of the same catch and takes the bind's PLACE; left
+        // open, the tests in this file would never see the bind. Disarming itself
         // DisarmTests'in konusu.
         CatchDisarmChance = 0,
     };
 
-    /// <summary>Yakalama zarının hiç tutmadığı ayar — kontrol tarafı.</summary>
+    /// <summary>The setting where the catch die never holds — the control side.</summary>
     private static CombatTuning NoCatch { get; } = CatchOnly with { BaseCatchChance = 0 };
 
-    /// <summary>Yakalayan alet: gelen kesici silahı tutar.</summary>
+    /// <summary>The catching implement: it holds the incoming cutting weapon.</summary>
     private static Weapon Hook { get; } =
         new("Test-Jitte", WeaponClass.Blunt, 4, TwoHanded: false, AttackSeconds: 1.0)
         {
@@ -43,7 +43,7 @@ public class WeaponCatchTests
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 30, TwoHanded: false, AttackSeconds: 1.0);
 
-    /// <summary>Aynı silahın çift el hâli — kaldıracın cevabını izole eder.</summary>
+    /// <summary>The two-handed version of the same weapon — it isolates the answer of leverage.</summary>
     private static Weapon HeavyBlade { get; } =
         new("Test-Nodachi", WeaponClass.Cutting, 30, TwoHanded: true, AttackSeconds: 1.0);
 
@@ -66,18 +66,18 @@ public class WeaponCatchTests
                 weapon: defenderWeapon),
         ],
         [TestBuilders.Warrior(101, "Vuran", aggression: 100, weapon: attackerWeapon)])
-    {
-        Tuning = tuning ?? CatchOnly,
-    };
+        {
+            Tuning = tuning ?? CatchOnly,
+        };
 
-    /// <summary>Yakalanan vuruş hiç hasar vermez.</summary>
+    /// <summary>A caught strike does no damage at all.</summary>
     [Fact]
     public void ACaughtAttackLandsNoDamage()
     {
-        // Stamina bol verilir: bedelin kendisi ayrı bir testin konusu
-        // (<see cref="CatchingRequiresStamina"/>). Varsayılan 100 stamina yalnızca
-        // birkaç yakalamaya yeter ve sonrasında vuruşlar geçmeye başlar — burada
-        // ölçülen şey kaynak değil, yakalanan vuruşun hasar vermemesi.
+        // Plenty of stamina is given: the cost itself is the subject of a separate test
+        // (<see cref="CatchingRequiresStamina"/>). The default 100 stamina is only enough for a few
+        // catches, after which strikes start getting through — what is measured here is not the resource
+        // but the caught strike doing no damage.
         var battle = new Battle(Bout(Hook, Blade, defenderStamina: 10000), new FixedRandom(0.0));
         battle.Run();
 
@@ -88,14 +88,14 @@ public class WeaponCatchTests
         Assert.Equal(new WarriorId(101), caught.Attacker);
         Assert.Equal(CatchOnly.CatchBindSeconds, caught.BindSeconds);
 
-        // Yakalayanın canına hiç dokunulmadı: yakalama kaçınma gibi hasarı azaltmaz,
-        // vuruşu tamamen siler.
+        // The catcher's health was not touched at all: catching does not reduce damage the way evasion
+        // does, it erases the strike entirely.
         Assert.DoesNotContain(
             battle.Events.OfType<AttackLanded>(),
             e => e.Defender == new WarriorId(1));
     }
 
-    /// <summary>Silahı yakalanan savaşçı o pencere boyunca yeni saldırı başlatmaz.</summary>
+    /// <summary>A warrior whose weapon is caught starts no new attack during that window.</summary>
     [Fact]
     public void ABoundAttackerStopsSwinging()
     {
@@ -122,7 +122,7 @@ public class WeaponCatchTests
             }
         }
 
-        Assert.False(double.IsNaN(caughtAt), "Hiçbir vuruş yakalanmadı.");
+        Assert.False(double.IsNaN(caughtAt), "No strike was caught.");
         Assert.Equal(attacksAtCatch, AttacksBy(battle, new WarriorId(101)));
 
         static int AttacksBy(Battle battle, WarriorId id) =>
@@ -130,16 +130,16 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Yakalamanın asıl karşılığı: kilitli savaşçı kaçınamaz.
+    /// Catching's real return: a bound warrior cannot evade.
     /// </summary>
     /// <remarks>
-    /// Kural yalnızca hasarı silseydi yakalama pahalı bir kaçınma olurdu. Açılan pencere
-    /// olmadan jitte'nin düşük hasarı hiçbir yerde telafi edilmez.
+    /// If the rule only erased damage, catching would be an expensive evasion. Without the window it
+    /// opens, the jitte's low damage is made up for nowhere.
     /// </remarks>
     [Fact]
     public void ABoundWarriorCannotDodge()
     {
-        // Yakalayan da vursun; kilitli savaşçının kaçınma zarı denenecek.
+        // The catcher strikes too; the bound warrior's evasion die will be tried.
         BattleSetup setup = Bout(Hook, Blade) with
         {
             PlayerSide =
@@ -165,7 +165,7 @@ public class WeaponCatchTests
                  && e.AtSeconds <= caught.AtSeconds + CatchOnly.CatchBindSeconds);
     }
 
-    /// <summary>Yakalayacak aleti olmayan savaşçı hiç yakalamaz.</summary>
+    /// <summary>A warrior with no catching implement never catches.</summary>
     [Fact]
     public void AnOrdinaryWeaponNeverCatches()
     {
@@ -176,11 +176,11 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Çift el silah daha zor yakalanır — yakalamanın kendi cevabı.
+    /// A two-handed weapon is harder to catch — catching's own answer.
     /// </summary>
     /// <remarks>
-    /// Sayı değil <b>sıra</b> sınanıyor. Kaldıracın karşılığı olmasaydı jitte her
-    /// eşleşmede doğru seçim olur ve ağır silah seçmek bedelsiz bir kayba dönüşürdü.
+    /// Not the number but the <b>order</b> is tested. Without the return for leverage, the jitte would be
+    /// the right choice in every matchup and choosing a heavy weapon would become a free loss.
     /// </remarks>
     [Fact]
     public void TwoHandedWeaponsAreHarderToCatch()
@@ -192,7 +192,7 @@ public class WeaponCatchTests
 
         Assert.True(
             twoHanded < oneHanded,
-            $"Çift el silah daha zor yakalanmadı ({twoHanded} >= {oneHanded}).");
+            $"The two-handed weapon was not harder to catch ({twoHanded} >= {oneHanded}).");
 
         static int CatchesAgainst(Weapon weapon, CombatTuning tuning)
         {
@@ -208,7 +208,7 @@ public class WeaponCatchTests
         }
     }
 
-    /// <summary>Yumruk yakalanmaz: ortada tutulacak bir şey yok.</summary>
+    /// <summary>Fists are not caught: there is nothing to hold.</summary>
     [Fact]
     public void FistsCannotBeCaught()
     {
@@ -220,7 +220,7 @@ public class WeaponCatchTests
         Assert.Empty(battle.Events.OfType<AttackCaught>());
     }
 
-    /// <summary>Havada gelen mermi yakalanmaz — kural yalnızca yakın dövüşe aittir.</summary>
+    /// <summary>A projectile in the air is not caught — the rule belongs to melee alone.</summary>
     [Fact]
     public void ProjectilesCannotBeCaught()
     {
@@ -231,7 +231,7 @@ public class WeaponCatchTests
             [
                 TestBuilders.Warrior(
                     101,
-                    "Atıcı",
+                    "Thrower",
                     aggression: 100,
                     weapon: Blade,
                     thrown: ThrownWeapon.Shuriken()),
@@ -251,9 +251,9 @@ public class WeaponCatchTests
 
     /// <summary>Stamina yetmiyorsa yakalama denenmez.</summary>
     /// <remarks>
-    /// Bedelin ölçümdeki karşılığı buydu: bedel sıfırken zafer %76.85, 16'da %72.63 —
-    /// üstelik yakalama sayısı neredeyse aynı kalıyor (2.72'ye karşı 2.75). Yani bedel
-    /// yakalamayı seyrekleştirerek değil, savaşçıyı <b>yorarak</b> ısırıyor.
+    /// The cost's counterpart in measurement was this: with the cost at zero, victory was 76.85%, at 16
+    /// it was 72.63% — and the number of catches stays almost the same (2.72 against 2.75). So the cost
+    /// bites not by making catches rarer but by <b>tiring</b> the warrior.
     /// </remarks>
     [Fact]
     public void CatchingRequiresStamina()
@@ -267,12 +267,12 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Çekilen savaşçı yakalamaz: kaçış vaadinin üstüne yeni bir zar konmaz.
+    /// A warrior pulling out does not catch: no new die is placed on top of the escape promise.
     /// </summary>
     /// <remarks>
-    /// Sersemletmedeki koruma kuralının eşi (GDD §5). Sırtı dönük koşan savaşçı
-    /// karşısındakinin silahına gitmez; kural burada da işleseydi kaçış bir çıkış değil
-    /// yeni bir dövüş hamlesi olurdu.
+    /// The counterpart of the protective rule in stun (GDD §5). A warrior running with his back turned
+    /// does not go into the other man's weapon; if the rule worked here too, fleeing would not be an exit
+    /// but a new combat move.
     /// </remarks>
     [Fact]
     public void ARetreatingWarriorNeverCatches()
@@ -294,12 +294,11 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Yakalama İsabet'e bağlıdır, Kaçınma'ya değil.
+    /// Catching hangs on Accuracy, not on Evasion.
     /// </summary>
     /// <remarks>
-    /// İki savunma ekseni aynı stattan beslenseydi ekipman kararı stat kararının
-    /// kopyası olur, jitte yalnızca "kaçınması yüksek savaşçının ikinci savunması"
-    /// olarak kalırdı.
+    /// If both defensive axes fed off the same stat, the equipment decision would be a copy of the stat
+    /// decision and the jitte would stay only "the second defence of a warrior with high evasion".
     /// </remarks>
     [Fact]
     public void CatchingScalesWithAccuracyNotEvasion()
@@ -311,7 +310,7 @@ public class WeaponCatchTests
 
         Assert.True(
             highAccuracy > lowAccuracy,
-            $"İsabet ekseni çalışmadı ({highAccuracy} <= {lowAccuracy}).");
+            $"The accuracy axis did not work ({highAccuracy} <= {lowAccuracy}).");
 
         static int CatchesWith(double accuracy, double evasion, CombatTuning tuning)
         {
@@ -330,19 +329,19 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Yakalama, kaçınmadan <b>önce</b> denenir.
+    /// Catching is tried <b>before</b> evasion.
     /// </summary>
     /// <remarks>
-    /// Sıra kuralın ısırıp ısırmadığını belirler: kaçınma önce gelseydi yüksek kaçınmalı
-    /// savaşçıda yakalama neredeyse hiç ateşlenmez, jitte "kaçınamayanın son çaresi"
-    /// olurdu — oysa asıl karşılığı saldıranı kilitlemek.
+    /// The order decides whether the rule bites: with evasion first, catching would almost never fire on
+    /// a warrior with high evasion and the jitte would be "the last resort of the one who cannot evade" —
+    /// whereas its real return is locking the attacker down.
     /// </remarks>
     [Fact]
     public void CatchIsTriedBeforeDodge()
     {
-        // Kaçınma zarı da tutacak kurulum: her ikisi de açıkken yakalama kazanmalı.
-        // Stamina bol, yoksa tükenen yakalama sırayı kaçınmaya bırakır ve test sıranın
-        // değil kaynağın davranışını ölçer.
+        // A setup where the evasion die also holds: with both open, catching must win. Plenty of
+        // stamina, or an exhausted catch leaves the turn to evasion and the test measures the resource's
+        // behaviour rather than the order's.
         var battle = new Battle(
             Bout(Hook, Blade, defenderEvasion: 100, defenderStamina: 10000),
             new FixedRandom(0.0));
@@ -355,12 +354,12 @@ public class WeaponCatchTests
     }
 
     /// <summary>
-    /// Yakalama kapalıyken aynı kurulum vuruşu geçirir — kontrol tarafı.
+    /// With catching off the same setup lets the strike through — the control side.
     /// </summary>
     /// <remarks>
-    /// Kuralın gerçekten bir şey yaptığını gösteren tek test bu: yakalama açıkken hasar
-    /// yok, kapalıyken var. İkisi yan yana durmazsa "hasar yok" sonucu kurulumun
-    /// tesadüfünden de gelebilirdi.
+    /// This is the only test that shows the rule really does something: with catching on there is no
+    /// damage, with it off there is. Without the two side by side, the "no damage" result could just as
+    /// well come from a coincidence in the setup.
     /// </remarks>
     [Fact]
     public void WithoutTheRuleTheSameBlowLands()

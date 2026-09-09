@@ -6,10 +6,10 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Dövüşün kadroya yazılması. Korunan karar: çekirdek kalıcı hale dokunmaz, yalnızca
-/// rapor eder — ölümü, uzuv kaybını, dağılan zırhı ve biriken yıpranmayı geri dönüşsüz
-/// hale çeviren tek yer burasıdır. Toplu simülasyonun aynı kadroyu on binlerce kez
-/// koşturabilmesi buna bağlı.
+/// Writing the fight onto the roster. The decision protected: the core does not touch the persistent
+/// state, it only reports — this is the only place that turns death, limb loss, broken armour and
+/// accumulated wear into something irreversible. Batch simulation being able to run the same roster tens
+/// of thousands of times depends on it.
 /// </summary>
 public class DojoAftermathTests
 {

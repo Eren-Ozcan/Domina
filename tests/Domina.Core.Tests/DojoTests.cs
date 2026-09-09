@@ -4,9 +4,9 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kadro ve gün döngüsü (GDD §6, §10). Korunan üç karar: isim eşsizliği yalnızca
-/// <b>canlılar</b> arasında geçerlidir, ölen savaşçı kadrodan silinmez, ve bir gün
-/// dojo'da da sefere çıkıldığında da tek bir çağrıyla kapanır.
+/// The roster and the day loop (GDD §6, §10). Three decisions are protected: name uniqueness holds only
+/// among <b>the living</b>, a dead warrior is not removed from the roster, and a day closes with a
+/// single call whether it is spent in the dojo or on an expedition.
 /// </summary>
 public class DojoTests
 {
@@ -109,7 +109,7 @@ public class DojoTests
     [Fact]
     public void DaysBurnTheInfirmaryDownAndReportTheRelease()
     {
-        // İlaçsız gün: ambar dolu ama eczane kapalı, iyileşme doğal hızda kalsın.
+        // A day with no medicine: the store is full but the dispensary is closed, so recovery stays at its natural rate.
         DojoState state = new(economy: new EconomyTuning { MedicineRecoveryDays = 0 });
         state.Resources = new Resources(Gold: 500);
         RosterEntry entry = state.Roster.Recruit("Kenji");

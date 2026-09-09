@@ -5,14 +5,14 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Günün aksilikleri (GDD §11: rastgele olaylar kaynak eksiltir, tampon tutma baskısı).
-/// Korunan üç karar: olay gün ve tohumun <b>saf</b> fonksiyonudur, hepsi <b>eksiltir</b>,
-/// ve etki ambara değil kasaya ya da takvime vurur — günlük alışveriş ambarı zaten tam
-/// ihtiyaç kadar dolduruyor, çalınan erzağın karşılığı sıfır olurdu.
+/// The day's mishaps (GDD §11: random events subtract resources, buffer-keeping pressure).
+/// Three decisions are protected: an event is a <b>pure</b> function of the day and the seed, they all
+/// <b>subtract</b>, and the effect hits the treasury or the calendar rather than the store — the daily
+/// shopping already fills the store to exactly what is needed, so stolen provisions would count for nothing.
 /// </summary>
 public class DayEventTests
 {
-    /// <summary>Tek bir olay türünü zorlayan tablo — etkiyi izole eder.</summary>
+    /// <summary>A table that forces a single event kind — it isolates the effect.</summary>
     private static DayEventTable Always(DayEventKind kind, EventTuning? tuning = null) =>
         new((tuning ?? new EventTuning()) with { ChancePerDay = 1, Weights = [(kind, 1)] });
 
@@ -37,7 +37,7 @@ public class DayEventTests
         Assert.Contains(first, e => e is null);
     }
 
-    /// <summary>Olay akışı teklif akışına kilitlenmemeli.</summary>
+    /// <summary>The event stream must not be locked to the offer stream.</summary>
     [Fact]
     public void MishapsDoNotFollowTheEncounterStream()
     {
@@ -56,7 +56,7 @@ public class DayEventTests
         Assert.NotEmpty(eventDays);
         Assert.NotEmpty(direDays);
 
-        // Kilitli olsalardı olay günleri ağır teklif günlerinin alt kümesi olurdu.
+        // Were they locked, event days would be a subset of heavy-offer days.
         Assert.Contains(eventDays, d => !direDays.Contains(d));
     }
 
@@ -81,7 +81,7 @@ public class DayEventTests
         Assert.False(broke.Resources.AnyNegative);
     }
 
-    /// <summary>Bozulan erzak o günün alışverişini pahalılaştırır — ertesi güne ötelenmez.</summary>
+    /// <summary>Spoiled provisions make that day's shopping more expensive — it is not postponed to the next day.</summary>
     [Fact]
     public void SpoiledStoresMakeTheDaysShoppingListDearer()
     {
@@ -118,7 +118,7 @@ public class DayEventTests
         Assert.Equal(0, day.Upkeep.Medicine);
         Assert.Empty(day.Upkeep.Medicated);
 
-        // İlaçsız gün yalnızca doğal iyileşme kadar erir.
+        // A day without medicine burns only the natural recovery.
         Assert.Equal(3, wounded.RecoveryDaysRemaining);
     }
 
@@ -133,9 +133,9 @@ public class DayEventTests
         Assert.Equal(entry.Id, day.Event!.Target);
         Assert.InRange(day.Event.RecoveryDays, 1, 3);
 
-        // Aynı gün revir de çalışır: doğal iyileşme bir gün, ilaç bir gün daha eritir.
+        // The infirmary works the same day too: natural recovery burns one day, medicine one more.
         Assert.Contains(entry.Id, day.Upkeep.Medicated);
-        // Kısa hastalık aynı gün geçebilir: doğal iyileşme bir gün, ilaç bir gün daha eritir.
+        // A short illness can pass the same day: natural recovery burns one day, medicine one more.
         int left = Math.Max(0, day.Event.RecoveryDays - 2);
         Assert.Equal(left, entry.RecoveryDaysRemaining);
         Assert.Equal(
@@ -143,7 +143,7 @@ public class DayEventTests
             entry.Activity);
     }
 
-    /// <summary>Yatıracak sağlam savaşçı yoksa hastalık boşa düşer — çökmez.</summary>
+    /// <summary>If there is no healthy warrior to put down, the illness falls on nothing — it does not crash.</summary>
     [Fact]
     public void MishapsWithNoTargetPassHarmlessly()
     {
@@ -158,7 +158,7 @@ public class DayEventTests
         Assert.Equal(0, day.Event.RecoveryDays);
     }
 
-    /// <summary>Hepsi eksiltir: hiçbir olay kasaya para koymaz ya da revirden gün silmez.</summary>
+    /// <summary>They all subtract: no event puts money in the treasury or erases an infirmary day.</summary>
     [Fact]
     public void NoMishapEverHelps()
     {
@@ -187,11 +187,11 @@ public class DayEventTests
     }
 
     /// <summary>
-    /// Şiddet sabit değil: aynı olay her seferinde aynı miktarı götürmez.
+    /// The severity is not fixed: the same event does not take the same amount every time.
     /// </summary>
     /// <remarks>
-    /// Sabit oran aksiliği hesaplanabilir bir vergiye çevirirdi — oyuncu kaybı baştan
-    /// bilirse tampon tutmak karar değil, aritmetik olur.
+    /// A fixed rate would turn the mishap into a calculable tax — if the player knows the loss up front,
+    /// keeping a buffer is arithmetic rather than a decision.
     /// </remarks>
     [Fact]
     public void TheSameMishapDoesNotAlwaysCostTheSame()

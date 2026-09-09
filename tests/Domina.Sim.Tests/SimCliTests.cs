@@ -4,7 +4,7 @@ using Domina.Sim;
 
 namespace Domina.Sim.Tests;
 
-/// <summary>Komut satırı ayrıştırma ve çıktı biçimi.</summary>
+/// <summary>Command-line parsing and the output format.</summary>
 public class SimCliTests
 {
     private static SimOptions Parse(params string[] args)
@@ -20,8 +20,8 @@ public class SimCliTests
     {
         SimOptions options = Parse();
 
-        // Kabul kriteri "10.000 dövüş" diyor; araç argümansız çalıştırıldığında
-        // tam olarak o ölçümü yapmalı.
+        // The acceptance criterion says "10,000 fights"; run with no arguments the tool must make
+        // exactly that measurement.
         Assert.Equal(10_000, options.Battles);
         Assert.Equal("3v3", options.Scenario.Name);
         Assert.Equal(1ul, options.FirstSeed);
@@ -30,11 +30,11 @@ public class SimCliTests
     }
 
     /// <summary>
-    /// Uzun ufuk ancak <b>uyum sağlayan</b> bir politikayla ölçülebilir.
+    /// A long horizon can only be measured with a policy that <b>adapts</b>.
     /// </summary>
     /// <remarks>
-    /// Sabit tehdit bandı, gün geçtikçe büyüyen bir eğride er ya da geç her teklifi geri
-    /// çevirir; o zaman ölçülen şey ekonominin değil politikanın iflası olur.
+    /// A fixed threat band sooner or later declines every offer on a curve that grows as the days pass;
+    /// what is measured then is the policy's bankruptcy, not the economy's.
     /// </remarks>
     [Fact]
     public void TheAcceptanceRatioAndTheRiskPremiumAreSweepable()
@@ -66,7 +66,7 @@ public class SimCliTests
         Assert.Equal(12, options.Campaign.Dojo.Training.PathTrainingDays);
     }
 
-    /// <summary>Antrenman oranı taranabilir olmalı — sayı ancak süpürülerek kilitlenir.</summary>
+    /// <summary>The training rate must be sweepable — a number is only locked by sweeping it.</summary>
     [Fact]
     public void TrainingNumbersAreSweepable()
     {
@@ -89,11 +89,11 @@ public class SimCliTests
     }
 
     /// <summary>
-    /// Zehrin dört düğmesi komut satırından taranabilir olmalı.
+    /// Poison's four knobs must be sweepable from the command line.
     /// </summary>
     /// <remarks>
-    /// Sayılar ancak süpürülerek kilitlenir (bkz. docs/PROGRESS.md); tarama düğmesi
-    /// olmayan bir kural, ölçülemeyen bir kuraldır.
+    /// Numbers are only locked by sweeping (see docs/PROGRESS.md); a rule with no sweep knob is a rule
+    /// that cannot be measured.
     /// </remarks>
     [Fact]
     public void ThePoisonKnobsCanBeSwept()
@@ -123,9 +123,9 @@ public class SimCliTests
     [Fact]
     public void ThePolicyFractionIsReadInvariantly()
     {
-        // Oran daima nokta ile okunur; virgüllü yazım kabul edilmez. Aksi hâlde aynı
-        // komut farklı bölge ayarlarında farklı politika üretir ve iki ölçüm
-        // karşılaştırılamaz hale gelirdi.
+        // A ratio is always read with a dot; a comma form is not accepted. Otherwise the same command
+        // would produce different policies under different locale settings and two measurements could
+        // not be compared.
         Assert.Equal(0.35, ((RetreatBelowHealth)Parse("--policy", "below:0.35").RetreatPolicy!).HealthFraction, precision: 9);
         Assert.NotNull(SimArgs.Parse(["--policy", "below:0,35"]).Error);
     }
@@ -206,8 +206,8 @@ public class SimCliTests
 
         Assert.Equal(SimCli.ExitOk, exit);
         Assert.Contains("duel", text, StringComparison.Ordinal);
-        Assert.Contains("Zafer", text, StringComparison.Ordinal);
-        Assert.Contains("Uzuv kaybı", text, StringComparison.Ordinal);
+        Assert.Contains("Victory", text, StringComparison.Ordinal);
+        Assert.Contains("Limb losses", text, StringComparison.Ordinal);
         Assert.Contains("seed 1..25", text, StringComparison.Ordinal);
     }
 
@@ -231,8 +231,8 @@ public class SimCliTests
             Assert.StartsWith("seed,outcome,seconds", lines[0], StringComparison.Ordinal);
             Assert.StartsWith("1,", lines[1], StringComparison.Ordinal);
 
-            // Sayılar nokta ile yazılmalı: virgül ondalık ayırıcı CSV'yi bozardı.
-            // Sütun sayısı başlıktan okunur; sabit yazılsaydı her yeni sütunda kırılırdı.
+            // The numbers must be written with a dot: a comma decimal separator would break the CSV.
+            // The column count is read from the header; hard-coded it would break on every new column.
             int columns = lines[0].Count(c => c == ',');
             foreach (string line in lines.Skip(1))
             {

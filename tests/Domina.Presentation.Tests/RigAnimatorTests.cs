@@ -4,9 +4,9 @@ using Domina.Core.Model;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Duruş üretimi. Sanat geldiğinde bu sayıların hepsi değişecek; sınanan şey
-/// <b>sayılar değil kurallar</b>: kopan uzuv geri gelmez, ceset seğirmez, tek bacaklı
-/// savaşçı kaçarken de topallar, ıskalayan vuruş isabet edenden farklı görünür.
+/// Pose generation. All these numbers will change when art arrives; what is tested is <b>the rules, not
+/// the numbers</b>: a severed limb does not come back, a body does not twitch, a one-legged warrior
+/// limps while fleeing too, and a missed strike looks different from a landed one.
 /// </summary>
 public class RigAnimatorTests
 {
@@ -33,7 +33,7 @@ public class RigAnimatorTests
         Assert.Equal(BodyPart.SwordArm, animator.React(loss));
         Assert.True(animator.HasLost(BodyPart.SwordArm));
 
-        // İkinci kez gelirse düğüm zaten sahnede değil: yeniden koparılamaz.
+        // If it comes a second time the node is no longer in the scene: it cannot be severed again.
         Assert.Null(animator.React(loss));
     }
 
@@ -60,7 +60,7 @@ public class RigAnimatorTests
         Assert.True(settled.RootRotation > 1.4f);
     }
 
-    /// <summary>Ceset seğirmez: yarım kalmış sarsıntı ölümle birlikte biter.</summary>
+    /// <summary>A body does not twitch: a half-finished shake ends with death.</summary>
     [Fact]
     public void TheCorpseDoesNotFlinch()
     {
@@ -78,11 +78,11 @@ public class RigAnimatorTests
 
         Assert.True(Step(animator, CombatState.Idle).HurtBlend > 0);
 
-        // Bir saniye sonra iz kalmamalı, yoksa savaşçı kalıcı olarak kırmızı kalır.
+        // A second later no trace must be left, or the warrior stays permanently red.
         Assert.Equal(0f, Step(animator, CombatState.Idle, frames: 60).HurtBlend);
     }
 
-    /// <summary>Iska ile isabet aynı görünürse oyuncu dövüşü yalnızca can barından okur.</summary>
+    /// <summary>If a miss and a hit look the same, the player reads the fight from the health bar alone.</summary>
     [Fact]
     public void AMissLooksDifferentFromALandedSwing()
     {
@@ -97,9 +97,8 @@ public class RigAnimatorTests
     }
 
     /// <summary>
-    /// Fırsat saldırısı çekirdekte bir duruma karşılık gelmez — kaçan avın arkasından
-    /// anında çözülür. Boşta bekleyen savaşçı vuruşu oynatmazsa bedava vuruşun kimden
-    /// geldiği ekranda hiç görünmez.
+    /// An opportunity attack has no state in the core — it resolves instantly behind fleeing prey. If the
+    /// idle warrior does not play the swing, who the free hit came from is never visible on screen.
     /// </summary>
     [Fact]
     public void TheOpportunitySwingInterruptsTheIdlePose()
@@ -112,7 +111,7 @@ public class RigAnimatorTests
 
         Assert.True(swinging.NearShoulder > waiting.NearShoulder + 1f);
 
-        // Yaklaşık yarım saniye sonra beklemeye dönmeli.
+        // After roughly half a second he must return to waiting.
         RigPose after = Step(hunter, CombatState.Idle, frames: 60);
         Assert.Equal(waiting.NearShoulder, after.NearShoulder, 1);
     }
@@ -139,15 +138,15 @@ public class RigAnimatorTests
         RigPose maimed = Step(animator, CombatState.Idle);
         RigPose whole = Step(new RigAnimator(), CombatState.Idle);
 
-        // Gövde sağlam tarafa döner, kalan kol öne çıkar.
+        // The body turns toward the sound side and the remaining arm comes forward.
         Assert.True(maimed.Torso > whole.Torso);
         Assert.True(maimed.FarShoulder < whole.FarShoulder);
     }
 
     /// <summary>
-    /// Kaçış duruşu sakatlığı yok saydığında bacağını kaybetmiş savaşçı arenadan
-    /// <b>iki bacakla</b> koşarak çıkıyordu: kopan bacağın düğümü sahnede olmadığı için
-    /// ekranda tek bacak görünüyor, ama kalça son topallama değerinde asılı kalıyordu.
+    /// When the flee pose ignored the disability, a warrior who had lost a leg ran out of the arena on
+    /// <b>two legs</b>: because the severed leg's node was not in the scene it looked like one leg on
+    /// screen, but the hip hung at the last limp value.
     /// </summary>
     [Fact]
     public void TheOneLeggedLimpWhileFleeingToo()
@@ -157,7 +156,7 @@ public class RigAnimatorTests
 
         RigPose fleeing = Step(animator, CombatState.Retreating, frames: 12);
 
-        // Kopan bacak sürülmez, kalan bacak taşır, kalça çöker.
+        // The severed leg is not driven, the remaining leg carries, the hip sinks.
         Assert.Equal(0f, fleeing.NearHip);
         Assert.Equal(0f, fleeing.NearKnee);
         Assert.True(fleeing.HipOffsetY > 0);
@@ -181,7 +180,7 @@ public class RigAnimatorTests
     }
 
     /// <summary>
-    /// Kesilemez pencerenin duruşu belirgin olmalı: oyuncunun "artık çekemem" anını
+    /// The uninterruptible window's pose must be distinct: the player's moment of "I can no longer pull
     /// okuyabilmesinin tek yolu bu.
     /// </summary>
     [Fact]
@@ -208,7 +207,7 @@ public class RigAnimatorTests
         Assert.True(finished.Weapon > raised.Weapon);
     }
 
-    /// <summary>Kaçarken sırt dönük ve gövde öne yatık — kaçınma/blok yok.</summary>
+    /// <summary>While fleeing, the back is turned and the body leans forward — no evasion or block.</summary>
     [Fact]
     public void TheFleeingTurnTheirBack()
     {

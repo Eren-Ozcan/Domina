@@ -5,9 +5,9 @@ using Domina.Presentation;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Roster ekranının modeli. Korunan üç karar: sıralama "bugün kimi gönderebilirim"
-/// sorusuna göre, ölü savaşçı listeden düşmez, ve ad çakışması ekrana <b>fırlatmadan</b>
-/// önce görünür.
+/// The roster screen's model. Three decisions are protected: the ordering follows the question "whom can
+/// I send today", a dead warrior does not drop off the list, and a name clash is visible <b>before</b>
+/// anything throws.
 /// </summary>
 public class RosterModelTests
 {

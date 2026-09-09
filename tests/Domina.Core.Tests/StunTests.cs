@@ -5,26 +5,26 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Sersemletme, künt silahın var oluş sebebidir (GDD §7). Kesici uzuv koparır
-/// (<c>DismembermentFactor</c> 1.0), künt koparmaz (0.15) — karşılığında savaşçıyı
-/// donduran darbeyi indirir. Bu testler takasın iki ucunu da bağlar: künt vuruş
-/// dondurur, donan savaşçı ne vurur ne kaçınır.
+/// The stun is the blunt weapon's reason to exist (GDD §7). A cutting weapon takes limbs
+/// (<c>DismembermentFactor</c> 1.0), a blunt one does not (0.15) — in exchange it lands the blow that
+/// freezes the warrior. These tests tie down both ends of the trade: a blunt strike freezes, and a
+/// frozen warrior neither strikes nor evades.
 /// </summary>
 public class StunTests
 {
-    /// <summary>Uzuv kopma dalını kapatan ayar — sersemletme tek başına ölçülsün.</summary>
+    /// <summary>The setting that closes the dismemberment branch — so the stun is measured on its own.</summary>
     /// <remarks>
-    /// İki zar aynı ağır darbeden atılıyor; kopma açık kalsaydı test, sersemleyen
-    /// savaşçının uzvunu da kaybettiği bir kurulumu ölçerdi ve hangi kuralın ne yaptığı
-    /// ayrışmazdı.
+    /// The two dice are rolled from the same heavy blow; with dismemberment left open the test would
+    /// measure a setup in which the stunned warrior also loses a limb, and which rule did what could not
+    /// be told apart.
     /// </remarks>
     private static CombatTuning StunOnly { get; } = TestBuilders.PointBlank with
     {
         BaseDismembermentChance = 0,
 
-        // Eşik düşürülür ki kurban tek dövüşte birden fazla ağır darbe yiyebilsin:
-        // sertlik/can oranı sabit olduğu için eşiği aşan darbe aynı zamanda kurbanı
-        // birkaç vuruşta öldüren darbedir. Sınanan şey eşiğin sayısı değil kural.
+        // The threshold is lowered so the victim can take more than one heavy blow in a single fight:
+        // because the hardness/health ratio is fixed, a blow that passes the threshold is also one that
+        // kills the victim in a few strikes. What is tested is not the threshold's number but the rule.
         StunSeverityThreshold = 0.05,
         TorsoHitWeight = 100,
         HeadHitWeight = 0,
@@ -32,22 +32,22 @@ public class StunTests
         LegHitWeight = 0,
     };
 
-    /// <summary>Tek vuruşta ağır darbe eşiğini aşan künt silah.</summary>
+    /// <summary>A blunt weapon that passes the heavy-blow threshold in one strike.</summary>
     private static Weapon Club { get; } =
         new("Test-Kanabō", WeaponClass.Blunt, 40, TwoHanded: false, AttackSeconds: 1.0);
 
     /// <summary>
-    /// Kurbanın elindeki zararsız silah: dövüş tek yönlü kalsın diye.
+    /// The harmless weapon in the victim's hand: so the fight stays one-way.
     /// </summary>
     /// <remarks>
-    /// Kurban yumrukla bile karşılık verirse hücumla varan darbesi dövücüyü sersemletir
-    /// ve testler kimin sersemlediğini ayırt edemez. Ölçülen şey karşılıklı dövüş değil,
+    /// If the victim answers even with his fists, a blow arriving with a charge stuns the striker and the
+    /// tests cannot tell who was stunned. What is measured is not an exchange but
     /// tek bir darbenin sonucu.
     /// </remarks>
     private static Weapon Harmless { get; } =
         new("Test-Sopa", WeaponClass.Cutting, 0, TwoHanded: false, AttackSeconds: 1.0);
 
-    /// <summary>Aynı sertlikte kesici silah — sınıf farkını izole eder.</summary>
+    /// <summary>A cutting weapon of the same hardness — it isolates the class difference.</summary>
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 40, TwoHanded: false, AttackSeconds: 1.0);
 
@@ -67,12 +67,12 @@ public class StunTests
                 weapon: Harmless,
                 armor: victimArmor),
         ],
-        [TestBuilders.Warrior(101, "Dövücü", aggression: 100, weapon: attackerWeapon)])
-    {
-        Tuning = tuning ?? StunOnly,
-    };
+        [TestBuilders.Warrior(101, "Striker", aggression: 100, weapon: attackerWeapon)])
+        {
+            Tuning = tuning ?? StunOnly,
+        };
 
-    /// <summary>Künt silahın ağır darbesi savaşçıyı dondurur.</summary>
+    /// <summary>A blunt weapon's heavy blow freezes the warrior.</summary>
     [Fact]
     public void ABluntGrievousBlowStunsTheDefender()
     {
@@ -88,12 +88,12 @@ public class StunTests
     }
 
     /// <summary>
-    /// Takasın kendisi: aynı sertlikteki kesici silah çok daha seyrek sersemletir.
+    /// The trade itself: a cutting weapon of the same hardness stuns far more rarely.
     /// </summary>
     /// <remarks>
-    /// Sayı değil <b>sıra</b> sınanıyor. Künt sınıf kopma çarpanında kesiciye kaybeder;
-    /// bu eksende kazanmazsa künt silah her eksende kötüdür ve kimse kuşanmaz.
-    /// </remarks>
+    /// Not the number but the <b>order</b> is tested. The blunt class loses to the cutting one on the
+    /// dismemberment multiplier; if it does not win on this axis, a blunt weapon is bad on every axis and
+    /// nobody carries one.
     [Fact]
     public void BluntStunsFarMoreOftenThanCutting()
     {
@@ -103,7 +103,7 @@ public class StunTests
         int blunt = StunsIn(Club);
         int cutting = StunsIn(Blade);
 
-        Assert.True(blunt > cutting, $"Künt sersemletmede öne geçmedi ({blunt} <= {cutting}).");
+        Assert.True(blunt > cutting, $"Blunt did not come ahead on stunning ({blunt} <= {cutting}).");
 
         static int StunsIn(Weapon weapon)
         {
@@ -119,7 +119,7 @@ public class StunTests
         }
     }
 
-    /// <summary>Sersemleyen savaşçı o pencere boyunca hiç saldırı başlatmaz.</summary>
+    /// <summary>A stunned warrior starts no attack at all during that window.</summary>
     [Fact]
     public void AStunnedWarriorStopsSwinging()
     {
@@ -145,18 +145,18 @@ public class StunTests
             }
         }
 
-        Assert.False(double.IsNaN(stunnedAt), "Kurban hiç sersemlemedi.");
+        Assert.False(double.IsNaN(stunnedAt), "The victim was never stunned.");
         Assert.Equal(attacksAtStun, AttacksBy(battle, new WarriorId(1)));
 
         static int AttacksBy(Battle battle, WarriorId id) =>
             battle.Events.OfType<AttackStarted>().Count(e => e.Attacker == id);
     }
 
-    /// <summary>Sersemleyen savaşçı kaçınamaz — donmanın asıl bedeli budur.</summary>
+    /// <summary>A stunned warrior cannot evade — that is the real price of freezing.</summary>
     [Fact]
     public void AStunnedWarriorCannotDodge()
     {
-        // Kaçınma zarı her seferinde tutacak şekilde: yüksek Kaçınma + FixedRandom(0).
+        // Set so the evasion die holds every time: high Evasion + FixedRandom(0).
         var setup = Beating(Club, victimEvasion: 100);
         var battle = new Battle(setup, new FixedRandom(0.0));
         battle.Run();
@@ -171,7 +171,7 @@ public class StunTests
     }
 
     /// <summary>
-    /// Çekilen savaşçı sersemlemez: künt silahlı düşman oyuncunun tek müdahalesini
+    /// A warrior pulling out is not stunned: an enemy with a blunt weapon would cancel the player's only
     /// (GDD §5) tek zarla iptal edemez.
     /// </summary>
     [Fact]
@@ -188,8 +188,8 @@ public class StunTests
         double commandedAt = battle.ElapsedSeconds;
         battle.Run();
 
-        // Komuttan SONRA sersemleme yok. Aynı tick'teki darbe komuttan önce düştü —
-        // tuşu açan darbe zaten oydu.
+        // No stun AFTER the command. The blow in the same tick landed before the command —
+        // it was the blow that unlocked the key.
         Assert.DoesNotContain(
             battle.Events.OfType<WarriorStunned>(),
             e => e.Defender == new WarriorId(1) && e.AtSeconds > commandedAt);
@@ -198,15 +198,15 @@ public class StunTests
     }
 
     /// <summary>
-    /// Sersemletme kaçış komutunu <b>yutmaz</b>, geciktirir: süre bitince buffer'lanmış
-    /// komut işlenir ve savaşçı çekilmeye başlar.
+    /// A stun <b>does not swallow</b> the flee command, it delays it: when the duration ends the buffered
+    /// command is processed and the warrior starts pulling out.
     /// </summary>
     [Fact]
     public void AStunDelaysTheRetreatCommandButDoesNotEatIt()
     {
         var battle = new Battle(Beating(Club), new FixedRandom(0.0));
 
-        // Önce sersemlemesini bekle, sonra tuşa bas.
+        // Wait for him to be stunned first, then press the key.
         while (!battle.Events.OfType<WarriorStunned>().Any() && battle.Step())
         {
         }
@@ -219,11 +219,11 @@ public class StunTests
         Assert.Contains(battle.Events.OfType<RetreatStarted>(), e => e.Warrior == new WarriorId(1));
     }
 
-    /// <summary>Zırh sersemletmeyi de damperler — ama kesiği durdurduğundan azını.</summary>
+    /// <summary>Armour damps the stun too — but less than it stops a cut.</summary>
     /// <remarks>
-    /// Payın (<see cref="CombatTuning.ArmorStunResistanceShare"/>) tek işi bu: künt
-    /// kuvvet plakanın altından geçer, o yüzden zırhın kopma direnci sersemletmeye
-    /// birebir sayılmaz.
+    /// That is the share's (<see cref="CombatTuning.ArmorStunResistanceShare"/>) only job: blunt force
+    /// goes through underneath the plate, so armour's dismemberment resistance does not count one to one
+    /// against stunning.
     /// </remarks>
     [Fact]
     public void ArmorDampensStunButLessThanItDampensSevering()
@@ -231,8 +231,8 @@ public class StunTests
         int bare = StunsWith(Armor.None());
         int plated = StunsWith(Armor.Heavy());
 
-        Assert.True(plated < bare, $"Zırh sersemletmeyi azaltmadı ({plated} >= {bare}).");
-        Assert.True(plated > 0, "Zırh sersemletmeyi tamamen kesti — pay 1'e kaymış olmalı.");
+        Assert.True(plated < bare, $"Armour did not reduce stunning ({plated} >= {bare}).");
+        Assert.True(plated > 0, "Armour cut stunning off entirely — the share must have slipped to 1.");
 
         static int StunsWith(Armor armor)
         {
@@ -248,7 +248,7 @@ public class StunTests
         }
     }
 
-    /// <summary>Kafaya inen darbe daha sık sersemletir — kabuto'nun dövüş içi karşılığı.</summary>
+    /// <summary>A blow to the head stuns more often — the kabuto's in-combat meaning.</summary>
     [Fact]
     public void AHeadBlowStunsMoreOftenThanATorsoBlow()
     {
@@ -259,7 +259,7 @@ public class StunTests
             HeadHitWeight = 100,
         });
 
-        Assert.True(head > torso, $"Kafa darbesi öne geçmedi ({head} <= {torso}).");
+        Assert.True(head > torso, $"The head blow did not come ahead ({head} <= {torso}).");
 
         static int StunsWithHits(CombatTuning tuning)
         {
@@ -275,7 +275,7 @@ public class StunTests
         }
     }
 
-    /// <summary>Eşiğin altındaki hafif darbe sersemletmez — sersemletme ağır darbe dalıdır.</summary>
+    /// <summary>A light blow below the threshold does not stun — the stun is a heavy-blow branch.</summary>
     [Fact]
     public void ALightBlowNeverStuns()
     {

@@ -1,15 +1,15 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Uçtan uca dövüş: kurulumdan bitişe kadar akışın tutarlı kalması. Faz 1'in kabul
-/// kriteri "3v3 dövüş baştan sona simüle ediliyor" — buradaki testler o cümlenin
-/// karşılığıdır. Olay akışı ile sonuç özeti birbirini tutmalı, çünkü Faz 2'de ekranda
-/// görünen şey olay akışı, kayıtlara geçen şey özettir; ikisi ayrışırsa uzuv kopan
-/// savaşçı ekranda sağlam görünür.
+/// End-to-end combat: the flow staying consistent from setup to finish. Phase 1's acceptance criterion
+/// is "a 3v3 fight is simulated from start to finish" — the tests here are that sentence's counterpart.
+/// The event stream and the result summary must match, because in phase 2 what appears on screen is the
+/// event stream while what goes into the records is the summary; if the two drift apart, a warrior who
+/// lost a limb looks intact on screen.
 /// </summary>
 public class BattleFlowTests
 {
@@ -37,7 +37,7 @@ public class BattleFlowTests
         Assert.True(result.ElapsedSeconds > 0);
         Assert.True(result.ElapsedSeconds <= CombatTuning.Default.MaxBattleSeconds);
 
-        // Bitmiş bir dövüş ilerlemez.
+        // A finished fight does not advance.
         Assert.False(battle.Step());
     }
 
@@ -65,7 +65,7 @@ public class BattleFlowTests
         double previous = -1;
         foreach (BattleEvent e in battle.Events)
         {
-            Assert.True(e.AtSeconds >= previous, "Olay akışı zamanda geriye gitmemeli.");
+            Assert.True(e.AtSeconds >= previous, "The event stream must not go backwards in time.");
             previous = e.AtSeconds;
         }
     }
@@ -82,8 +82,8 @@ public class BattleFlowTests
 
         foreach (WarriorBattleSummary summary in result.Summaries)
         {
-            // Bloklanan darbe de inen darbedir: ayrı olay akar (ekranda ayrı görünmesi
-            // gerekiyor) ama sayaçlarda isabettir. İkisi toplanmazsa akış ile bilanço
+            // A blocked blow is a landed blow too: it flows as a separate event (it has to look separate
+            // on screen) but counts as a hit in the counters. If the two are not added together, the
             // birbirini tutmaz.
             int landed = battle.Events.OfType<AttackLanded>().Count(e => e.Attacker == summary.Id)
                          + battle.Events.OfType<AttackBlocked>().Count(e => e.Attacker == summary.Id);
@@ -102,7 +102,7 @@ public class BattleFlowTests
             Assert.Equal(dismembered, summary.LostLimb);
             Assert.Equal(dismembered, summary.LostParts != BodyPartSet.None);
 
-            // İsabetler saldırıların alt kümesidir.
+            // Hits are a subset of attacks.
             Assert.True(summary.HitsLanded <= summary.AttacksMade);
             Assert.InRange(summary.Accuracy, 0, 1);
         }
@@ -167,7 +167,7 @@ public class BattleFlowTests
         {
             foreach (CombatantSnapshot s in battle.Snapshots())
             {
-                // HUD bu değerleri doğrudan bara basar; negatif can bar'ı bozardı.
+                // The HUD prints these values straight onto the bar; negative health would break it.
                 Assert.InRange(s.Health, 0, s.MaxHealth);
                 Assert.InRange(s.Stamina, 0, s.MaxStamina);
             }
@@ -179,7 +179,7 @@ public class BattleFlowTests
     [Fact]
     public void ADrawnOutStalemateEndsAtTheTimeLimit()
     {
-        // İki dev, yumrukla: kimse kimseyi bitiremez, süre dolar.
+        // Two giants, with fists: neither can finish the other and the time runs out.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 100_000, weapon: Weapon.Fists())],
             [TestBuilders.Warrior(101, health: 100_000, weapon: Weapon.Fists())])
@@ -197,7 +197,7 @@ public class BattleFlowTests
     [Fact]
     public void AnUnevenFightStillResolves()
     {
-        // 1v3: çoklu savaşçı desteği tek tarafta yığılınca da çalışmalı.
+        // 1v3: multi-warrior support must work when they pile up on one side too.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 200, defense: 40)],
             [
@@ -233,8 +233,8 @@ public class BattleFlowTests
     [Fact]
     public void EventCollectionCanBeTurnedOffWithoutChangingTheOutcome()
     {
-        // Toplu simülasyon olayları biriktirmez; sonucu bu ayarın etkilememesi şart,
-        // yoksa dengeye bakılan dövüş ile ekranda izlenen dövüş farklı olurdu.
+        // Batch simulation does not collect events; the result must not be affected by that setting, or
+        // the fight balance is examined on and the fight watched on screen would differ.
         var withEvents = new Battle(ThreeVsThree(), new SeededRandom(17));
         BattleResult a = withEvents.Run();
 

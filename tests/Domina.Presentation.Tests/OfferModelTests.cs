@@ -5,8 +5,8 @@ using Domina.Core.Model;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Günün teklifi ekranının modeli. Korunan üç karar: düşman kadrosu ekrana hiç
-/// verilmez, ödül girmeden önce okunur, ve seferin reddedileceği <b>fırlamadan önce</b>
+/// The day's offer screen's model. Three decisions are protected: the enemy roster is never given to
+/// the screen, the reward is readable before going in, and the expedition being refused is visible
 /// bilinir.
 /// </summary>
 public class OfferModelTests
@@ -31,7 +31,7 @@ public class OfferModelTests
         Assert.Equal(EncounterOffer.MaxPartySize, card.MaxPartySize);
     }
 
-    /// <summary>Ödül girmeden önce okunabilir olmalı; yoksa "al ya da bırak" bir kumar olur.</summary>
+    /// <summary>The reward must be readable before going in; otherwise "take it or leave it" is a gamble.</summary>
     [Fact]
     public void TheRewardIsReadableBeforeEntering()
     {
@@ -40,7 +40,7 @@ public class OfferModelTests
         Assert.True(OfferModel.Describe(dojo).PromisedReward > 0);
     }
 
-    /// <summary>Hami ödülü büyütür — kart okulun işlediği sayıyı göstermeli.</summary>
+    /// <summary>The patron raises the reward — the card must show the number the school applied.</summary>
     [Fact]
     public void TheCardReadsTheSchoolAdjustedReward()
     {
@@ -99,7 +99,7 @@ public class OfferModelTests
     {
         DojoState dojo = Stocked();
         List<WarriorId> party =
-            [.. Enumerable.Range(1, 5).Select(i => dojo.Roster.Recruit($"Savaşçı {i}").Id)];
+            [.. Enumerable.Range(1, 5).Select(i => dojo.Roster.Recruit($"Warrior {i}").Id)];
 
         PartyVerdict verdict = OfferModel.Judge(dojo, party);
 
@@ -107,7 +107,7 @@ public class OfferModelTests
         Assert.Equal(5, verdict.Size);
     }
 
-    /// <summary>Ölen savaşçının kimliği ekranda kalabilir; hüküm onu sessizce düşürmez.</summary>
+    /// <summary>A dead warrior's id can stay on the screen; the verdict does not silently drop him.</summary>
     [Fact]
     public void AnIdThatIsNoLongerInTheRosterIsRefusedNotDropped()
     {
@@ -155,7 +155,7 @@ public class OfferModelTests
         Assert.Equal(contract.DaysLeft(dojo.Day), card.DaysLeft);
     }
 
-    /// <summary>Süresi geçmiş sözleşmeye ekip gönderilemez — söz verilmiş olsa bile.</summary>
+    /// <summary>A party cannot be sent against an expired contract — even if the promise was given.</summary>
     [Fact]
     public void AClosedContractRefusesTheParty()
     {
@@ -175,7 +175,7 @@ public class OfferModelTests
             OfferModel.JudgeBounty(dojo, contract, [ready.Id]).Refusal);
     }
 
-    /// <summary>Tahtada sözleşmesiz günler var; ilk asılı olanı bulana kadar gün geçer.</summary>
+    /// <summary>There are days with no contract on the board; days pass until the first posted one is found.</summary>
     private static BountyContract OpenContract(DojoState dojo)
     {
         for (int guard = 0; guard < 30; guard++)
@@ -188,6 +188,6 @@ public class OfferModelTests
             dojo.Decline();
         }
 
-        throw new InvalidOperationException("Tahtaya 30 günde sözleşme asılmadı.");
+        throw new InvalidOperationException("No contract was posted on the board in 30 days.");
     }
 }

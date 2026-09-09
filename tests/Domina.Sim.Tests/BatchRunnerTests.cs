@@ -1,12 +1,12 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Sim;
 
 namespace Domina.Sim.Tests;
 
 /// <summary>
-/// Toplu simülasyonun sayımı. Bu sayılar denge kararlarının tek dayanağı — yanlış
-/// toplanan bir oran, sessizce yanlış bir denge ayarına yol açar. Bu yüzden
-/// toplamlar dövüş başına satırlarla karşılaştırılarak doğrulanır.
+/// Batch simulation's counting. These numbers are the only basis for balance decisions — a rate summed
+/// wrongly leads silently to a wrong balance setting. That is why the totals are verified against the
+/// per-fight rows.
 /// </summary>
 public class BatchRunnerTests
 {
@@ -30,13 +30,13 @@ public class BatchRunnerTests
     {
         Assert.NotNull(Scenarios.Find("3V3"));
         Assert.NotNull(Scenarios.Find("AMBUSH"));
-        Assert.Null(Scenarios.Find("yok-böyle-bir-şey"));
+        Assert.Null(Scenarios.Find("no-such-thing"));
     }
 
     [Fact]
     public void TheSameSeedRangeProducesTheSameNumbers()
     {
-        // Bu bozulursa "sayıyı değiştirdim, oran değişti" cümlesi anlamını yitirir.
+        // If this breaks, the sentence "I changed the number and the rate changed" loses its meaning.
         BatchReport a = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 200);
         BatchReport b = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 200);
 
@@ -72,8 +72,8 @@ public class BatchRunnerTests
     [Fact]
     public void RatesUseTheRightDenominator()
     {
-        // Oranların paydası dövüş sayısı değil, sahaya çıkan savaşçı sayısıdır:
-        // 3v3'te bir dövüşte üç savaşçı ölebilir.
+        // The denominator of the rates is not the number of fights but the number of warriors who took
+        // the field: in 3v3 three warriors can die in one fight.
         BatchReport report = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 100);
 
         Assert.Equal(300, report.PlayerAppearances);
@@ -112,21 +112,21 @@ public class BatchRunnerTests
     }
 
     /// <summary>
-    /// Tuş ölümü uzuv kaybına çevirir (GDD §7): çeken oyuncu daha az ölü, daha çok
-    /// sakat getirir. Aracın ölçmesi gereken en önemli fark budur.
+    /// The key turns death into limb loss (GDD §7): a player who pulls out brings back fewer dead and
+    /// more maimed. This is the most important difference the tool has to measure.
     /// </summary>
     /// <remarks>
-    /// Uzuv kaybı <b>yalnızca</b> müdahale edilen dövüşlerde oluşmaz — öldürmeyen ağır
-    /// darbe tuşsuz da koparır (GDD §7). Bu yüzden test toplam sakat sayısını değil
-    /// <b>ölüm farkını</b> bağlar: ölçümde çeken ve çekmeyen oyuncunun sakat sayısı
-    /// neredeyse aynı çıkıyor, ölüm ise ölçülebilir biçimde düşüyor.
+    /// Limb loss does <b>not</b> happen only in fights with intervention — a heavy blow that does not kill
+    /// severs without the key too (GDD §7). So the test ties down not the total number of maimed but the
+    /// <b>difference in deaths</b>: in measurement the number of maimed comes out almost the same for the
+    /// player who pulls out and the one who does not, while death falls measurably.
     /// </remarks>
     [Fact]
     public void InterventionTradesDeathsForLostLimbs()
     {
-        // Örneklem kasıtlı olarak büyük: hücum savunmayı kapatmayı bıraktığından beri
-        // (GDD §4) çeken ile çekmeyen arasındaki ölüm farkı daraldı — 10.000 dövüşte
-        // %40.2'ye karşı %38.6 — ve küçük örneklemde gürültüye karışıyor.
+        // The sample is deliberately large: since the charge stopped closing defence (GDD §4) the
+        // difference in deaths between pulling out and not narrowed — 40.2% against 38.6% over 10,000
+        // fights — and it drowns in noise on a small sample.
         BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 3000);
         BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3)).Run(1, 3000);
 
@@ -138,19 +138,19 @@ public class BatchRunnerTests
     }
 
     /// <summary>
-    /// Kaçışın bedeli bir merdivendir (GDD §5) ve basma anı seni tek yönlü aşağı
-    /// kaydırır: ne kadar geç basarsan o kadar çok ölü, o kadar az sağ çıkan.
+    /// The price of escape is a ladder (GDD §5) and the moment you press slides you one way down it: the
+    /// later you press, the more dead and the fewer who get out alive.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Tuş bir <b>takas değil</b>: "ölümü uzuv kaybına çevirir" ağacın yalnızca bir dalı.
-    /// Bu test merdivenin sırasını bağlar — sıra bozulursa §5'in vaadi bozulmuş demektir.
-    /// Mutlak sayılar değil <b>sıralama</b> bağlanır; sayılar Faz 9'un işi.
+    /// The key is <b>not a trade</b>: "it turns death into limb loss" is only one branch of the tree.
+    /// This test ties down the ladder's order — if the order breaks, §5's promise is broken.
+    /// Not the absolute numbers but the <b>ordering</b> is tied down; the numbers are phase 9's job.
     /// </para>
     /// <para>
-    /// Merdivenin en üst basamağı artık "temastan önce bas" değil: tuş ilk isabete kadar
-    /// kapalı. En erken basış bile bedava değildir ve bu test onu da bağlar — eskiden
-    /// temas öncesi basış %0 uzuv kaybı veriyordu, yani basamak hiç yoktu.
+    /// The ladder's top rung is no longer "press before contact": the key is closed until the first hit.
+    /// Even the earliest press is not free, and this test ties that down too — a pre-contact press used
+    /// to give 0% limb loss, meaning the rung did not exist.
     /// </para>
     /// </remarks>
     [Fact]
@@ -160,10 +160,10 @@ public class BatchRunnerTests
         BatchReport afterAWhile = new BatchRunner(Scenario(), new RetreatAtSecond(2)).Run(1, 400);
         BatchReport whenLosing = new BatchRunner(Scenario(), new RetreatWhenLosing(0.7)).Run(1, 400);
 
-        // Tuşun açıldığı anda basmak bile sakatlık getirir: temas olmadan kaçış yok.
+        // Even pressing the moment the key unlocks brings maiming: there is no escape without contact.
         Assert.True(asSoonAsItOpens.PlayerLimbLosses > 0);
 
-        // Merdiven aşağı indikçe ölü artar, sağ çıkan azalır.
+        // As the ladder goes down, the dead rise and the survivors fall.
         Assert.True(asSoonAsItOpens.PlayerDeaths <= afterAWhile.PlayerDeaths);
         Assert.True(afterAWhile.PlayerDeaths < whenLosing.PlayerDeaths);
 

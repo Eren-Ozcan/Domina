@@ -5,14 +5,14 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Blok, savunmanın kaçınmadan ayrı ikinci eksenidir: kaçınma darbeyi ıskalatır ve orada
-/// biter, blok darbeyi <b>karşılar</b> — hasar düşer, uzuv kopmaz, ama darbe gelmiştir ve
-/// duruşta geçen süre vurulmayan vuruştur. Bu testler kararın kaynağını (Savunma statı),
-/// duruşun bedelini (saldırı döngüsü) ve tuttuğu ile tutmadığı şeyi bağlar.
+/// A block is defence's second axis, separate from evasion: evasion makes the blow miss and ends
+/// there, a block <b>meets</b> the blow — damage drops, no limb comes off, but the blow has landed, and
+/// the time spent in the stance is a strike not made. These tests tie down the decision's source (the
+/// Defence stat), the stance's price (the attack cycle) and what it holds and does not hold.
 /// </summary>
 public class BlockTests
 {
-    /// <summary>Bloğun izole edildiği ayar: kopma, sersemletme ve düşürme kapalı.</summary>
+    /// <summary>The setting that isolates the block: dismemberment, stun and disarming are off.</summary>
     private static CombatTuning BlockOnly { get; } = TestBuilders.PointBlank with
     {
         BaseDismembermentChance = 0,
@@ -25,11 +25,11 @@ public class BlockTests
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 20, TwoHanded: false, AttackSeconds: 1.0);
 
-    /// <summary>Blok kalitesi 1.0 olan silah — kaliteyi denklemden çıkarır.</summary>
+    /// <summary>A weapon with a block quality of 1.0 — it takes quality out of the equation.</summary>
     private static Weapon Guardpole { get; } =
         new("Test-Naginata", WeaponClass.Cutting, 20, TwoHanded: true, AttackSeconds: 1.0);
 
-    /// <param name="defense">Savunanın Savunma statı — blok zarının tek kaynağı.</param>
+    /// <param name="defense">The defender's Defence stat — the block die's only source.</param>
     private static BattleSetup Bout(
         double defense,
         CombatTuning? tuning = null,
@@ -37,21 +37,21 @@ public class BlockTests
         [
             TestBuilders.Warrior(
                 1,
-                "Karşılayan",
+                "Blocker",
                 health: 4000,
                 aggression: 0,
                 defense: defense,
                 weapon: defenderWeapon ?? Guardpole),
         ],
         [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: Blade)])
-    {
-        Tuning = tuning ?? BlockOnly,
-    };
+        {
+            Tuning = tuning ?? BlockOnly,
+        };
 
-    /// <summary>Savunma 0 olan savaşçı hiç bloklamaz.</summary>
+    /// <summary>A warrior with Defence 0 never blocks.</summary>
     /// <remarks>
-    /// Kaçınmayla aynı şekil: taban şans yok. Kural bu yüzden kendi kendini sınırlar —
-    /// bloğu ölçmeyen testler statı sıfırlayarak duruşu kapatabilir.
+    /// The same shape as evasion: no base chance. That is why the rule limits itself — tests that do not
+    /// measure blocking can switch the stance off by zeroing the stat.
     /// </remarks>
     [Fact]
     public void AWarriorWithNoDefenseNeverRaisesAGuard()
@@ -63,7 +63,7 @@ public class BlockTests
         Assert.Empty(battle.Events.OfType<AttackBlocked>());
     }
 
-    /// <summary>Duruş, gelen darbeyi karşılar: hasar düşer ve olay ayrı akar.</summary>
+    /// <summary>The stance meets the incoming blow: damage drops and the event flows separately.</summary>
     [Fact]
     public void AGuardedBlowLandsSofterThanAnOpenOne()
     {
@@ -79,14 +79,14 @@ public class BlockTests
         double openDamage = open.Events.OfType<AttackLanded>()
             .First(a => a.Defender == new WarriorId(1)).Damage;
 
-        // Karşılanan darbe silinmez, hafifler: BlockDamageReduction 0.70, silahın blok
-        // kalitesi 1.0 — geriye açık darbenin onda üçü kalır.
+        // A blow that is met is not erased, it is lightened: BlockDamageReduction 0.70 and the weapon's
+        // block quality 1.0 — three tenths of the open blow are left.
         Assert.All(blocked, b => Assert.True(
             b.Damage < openDamage,
-            $"Bloklanan darbe {b.Damage:F2}, açık darbe {openDamage:F2}."));
+            $"The blocked blow was {b.Damage:F2}, the open blow {openDamage:F2}."));
     }
 
-    /// <summary>Bloklanan darbe uzuv koparmaz — Savunma statının verdiği tek kesin söz.</summary>
+    /// <summary>A blocked blow takes no limb — the only certain promise the Defence stat makes.</summary>
     [Fact]
     public void AGuardedBlowCannotTakeALimb()
     {
@@ -97,7 +97,7 @@ public class BlockTests
 
         Assert.NotEmpty(battle.Events.OfType<AttackBlocked>());
 
-        // Kopma zarı her vuruşta tutuyor; bloklananların hiçbiri uzuv götüremez.
+        // The dismemberment die holds on every strike; none of the blocked ones may take a limb.
         var blockedAt = battle.Events.OfType<AttackBlocked>().Select(b => b.AtSeconds).ToHashSet();
         var severedAt = battle.Events.OfType<WarriorDismembered>()
             .Where(d => d.Warrior == new WarriorId(1))
@@ -107,33 +107,33 @@ public class BlockTests
         Assert.NotNull(result);
     }
 
-    /// <summary>Künt silah bloğun içinden geçer: sarsıntı payı duruşa rağmen işler.</summary>
+    /// <summary>A blunt weapon goes through the block: the concussion share works despite the stance.</summary>
     /// <remarks>
-    /// Kalkan yokken künt sınıfın dördüncü kazancı budur. Blok künte de tam işleseydi
-    /// savunmacı savaşçının önünde künt silahın tek karşılığı silinirdi.
+    /// With no shield, this is the blunt class's fourth gain. If the block worked fully against blunt
+    /// weapons too, their only answer would be erased in front of a defensive warrior.
     /// </remarks>
     [Fact]
     public void AGuardStopsSteelButNotTheShock()
     {
-        // Sersemletme eşiği sıfırlanır: sınanan şey ağır darbenin ne olduğu değil,
-        // bloklanan darbenin sarsıntı payını taşımaya devam ettiği.
+        // The stun threshold is zeroed: what is tested is not what a heavy blow is but that a blocked
+        // blow keeps carrying its concussion share.
         CombatTuning stunOnly = BlockOnly with
         {
             BaseStunChance = 1.0,
             StunSeverityThreshold = 0,
 
-            // Kısa sersemleme: uzun olsaydı savunan iki darbe arasında duruşa geçecek
-            // fırsat bulamaz, test sersemletmeyi değil sersemletme kilidini ölçerdi.
+            // A short stun: a long one would leave the defender no chance to take the stance between two
+            // blows, and the test would measure the stun lock rather than the stun.
             StunSeconds = 0.2,
             MaxBattleSeconds = 10,
         };
 
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Karşılayan", health: 4000, aggression: 0, defense: 100)],
+            [TestBuilders.Warrior(1, "Blocker", health: 4000, aggression: 0, defense: 100)],
             [
                 TestBuilders.Warrior(
                     101,
-                    "Sopalı",
+                    "Clubman",
                     health: 4000,
                     aggression: 100,
                     weapon: new Weapon("Test-Tetsubo", WeaponClass.Blunt, 30, TwoHanded: true, AttackSeconds: 2.0)),
@@ -148,13 +148,13 @@ public class BlockTests
         AttackBlocked[] blocked = [.. battle.Events.OfType<AttackBlocked>()];
         Assert.NotEmpty(blocked);
 
-        // Karşılanan darbelerden en az biri sersemletmiş olmalı: duruş çeliği durdurur,
-        // sarsıntıyı durdurmaz.
+        // At least one of the blows met must have stunned: the stance stops steel, it does not stop
+        // concussion.
         var stunnedAt = battle.Events.OfType<WarriorStunned>().Select(s => s.AtSeconds).ToHashSet();
         Assert.Contains(blocked, b => stunnedAt.Contains(b.AtSeconds));
     }
 
-    /// <summary>Bloğun bedeli: duruşta geçen süre vurulmayan vuruştur.</summary>
+    /// <summary>The block's price: the time spent in the stance is a strike not made.</summary>
     [Fact]
     public void AGuardIsPaidForWithSwings()
     {
@@ -169,13 +169,13 @@ public class BlockTests
 
         Assert.True(
             guardedSwings < openSwings,
-            $"Bloklayan {guardedSwings}, hiç bloklamayan {openSwings} vuruş yaptı.");
+            $"The blocker made {guardedSwings} swings, the one who never blocked {openSwings}.");
     }
 
-    /// <summary>Blok arkasına blok gelmez: duruş bir ritme bağlıdır.</summary>
+    /// <summary>No block comes right after a block: the stance is bound to a rhythm.</summary>
     /// <remarks>
-    /// Zar her karar adımında yeniden atılsaydı savunması yüksek savaşçı arka arkaya
-    /// bloklayıp hiç vurmayabilirdi — dövüş kilitlenirdi.
+    /// If the die were rolled again at every decision step, a warrior with high defence could block back
+    /// to back and never strike — the fight would lock up.
     /// </remarks>
     [Fact]
     public void AGuardCannotFollowAGuard()
@@ -183,15 +183,15 @@ public class BlockTests
         var battle = new Battle(Bout(defense: 100), new FixedRandom(0.0));
         BattleResult result = battle.Run();
 
-        // FixedRandom(0.0) her zarı tutturur: kural olmasaydı savaşçı ilk duruştan sonra
-        // hiç vurmazdı.
+        // FixedRandom(0.0) makes every die hold: without the rule the warrior would never strike after
+        // the first stance.
         Assert.True(result.SummaryFor(new WarriorId(1)).AttacksMade > 0);
         Assert.NotEmpty(battle.Events.OfType<BlockRaised>());
     }
 
-    /// <summary>Duruşun ne kadar tuttuğu elindeki silahtan okunur.</summary>
+    /// <summary>How much the stance holds is read from the weapon in his hand.</summary>
     /// <remarks>
-    /// Silahını düşüren savaşçı bloğunu da kaybeder: yumruğun blok kalitesi 0.30.
+    /// A warrior who drops his weapon loses his block too: the fists' block quality is 0.30.
     /// </remarks>
     [Fact]
     public void TheWeaponInHandDecidesHowMuchTheGuardHolds()
@@ -209,19 +209,19 @@ public class BlockTests
 
         Assert.True(
             poleDamage < fistDamage,
-            $"Sap {poleDamage:F2}, yumruk {fistDamage:F2} geçirdi — kalite ters çalışıyor.");
+            $"The haft let through {poleDamage:F2}, the fists {fistDamage:F2} — the quality works backwards.");
     }
 
-    /// <summary>Arkadan gelen vuruş bloklanamaz.</summary>
+    /// <summary>A strike from behind cannot be blocked.</summary>
     [Fact]
     public void AGuardFacesOnlyForward()
     {
         Assert.Equal(0.30, Weapon.Fists().BlockFactor);
         Assert.Equal(1.0, Guardpole.BlockFactor);
 
-        // Yakalama aleti bloğa ayrıca kayırılmaz: tek elli künt bir alettir, kalitesi de
-        // odur. Kayırıldığında ölçüm kilitli bir freni kırıyordu — ağır silah taşıyan
-        // düşmanın önünde jitte yanlış seçim olmaktan çıkıyordu (docs/GDD.md §5).
+        // The catching implement gets no extra favour for blocking: it is a one-handed blunt implement
+        // and its quality is that. When it was favoured, measurement broke a locked brake — the jitte
+        // stopped being the wrong choice in front of an enemy carrying a heavy weapon (docs/GDD.md §5).
         Assert.Equal(0.85, Weapon.Jitte().BlockFactor);
     }
 }

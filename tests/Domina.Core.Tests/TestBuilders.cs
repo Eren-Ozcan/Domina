@@ -4,24 +4,24 @@ using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
-/// <summary>Testlerde savaşçı üretmek için kısa yollar.</summary>
+/// <summary>Shortcuts for producing warriors in the tests.</summary>
 internal static class TestBuilders
 {
     /// <summary>
-    /// Taraflar birbirinin menzilinde başlar.
+    /// The sides start within each other's reach.
     /// </summary>
     /// <remarks>
-    /// Uzam geldiğinden beri savaşçılar varsayılan arenada birbirine <b>yürüyor</b>.
-    /// Sonuç ağacını, kaçışı ya da hasarı sınayan testler yürüyüşü değil çarpışmayı
-    /// ölçüyor; yaklaşmayı beklemek testi hem yavaşlatır hem kırılganlaştırır.
-    /// Yaklaşmanın kendisi <c>MovementTests</c>'in konusu.
+    /// Since space arrived, the warriors <b>walk</b> toward each other in the default arena. Tests that
+    /// exercise the outcome tree, escape or damage measure the collision, not the walk; waiting for them
+    /// to close both slows the test down and makes it fragile.
+    /// Closing itself is <c>MovementTests</c>'s subject.
     /// </remarks>
     /// <remarks>
     /// <para>
     /// <see cref="CombatTuning.BaseDismembermentChance"/> burada <b>sabitlenir</b>:
-    /// sonuç ağacını sınayan testler belirli zar değerleriyle çalışıyor ve o değerler
-    /// eşiğe göre seçildi. Denge sayısı devralınsaydı her denge ayarında bu testler
-    /// kırılırdı — oysa sınadıkları şey denge değil, kural.
+    /// tests exercising the outcome tree work with specific die values, and those values were chosen
+    /// against the threshold. If the balance number were inherited, these tests would break on every
+    /// balance change — whereas what they test is not balance but the rule.
     /// </para>
     /// </remarks>
     public static CombatTuning PointBlank { get; } = CombatTuning.Default with
@@ -46,25 +46,25 @@ internal static class TestBuilders
         ThrownWeapon? thrown = null) =>
         new(
             new WarriorId(id),
-            name ?? $"Savaşçı{id}",
+            name ?? $"Warrior{id}",
             new WarriorStats(health, aggression, defense, evasion, strength, accuracy, stamina, speed),
             weapon,
             armor,
             thrown);
 
-    /// <summary>Ağır darbe eşiğini tek vuruşta aşan silah.</summary>
+    /// <summary>A weapon that passes the heavy-blow threshold in one strike.</summary>
     public static Weapon Executioner() =>
         new("Test-Nodachi", WeaponClass.Cutting, 80, TwoHanded: false, AttackSeconds: 1.0);
 }
 
 /// <summary>
-/// Sabit değer döndüren sahte rastgelelik kaynağı.
+/// A fake randomness source that returns a fixed value.
 /// </summary>
 /// <remarks>
-/// <c>0.0</c> = her zar tutar (isabet eder, kaçınır, uzuv kopar).
-/// <c>0.999</c> = hiçbiri tutmaz. Kaçınma gibi istenmeyen dalları kapatmak için
-/// ilgili statı 0 vermek yeterlidir — <see cref="Chance"/> olasılık 0 iken
-/// değere bakmadan false döner.
+/// <c>0.0</c> = every die holds (it hits, it evades, a limb comes off).
+/// <c>0.999</c> = none of them holds. To close unwanted branches such as evasion it is enough to give
+/// the relevant stat as 0 — <see cref="Chance"/> returns false without looking at the value when the
+/// probability is 0.
 /// </remarks>
 internal sealed class FixedRandom(double value) : IRandomSource
 {

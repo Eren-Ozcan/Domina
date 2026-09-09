@@ -5,9 +5,9 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Hedef seçimi bir karardır, bir sıralama değil: savaşçı her karar adımında düşmanları
-/// mesafe, yara, açık bölge ve takım arkadaşlarının yığılması üzerinden tartar. Bu testler
-/// ağırlıkların yönünü ve kuralın iki frenini (fırsat penceresi, yapışkanlık) bağlar.
+/// Target selection is a decision, not an ordering: at every decision step the warrior weighs the
+/// enemies by distance, wounds, exposed regions and how his teammates have piled up. These tests tie
+/// down the direction of the weights and the rule's two brakes (the opportunity window, stickiness).
 /// </summary>
 public class TargetSelectionTests
 {
@@ -20,7 +20,7 @@ public class TargetSelectionTests
         MaxBattleSeconds = 6,
     };
 
-    /// <summary>İlk saldırının kime yöneldiği — seçimin gözlemlenebilir hâli.</summary>
+    /// <summary>Who the first attack goes to — the observable form of the choice.</summary>
     private static WarriorId FirstTargetOf(Battle battle, WarriorId attacker)
     {
         battle.Run();
@@ -28,12 +28,12 @@ public class TargetSelectionTests
         return battle.Events.OfType<AttackStarted>().First(a => a.Attacker == attacker).Defender;
     }
 
-    /// <summary>Yara farkı büyüdükçe takım yaralının üstüne döner.</summary>
+    /// <summary>As the wound difference grows the team turns on the wounded one.</summary>
     /// <remarks>
-    /// Kural doğrudan sınanamaz: çekirdek canı dışarıya açmıyor (dövüşe tek müdahale
-    /// noktası <c>CommandRetreat</c>), yani "şu düşmanı yarala" diye bir kurulum yok.
-    /// Sınanan şey bu yüzden sonuç: yapışkanlık kapalı ve yara ağırlığı baskınken iki
-    /// savaşçı da dövüşün sonunda <b>aynı</b> — en yaralı — düşmanı dövüyor olmalı.
+    /// The rule cannot be tested directly: the core does not expose health (the fight's only intervention
+    /// point is <c>CommandRetreat</c>), so there is no setup that says "wound this enemy". What is tested
+    /// is therefore the outcome: with stickiness off and the wound weight dominant, both warriors must be
+    /// fighting the <b>same</b> — the most wounded — enemy at the end of the fight.
     /// </remarks>
     [Fact]
     public void TheWoundedOneDrawsTheTeam()
@@ -41,14 +41,14 @@ public class TargetSelectionTests
         var setup = new BattleSetup(
             [
                 TestBuilders.Warrior(1, "Biri", aggression: 100, weapon: Weapon.Katana()),
-                TestBuilders.Warrior(2, "Öbürü", aggression: 100, weapon: Weapon.Katana()),
+                TestBuilders.Warrior(2, "Other", aggression: 100, weapon: Weapon.Katana()),
             ],
             [
-                TestBuilders.Warrior(101, "Sağlam", health: 4000),
+                TestBuilders.Warrior(101, "Healthy", health: 4000),
 
-                // Aynı darbe bunda çok daha büyük bir oran açar: yara ağırlığı orana
-                // bakar, mutlak hasara değil.
-                TestBuilders.Warrior(102, "Cılız", health: 400),
+                // The same blow opens a much larger ratio on this one: the wound weight looks at the
+                // ratio, not at absolute damage.
+                TestBuilders.Warrior(102, "Frail", health: 400),
             ])
         {
             Tuning = Quiet with
@@ -58,9 +58,9 @@ public class TargetSelectionTests
                 TargetCrowdPenalty = 0,
                 TargetWoundedWeight = 10_000,
 
-                // Fırsat penceresi burada denklemden çıkarılır: kendi testi var
-                // (ADistantWoundedEnemyIsNotWorthTheWalk), ve açık bırakılırsa iki
-                // savaşçı da yalnızca önündeki düşmanı görür.
+                // The opportunity window is taken out of the equation here: it has its own test
+                // (ADistantWoundedEnemyIsNotWorthTheWalk), and left open both warriors would only see
+                // the enemy in front of them.
                 TargetOpportunityRange = 10_000,
             },
         };
@@ -82,19 +82,19 @@ public class TargetSelectionTests
         Assert.All(late, t => Assert.Equal(weakest.Id, t));
     }
 
-    /// <summary>Fırsat penceresi: uzaktaki yaralı, yanındaki sağlamı geçemez.</summary>
+    /// <summary>The opportunity window: a distant wounded enemy cannot beat the healthy one beside you.</summary>
     /// <remarks>
-    /// Pencere olmasaydı savaşçı önündeki düşmanı bırakıp arenayı kat eder ve yol boyunca
-    /// bedava vuruş yerdi. Ölçüldü: sınırsız yara ağırlığı kuralı düz bir zorluk artışına
-    /// çeviriyordu (docs/GDD.md §4).
+    /// Without the window the warrior would leave the enemy in front of him and cross the arena, taking
+    /// free hits along the way. Measured: an unbounded wound weight turned the rule into a flat
+    /// difficulty increase (docs/GDD.md §4).
     /// </remarks>
     [Fact]
     public void ADistantWoundedEnemyIsNotWorthTheWalk()
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Seçen", aggression: 100, weapon: Weapon.Katana())],
+            [TestBuilders.Warrior(1, "Chooser", aggression: 100, weapon: Weapon.Katana())],
             [
-                TestBuilders.Warrior(101, "Yakın", health: 100),
+                TestBuilders.Warrior(101, "Near", health: 100),
                 TestBuilders.Warrior(102, "Uzak", health: 100),
             ])
         {
@@ -108,10 +108,10 @@ public class TargetSelectionTests
         Assert.Equal(new WarriorId(101), FirstTargetOf(battle, new WarriorId(1)));
     }
 
-    /// <summary>Kuşamı dağılmış bölge hedefi çeker.</summary>
+    /// <summary>A region whose armour has broken draws the target.</summary>
     /// <remarks>
-    /// Zırh yıpranmasının dövüş içi karşılığı burada kapanır: parçası dağılan düşman
-    /// yalnızca daha çok hasar almaz, aynı zamanda <b>daha çok dikkat</b> çeker.
+    /// Armour wear's in-combat meaning closes here: an enemy whose piece has broken not only takes more
+    /// damage, he also draws <b>more attention</b>.
     /// </remarks>
     [Fact]
     public void ABareSpotDrawsTheBlade()
@@ -119,20 +119,20 @@ public class TargetSelectionTests
         var setup = new BattleSetup(
             [
                 TestBuilders.Warrior(1, "Biri", aggression: 100, weapon: Weapon.Katana()),
-                TestBuilders.Warrior(2, "Öbürü", aggression: 100, weapon: Weapon.Katana()),
+                TestBuilders.Warrior(2, "Other", aggression: 100, weapon: Weapon.Katana()),
             ],
             [
-                // Çıplak tarafın dağılacak parçası yoktur (havuzu sıfır): dağılmanın
-                // hangi savaşçıda gerçekleştiği testin kurulumundan bilinsin diye.
-                TestBuilders.Warrior(101, "Çıplak", health: 4000, armor: Armor.None()),
-                TestBuilders.Warrior(102, "Kuşanan", health: 4000, armor: Armor.Light()),
+                // The bare side has no piece to break (its pool is zero): so that which warrior the
+                // breaking happened to is known from the test's setup.
+                TestBuilders.Warrior(101, "Bare", health: 4000, armor: Armor.None()),
+                TestBuilders.Warrior(102, "Armoured", health: 4000, armor: Armor.Light()),
             ])
         {
             Tuning = Quiet with
             {
                 MaxBattleSeconds = 12,
 
-                // Kırılgan kuşam: dağılma anı testin içinde gerçekleşsin diye.
+                // Fragile armour: so the moment of breaking happens inside the test.
                 ArmorDurabilityScale = 0.02,
                 TargetStickiness = 0,
                 TargetCrowdPenalty = 0,
@@ -160,19 +160,19 @@ public class TargetSelectionTests
         Assert.All(late, t => Assert.Equal(bare.Id, t));
     }
 
-    /// <summary>Yapışkanlık: hiçbir şey değişmezken hedef değişmez.</summary>
+    /// <summary>Stickiness: while nothing changes, the target does not change.</summary>
     /// <remarks>
-    /// Yapışkanlık olmasaydı iki düşman arasında kalan savaşçı her karar adımında yön
-    /// değiştirir, hiçbirine varamazdı — hedef değiştirmenin bedeli boşa giden yoldur.
+    /// Without stickiness a warrior caught between two enemies would change direction at every decision
+    /// step and reach neither — the price of switching targets is the road wasted.
     /// </remarks>
     [Fact]
     public void AWarriorDoesNotThrashBetweenEqualEnemies()
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Seçen", aggression: 100, weapon: Weapon.Katana())],
+            [TestBuilders.Warrior(1, "Chooser", aggression: 100, weapon: Weapon.Katana())],
             [
-                TestBuilders.Warrior(101, "Eş-1", health: 4000),
-                TestBuilders.Warrior(102, "Eş-2", health: 4000),
+                TestBuilders.Warrior(101, "Twin-1", health: 4000),
+                TestBuilders.Warrior(102, "Twin-2", health: 4000),
             ])
         {
             Tuning = Quiet with { MaxBattleSeconds = 12 },
@@ -189,18 +189,18 @@ public class TargetSelectionTests
         Assert.All(targets, t => Assert.Equal(targets[0], t));
     }
 
-    /// <summary>Kalabalık cezası: takım aynı düşmanın üstüne yığılmaz.</summary>
+    /// <summary>The crowd penalty: the team does not pile onto the same enemy.</summary>
     [Fact]
     public void ATeamSpreadsInsteadOfPiling()
     {
         var setup = new BattleSetup(
             [
                 TestBuilders.Warrior(1, "Biri", aggression: 100, weapon: Weapon.Katana()),
-                TestBuilders.Warrior(2, "Öbürü", aggression: 100, weapon: Weapon.Katana()),
+                TestBuilders.Warrior(2, "Other", aggression: 100, weapon: Weapon.Katana()),
             ],
             [
-                TestBuilders.Warrior(101, "Düşman-1", health: 4000),
-                TestBuilders.Warrior(102, "Düşman-2", health: 4000),
+                TestBuilders.Warrior(101, "Enemy-1", health: 4000),
+                TestBuilders.Warrior(102, "Enemy-2", health: 4000),
             ])
         {
             Tuning = Quiet with { MaxBattleSeconds = 12, TargetCrowdPenalty = 1000 },
@@ -224,15 +224,15 @@ public class TargetSelectionTests
         Assert.NotEqual(first, second);
     }
 
-    /// <summary>Ölen hedef bırakılır — kuralın en eski hâli hâlâ geçerli.</summary>
+    /// <summary>A dead target is dropped — the rule's oldest form still holds.</summary>
     [Fact]
     public void ADeadEnemyIsDropped()
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Seçen", aggression: 100, weapon: TestBuilders.Executioner())],
+            [TestBuilders.Warrior(1, "Chooser", aggression: 100, weapon: TestBuilders.Executioner())],
             [
-                TestBuilders.Warrior(101, "Kırılgan", health: 30),
-                TestBuilders.Warrior(102, "Dayanıklı", health: 4000),
+                TestBuilders.Warrior(101, "Fragile", health: 30),
+                TestBuilders.Warrior(102, "Sturdy", health: 4000),
             ])
         {
             Tuning = Quiet with { MaxBattleSeconds = 12 },
@@ -247,7 +247,7 @@ public class TargetSelectionTests
             a => a.Attacker == new WarriorId(1) && a.Defender == new WarriorId(102));
     }
 
-    /// <summary>Hedefi uzağa taşımanın tek yolu: dövüşü onu uzaklaştıracak kadar sürdürmek.</summary>
+    /// <summary>The only way to move a target far away: keep the fight going long enough to push him away.</summary>
     private static void PushAway(Battle battle, WarriorId id, double by)
     {
         for (int i = 0; i < 200 && !battle.IsFinished; i++)

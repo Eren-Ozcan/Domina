@@ -1,21 +1,21 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Silahın elden düşmesi zırhın ikinci cevabıdır: plaka darbeyi durdurmakla kalmaz,
-/// vuranın kavrayışını da bozar. Bu testler kuralın iki kaynağını (zırha vurmak,
-/// yakalanmak), üç sınırını (çıplak et düşürmez, mermi düşürmez, yumruk düşmez) ve
-/// düşen silahın <b>yerden alınmasını</b> bağlar.
+/// Dropping the weapon is armour's second answer: plate does not only stop the blow, it breaks the
+/// striker's grip too. These tests tie down the rule's two sources (striking armour, being caught), its
+/// three limits (bare flesh does not disarm, a projectile does not disarm, fists do not fall) and
+/// <b>picking the dropped weapon up</b> from the ground.
 /// </summary>
 public class DisarmTests
 {
-    /// <summary>Düşürmenin izole edildiği ayar: kopma ve sersemletme dalları kapalı.</summary>
+    /// <summary>The setting that isolates disarming: the dismemberment and stun branches are off.</summary>
     /// <remarks>
-    /// Üçü de aynı vuruştan çıkar. Açık bırakılsalardı savunan daha ilk darbede düşer,
-    /// düşürme zarına sıra hiç gelmezdi.
+    /// All three come out of the same strike. Left open, the defender would fall on the very first blow
+    /// and the disarm die would never get its turn.
     /// </remarks>
     private static CombatTuning DisarmOnly { get; } = TestBuilders.PointBlank with
     {
@@ -26,23 +26,23 @@ public class DisarmTests
         MaxBattleSeconds = 12,
     };
 
-    /// <summary>Yerden almanın kapalı olduğu ayar — düşmenin kendi sonucunu yalıtır.</summary>
+    /// <summary>The setting with picking up disabled — it isolates the drop's own consequence.</summary>
     private static CombatTuning NoPickup { get; } = DisarmOnly with { WeaponPickupRadius = 0 };
 
-    /// <summary>Düşürme zarının hiç tutmadığı ayar — kontrol tarafı.</summary>
+    /// <summary>The setting where the disarm die never holds — the control side.</summary>
     private static CombatTuning NoDisarm { get; } = DisarmOnly with { BaseDisarmChance = 0 };
 
-    /// <summary>Kesici, tek el, hafif: düşünce kaybedilen şey görünür olsun diye.</summary>
+    /// <summary>Cutting, one-handed, light: so that what is lost when it drops is visible.</summary>
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 20, TwoHanded: false, AttackSeconds: 1.0);
 
-    /// <summary>Aynı silahın künt hâli — sınıf ekseni yalıtılsın diye tek fark sınıf.</summary>
+    /// <summary>The blunt version of the same weapon — the only difference is the class, so the class axis is isolated.</summary>
     private static Weapon Club { get; } =
         new("Test-Tetsubo", WeaponClass.Blunt, 20, TwoHanded: false, AttackSeconds: 1.0);
 
-    /// <summary>Sert plaka: düşürme zarı vurulan parçanın direncinden beslenir.</summary>
+    /// <summary>Hard plate: the disarm die feeds on the struck piece's resistance.</summary>
     private static Armor Plate { get; } =
-        Armor.Uniform("Test-Plaka", new ArmorPiece("Test-Parça", 0, DismembermentResistance: 1.0, Weight: 0));
+        Armor.Uniform("Test plate", new ArmorPiece("Test piece", 0, DismembermentResistance: 1.0, Weight: 0));
 
     private static BattleSetup Bout(
         Weapon attackerWeapon,
@@ -51,18 +51,18 @@ public class DisarmTests
         [
             TestBuilders.Warrior(
                 1,
-                "Kuşanan",
+                "Armoured",
                 health: 4000,
                 aggression: 0,
                 weapon: Weapon.Fists(),
                 armor: defenderArmor ?? Plate),
         ],
         [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: attackerWeapon)])
-    {
-        Tuning = tuning ?? NoPickup,
-    };
+        {
+            Tuning = tuning ?? NoPickup,
+        };
 
-    /// <summary>Zırha inen vuruş saldıranın silahını elinden düşürür.</summary>
+    /// <summary>A strike landing on armour knocks the attacker's weapon out of his hand.</summary>
     [Fact]
     public void AnArmoredBlowKnocksTheWeaponLoose()
     {
@@ -71,17 +71,17 @@ public class DisarmTests
 
         WeaponDropped dropped = battle.Events.OfType<WeaponDropped>().First();
 
-        // Düşüren kimse yok: kavrayışı bozan şey plakadan dönen darbedir.
+        // Nobody disarmed him: what breaks the grip is the blow rebounding off the plate.
         Assert.Equal(new WarriorId(101), dropped.Warrior);
         Assert.Null(dropped.Disarmer);
         Assert.Equal(Blade.Name, dropped.Weapon);
     }
 
-    /// <summary>Çıplak bölgeye inen vuruş hiç düşürmez — kural kendi kendini sınırlar.</summary>
+    /// <summary>A strike landing on a bare region never disarms — the rule limits itself.</summary>
     /// <remarks>
-    /// Sertlik vurulan parçanın kopma direncinden okunur ve çıplak bölgenin direnci
-    /// sıfırdır. Bu sınır olmasaydı zırhsız düşmanla dövüşen savaşçı da silahını
-    /// elinden kaçırır, kural zırhın cevabı olmaktan çıkardı.
+    /// Hardness is read from the struck piece's dismemberment resistance, and a bare region's resistance
+    /// is zero. Without this limit a warrior fighting an unarmoured enemy would lose his weapon too, and
+    /// the rule would stop being armour's answer.
     /// </remarks>
     [Fact]
     public void ABlowOnBareFleshNeverDisarms()
@@ -92,15 +92,15 @@ public class DisarmTests
         Assert.Empty(battle.Events.OfType<WeaponDropped>());
     }
 
-    /// <summary>Künt silahın elden çıkma eğilimi kesicinin beşte biridir.</summary>
+    /// <summary>A blunt weapon's tendency to leave the hand is a fifth of a cutting weapon's.</summary>
     /// <remarks>
-    /// Zar sınıftan besleniyor; test sayıyı değil <b>sırayı</b> bağlar: aynı plakaya
-    /// aynı zarla vuran künt silah, kesici düşerken avuçta kalmalı.
+    /// The die feeds on the class; the test ties down not the number but the <b>order</b>: striking the
+    /// same plate with the same die, a blunt weapon must stay in the palm while a cutting one falls.
     /// </remarks>
     [Fact]
     public void ABluntWeaponKeepsTheGripWhereABladeLosesIt()
     {
-        // 0.3: kesicinin şansının (1.0 × 1.0 × 1.0) altında, küntünkinin (0.2) üstünde.
+        // 0.3: below the cutting weapon's chance (1.0 × 1.0 × 1.0), above the blunt one's (0.2).
         var blade = new Battle(Bout(Blade), new FixedRandom(0.3));
         blade.Run();
 
@@ -111,7 +111,7 @@ public class DisarmTests
         Assert.Empty(club.Events.OfType<WeaponDropped>());
     }
 
-    /// <summary>Silahını düşüren savaşçı dövüşü yumrukla sürdürür.</summary>
+    /// <summary>A warrior who drops his weapon carries on with his fists.</summary>
     [Fact]
     public void ADisarmedWarriorKeepsFightingWithFists()
     {
@@ -127,7 +127,7 @@ public class DisarmTests
 
         Assert.NotEmpty(after);
 
-        // Düşmeden sonraki vuruşlar yumruğun hasarını taşır: kesicininkinden düşük.
+        // The strikes after the drop carry the fists' damage: lower than the cutting weapon's.
         double beforeDamage = battle.Events.OfType<AttackLanded>()
             .First(a => a.Attacker == dropped.Warrior).Damage;
         Assert.All(after, a => Assert.True(a.Damage < beforeDamage));
@@ -137,7 +137,7 @@ public class DisarmTests
         Assert.Equal(1, attacker.TimesDisarmed);
     }
 
-    /// <summary>Silah bir kez düşer; yumruğun düşecek bir şeyi yoktur.</summary>
+    /// <summary>A weapon drops once; fists have nothing to drop.</summary>
     [Fact]
     public void FistsCannotBeDropped()
     {
@@ -147,21 +147,21 @@ public class DisarmTests
         Assert.Single(battle.Events.OfType<WeaponDropped>());
     }
 
-    /// <summary>Düşen silah yok olmaz: sahibi ona yürüyüp geri alabilir.</summary>
+    /// <summary>A dropped weapon is not destroyed: its owner can walk to it and take it back.</summary>
     /// <remarks>
-    /// Kırılma yerine düşme seçilmesinin bütün karşılığı budur. Bedel kalıcı bir kayıp
-    /// değil, silaha kadar yürünen ve yumrukla geçen süredir.
+    /// This is the whole return of choosing dropping over breaking. The price is not a permanent loss
+    /// but the time spent walking to the weapon with only fists.
     /// </remarks>
     [Fact]
     public void TheOwnerCanWalkBackToItsWeapon()
     {
-        // İki ayar: karşıdaki savaşçı silahlıdır (düşen kılıcı o almasın) ve silah tam
-        // dibine düşer. Silah normalde karşıdakinin arkasına savrulur ve teke tekte
-        // oraya varılamaz (bkz. Battle.DropPoint); ölçülen şey burada geometri değil,
-        // sahibinin silahını geri alabilmesi.
+        // Two settings: the warrior opposite is armed (so he does not take the fallen sword) and the
+        // weapon falls right at his feet. Normally the weapon is flung behind the other man and in a duel
+        // it cannot be reached (see Battle.DropPoint); what is measured here is not the geometry but the
+        // owner being able to take his weapon back.
         BattleSetup setup = new(
             [
-                TestBuilders.Warrior(1, "Kuşanan", health: 4000, aggression: 0, weapon: Club, armor: Plate),
+                TestBuilders.Warrior(1, "Armoured", health: 4000, aggression: 0, weapon: Club, armor: Plate),
             ],
             [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: Blade)])
         {
@@ -185,10 +185,10 @@ public class DisarmTests
         Assert.True(attacker.WeaponsPickedUp > 0);
     }
 
-    /// <summary>Yerdeki silahı eli boş olan <b>herkes</b> alabilir — düşman da.</summary>
+    /// <summary><b>Anyone</b> empty-handed can pick a weapon off the ground — the enemy too.</summary>
     /// <remarks>
-    /// Silahın kime ait olduğu sorulmaz: arenada duran bir namludur. Kural bu yüzden
-    /// tek yönlü değil — düşürdüğün silah düşmanın eline geçebilir.
+    /// Nobody asks whose the weapon is: it is a blade lying in the arena. So the rule is not one-way —
+    /// the weapon you knock out can end up in the enemy's hand.
     /// </remarks>
     [Fact]
     public void AnyEmptyHandedWarriorCanTakeIt()
@@ -198,23 +198,23 @@ public class DisarmTests
             new FixedRandom(0.0));
         battle.Run();
 
-        // Kuşanan taraf yumrukla dövüşüyor: eli boş sayılır ve düşen kılıca yürür.
+        // The armoured side is fighting with fists: he counts as empty-handed and walks to the fallen sword.
         Assert.Contains(
             battle.Events.OfType<WeaponPickedUp>(),
             p => p.Warrior == new WarriorId(1));
     }
 
-    /// <summary>Elinde silah olan ne alır ne arar.</summary>
+    /// <summary>A warrior with a weapon in hand neither picks up nor searches.</summary>
     /// <remarks>
-    /// Bu sınır olmasaydı savaşçılar sürekli daha iyi silah toplar, dövüş bir yağma
-    /// turuna dönerdi.
+    /// Without this limit the warriors would constantly collect better weapons and the fight would turn
+    /// into a looting round.
     /// </remarks>
     [Fact]
     public void AnArmedWarriorNeverPicksAnythingUp()
     {
         BattleSetup setup = new(
             [
-                TestBuilders.Warrior(1, "Kuşanan", health: 4000, aggression: 0, weapon: Club, armor: Plate),
+                TestBuilders.Warrior(1, "Armoured", health: 4000, aggression: 0, weapon: Club, armor: Plate),
             ],
             [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: Blade)])
         {
@@ -230,10 +230,10 @@ public class DisarmTests
             p => p.Warrior == new WarriorId(1));
     }
 
-    /// <summary>Yakalanan silah avuçtan sökülebilir — ve kilidin yerine geçer.</summary>
+    /// <summary>A caught weapon can be levered out of the palm — and that replaces the bind.</summary>
     /// <remarks>
-    /// Düşürme kilidin üstüne binseydi yakalama aleti tek zarda hem açık pencereyi hem
-    /// silahı alırdı; hasarda kaybettiğinin karşılığı fazlasıyla ödenirdi.
+    /// If disarming stacked on top of the bind, the catching implement would take both the open window
+    /// and the weapon on a single die; what it loses in damage would be more than repaid.
     /// </remarks>
     [Fact]
     public void ACaughtWeaponCanBeTornLooseInsteadOfBound()
@@ -257,7 +257,7 @@ public class DisarmTests
                         CatchSkill = 1.0,
                     }),
             ],
-            [TestBuilders.Warrior(101, "Saldıran", health: 4000, aggression: 100, weapon: Blade)])
+            [TestBuilders.Warrior(101, "Attacker", health: 4000, aggression: 100, weapon: Blade)])
         {
             Tuning = catching,
         };
@@ -267,27 +267,27 @@ public class DisarmTests
 
         WeaponDropped dropped = battle.Events.OfType<WeaponDropped>().First();
 
-        // Burada düşüren belli: çengeli tutan savaşçı.
+        // Here the disarmer is known: the warrior holding the hook.
         Assert.Equal(new WarriorId(101), dropped.Warrior);
         Assert.Equal(new WarriorId(1), dropped.Disarmer);
 
-        // Elden çıkan silahla birlikte kenetlenme çözülür: o anda kilit olayı çıkmaz.
+        // With the weapon gone the bind is released too: no bind event comes out at that moment.
         Assert.DoesNotContain(
             battle.Events.OfType<AttackCaught>(),
             c => Math.Abs(c.AtSeconds - dropped.AtSeconds) < 1e-9);
     }
 
-    /// <summary>Mermi kimsenin silahını düşürmez.</summary>
+    /// <summary>A projectile knocks nobody's weapon out.</summary>
     /// <remarks>
-    /// Kavrayışı bozan şey silahın plakaya çarpıp geri tepmesidir; fırlatılan silah
-    /// zaten elden çıkmıştır.
+    /// What breaks the grip is the weapon striking plate and rebounding; a thrown weapon has already
+    /// left the hand.
     /// </remarks>
     [Fact]
     public void ProjectilesDisarmNobody()
     {
         BattleSetup setup = new(
             [
-                TestBuilders.Warrior(1, "Kuşanan", health: 4000, aggression: 0, armor: Plate),
+                TestBuilders.Warrior(1, "Armoured", health: 4000, aggression: 0, armor: Plate),
             ],
             [
                 TestBuilders.Warrior(
@@ -299,7 +299,7 @@ public class DisarmTests
                     thrown: ThrownWeapon.Shuriken()),
             ])
         {
-            // Taraflar uzakta başlar: yakınken savaşçı yumruğu seçer, mermi hiç havalanmaz.
+            // The sides start far apart: up close the warrior chooses his fists and no projectile takes off.
             Tuning = NoPickup with { StartOffsetX = 400 },
         };
 
@@ -310,10 +310,10 @@ public class DisarmTests
         Assert.Empty(battle.Events.OfType<WeaponDropped>());
     }
 
-    /// <summary>Düşürme kalıcı hale dokunmaz — dövüş savaşçının silahını almaz.</summary>
+    /// <summary>Disarming does not touch the persistent state — a fight does not take the warrior's weapon.</summary>
     /// <remarks>
-    /// Toplu simülasyon aynı kadroyu on binlerce kez koşturur; dövüş kalıcı hali
-    /// değiştirseydi ikinci dövüş birincinin kalıntısıyla başlardı.
+    /// Batch simulation runs the same roster tens of thousands of times; if a fight changed the
+    /// persistent state, the second fight would start with the first one's residue.
     /// </remarks>
     [Fact]
     public void DisarmingDoesNotTouchThePermanentWeapon()
@@ -331,7 +331,7 @@ public class DisarmTests
         Assert.NotEmpty(second.Events.OfType<WeaponDropped>());
     }
 
-    /// <summary>Kural kapalıyken hiçbir silah düşmez — kontrol tarafı ayakta.</summary>
+    /// <summary>With the rule off no weapon drops — the control side holds.</summary>
     [Fact]
     public void TheRuleCanBeTurnedOff()
     {

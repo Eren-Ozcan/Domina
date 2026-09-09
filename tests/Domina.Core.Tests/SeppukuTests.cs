@@ -5,10 +5,10 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Seppuku kuyruğu (GDD §6). Kuyruğun sebebi: <c>!bushi</c>/<c>!ronin</c> hem aktif
-/// dövüşe tepki hem oylama oyudur. Aynı anda hem dövüş hem oylama açık olsaydı
-/// chat'in yazdığı komutun hangisine sayıldığı belirsiz kalırdı — bu yüzden oylama
-/// dövüş bitene kadar bekler ve asla iki oylama birden açılmaz.
+/// The seppuku queue (GDD §6). The reason for the queue: <c>!bushi</c>/<c>!ronin</c> is both a reaction
+/// to a live fight and a vote. If a fight and a vote were open at the same time, which one a command
+/// written in chat counted for would be unclear — so a vote waits until the fight ends and two votes
+/// are never open at once.
 /// </summary>
 public class SeppukuTests
 {
@@ -25,7 +25,7 @@ public class SeppukuTests
     private static SeppukuArbiter Arbiter(double roll = 0.5) =>
         new(new FixedRandom(roll), _tuning);
 
-    /// <summary>Oylamayı açar ve döner (dövüş bitmiş kabul edilir).</summary>
+    /// <summary>Opens the vote and returns (the fight is taken to be over).</summary>
     private static SeppukuVote OpenVote(SeppukuArbiter arbiter, Warrior warrior)
     {
         Assert.True(arbiter.Consider(warrior, _t0));
@@ -33,7 +33,7 @@ public class SeppukuTests
         return arbiter.ActiveVote!;
     }
 
-    // ------------------------------------------------------------------ eşik
+    // -------------------------------------------------------------- threshold
 
     [Fact]
     public void OnlyWarriorsBelowTheThresholdAreQueued()
@@ -99,7 +99,7 @@ public class SeppukuTests
         Assert.Equal(new WarriorId(1), arbiter.ActiveVote!.WarriorId);
         Assert.Equal(1, arbiter.PendingCount);
 
-        // Açık oylama varken sıradaki beklemeye devam eder.
+        // While a vote is open, the next one keeps waiting.
         arbiter.Tick(_t0 + TimeSpan.FromSeconds(1));
         Assert.Equal(new WarriorId(1), arbiter.ActiveVote!.WarriorId);
         Assert.Equal(1, arbiter.PendingCount);
@@ -134,7 +134,7 @@ public class SeppukuTests
         Assert.True(arbiter.CastVote("kaguya", isBushi: true));
         Assert.False(arbiter.CastVote("kaguya", isBushi: false));
 
-        // Büyük harf farkıyla ikinci hesap taklidi de sayılmaz.
+        // Imitating a second account by changing the case does not count either.
         Assert.False(arbiter.CastVote("KAGUYA", isBushi: false));
         Assert.Equal(1, arbiter.ActiveVote!.VoterCount);
     }
@@ -158,7 +158,7 @@ public class SeppukuTests
         Assert.NotNull(arbiter.Tick(_t0 + _tuning.VoteWindow));
     }
 
-    // --------------------------------------------------------------- sonuç
+    // ----------------------------------------------------------------- result
 
     [Fact]
     public void TheMajorityDecides()
@@ -192,7 +192,7 @@ public class SeppukuTests
     [Fact]
     public void ASingleVoteCountsAsARealVerdict()
     {
-        // Asgari katılım eşiği yok: tek oy bile AI kararını devre dışı bırakır.
+        // There is no minimum turnout: even a single vote disables the AI decision.
         var arbiter = Arbiter(roll: 0.0);
         OpenVote(arbiter, Disgraced(1));
         arbiter.CastVote("tek", isBushi: false);
@@ -216,15 +216,15 @@ public class SeppukuTests
     }
 
     /// <summary>
-    /// Sıfır oyda AI, <b>oylamaya giren savaşçının</b> onuruna bakmalıdır. Oylama
-    /// açılırken savaşçı kuyruktan çıkarıldığı için bu değer bir kez kaybolmuştu;
-    /// test o hatanın geri gelmemesi için var.
+    /// With zero votes the AI must look at the honour of <b>the warrior in the vote</b>. Because the
+    /// warrior is taken out of the queue when the vote opens, that value was lost once; this test exists
+    /// so that the bug does not come back.
     /// </summary>
     [Fact]
     public void TheArtificialAudienceJudgesTheRightWarriorsHonor()
     {
-        // Eşiğin hemen altı → af şansı ~%50; sıfıra yakın onur → ~%5. Sayı eşikten
-        // türetilir: eşik playtest'te oynayacak, testin iddiası oynamamalı.
+        // Just below the threshold → a pardon chance of ~50%; honour near zero → ~5%. The number is
+        // derived from the threshold: the threshold will move in playtesting, the test's claim must not.
         var lucky = Arbiter(roll: 0.30);
         OpenVote(lucky, Disgraced(1, honor: _tuning.SeppukuThreshold - 0.1));
         Assert.Equal(SeppukuOutcome.Pardoned, lucky.ForceResolve(_t0)!.Outcome);
@@ -246,7 +246,7 @@ public class SeppukuTests
         arbiter.CastVote("merhametli", isBushi: true);
         Assert.Equal(SeppukuOutcome.Pardoned, arbiter.ForceResolve(_t0)!.Outcome);
 
-        // Onuru hâlâ eşiğin altında olsa bile yeni oylama açılmaz.
+        // No new vote opens even if his honour is still below the threshold.
         Assert.False(arbiter.Consider(warrior, _t0 + _tuning.PardonImmunity - TimeSpan.FromMinutes(1)));
         Assert.True(arbiter.Consider(warrior, _t0 + _tuning.PardonImmunity));
     }
@@ -258,10 +258,10 @@ public class SeppukuTests
         Warrior warrior = Disgraced(1);
 
         OpenVote(arbiter, warrior);
-        arbiter.CastVote("acımasız", isBushi: false);
+        arbiter.CastVote("merciless", isBushi: false);
         Assert.Equal(SeppukuOutcome.Seppuku, arbiter.ForceResolve(_t0)!.Outcome);
 
-        // Kalıcı ölümü işlemek meta katmanın işi; hakem savaşçıyı öldürmez.
+        // Applying permanent death is the meta layer's job; the arbiter does not kill the warrior.
         Assert.True(warrior.IsAlive);
         Assert.True(arbiter.Consider(warrior, _t0 + TimeSpan.FromSeconds(1)));
     }
@@ -269,7 +269,7 @@ public class SeppukuTests
     [Fact]
     public void PardonedHonorLandsAboveTheThreshold()
     {
-        // Affedilen savaşçı doğrudan yeni bir oylamaya düşmemeli.
+        // A pardoned warrior must not fall straight into a new vote.
         Assert.True(Arbiter().PardonedHonor > _tuning.SeppukuThreshold);
     }
 

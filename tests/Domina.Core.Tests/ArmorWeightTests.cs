@@ -1,23 +1,23 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Zırhın ağırlığı, kuşamı bir <b>karar</b> yapan şeydir. Bedelsizken ō-yoroi her
-/// eksende üstündü ve tek freni henüz var olmayan fiyattı. Bu testler ağırlığın iki
-/// hattını bağlar: kılıç geç iner, savaşçı yavaş yürür.
+/// Armour's weight is what makes a kit a <b>decision</b>. While it was free, ō-yoroi was superior on
+/// every axis and its only brake was a price that did not yet exist. These tests tie down weight's two
+/// lines: the sword lands late, the warrior walks slowly.
 /// </summary>
 public class ArmorWeightTests
 {
-    /// <summary>Ağırlığın hiçbir yere dokunmadığı ayar — karşılaştırma tabanı.</summary>
+    /// <summary>The setting where weight touches nothing — the comparison baseline.</summary>
     private static readonly CombatTuning Weightless = TestBuilders.PointBlank with
     {
         ArmorAttackSlowdownAtFullWeight = 0,
     };
 
-    /// <summary>Takımın ağırlığı parçalarının toplamıdır; boş yuva ağırlık taşımaz.</summary>
+    /// <summary>A kit's weight is the sum of its pieces; an empty slot carries no weight.</summary>
     [Fact]
     public void ArmorWeighsTheSumOfItsPieces()
     {
@@ -33,9 +33,9 @@ public class ArmorWeightTests
     }
 
     /// <summary>
-    /// Ağır kuşanan savaşçı aynı sürede daha az saldırı başlatır — ağırlığın ısıran
-    /// hattı budur. Hız ve stamina cezaları ölçümde zaferi kıpırdatmadı; dövüş hasar
-    /// alışverişiyle bittiği için bedelin oraya inmesi gerekiyor.
+    /// A heavily armoured warrior starts fewer attacks in the same time — that is weight's biting line.
+    /// The speed and stamina penalties did not budge victory in measurement; because a fight ends through
+    /// the damage exchange, the price has to land there.
     /// </summary>
     [Fact]
     public void HeavyArmorSlowsTheSword()
@@ -43,10 +43,10 @@ public class ArmorWeightTests
         int bare = AttacksIn(TestBuilders.PointBlank, Armor.None());
         int heavy = AttacksIn(TestBuilders.PointBlank, Armor.Heavy());
 
-        Assert.True(heavy < bare, $"Ağır kuşam kılıcı yavaşlatmadı ({heavy} >= {bare}).");
+        Assert.True(heavy < bare, $"Heavy armour did not slow the sword ({heavy} >= {bare}).");
     }
 
-    /// <summary>Yavaşlamanın sebebi ağırlık: ceza sıfırlanınca fark kapanır.</summary>
+    /// <summary>The reason for the slowdown is weight: with the penalty zeroed the difference closes.</summary>
     [Fact]
     public void WithoutThePenaltyArmorDoesNotSlowTheSword()
     {
@@ -54,10 +54,10 @@ public class ArmorWeightTests
     }
 
     /// <summary>
-    /// Ağırlık yürüyüşe dokunmaz. Denendi ve geri alındı: yürüme hızına yazılan ceza
-    /// zaferi hiç kıpırdatmadı ama §5'in vaadini sildi — kuşanmış savaşçı arenayı terk
-    /// edemeden yetişildiği için "Kaç" tuşu ölümü düşürmez oldu (çeken %46.35,
-    /// çekilmeyen %46.44; ceza yokken %44.32'ye karşı %46.33).
+    /// Weight does not touch walking. It was tried and undone: a penalty written onto walking speed did
+    /// not budge victory at all but erased §5's promise — the armoured warrior was caught before he could
+    /// leave the arena, so the "Flee" key stopped reducing death (pulling 46.35%, not pulling 46.44%;
+    /// against 44.32% vs 46.33% with no penalty).
     /// </summary>
     [Fact]
     public void ArmorDoesNotSlowTheWalk()
@@ -78,7 +78,7 @@ public class ArmorWeightTests
 
         for (int i = 0; i < 400 && battle.Step(); i++)
         {
-            // Sabit sayıda tick: karşılaştırma süreye göre yapılır.
+            // A fixed number of ticks: the comparison is made against time.
         }
 
         return battle.Events.OfType<AttackStarted>().Count(e => e.Attacker == new WarriorId(1));
@@ -95,7 +95,7 @@ public class ArmorWeightTests
         double start = battle.SnapshotOf(new WarriorId(1)).Position.X;
         for (int i = 0; i < 40 && battle.Step(); i++)
         {
-            // Yaklaşma aşaması.
+            // The closing phase.
         }
 
         return Math.Abs(battle.SnapshotOf(new WarriorId(1)).Position.X - start);

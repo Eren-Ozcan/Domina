@@ -1,42 +1,42 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kaçışı bedelsiz olmaktan çıkaran üç mekanik: <b>hız</b> (yetişen düşman),
-/// <b>fırlatma</b> (arkadan gelen mermi) ve <b>kaçış zarı</b> (kimsenin vurmadığı yara).
+/// The three mechanics that stop escape from being free: <b>speed</b> (the enemy catching up),
+/// <b>throwing</b> (a projectile from behind) and the <b>escape die</b> (the wound nobody struck).
 /// </summary>
 /// <remarks>
-/// Üçü birden eklendi çünkü hiçbiri tek başına yetmiyordu: hız tek sabitken kovalayan
-/// kaçana yetişemiyor, yakın dövüş arenanın uzak yarısına ulaşamıyor, ve temastan önce
-/// basılan tuş %100 temiz çıkış veriyordu (ölçüldü, 20.000 dövüş).
+/// All three were added because none was enough on its own: with speed a single constant the chaser
+/// could not catch the fleer, melee could not reach the far half of the arena, and the key pressed
+/// before contact gave a 100% clean exit (measured, 20,000 fights).
 /// </remarks>
 public class RangedAndFlightTests
 {
-    /// <summary>Zar hiç tutmayan kaynak: kaza yarası gibi şansa bağlı dalları kapatır.</summary>
+    /// <summary>A source where no die holds: it closes the chance-based branches like the accidental wound.</summary>
     private static CombatTuning NoMishap { get; } =
         TestBuilders.PointBlank with { EscapeMishapChance = 0 };
 
-    /// <summary>Hafif ve hızlı silah: öldürmeden ilk kanı akıtır.</summary>
+    /// <summary>A light, fast weapon: it draws first blood without killing.</summary>
     /// <remarks>
-    /// "Çek" tuşu ilk isabete kadar kapalı (GDD §5). Kaçışın mekaniğini ölçen testlerin
-    /// önce savaşı başlatması gerekiyor; kaçacak savaşçının kendi vuruşu bunun en ucuz
-    /// yolu — kimsenin canını riske atmadan tuşu açar.
+    /// The "pull out" key is closed until the first hit (GDD §5). Tests measuring the escape mechanics
+    /// have to start the fight first; the fleeing warrior's own strike is the cheapest way — it unlocks
+    /// the key without risking anyone's life.
     /// </remarks>
     private static Weapon Quick { get; } =
         new("Test-Tantō", WeaponClass.Cutting, 12, TwoHanded: false, AttackSeconds: 0.4);
 
-    /// <summary>Hiç hasar vermeyen silah: savaşı başlatır, kimseyi yaralamaz.</summary>
+    /// <summary>A weapon that does no damage: it starts the fight and wounds nobody.</summary>
     private static Weapon Harmless { get; } =
         new("Test-Sopa", WeaponClass.Blunt, 0, TwoHanded: false, AttackSeconds: 0.4);
 
-    /// <summary>İki savaşçı arasındaki hat üstü mesafe.</summary>
+    /// <summary>The along-the-line distance between two warriors.</summary>
     private static double Gap(Battle battle) => Math.Abs(
         battle.SnapshotOf(new WarriorId(1)).Position.X
         - battle.SnapshotOf(new WarriorId(101)).Position.X);
 
-    /// <summary>İlk isabete kadar adımlar, sonra tuşa basar ve kaçışın başladığı anı döner.</summary>
+    /// <summary>Steps to the first hit, then presses the key and returns the moment the escape started.</summary>
     private static double PressAfterFirstBlood(Battle battle)
     {
         while (!battle.ContactMade && battle.Step())
@@ -59,20 +59,20 @@ public class RangedAndFlightTests
     [Fact]
     public void AFasterWarriorCatchesUpWithASlowerOne()
     {
-        // Aynı kadro, tek fark hız. Yavaş kovalayan yetişemez, hızlı olan yetişir.
+        // The same roster, the only difference is speed. A slow chaser cannot catch up, a fast one can.
         Assert.False(CaughtUp(hunterSpeed: 5));
         Assert.True(CaughtUp(hunterSpeed: 100));
     }
 
     /// <remarks>
-    /// Ölçülen şey <b>kaçış başladıktan sonra</b> yenen darbe. İlk isabet zaten tuşu açan
-    /// darbedir ve iki kurulumda da düşer; kovalamacayı ayıran, aradaki mesafenin
-    /// kapanıp kapanmadığıdır.
+    /// What is measured is the blow taken <b>after the escape started</b>. The first hit is the blow
+    /// that unlocks the key and lands in both setups; what separates the chase is whether the gap
+    /// closes.
     /// </remarks>
     private static bool CaughtUp(double hunterSpeed)
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 900, aggression: 0, speed: 50)],
+            [TestBuilders.Warrior(1, "Fleer", health: 900, aggression: 0, speed: 50)],
             [TestBuilders.Warrior(101, "Kovalayan", health: 400, aggression: 100, speed: hunterSpeed)])
         {
             Tuning = NoMishap,
@@ -87,7 +87,7 @@ public class RangedAndFlightTests
             .Any(e => e.Defender == new WarriorId(1) && e.AtSeconds > left);
     }
 
-    /// <summary>Bacağını kaybeden savaşçı yalnızca kaçınmayı değil kaçabilmeyi de kaybeder.</summary>
+    /// <summary>A warrior who loses a leg loses not only evasion but the ability to flee.</summary>
     [Fact]
     public void LosingALegCostsSpeedToo()
     {
@@ -99,12 +99,12 @@ public class RangedAndFlightTests
         Assert.True(lame.EffectiveStats.Speed < before);
     }
 
-    /// <summary>Kaçan sırtı dönük koştuğu için kovalayandan yavaştır.</summary>
+    /// <summary>Because the fleer runs with his back turned he is slower than the chaser.</summary>
     [Fact]
     public void RetreatingIsSlowerThanChasing()
     {
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 900, aggression: 0, speed: 50)],
+            [TestBuilders.Warrior(1, "Fleer", health: 900, aggression: 0, speed: 50)],
             [TestBuilders.Warrior(101, "Kovalayan", health: 400, aggression: 100, speed: 50)])
         {
             Tuning = NoMishap with { StartOffsetX = 60 },
@@ -113,9 +113,9 @@ public class RangedAndFlightTests
         var battle = new Battle(setup, new FixedRandom(0.0));
         PressAfterFirstBlood(battle);
 
-        // Ölçülen şey adım hızı: aynı Speed değerine sahip iki savaşçıdan sırtı dönük
-        // koşan daha yavaş ilerler. Darbeye bakmak yanıltıcı olurdu — kovalayan vuruş
-        // yaptığı sürece duruyor ve net olarak geride kalabiliyor (bkz. Battle.CanAdvanceOn).
+        // What is measured is step speed: of two warriors with the same Speed value, the one running with
+        // his back turned advances more slowly. Looking at the blows would be misleading — the chaser
+        // stops while striking and can fall behind in net terms (see Battle.CanAdvanceOn).
         var compared = false;
 
         for (int i = 0; i < 200 && battle.Step(); i++)
@@ -130,23 +130,23 @@ public class RangedAndFlightTests
 
             Assert.True(
                 fleeing.Speed < chasing.Speed,
-                $"Kaçan yavaşlamadı: {fleeing.Speed} vs {chasing.Speed}");
+                $"The fleer did not slow down: {fleeing.Speed} vs {chasing.Speed}");
 
             compared = true;
             break;
         }
 
-        Assert.True(compared, "Kovalamacanın ölçülebildiği bir tick bulunamadı.");
+        Assert.True(compared, "No tick was found where the chase could be measured.");
     }
 
-    // ------------------------------------------------------------------ fırlatma
+    // ------------------------------------------------------------------ throwing
 
     private static BattleSetup Thrower(double startOffset, ThrownWeapon? thrown = null) => new(
         [TestBuilders.Warrior(1, "Hedef", health: 400, aggression: 0, speed: 50)],
         [
             TestBuilders.Warrior(
                 101,
-                "Atıcı",
+                "Thrower",
                 aggression: 100,
                 accuracy: 100,
                 speed: 1,
@@ -157,8 +157,8 @@ public class RangedAndFlightTests
     };
 
     /// <summary>
-    /// Yakın dövüş menzilinin dışındaki hedefe mermi ulaşır — arenanın uzak yarısı artık
-    /// güvenli bölge değil.
+    /// A projectile reaches a target outside melee reach — the far half of the arena is no longer a safe
+    /// zone.
     /// </summary>
     [Fact]
     public void AThrownWeaponReachesATargetOutOfMeleeRange()
@@ -170,7 +170,7 @@ public class RangedAndFlightTests
         Assert.Contains(battle.Events, e => e is ProjectileHit);
     }
 
-    /// <summary>Mermi anında çözülmez: havada geçirdiği süre olay akışında görünür.</summary>
+    /// <summary>A projectile is not resolved instantly: the time it spends in the air shows in the event stream.</summary>
     [Fact]
     public void AProjectileSpendsTimeInTheAir()
     {
@@ -184,11 +184,11 @@ public class RangedAndFlightTests
         Assert.True(hit.AtSeconds > launched.AtSeconds);
     }
 
-    /// <summary>Mermi biter; bittiğinde savaşçının elinde yalnızca yakın dövüş kalır.</summary>
+    /// <summary>The projectiles run out; when they do, the warrior is left with melee alone.</summary>
     /// <remarks>
-    /// Hedef kaçıyor: yaklaşsaydı yakın dövüş menziline girer ve atıcı cephanesini
-    /// bitirmeden kılıca geçerdi. Menzil de kasıtlı olarak arenadan büyük — ölçülen şey
-    /// cephanenin bitmesi, menzilin yetmemesi değil.
+    /// The target is fleeing: if he closed, he would enter melee reach and the thrower would switch to
+    /// the sword before running out of ammo. The range is deliberately larger than the arena too — what
+    /// is measured is the ammo running out, not the range falling short.
     /// </remarks>
     [Fact]
     public void AThrowerRunsOutOfAmmunition()
@@ -197,25 +197,25 @@ public class RangedAndFlightTests
 
         var battle = new Battle(Thrower(startOffset: 250, twoShots), new FixedRandom(0.0));
 
-        // İlk mermi hedefi bulur ve tuşu açar; ikincisi kaçarken arkadan gelir.
+        // The first projectile finds the target and unlocks the key; the second comes from behind while he flees.
         PressAfterFirstBlood(battle);
         battle.Run();
 
         Assert.Equal(2, battle.Events.OfType<ProjectileLaunched>().Count());
     }
 
-    /// <summary>Uçuş sırasında sahayı terk eden hedefe mermi ulaşamaz.</summary>
+    /// <summary>A projectile cannot reach a target who leaves the field during the flight.</summary>
     [Fact]
     public void AProjectileMissesATargetThatLeftTheArena()
     {
-        // Menzilin ucundan, yavaş bir mermiyle: hedef kaçarken mermi havada kalır.
+        // From the edge of the range, with a slow projectile: the target flees while it is in the air.
         ThrownWeapon slow = ThrownWeapon.Shuriken() with { Speed = 60, Range = 900 };
 
         var setup = new BattleSetup(
-            [TestBuilders.Warrior(1, "Kaçan", health: 400, aggression: 0, speed: 100)],
+            [TestBuilders.Warrior(1, "Fleer", health: 400, aggression: 0, speed: 100)],
             [
                 TestBuilders.Warrior(
-                    101, "Atıcı", aggression: 100, accuracy: 100, speed: 1, thrown: slow),
+                    101, "Thrower", aggression: 100, accuracy: 100, speed: 1, thrown: slow),
             ])
         {
             Tuning = NoMishap with { StartOffsetX = 420 },
@@ -223,7 +223,7 @@ public class RangedAndFlightTests
 
         var battle = new Battle(setup, new FixedRandom(0.0));
 
-        // İlk mermi hedefi bulur — tuşu açan da odur. Ölçülen, ondan SONRAKİ mermi.
+        // The first projectile finds the target — it is also what unlocks the key. What is measured is the one AFTER it.
         PressAfterFirstBlood(battle);
         battle.Run();
 
@@ -231,14 +231,14 @@ public class RangedAndFlightTests
         Assert.Contains(battle.Events, e => e is ProjectileMissed);
     }
 
-    // ---------------------------------------------------------------- kaçış zarı
+    // ---------------------------------------------------------------- escape die
 
     /// <summary>
-    /// Kaçış zarı yaralar ama <b>öldürmez</b>: canı 1'in altına indirmez.
+    /// The escape die wounds but <b>does not kill</b>: it does not push health below 1.
     /// </summary>
     /// <remarks>
-    /// Amacı ölüm değil, "hiç bedel ödemeden çıktım" durumunu ortadan kaldırmak. Öldürebilseydi
-    /// oyuncuya sebepsiz bir ölüm olarak görünürdü — ekranda vuran kimse yok.
+    /// Its purpose is not death but removing the case of "I got out without paying anything". If it could
+    /// kill, it would look to the player like a death for no reason — there is nobody striking on screen.
     /// </remarks>
     [Fact]
     public void TheEscapeMishapWoundsButNeverKills()
@@ -247,14 +247,14 @@ public class RangedAndFlightTests
 
         for (ulong seed = 1; seed <= 200; seed++)
         {
-            // Tuşu açan temas zararsız: karşı taraf sıfır hasarlı bir silahla vuruyor
-            // (MinimumDamage da 0). Ölçülen tek şey kaçış zarı olsun diye — savaşın
-            // başlamış olması ön koşul, ölçülen değer değil.
+            // The contact that unlocks the key is harmless: the other side strikes with a zero-damage
+            // weapon (MinimumDamage is 0 too). So that the only thing measured is the escape die — the
+            // fight having started is a precondition, not the value being measured.
             var setup = new BattleSetup(
-                [TestBuilders.Warrior(1, "Kaçan", health: 4, aggression: 0)],
+                [TestBuilders.Warrior(1, "Fleer", health: 4, aggression: 0)],
                 [
                     TestBuilders.Warrior(
-                        101, "Yavaş", health: 400, aggression: 100, speed: 1,
+                        101, "Slow", health: 400, aggression: 100, speed: 1,
                         weapon: Harmless),
                 ])
             {
@@ -283,19 +283,19 @@ public class RangedAndFlightTests
         Assert.Equal(200, mishaps);
     }
 
-    /// <summary>Zar kapalıyken çıkış tertemizdir — bedel gerçekten zardan geliyor.</summary>
+    /// <summary>With the die off the exit is spotless — the price really does come from the die.</summary>
     [Fact]
     public void WithoutTheMishapRollLeavingIsClean()
     {
-        // Temas uzaktan kurulur: yakın dövüşte çekilmek bedava vuruş demek olurdu ve
-        // "tertemiz çıkış" ölçülemezdi.
+        // Contact is made from a distance: pulling out in melee would mean a free hit and "a spotless
+        // exit" could not be measured.
         var setup = new BattleSetup(
             [
                 TestBuilders.Warrior(
-                    1, "Kaçan", health: 100, aggression: 100, accuracy: 100,
+                    1, "Fleer", health: 100, aggression: 100, accuracy: 100,
                     thrown: ThrownWeapon.Shuriken()),
             ],
-            [TestBuilders.Warrior(101, "Yavaş", health: 400, aggression: 0, speed: 1)])
+            [TestBuilders.Warrior(101, "Slow", health: 400, aggression: 0, speed: 1)])
         {
             Tuning = NoMishap with { StartOffsetX = 400 },
         };

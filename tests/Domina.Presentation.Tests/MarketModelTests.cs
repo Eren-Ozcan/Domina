@@ -4,9 +4,9 @@ using Domina.Core.Model;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Pazar ekranının modeli. Korunan üç karar: sıra fiyata göredir ve kasa değiştikçe
-/// kaymaz, adayın kadroya göre nerede durduğu satırda yazar, ve yetenek sayı olarak
-/// değil <b>bant</b> olarak okunur.
+/// The market screen's model. Three decisions are protected: the order is by price and does not shift
+/// as the treasury changes, where the candidate stands relative to the roster is written in the row, and
+/// talent is read as a <b>band</b> rather than a number.
 /// </summary>
 public class MarketModelTests
 {
@@ -28,7 +28,7 @@ public class MarketModelTests
         Assert.Equal(rows.Select(r => r.Price).Order(), rows.Select(r => r.Price));
     }
 
-    /// <summary>Tezgâh oyuncunun cebine göre yeniden dizilmez.</summary>
+    /// <summary>The stall is not rearranged to fit the player's pocket.</summary>
     [Fact]
     public void SpendingGoldDoesNotReorderTheStall()
     {
@@ -40,7 +40,7 @@ public class MarketModelTests
             MarketModel.Describe(poor).Select(r => r.Index));
     }
 
-    /// <summary>Satır sırası kaysa da satın alma stok sırasını gösterir.</summary>
+    /// <summary>Even if the row order shifts, a purchase uses the stock index.</summary>
     [Fact]
     public void TheIndexPointsBackAtTheStock()
     {
@@ -65,17 +65,17 @@ public class MarketModelTests
         Assert.Equal(0, MarketModel.Summarize(dojo).Affordable);
     }
 
-    /// <summary>Pazarın asıl sorusu: bu adam elimdekinden iyi mi?</summary>
+    /// <summary>The market's real question: is this man better than what I have?</summary>
     [Fact]
     public void ARowCountsHowManyLivingWarriorsAreBetter()
     {
         DojoState dojo = Funded(gold: 5000);
         RecruitOffer offer = dojo.Recruits[0];
 
-        RosterEntry weak = dojo.Roster.Recruit("Zayıf");
+        RosterEntry weak = dojo.Roster.Recruit("Weak");
         weak.Warrior.BaseStats = offer.Stats with { Strength = offer.Stats.Strength - 20 };
 
-        RosterEntry strong = dojo.Roster.Recruit("Güçlü");
+        RosterEntry strong = dojo.Roster.Recruit("Strong");
         strong.Warrior.BaseStats = offer.Stats with { Strength = offer.Stats.Strength + 20 };
 
         MarketRow row = MarketModel.Describe(dojo).Single(r => r.Index == 0);
@@ -83,7 +83,7 @@ public class MarketModelTests
         Assert.Equal(1, row.BetterInRoster);
     }
 
-    /// <summary>Ölü savaşçı kıyaslamaya girmez — kadroda olan artık o değil.</summary>
+    /// <summary>A dead warrior does not enter the comparison — he is no longer on the roster.</summary>
     [Fact]
     public void TheDeadDoNotCountInTheComparison()
     {
@@ -98,7 +98,7 @@ public class MarketModelTests
         Assert.Equal(0, MarketModel.Summarize(dojo).BestLivingScore);
     }
 
-    /// <summary>Alınan aday tezgâhta durur ama satılmaz; sayaç da onu saymaz.</summary>
+    /// <summary>A bought candidate stays at the stall but is not sold; the counter does not count him either.</summary>
     [Fact]
     public void ABoughtCandidateIsMarkedAndDropsOutOfTheAffordableCount()
     {
@@ -115,7 +115,7 @@ public class MarketModelTests
         Assert.Equal(affordable - 1, summary.Affordable);
     }
 
-    /// <summary>Varsayılan ayarda tezgâh her gün yenilenir.</summary>
+    /// <summary>With the default setting the stall refreshes every day.</summary>
     [Fact]
     public void TheDefaultStallStandsForASingleDay()
     {
@@ -132,8 +132,8 @@ public class MarketModelTests
     }
 
     /// <summary>
-    /// Pazarın durgunluğu ekranda yazmalı; yazmazsa oyuncu kararı "yarın değişir" diye
-    /// erteler ve iki gün aynı tezgâhı bulur.
+    /// The market standing still must be written on screen; if it is not, the player postpones the
+    /// decision thinking "it changes tomorrow" and finds the same stall two days running.
     /// </summary>
     [Fact]
     public void TheScreenKnowsHowManyDaysTheStallStands()
@@ -149,7 +149,7 @@ public class MarketModelTests
         Assert.Equal(3, MarketModel.DaysToRefresh(dojo));
     }
 
-    /// <summary>Skor, pazarın tavan hesabıyla aynı formül olmalı.</summary>
+    /// <summary>The score must be the same formula as the market's ceiling calculation.</summary>
     [Fact]
     public void ScoreLeavesStaminaOutJustLikeTheCeilingDoes()
     {

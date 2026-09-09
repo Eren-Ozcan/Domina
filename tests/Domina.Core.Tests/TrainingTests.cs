@@ -4,9 +4,9 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Antrenman (GDD §11). Korunan kararlar: kazanç kalan boşluğun payıdır (azalan getiri),
-/// tavan aşılmaz, yetenek kazancı doğrudan çarpar, aç savaşçı ilerlemez ve antrenman
-/// <b>ham</b> statı yazar — sakatlığın çarpanı eğitimle geri alınmaz.
+/// Training (GDD §11). The decisions protected: the gain is a share of the gap left (diminishing
+/// returns), the ceiling is not passed, talent multiplies the gain directly, a hungry warrior does not
+/// advance, and training writes the <b>raw</b> stat — a disability's multiplier is not undone by training.
 /// </summary>
 public class TrainingTests
 {
@@ -38,7 +38,7 @@ public class TrainingTests
         Assert.True(after.Speed > before.Speed);
     }
 
-    /// <summary>Dört talim sekiz statı tam olarak kaplar — hiçbiri antrenmanın dışında değil.</summary>
+    /// <summary>The four drills cover the eight stats exactly — none is left outside training.</summary>
     [Fact]
     public void TheFourDrillsCoverEveryStat()
     {
@@ -122,7 +122,7 @@ public class TrainingTests
         Assert.True(entry.Warrior.BaseStats.Accuracy > before);
     }
 
-    /// <summary>Aç savaşçı o gün ne iyileşir ne ilerler — kıtlığın bedeli zamandır.</summary>
+    /// <summary>A hungry warrior neither heals nor advances that day — the price of scarcity is time.</summary>
     [Fact]
     public void AHungryWarriorGainsNothing()
     {
@@ -155,8 +155,8 @@ public class TrainingTests
     }
 
     /// <summary>
-    /// Antrenman ham statı yazar; sakatlığın çarpanı üstüne uygulanmaya devam eder —
-    /// çalışan sakat savaşçı toparlanır, kaybettiği kolu geri kazanmaz (GDD §7).
+    /// Training writes the raw stat; the disability's multiplier keeps being applied on top — a maimed
+    /// warrior who works recovers, he does not get the lost arm back (GDD §7).
     /// </summary>
     [Fact]
     public void TrainingWritesBaseStatsAndLeavesTheDisabilityPenaltyStanding()
