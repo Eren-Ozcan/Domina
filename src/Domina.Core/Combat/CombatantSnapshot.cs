@@ -1,46 +1,46 @@
-﻿using Domina.Core.Model;
+using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
 /// <summary>
-/// Bir savaşçının dövüş sırasındaki anlık hali — görselleştirme ve HUD için.
+/// A warrior's current state during a fight — for the visualisation and the HUD.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Salt okunur bir kopyadır; buradan dövüşe müdahale edilemez. Dövüşün tek
-/// müdahale noktası <see cref="Battle.CommandRetreat"/>'tir.
+/// It is a read-only copy; the fight cannot be interfered with from here. The fight's only
+/// intervention point is <see cref="Battle.CommandRetreat"/>.
 /// </para>
 /// <para>
-/// <see cref="StateProgress"/> ve <see cref="CanCancel"/> görselleştirme içindir:
-/// animasyon durumun neresinde olunduğuna göre sürülür ve "çek" tuşu, komutun anında
-/// mı işleyeceğini yoksa buffer'lanacağını mı oyuncuya önceden gösterir.
+/// <see cref="StateProgress"/> and <see cref="CanCancel"/> are for the visualisation: the animation is
+/// driven by where in the state we are, and the "pull out" key shows the player in advance whether the
+/// command will take effect immediately or be buffered.
 /// </para>
 /// </remarks>
-/// <param name="StateProgress">Mevcut durumun tamamlanma oranı (0-1).</param>
-/// <param name="CanCancel">Kaçış komutu şu an anında işler mi, yoksa buffer'lanır mı.</param>
+/// <param name="StateProgress">How far the current state has progressed (0-1).</param>
+/// <param name="CanCancel">Whether a flee command takes effect immediately right now or is buffered.</param>
 /// <param name="Position">
-/// Arena düzlemindeki yeri. Görselleştirme konumu <b>kendisi hesaplamaz</b>; savaşçılar
-/// gerçekten yürüdüğü için tek doğruluk kaynağı çekirdektir.
+/// His place on the arena plane. The visualisation <b>does not compute</b> the position itself; because
+/// the warriors really walk, the single source of truth is the core.
 /// </param>
-/// <param name="Facing">Baktığı yön (+1 sağa, -1 sola).</param>
-/// <param name="Speed">Bu tick'teki hızı — yürüme döngüsü buradan sürülür.</param>
+/// <param name="Facing">The direction he faces (+1 right, -1 left).</param>
+/// <param name="Speed">His speed this tick — the walk cycle is driven from it.</param>
 /// <param name="Poisoned">
-/// Kanında hâlâ zehir var mı? Bir <b>durum</b> değildir — zehirlenmiş savaşçı yürür,
-/// vurur, kaçınır; bu yüzden <see cref="CombatState"/> içinde temsil edilemez, ayrı bir
-/// bayrak olarak taşınır.
+/// Is there still poison in his blood? It is not a <b>state</b> — a poisoned warrior walks, strikes and
+/// evades; that is why it cannot be represented inside <see cref="CombatState"/> and is carried as a
+/// separate flag.
 /// </param>
 /// <param name="Disarmed">
-/// Silahı kırıldı mı? Zehir gibi bu da bir <b>durum</b> değil, durumun üstüne binen bir
-/// işaret: silahsız savaşçı dövüşmeye devam eder — yalnızca yumrukla.
+/// Is his weapon gone? Like poison this is not a <b>state</b> but a mark laid on top of the state: an
+/// unarmed warrior keeps fighting — only with his fists.
 /// </param>
 /// <param name="DestroyedArmor">
-/// Dağılmış zırh yuvaları. Görselleştirme kuşamı buradan söker — plakası giden bölge
-/// ekranda da çıplak görünmeli, yoksa savaşçı korunduğunu sandığı bir zırhla dövüşüyor
+/// The armour slots that broke. The visualisation strips the kit from here — a region whose plate is
+/// gone must look bare on screen too, or the warrior is fighting in armour he only thinks he has
 /// gibi durur (docs/GDD.md §12).
 /// </param>
 /// <param name="TargetId">
-/// Vurmaya çalıştığı düşman; hedefi yoksa <c>null</c>. Hedef seçimi rastgele olduğu için
-/// görselleştirme bunu <b>kendi başına türetemez</b> — hamlenin nereye gideceği buradan
+/// The enemy he is trying to strike; <c>null</c> if he has no target. Because target selection is
+/// random, the visualisation <b>cannot derive it on its own</b> — where the move goes is read from
 /// okunur (bkz. <c>ArenaChoreography.StrikePoint</c>).
 /// </param>
 public readonly record struct CombatantSnapshot(

@@ -2,13 +2,13 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Savaşçının dojo'daki günlük hâli — dövüşün bilmediği her şey.</summary>
+/// <summary>A warrior's daily state in the dojo — everything the fight does not know.</summary>
 /// <remarks>
 /// <para>
-/// <see cref="Model.Warrior"/> dövüşün okuduğu kalıcı hâldir; bu kayıt onun etrafındaki
-/// <b>meta</b> durumu taşır: kaç gün revirde, bugün ne yapıyor, kaç gün antrenman görmüş.
-/// Ayrı tutulmasının sebebi mimari kural: dövüş çözümleyicisi gün döngüsünü bilmez ve
-/// toplu simülasyon aynı savaşçıyı on binlerce kez koşturur — takvim orada anlamsızdır.
+/// <see cref="Model.Warrior"/> is the persistent state the fight reads; this record carries the
+/// <b>meta</b> state around it: how many days in the infirmary, what he is doing today, how many days
+/// he has trained. The reason for the separation is the architecture rule: the combat resolver does not
+/// know the day loop, and batch simulation runs the same warrior tens of thousands of times — a calendar is meaningless there.
 /// </para>
 /// </remarks>
 public sealed class RosterEntry
@@ -25,30 +25,30 @@ public sealed class RosterEntry
 
     public string Name => Warrior.Name;
 
-    /// <summary>Savaşçının sefere çıkabilmesi için geçmesi gereken gün sayısı.</summary>
+    /// <summary>The days that must pass before the warrior can go on an expedition.</summary>
     /// <remarks>
-    /// Yara ağırlığına göre dolar (bkz. docs/GDD.md §7 "İyileşme"). Doğal iyileşme
-    /// günde bir gün eritir; revir ve ilaç bunu hızlandırır.
+    /// It fills according to the severity of the wound (see docs/GDD.md §7 "Recovery"). Natural recovery
+    /// burns one day a day; the infirmary and medicine speed that up.
     /// </remarks>
     public int RecoveryDaysRemaining { get; internal set; }
 
-    /// <summary>Bugünkü uğraş. Revirdeki savaşçı antrenman yapamaz.</summary>
+    /// <summary>Today's occupation. A warrior in the infirmary cannot train.</summary>
     public DojoActivity Activity { get; internal set; } = DojoActivity.Resting;
 
-    /// <summary>Bugüne kadar tamamlanmış antrenman günü.</summary>
+    /// <summary>The training days completed so far.</summary>
     public int TrainingDays { get; internal set; }
 
-    /// <summary>Antrenman gününün konusu.</summary>
+    /// <summary>The subject of the training day.</summary>
     /// <remarks>
-    /// Uğraştan ayrı bir alan: savaşçı revire yatıp çıktığında talimi unutulmasın, ve
-    /// oyuncu talimi <b>önceden</b> seçebilsin — gün kapanınca uygulanan şey budur.
+    /// A separate field from the occupation: so the drill is not forgotten when a warrior goes into the
+    /// infirmary and comes out, and so the player can choose the drill <b>in advance</b> — this is what is applied when the day closes.
     /// </remarks>
     public Drill Drill { get; internal set; } = Drill.Strikes;
 
-    /// <summary>Sefere gönderilebilir mi?</summary>
+    /// <summary>Can he be sent on an expedition?</summary>
     public bool IsFitForCampaign => Warrior.IsAlive && RecoveryDaysRemaining == 0;
 
-    /// <summary>Savaşçıyı revire yatırır. Daha uzun süre kısayı ezer, tersi olmaz.</summary>
+    /// <summary>Puts the warrior in the infirmary. A longer stay overrides a shorter one, never the reverse.</summary>
     public void Injure(int days)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(days);
@@ -64,10 +64,10 @@ public sealed class RosterEntry
         }
     }
 
-    /// <summary>Bugün antrenmana yazar. Revirdeki savaşçı kabul edilmez.</summary>
+    /// <summary>Puts him on training today. A warrior in the infirmary is not accepted.</summary>
     /// <remarks>
-    /// Talim verilmezse en son seçilen sürer. Kazanç gün kapanırken işlenir
-    /// (<see cref="DojoState.AdvanceDay"/>): aç kalan savaşçı o gün ilerlemez.
+    /// If no drill is given, the last one chosen continues. The gain is applied when the day closes
+    /// (<see cref="DojoState.AdvanceDay"/>): a warrior left hungry does not advance that day.
     /// </remarks>
     public bool Train(Drill? drill = null)
     {
@@ -90,15 +90,15 @@ public sealed class RosterEntry
         : DojoActivity.Resting;
 }
 
-/// <summary>Bir savaşçının o günkü uğraşı.</summary>
+/// <summary>A warrior's occupation that day.</summary>
 public enum DojoActivity
 {
-    /// <summary>Boşta — ne antrenman ne revir.</summary>
+    /// <summary>Idle — neither training nor the infirmary.</summary>
     Resting,
 
-    /// <summary>Antrenman alanında.</summary>
+    /// <summary>On the training ground.</summary>
     Training,
 
-    /// <summary>Revirde; sefere çıkamaz, antrenman yapamaz.</summary>
+    /// <summary>In the infirmary; cannot go on an expedition, cannot train.</summary>
     Recovering,
 }

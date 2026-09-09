@@ -6,13 +6,13 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Faz 1'in kabul kriteri: <b>10.000 dövüş 10 saniyenin altında koşmalı</b>.
+/// Phase 1's acceptance criterion: <b>10,000 fights must run in under 10 seconds</b>.
 /// </summary>
 /// <remarks>
-/// Bu bir mikro-optimizasyon testi değil, mimarinin sağlık kontrolüdür. Denge
-/// çalışması "bir sayıyı değiştir, on binlerce dövüş koştur, orana bak" döngüsüyle
-/// yürür; bu döngü dakikalar sürerse pratikte kimse denge yapmaz. Çekirdeğe motor
-/// bağımlılığı veya dövüş başına ağır bir ayırma sızarsa ilk burada görülür.
+/// This is not a micro-optimisation test but the architecture's health check. Balance work runs on the
+/// loop "change a number, run tens of thousands of fights, look at the rate"; if that loop takes
+/// minutes, nobody does balance in practice. If an engine dependency or a heavy per-fight allocation
+/// leaks into the core, it shows here first.
 /// </remarks>
 [Collection(ThroughputGroup.Name)]
 public class ThroughputTests
@@ -32,7 +32,7 @@ public class ThroughputTests
             TestBuilders.Warrior(103, "Tengu", health: 80, aggression: 70, evasion: 50),
         ])
     {
-        // Toplu simülasyonun gerçek koşulu: olay akışı biriktirilmez.
+        // Batch simulation's real condition: the event stream is not collected.
         CollectEvents = false,
     };
 
@@ -41,7 +41,7 @@ public class ThroughputTests
     {
         BattleSetup setup = ThreeVsThree();
 
-        // Kadro tekrar kullanılıyor; Battle savaşçıların kalıcı halini değiştirmez.
+        // The roster is reused; Battle does not change the warriors' persistent state.
         long started = Stopwatch.GetTimestamp();
         int finished = 0;
 
@@ -58,11 +58,11 @@ public class ThroughputTests
 
         Assert.True(
             elapsed < _budget,
-            $"{_battles} dövüş {elapsed.TotalSeconds:F2} sn sürdü; bütçe {_budget.TotalSeconds:F0} sn.");
+            $"{_battles} fights took {elapsed.TotalSeconds:F2} s; the budget is {_budget.TotalSeconds:F0} s.");
 
-        // Dövüşlerin çoğu gerçekten sonuçlanmalı — hepsi süre dolarak bitseydi
-        // "hızlı" olması hiçbir şey kanıtlamazdı.
-        Assert.True(finished > _battles * 0.9, $"{_battles} dövüşün yalnızca {finished} tanesi sonuçlandı.");
+        // Most of the fights must actually resolve — if they all ended on the time limit, being "fast"
+        // would prove nothing.
+        Assert.True(finished > _battles * 0.9, $"Only {finished} of {_battles} fights resolved.");
     }
 
     [Fact]
@@ -70,14 +70,14 @@ public class ThroughputTests
     {
         BattleSetup setup = ThreeVsThree();
 
-        // Isınma: JIT ve ilk ayırmalar ölçüme karışmasın.
+        // Warm-up: so the JIT and the first allocations do not enter the measurement.
         for (int i = 0; i < 50; i++)
         {
             _ = new Battle(setup, new SeededRandom((ulong)i)).Run();
         }
 
-        // Süreç geneli değil, bu iş parçacığı: testler paralel koştuğu için
-        // GC.GetTotalAllocatedBytes ölçümü başka testlerin ayırmalarıyla kirlenirdi.
+        // Not the whole process but this thread: because the tests run in parallel, a
+        // GC.GetTotalAllocatedBytes measurement would be polluted by other tests' allocations.
         long before = GC.GetAllocatedBytesForCurrentThread();
 
         for (int i = 0; i < 200; i++)
@@ -87,18 +87,17 @@ public class ThroughputTests
 
         long perBattle = (GC.GetAllocatedBytesForCurrentThread() - before) / 200;
 
-        // Dövüş başına birkaç KB (savaşçı durumları + özet) beklenir. Bunun çok
-        // üstü, olay akışının veya başka bir listenin sızdığı anlamına gelir.
-        Assert.True(perBattle < 16 * 1024, $"Dövüş başına {perBattle} bayt ayrıldı.");
+        // A few KB per fight (the warrior states + the summary) is expected. Much above that means the
+        // event stream or some other list is leaking.
+        Assert.True(perBattle < 16 * 1024, $"{perBattle} bytes were allocated per fight.");
     }
 }
 
-/// <summary>Süre ölçen testleri yalnız koşturur.</summary>
+/// <summary>Runs the timing tests on their own.</summary>
 /// <remarks>
-/// Bütçe duvar saatiyle ölçülüyor: aynı anda koşan başka bir test sınıfı çekirdeği
-/// meşgul ettiğinde ölçüm dövüş çözümleyicisinin hızını değil makinenin o anki yükünü
-/// ölçer. Sınıf sayısı arttıkça bu kaçınılmaz — bu yüzden ölçüm tek başına koşar.
-/// </remarks>
+/// The budget is measured by wall clock: when another test class runs at the same time and keeps the
+/// core busy, the measurement measures the machine's current load rather than the combat resolver's
+/// speed. As the number of classes grows this is inevitable — which is why the measurement runs alone.
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class ThroughputGroup
 {

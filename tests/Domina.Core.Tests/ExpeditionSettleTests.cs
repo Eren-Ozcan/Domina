@@ -7,10 +7,10 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Seferin iki yolu: dövüşü arka planda çözen <see cref="Expedition.Send"/> ve arenanın
-/// kullandığı <c>Prepare</c> + <c>Settle</c>. Korunan karar: <b>ikisi aynı sonucu
-/// vermeli</b>. Arena kendi muhasebesini yazsaydı izlenen dövüş ile simüle edilen dövüş
-/// ayrışır ve denge ölçümü ekrandakini ölçmemiş olurdu.
+/// The expedition's two routes: <see cref="Expedition.Send"/>, which resolves the fight in the
+/// background, and the <c>Prepare</c> + <c>Settle</c> the arena uses. The decision protected: <b>the two
+/// must give the same result</b>. If the arena wrote its own books, a watched fight and a simulated one
+/// would drift apart and balance measurement would not be measuring what is on screen.
 /// </summary>
 public class ExpeditionSettleTests
 {
@@ -28,11 +28,11 @@ public class ExpeditionSettleTests
         return state;
     }
 
-    /// <summary>Teklifin istediği büyüklükte ekip — bazı teklifler tam sayı dayatıyor.</summary>
+    /// <summary>A party of the size the offer wants — some offers impose an exact number.</summary>
     private static List<RosterEntry> Party(DojoState dojo) =>
         [.. dojo.Roster.Living.Take(dojo.Offer.RequiredPartySize ?? 2)];
 
-    /// <summary>Aynı tohum, aynı ekip, aynı teklif: iki yol tek sonuç.</summary>
+    /// <summary>The same seed, the same party, the same offer: two routes, one result.</summary>
     [Fact]
     public void WatchingTheBattleLeavesTheSameDojoAsResolvingIt()
     {
@@ -58,7 +58,7 @@ public class ExpeditionSettleTests
             watched.Roster.Entries.Select(e => (e.Name, e.Warrior.IsAlive, e.RecoveryDaysRemaining)));
     }
 
-    /// <summary>Kurulum dövüşü koşturmaz: gün de kadro da olduğu yerde kalır.</summary>
+    /// <summary>The setup does not run the fight: both the day and the roster stay where they were.</summary>
     [Fact]
     public void PreparingDoesNotTouchTheDojo()
     {
@@ -74,7 +74,7 @@ public class ExpeditionSettleTests
         Assert.Equal(dojo.Offer.Enemies, setup.EnemySide);
     }
 
-    /// <summary>Uygun olmayan ekip kurulumda durur — dövüş hiç kurulmaz.</summary>
+    /// <summary>An unfit party stops at the setup — the fight is never built.</summary>
     [Fact]
     public void PrepareRefusesAnUnfitParty()
     {
@@ -86,7 +86,7 @@ public class ExpeditionSettleTests
             () => Expedition.Prepare(dojo, dojo.Offer, [wounded]));
     }
 
-    /// <summary>Arena çekilme komutunu kullanabilsin diye kurulum olay akışını taşıyabilir.</summary>
+    /// <summary>The setup can carry the event stream so the arena can use the retreat command.</summary>
     [Fact]
     public void PrepareCanBeAskedForTheEventStream()
     {

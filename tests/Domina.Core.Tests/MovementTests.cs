@@ -5,8 +5,8 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Arena artık bir <b>düzlem</b>: savaşçılar yürür, silahın menzili vardır, ve
-/// çevrilmek gerçek bir tehlikedir. Bu testler uzamın vaat ettiği şeyleri bağlar.
+/// The arena is now a <b>plane</b>: the warriors walk, the weapon has reach, and being surrounded is a
+/// real danger. These tests tie down what space promised.
 /// </summary>
 public class MovementTests
 {
@@ -18,11 +18,11 @@ public class MovementTests
     {
         for (int i = 0; i < steps && battle.Step(); i++)
         {
-            // Step() bitiş koşulunu kendi kontrol eder.
+            // Step() checks the end condition itself.
         }
     }
 
-    /// <summary>Karşılıklı duran iki savaşçı birbirine yürür.</summary>
+    /// <summary>Two warriors standing opposite each other walk toward one another.</summary>
     [Fact]
     public void WarriorsWalkTowardEachOther()
     {
@@ -31,18 +31,18 @@ public class MovementTests
         double startGap = Gap(battle);
         StepMany(battle, 10);
 
-        Assert.True(Gap(battle) < startGap, "Savaşçılar yaklaşmadı.");
+        Assert.True(Gap(battle) < startGap, "The warriors did not close.");
     }
 
     /// <summary>
-    /// Menzil dışındayken saldırı başlamaz; savaşçı önce yaklaşmak zorundadır.
+    /// No attack starts while out of reach; the warrior has to close first.
     /// </summary>
     [Fact]
     public void NoOneSwingsFromOutOfReach()
     {
         var battle = new Battle(Approach(), new SeededRandom(7));
 
-        // İlk tick'te taraflar 960 birim uzakta — hiçbir silah oraya erişemez.
+        // On the first tick the sides are 960 units apart — no weapon can reach that far.
         battle.Step();
 
         Assert.DoesNotContain(battle.Events, e => e is AttackStarted);
@@ -50,8 +50,8 @@ public class MovementTests
     }
 
     /// <summary>
-    /// Uzun silah daha uzakta durur. Menzil olmasaydı naginata ile tantō arasındaki
-    /// fark yalnızca hasar ve hız olurdu.
+    /// A long weapon stands further away. Without reach, the difference between a naginata and a tantō
+    /// would be damage and speed alone.
     /// </summary>
     [Fact]
     public void LongerWeaponsStopFartherAway()
@@ -64,10 +64,10 @@ public class MovementTests
 
         Assert.True(
             Gap(withSpear) > Gap(withBlade),
-            "Mızraklı savaşçı kılıçlıdan daha uzaktan vurmalı.");
+            "The spear warrior must strike from further away than the sword one.");
     }
 
-    /// <summary>Savaşçılar üst üste binmez.</summary>
+    /// <summary>Warriors do not overlap.</summary>
     [Fact]
     public void WarriorsKeepTheirPersonalSpace()
     {
@@ -93,14 +93,14 @@ public class MovementTests
                 }
 
                 double gap = snapshots[i].Position.DistanceTo(snapshots[j].Position);
-                Assert.True(gap > 1, $"İki savaşçı üst üste bindi: {gap:F1}");
+                Assert.True(gap > 1, $"Two warriors overlapped: {gap:F1}");
             }
         }
     }
 
     /// <summary>
-    /// Kaçan savaşçı <b>menzilindeki her düşmandan</b> bedava vuruş yer. Kuşatmanın
-    /// bedeli budur: çevrildiysen çekilmek üç darbe demektir.
+    /// A fleeing warrior takes a free hit from <b>every enemy in his reach</b>. That is the price of
+    /// being surrounded: if you are encircled, pulling out means three blows.
     /// </summary>
     [Fact]
     public void BeingSurroundedMakesRetreatCostMore()
@@ -113,13 +113,13 @@ public class MovementTests
                 TestBuilders.Warrior(103, health: 400),
             ])
         {
-            // Üçü de kaçanın menzilinde: kuşatılmış hâl.
+            // All three are within the fleer's reach: the surrounded state.
             Tuning = TestBuilders.PointBlank with { StartSpacingY = 25 },
         };
 
         var battle = new Battle(setup, new SeededRandom(5));
 
-        // Tuş ilk isabete kadar kapalı (GDD §5); kuşatmanın bedeli ondan sonra ölçülür.
+        // The key is closed until the first hit (GDD §5); the price of encirclement is measured after that.
         while (!battle.ContactMade && battle.Step())
         {
         }
@@ -128,17 +128,17 @@ public class MovementTests
         StepMany(battle, 10);
 
         int swings = battle.Events.OfType<OpportunityAttack>().Count();
-        Assert.True(swings > 1, $"Çevrilmiş savaşçı tek bedava vuruşla kurtuldu: {swings}");
+        Assert.True(swings > 1, $"The surrounded warrior got away with a single free hit: {swings}");
     }
 
     /// <summary>
-    /// Hedef hamle sırasında menzilden çıkarsa kılıç boşluğa iner — vuruşa
+    /// If the target leaves reach during the move the sword lands on empty air — the price of committing
     /// kilitlenmenin bedeli.
     /// </summary>
     [Fact]
     public void ASwingAtAFleeingTargetCanWhiff()
     {
-        // Kaçan hedefi kovalayan uzun bir dövüşte er ya da geç ıska olur.
+        // A chaser after a fleeing target misses sooner or later in a long fight.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 900, aggression: 100)],
             [TestBuilders.Warrior(101, health: 900, aggression: 100)])

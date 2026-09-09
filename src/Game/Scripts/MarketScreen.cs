@@ -6,18 +6,18 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Pazar ekranı: adaylar, statları, yetenek bandı ve fiyatı (GDD §10).
+/// The market screen: the candidates, their stats, the talent band and the price (GDD §10).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Ne yazacağına ve satırların sırasına <see cref="MarketModel"/> karar verir (motorsuz,
-/// testli); buradaki iş düğümleri kurup metni basmak. Alım <see cref="Quartermaster"/>
-/// üzerinden geçer — fiyatı kasadan düşen ve adayı kadroya yazan taraf orası.
+/// What it says and the order of the rows are decided by <see cref="MarketModel"/> (engine-free,
+/// tested); the job here is building the nodes and printing the text. A purchase goes through
+/// <see cref="Quartermaster"/> — that is the side that deducts the price and writes the candidate onto the roster.
 /// </para>
 /// <para>
-/// Adayın statları <b>kadronun en iyisiyle</b> yan yana basılıyor: pazarın asıl sorusu
-/// "bu aday iyi mi" değil, "elimdekinden iyi mi". Tek başına duran sayı bu soruyu
-/// cevaplamaz.
+/// The candidate's stats are printed side by side with <b>the roster's best</b>: the market's real
+/// question is not "is this candidate good" but "is he better than what I have". A number standing
+/// alone does not answer that.
 /// </para>
 /// </remarks>
 public sealed partial class MarketScreen : DojoScreen
@@ -30,7 +30,7 @@ public sealed partial class MarketScreen : DojoScreen
     private Label _notice = null!;
     private int? _selected;
 
-    /// <summary>Ekranı kurar ve tezgâhı basar.</summary>
+    /// <summary>Builds the screen and prints the stall.</summary>
     public override void Build(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -67,7 +67,7 @@ public sealed partial class MarketScreen : DojoScreen
         _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         panel.AddChild(_detail);
 
-        _buyButton = new Button { Text = "Satın al" };
+        _buyButton = new Button { Text = "Buy" };
         _buyButton.Pressed += Buy;
         panel.AddChild(_buyButton);
 
@@ -78,7 +78,7 @@ public sealed partial class MarketScreen : DojoScreen
         return panel;
     }
 
-    /// <summary>Tezgâhı ve seçili adayın ayrıntısını yeniden basar.</summary>
+    /// <summary>Reprints the stall and the selected candidate's detail.</summary>
     public void Refresh()
     {
         Clear(_list);
@@ -112,9 +112,9 @@ public sealed partial class MarketScreen : DojoScreen
 
         MarketSummary summary = MarketModel.Summarize(_dojo);
         _summary.Text =
-            $"Gün {_dojo.Day}  ·  Kasa {summary.Gold} altın  ·  Aday {summary.Candidates}" +
-            $"  ·  Alınabilir {summary.Affordable}  ·  Bugün alınan {summary.Bought}" +
-            $"  ·  Tezgâh {summary.DaysToRefresh} gün sonra yenilenir";
+            $"Day {_dojo.Day}  ·  Purse {summary.Gold} gold  ·  Candidates {summary.Candidates}" +
+            $"  ·  Affordable {summary.Affordable}  ·  Bought today {summary.Bought}" +
+            $"  ·  Stall refreshes in {summary.DaysToRefresh} days";
 
         ShowDetail(rows.FirstOrDefault(r => r.Index == _selected));
     }
@@ -123,7 +123,7 @@ public sealed partial class MarketScreen : DojoScreen
     {
         if (row.Name is null)
         {
-            _detail.Text = "Bugün tezgâhta kimse yok.";
+            _detail.Text = "Nobody at the stall today.";
             _buyButton.Disabled = true;
             _notice.Text = string.Empty;
             return;
@@ -134,36 +134,36 @@ public sealed partial class MarketScreen : DojoScreen
 
         _detail.Text = string.Join(
             '\n',
-            $"{row.Name}  —  {row.Price} altın",
-            $"Yetenek: {BandName(row.Band)}  ·  antrenmanın kazancını bu çarpar",
+            $"{row.Name}  —  {row.Price} gold",
+            $"Talent: {BandName(row.Band)}  ·  this multiplies what training gains",
             row.BetterInRoster == 0
-                ? "Kadroda bundan iyisi yok."
-                : $"Kadroda bundan iyi {row.BetterInRoster} savaşçı var.",
+                ? "Nobody on the roster is better."
+                : $"{row.BetterInRoster} warriors on the roster are better.",
             string.Empty,
-            best is null ? "Kadro boş — kıyas yok." : "Sol sütun aday, sağ sütun kadronun en iyisi:",
-            $"Can       {Pair(stats.MaxHealth, best?.MaxHealth)}",
-            $"Saldırganlık {Pair(stats.Aggression, best?.Aggression)}",
-            $"Savunma   {Pair(stats.Defense, best?.Defense)}",
-            $"Kaçınma   {Pair(stats.Evasion, best?.Evasion)}",
-            $"Güç       {Pair(stats.Strength, best?.Strength)}",
-            $"İsabet    {Pair(stats.Accuracy, best?.Accuracy)}",
-            $"Stamina   {Pair(stats.MaxStamina, best?.MaxStamina)}",
-            $"Hız       {Pair(stats.Speed, best?.Speed)}");
+            best is null ? "The roster is empty — nothing to compare." : "Left column the candidate, right column the roster's best:",
+            $"Health      {Pair(stats.MaxHealth, best?.MaxHealth)}",
+            $"Aggression  {Pair(stats.Aggression, best?.Aggression)}",
+            $"Defence     {Pair(stats.Defense, best?.Defense)}",
+            $"Evasion     {Pair(stats.Evasion, best?.Evasion)}",
+            $"Strength    {Pair(stats.Strength, best?.Strength)}",
+            $"Accuracy    {Pair(stats.Accuracy, best?.Accuracy)}",
+            $"Stamina     {Pair(stats.MaxStamina, best?.MaxStamina)}",
+            $"Speed       {Pair(stats.Speed, best?.Speed)}");
 
         _buyButton.Disabled = row.Bought || !row.Affordable;
-        _buyButton.Text = row.Bought ? "Alındı" : $"Satın al ({row.Price} altın)";
+        _buyButton.Text = row.Bought ? "Bought" : $"Buy ({row.Price} gold)";
         _notice.Text = row.Bought || row.Affordable
             ? string.Empty
-            : $"Kasa yetmiyor: {row.Price - _dojo.Resources.Gold} altın eksik.";
+            : $"The purse is short: {row.Price - _dojo.Resources.Gold} gold missing.";
     }
 
     /// <summary>
-    /// Seçili adayı satın alır.
+    /// Buys the selected candidate.
     /// </summary>
     /// <remarks>
-    /// Alım <see cref="DojoState.HireRecruit"/> üzerinden geçiyor: alınan adayı kaydeden
-    /// ve aynı adamın iki kez satılmasını engelleyen taraf çekirdek. Ekranın kendi
-    /// işareti olsaydı kaydı yükleyip aynı adayı yeniden almak açık kalırdı.
+    /// The purchase goes through <see cref="DojoState.HireRecruit"/>: the side that records the bought candidate
+    /// and the side that stops the same man being sold twice is the core. With the screen keeping its
+    /// own mark, reloading the save and buying the same candidate again would stay open.
     /// </remarks>
     private void Buy()
     {
@@ -174,7 +174,7 @@ public sealed partial class MarketScreen : DojoScreen
 
         if (_dojo.HireRecruit(index) is null)
         {
-            _notice.Text = "Bu aday şimdi alınamaz.";
+            _notice.Text = "This candidate cannot be bought now.";
             return;
         }
 
@@ -192,8 +192,8 @@ public sealed partial class MarketScreen : DojoScreen
     }
 
     private static string RowText(MarketRow row) => row.Bought
-        ? $"{row.Name}  —  alındı"
-        : $"{row.Name}  —  {row.Price} altın  ·  {BandName(row.Band)}";
+        ? $"{row.Name}  —  bought"
+        : $"{row.Name}  —  {row.Price} gold  ·  {BandName(row.Band)}";
 
     private static Color RowColor(MarketRow row)
     {
@@ -205,15 +205,15 @@ public sealed partial class MarketScreen : DojoScreen
         return row.Affordable ? InkColor : MutedColor;
     }
 
-    /// <summary>Adayın statı, kadronun en iyisi yanında.</summary>
+    /// <summary>The candidate's stat, next to the roster's best.</summary>
     private static string Pair(double candidate, double? best) =>
         best is null ? $"{candidate:0}" : $"{candidate:0}   ({best:0})";
 
     private static string BandName(TalentBand band) => band switch
     {
-        TalentBand.Dull => "kütük",
-        TalentBand.Fair => "sıradan",
-        TalentBand.Promising => "umut verici",
-        _ => "nadir",
+        TalentBand.Dull => "dull",
+        TalentBand.Fair => "ordinary",
+        TalentBand.Promising => "promising",
+        _ => "rare",
     };
 }

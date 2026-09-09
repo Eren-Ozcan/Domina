@@ -3,9 +3,9 @@ using Domina.Core.Dojo;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Okul ekranının modeli. Korunan üç karar: ağacın şekli dojo'nun durumuna göre
-/// değişmez, "sırası gelmedi" ile "param yetmiyor" ayrı iki hâldir, ve kilitli düğüm
-/// gizlenmez — oyuncu neye para biriktirdiğini görmeli.
+/// The school screen's model. Three decisions are protected: the tree's shape does not change with the
+/// dojo's state, "its turn has not come" and "I cannot afford it" are two separate states, and a locked
+/// node is not hidden — the player must see what he is saving for.
 /// </summary>
 public class SchoolModelTests
 {
@@ -27,7 +27,7 @@ public class SchoolModelTests
         Assert.Equal(SchoolTree.All.Count, columns.Sum(c => c.Nodes.Count));
     }
 
-    /// <summary>Sıra kataloğun sırası; alınan düğüm listenin başına taşınmaz.</summary>
+    /// <summary>The order is the catalogue's order; a bought node is not moved to the top of the list.</summary>
     [Fact]
     public void BuyingDoesNotReshuffleTheTree()
     {
@@ -91,7 +91,7 @@ public class SchoolModelTests
         Assert.Equal(200, summary.NextCost);
     }
 
-    /// <summary>Ağaç bittiğinde "sıradaki bedel" diye bir şey kalmaz.</summary>
+    /// <summary>When the tree is finished there is no such thing as "the next cost".</summary>
     [Fact]
     public void AFinishedTreeHasNoNextCost()
     {

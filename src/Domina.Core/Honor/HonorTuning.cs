@@ -1,76 +1,75 @@
-﻿namespace Domina.Core.Honor;
+namespace Domina.Core.Honor;
 
-/// <summary>Onur ve seppuku sisteminin ayarlanabilir sayıları.</summary>
+/// <summary>The honour and seppuku system's tunable numbers.</summary>
 /// <remarks>
-/// Denge değerleri Faz 9'da oturacak (bkz. docs/GDD.md → Açık Karar #8).
+/// The balance values will settle in phase 9 (see docs/GDD.md → Open Decision #8).
 /// </remarks>
 public sealed record HonorTuning
 {
-    /// <summary>Ödül çarpanının alt sınırı (%100 ronin).</summary>
+    /// <summary>The lower bound of the reward multiplier (100% ronin).</summary>
     public double MinRewardMultiplier { get; init; } = 0.5;
 
-    /// <summary>Ödül çarpanının üst sınırı (%100 bushi).</summary>
+    /// <summary>The upper bound of the reward multiplier (100% bushi).</summary>
     public double MaxRewardMultiplier { get; init; } = 1.5;
 
     /// <summary>
-    /// Aktif dövüşe verilen tepkinin onura etkisi. Performanstan gelen değişimle
-    /// birlikte "büyük etki" tarafını oluşturur.
+    /// The effect on honour of a reaction to a live fight. Together with the change from performance it
+    /// makes up the "large effect" side.
     /// </summary>
     public double LiveVoteHonorSwing { get; init; } = 12;
 
     /// <summary>
-    /// Dövüş dışındaki savaşçıya hedefli komutun (<c>!ronin-&lt;isim&gt;</c>) etkisi.
-    /// Kasıtlı olarak küçük: aksi hâlde bir grup, hiç dövüşmemiş bir savaşçıyı
-    /// spam'leyerek seppuku'ya sürükleyebilirdi.
+    /// The effect of a command targeting a warrior outside a fight (<c>!ronin-&lt;name&gt;</c>).
+    /// Deliberately small: otherwise a group could spam a warrior who never fought and drag him to
+    /// seppuku.
     /// </summary>
     public double TargetedVoteHonorSwing { get; init; } = 0.4;
 
-    /// <summary>Dövüş performansının onura azami etkisi.</summary>
+    /// <summary>The maximum effect of fight performance on honour.</summary>
     public double PerformanceHonorSwing { get; init; } = 10;
 
     /// <summary>
-    /// Kaçarak dönen savaşçının performans puanına eklenen ceza (-1..+1 ölçeğinde).
+    /// The penalty added to the performance score of a warrior who comes back by fleeing (on a -1..+1 scale).
     /// </summary>
     /// <remarks>
-    /// Bu, performans bileşeninin <b>içinde</b> kalır: iyi dövüşüp sonra çekilen savaşçı
-    /// hâlâ kötü dövüşenden iyidir. Tuşun kendi bedeli ayrıdır, bkz.
+    /// This stays <b>inside</b> the performance component: a warrior who fights well and then pulls out
+    /// is still better than one who fights badly. The key's own price is separate, see
     /// <see cref="RetreatHonorPenalty"/>.
     /// </remarks>
     public double EscapePerformancePenalty { get; init; } = -0.6;
 
     /// <summary>
-    /// Kaçmanın düz onur bedeli. Performanstan bağımsız, her çekilişte uygulanır.
+    /// The flat honour price of fleeing. Independent of performance, applied on every withdrawal.
     /// </summary>
     /// <remarks>
-    /// Buradaki sayı <b>yer tutucudur</b> — kaçmanın onur bedeli henüz kararlaştırılmadı
-    /// (bkz. docs/GDD.md → Açık Karar #8). Ayrı bir knob olmasının sebebi:
-    /// performans içindeki ceza isabet oranıyla karışıyor ve yeterince isabetli bir
-    /// savaşçı kaçtığı hâlde onur kazanabiliyordu. Çekilmenin bedeli, ne kadar iyi
-    /// dövüştüğünden bağımsız olarak görünmeli.
+    /// The number here is a <b>placeholder</b> — the honour price of fleeing has not been decided yet
+    /// (see docs/GDD.md → Open Decision #8). The reason it is a separate knob: the penalty inside
+    /// performance mixed with the hit rate, and a warrior accurate enough could gain honour even though
+    /// he fled. The price of pulling out should be visible independently of how well he
+    /// fought.
     /// </remarks>
     public double RetreatHonorPenalty { get; init; } = 8;
 
     /// <summary>
-    /// Onurun saatte nötre (50) doğru toparlanma miktarı. Anlık bir troll saldırısının
-    /// kalıcı ölüm cezasına dönüşmesini engeller; yalnızca <b>sürekli</b> onursuzluk
-    /// seppuku'ya götürür.
+    /// How much honour recovers toward neutral (50) per hour. It stops a momentary troll attack from
+    /// turning into a permanent death sentence; only <b>sustained</b> dishonour leads to seppuku.
     /// </summary>
     public double DecayPerHourTowardNeutral { get; init; } = 6;
 
-    /// <summary>Bu değerin altına düşen savaşçı seppuku oylamasına girer.</summary>
+    /// <summary>A warrior who falls below this value enters the seppuku vote.</summary>
     /// <remarks>
-    /// <b>Geçici sayı (2026-09-04):</b> 100'lük ölçekte 30, playtest'e kadar duracak
-    /// (GDD §14 #8 açık). Eski 12 ölçeğin dibine yapışıktı: onur oraya ancak üst üste
-    /// felaketle iniyordu, yani oylama neredeyse hiç açılmıyordu — chat'in en ağır
-    /// kararı pratikte oyunda yoktu.
+    /// <b>Temporary number (2026-09-04):</b> 30 on a scale of 100, standing until playtesting
+    /// (GDD §14 #8 open). The old 12 was stuck to the bottom of the scale: honour only got there through
+    /// back-to-back disasters, so the vote almost never opened — chat's heaviest decision was in practice
+    /// not in the game.
     /// </remarks>
     public double SeppukuThreshold { get; init; } = 30;
 
-    /// <summary>Affedilen savaşçının onuru bu değere çekilir — eşiğin biraz üstü.</summary>
+    /// <summary>A pardoned warrior's honour is pulled to this value — a little above the threshold.</summary>
     /// <remarks>
-    /// Eşikle birlikte yürür: affedilen savaşçı doğrudan yeni bir oylamaya düşmemeli,
-    /// ama af onu nötre (<see cref="HonorScale.Starting"/>) de taşımamalı — af aklama
-    /// değil, savaşçı borçlu kalkar.
+    /// It moves with the threshold: a pardoned warrior must not fall straight into a new vote, but the
+    /// pardon must not carry him to neutral (<see cref="HonorScale.Starting"/>) either — a pardon is not
+    /// an acquittal, the warrior gets up in debt.
     /// </remarks>
     public double PardonedHonor { get; init; } = 45;
 
@@ -78,8 +77,8 @@ public sealed record HonorTuning
     public TimeSpan VoteWindow { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
-    /// Affedilen savaşçının yeni oylamaya girmeden önceki bağışıklık süresi.
-    /// Bu sürede onuru eşiğin altına inse bile oylama tetiklenmez.
+    /// The immunity period of a pardoned warrior before he can enter a new vote.
+    /// During it the vote is not triggered even if his honour falls below the threshold.
     /// </summary>
     public TimeSpan PardonImmunity { get; init; } = TimeSpan.FromMinutes(15);
 

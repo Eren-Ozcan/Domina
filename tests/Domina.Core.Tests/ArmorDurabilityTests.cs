@@ -1,17 +1,17 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Zırh bir sarf malzemesidir: durdurduğu her darbe onu yıpratır ve havuzu bitince
-/// parça <b>kalıcı olarak</b> dağılır. Bu testler yıpranmanın kaynağını (emilen hasar),
-/// dağılmanın sonucunu (o bölge çıplak) ve kuralın kalıcı hale dokunmadığını bağlar.
+/// Armour is a consumable: every blow it stops wears it, and when its pool runs out the piece breaks
+/// <b>permanently</b>. These tests tie down wear's source (the damage absorbed), the consequence of
+/// breaking (that region is bare) and the rule not touching the persistent state.
 /// </summary>
 public class ArmorDurabilityTests
 {
-    /// <summary>Yıpranmanın izole edildiği ayar: kopma, sersemletme ve düşürme kapalı.</summary>
+    /// <summary>The setting that isolates wear: dismemberment, stun and disarming are off.</summary>
     private static CombatTuning WearOnly { get; } = TestBuilders.PointBlank with
     {
         BaseDismembermentChance = 0,
@@ -21,32 +21,32 @@ public class ArmorDurabilityTests
         MaxBattleSeconds = 20,
     };
 
-    /// <summary>Tek vuruşta biten havuz: dağılma anı ölçülebilsin diye.</summary>
+    /// <summary>A pool that runs out in one strike: so the moment of breaking can be measured.</summary>
     private static Armor Brittle { get; } = Armor.Uniform(
-        "Test-Kırılgan",
-        new ArmorPiece("Test-Parça", DamageReduction: 5, DismembermentResistance: 0.5, Weight: 1, Durability: 5));
+        "Test fragile",
+        new ArmorPiece("Test piece", DamageReduction: 5, DismembermentResistance: 0.5, Weight: 1, Durability: 5));
 
-    /// <summary>Aynı parçanın tükenmeyen hâli — kontrol tarafı.</summary>
+    /// <summary>The inexhaustible version of the same piece — the control side.</summary>
     private static Armor Sturdy { get; } = Armor.Uniform(
-        "Test-Sağlam",
-        new ArmorPiece("Test-Parça", DamageReduction: 5, DismembermentResistance: 0.5, Weight: 1, Durability: 10_000));
+        "Test sturdy",
+        new ArmorPiece("Test piece", DamageReduction: 5, DismembermentResistance: 0.5, Weight: 1, Durability: 10_000));
 
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 20, TwoHanded: false, AttackSeconds: 1.0);
 
     private static BattleSetup Bout(Armor defenderArmor, CombatTuning? tuning = null) => new(
         [
-            TestBuilders.Warrior(1, "Kuşanan", health: 4000, aggression: 0, weapon: Weapon.Fists(), armor: defenderArmor),
+            TestBuilders.Warrior(1, "Armoured", health: 4000, aggression: 0, weapon: Weapon.Fists(), armor: defenderArmor),
         ],
         [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: Blade)])
     {
         Tuning = tuning ?? WearOnly,
     };
 
-    /// <summary>Parça durdurduğu hasar kadar yıpranır.</summary>
+    /// <summary>A piece wears by as much damage as it stops.</summary>
     /// <remarks>
-    /// Gelen hasardan düşseydi kalın plaka ince kumaşla aynı hızda tükenir, kademe farkı
-    /// yalnızca sayıda kalırdı (docs/GDD.md §7).
+    /// Reduced by the incoming damage, thick plate would run out as fast as thin cloth and the difference
+    /// between the tiers would exist only on paper (docs/GDD.md §7).
     /// </remarks>
     [Fact]
     public void APieceWearsByWhatItStops()
@@ -57,11 +57,11 @@ public class ArmorDurabilityTests
         WarriorBattleSummary worn = result.Summaries.First(s => s.Id == new WarriorId(1));
         int hits = battle.Events.OfType<AttackLanded>().Count(a => a.Defender == new WarriorId(1));
 
-        // Her isabet parçanın azaltımı kadar yıpratır: 5 hasar × isabet sayısı.
+        // Every hit wears it by the piece's reduction: 5 damage × the number of hits.
         Assert.Equal(hits * 5.0, worn.ArmorWear.Total, precision: 6);
     }
 
-    /// <summary>Havuz bitince parça dağılır ve o bölge çıplak kalır.</summary>
+    /// <summary>When the pool runs out the piece breaks and that region is left bare.</summary>
     [Fact]
     public void AnExhaustedPieceShattersAndLeavesTheSlotBare()
     {
@@ -74,11 +74,11 @@ public class ArmorDurabilityTests
         WarriorBattleSummary summary = result.Summaries.First(s => s.Id == new WarriorId(1));
         Assert.True(summary.DestroyedArmor.Has(destroyed.Slot));
 
-        // Dağıldıktan sonra o bölgeye inen vuruş artık azaltımsız: hasar yükselir.
+        // After it breaks, a strike landing on that region is no longer reduced: the damage rises.
         List<AttackLanded> onSlot =
             [.. battle.Events.OfType<AttackLanded>().Where(a => a.Defender == new WarriorId(1))];
 
-        // Parçayı bitiren vuruş hâlâ azaltımı yer; ondan sonrakiler yemez.
+        // The strike that finishes the piece still takes the reduction; the ones after it do not.
         double whileWorn = onSlot.First(a => a.AtSeconds <= destroyed.AtSeconds).Damage;
 
         Assert.Contains(
@@ -86,7 +86,7 @@ public class ArmorDurabilityTests
             a => a.AtSeconds > destroyed.AtSeconds && a.Damage > whileWorn);
     }
 
-    /// <summary>Zırhı hiç olmayan savaşçıda yıpranacak bir şey yoktur.</summary>
+    /// <summary>A warrior with no armour has nothing to wear down.</summary>
     [Fact]
     public void BareSlotsNeverWear()
     {
@@ -97,10 +97,10 @@ public class ArmorDurabilityTests
         Assert.Equal(0, result.Summaries.First(s => s.Id == new WarriorId(1)).ArmorWear.Total);
     }
 
-    /// <summary>Dayanıklılık savaşçıya aittir: dövüş geçmiş yıpranmanın üstüne yazar.</summary>
+    /// <summary>Durability belongs to the warrior: a fight writes on top of past wear.</summary>
     /// <remarks>
-    /// Kuralın bütün anlamı bu: bir parça tek dövüşte tükenmez, <b>seferler boyunca</b>
-    /// yıpranır ve bir gün ortada dağılır.
+    /// This is the whole meaning of the rule: a piece is not used up in a single fight, it wears
+    /// <b>across expeditions</b> and one day breaks in the middle of one.
     /// </remarks>
     [Fact]
     public void WearCarriesOverFromEarlierBattles()
@@ -111,7 +111,7 @@ public class ArmorDurabilityTests
         first.Run();
         Assert.Empty(first.Events.OfType<ArmorDestroyed>());
 
-        // Aynı kuşam, ama neredeyse tükenmiş olarak sahaya çıkıyor.
+        // The same kit, but taking the field almost used up.
         BattleSetup used = Bout(Sturdy);
         used.PlayerSide[0].ArmorWear = new ArmorWearSet(
             Head: 9_995,
@@ -127,7 +127,7 @@ public class ArmorDurabilityTests
         Assert.NotEmpty(second.Events.OfType<ArmorDestroyed>());
     }
 
-    /// <summary>Dövüş kalıcı hale dokunmaz — yıpranmayı dojo işler.</summary>
+    /// <summary>A fight does not touch the persistent state — the dojo applies the wear.</summary>
     [Fact]
     public void TheBattleDoesNotWriteBackToTheWarrior()
     {
@@ -137,10 +137,10 @@ public class ArmorDurabilityTests
         new Battle(setup, new FixedRandom(0.0)).Run();
 
         Assert.Equal(0, worn.ArmorWear.Total);
-        Assert.Equal("Test-Kırılgan", worn.Armor.Name);
+        Assert.Equal("Test fragile", worn.Armor.Name);
     }
 
-    /// <summary>Ölçek 0 iken zırh hiç yıpranmaz — kontrol tarafı ayakta.</summary>
+    /// <summary>With the scale at 0 armour never wears — the control side holds.</summary>
     [Fact]
     public void TheRuleCanBeTurnedOff()
     {
@@ -153,11 +153,11 @@ public class ArmorDurabilityTests
         Assert.All(result.Summaries, s => Assert.Equal(HitLocationSet.None, s.DestroyedArmor));
     }
 
-    /// <summary>Dağılan parça artık ağırlık da taşımaz.</summary>
+    /// <summary>A broken piece no longer carries weight either.</summary>
     /// <remarks>
-    /// Zırhın sahadaki bedeli ağırlıktı; parçası giden savaşçı korumasını kaybederken
-    /// hızını geri alır. Ağırlık kalıcı kuşamdan okunsaydı savaşçı olmayan bir plakanın
-    /// yükünü taşımaya devam ederdi.
+    /// Armour's price on the field was weight; a warrior whose piece is gone loses his protection and
+    /// gets his speed back. If the weight were read from the persistent kit, the warrior would keep
+    /// carrying the load of a plate that is no longer there.
     /// </remarks>
     [Fact]
     public void AShatteredPieceStopsWeighing()
@@ -165,7 +165,7 @@ public class ArmorDurabilityTests
         var battle = new Battle(Bout(Brittle), new FixedRandom(0.0));
         battle.Run();
 
-        // Altı yuvanın hepsi dağılınca kuşam ağırlığı sıfırlanır; snapshot bunu taşır.
+        // When all six slots break the kit's weight goes to zero; the snapshot carries that.
         CombatantSnapshot snapshot = battle.SnapshotOf(new WarriorId(1));
         Assert.NotEqual(HitLocationSet.None, snapshot.DestroyedArmor);
     }

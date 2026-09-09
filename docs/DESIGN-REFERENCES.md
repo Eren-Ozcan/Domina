@@ -1,64 +1,66 @@
-# Tasarım Dayanakları
+# Design Grounds
 
-Bu dosya, `docs/GDD.md`'deki kararların **dışarıdan doğrulanabilir** dayanaklarını tutar:
-hangi karar hangi yerleşik tasarım pratiğine yaslanıyor, nerede o pratikten ayrılıyoruz ve
-ayrılmanın gerekçesi ne.
+This file holds the **externally verifiable** grounds for the decisions in `docs/GDD.md`:
+which decision leans on which established design practice, where we depart from that
+practice, and why.
 
-**Neden ayrı dosya:** GDD kararı söyler, burası kararın *neden savunulabilir* olduğunu.
-İkisini karıştırmak GDD'yi okunmaz yapar.
+**Why a separate file:** the GDD states the decision, this states why the decision is
+*defensible*. Mixing the two makes the GDD unreadable.
 
-**Uyarı — kaynakların ağırlığı eşit değil.** Aşağıda üç tür kaynak var: (1) tasarımcıların
-kendi konuşma/yazıları, (2) hakemli olmayan ama yerleşik sektör yazısı, (3) topluluk
-wiki'leri ve forum ölçümleri. Üçüncüsü bir oyunun *ne yaptığını* gösterir, *neden* yaptığını
-değil — sayıları oradan almayız, yalnızca kalıbı okuruz.
+**Warning — the sources do not carry equal weight.** There are three kinds of source below:
+(1) designers' own talks and writing, (2) non-peer-reviewed but established industry writing,
+(3) community wikis and forum measurements. The third shows what a game *does*, not *why* it
+does it — we do not take numbers from there, only read the pattern.
 
 ---
 
-## 1. Hücumun tetiği: fırsat değerlendirmesi, sabit eşik değil
+## 1. The charge's trigger: an assessment of the opportunity, not a fixed threshold
 
-**Bizim kuralımız (GDD §4):** savaşçı sabit bir mesafeye bakmaz; her düşman için "bana
-vurabilir hale gelmesi ne kadar sürer" hesabını yapar ve birikmesini tamamlayacak boşluk
-varsa hücumu düşünür.
+**Our rule (GDD §4):** the warrior does not look at a fixed distance; for every enemy he
+computes "how long until he can hit me" and considers a charge if there is a gap big enough
+to finish his windup.
 
-**Dayanak — fayda tabanlı (utility) yapay zekâ.** Dave Mark'ın GDC AI Summit'te anlattığı
-yaklaşımın çekirdeği tam bu: ajan sabit eşiklere/ağaçlara değil, **o anki duruma göre
-puanlanan seçeneklere** bakar ve en iyisini seçer. Yöntemin tasarımcı açısından asıl değeri,
-kuralın doğal dilde ifade edilebilmesi — "ateş altındaysan önce siper ara" gibi. Bizimki de
-öyle okunuyor: *"kimse bana vuramıyorsa ve toparlanacak vaktim varsa hücumu dene."*
+**The ground — utility-based AI.** The core of the approach Dave Mark presented at the GDC AI
+Summit is exactly this: the agent looks not at fixed thresholds or trees but at **options
+scored against the current situation**, and picks the best. The method's real value for a
+designer is that the rule can be expressed in natural language — like "if you are under fire,
+look for cover first". Ours reads the same way: *"if nobody can hit me and I have time to
+gather, try the charge."*
 
-**Nerede ayrılıyoruz:** IAUS sürekli bir puan üretir; bizimki **evet/hayır bir uygunluk
-kapısı** + Saldırganlıkla ölçeklenen bir zar. Yani fayda sisteminin tamamı değil, "durumu
-sorgula" ilkesi alınmış. Puanlamaya geçmek için sebep yok: hücumun rakibi yok, tek soru
-yapılıp yapılmayacağı.
+**Where we depart:** IAUS produces a continuous score; ours is a **yes/no fitness gate** plus a
+die scaled by Aggression. So it is not the whole utility system, only the "query the
+situation" principle. There is no reason to move to scoring: the charge has no rival, the only
+question is whether it happens.
 
-**Ne doğrulamıyor:** eşiğin *sayısını* bu kaynak vermiyor. Bizim sayımız ölçümden geliyor
-(GDD §4 tablosu) ve zaten formülden türüyor.
+**What it does not verify:** this source does not give the threshold's *number*. Our number
+comes from measurement (the GDD §4 table) and derives from a formula anyway.
 
 > [Architecture Tricks: Managing Behaviors in Time, Space, and Depth (GDC 2013)](https://www.gdcvault.com/play/1018040/Architecture-Tricks-Managing-Behaviors-in) ·
 > [IAUS — Intrinsic Algorithm](https://www.gameai.com/iaus.php) ·
-> [Utility system (genel bakış)](https://en.wikipedia.org/wiki/Utility_system)
+> [Utility system (overview)](https://en.wikipedia.org/wiki/Utility_system)
 
 ---
 
-## 2. Birikme süresi: 0.75 sn okunabilir mi
+## 2. The windup duration: is 0.75 s readable
 
-**Bizim kuralımız:** hücum 0.75 sn yerinde birikir; bu sürede savaşçı yerinden kıpırdamaz
-ve yediği ilk isabetle hamle dağılır (savunması normal oranıyla sürer — bkz. §3).
+**Our rule:** a charge gathers in place for 0.75 s; the warrior does not move during it and
+the move scatters on the first hit he takes (his defence continues at its normal rate — see §3).
 
-**Dayanak — insan tepki süresi.** Basit görsel uyarana tepki **200-300 ms** bandında; 60
-fps'de 12-18 kare. Yaygın tasarım kılavuzları pratikte **~0.25 sn**'lik bir pay üzerinden
-düşünmeyi öneriyor. Telegraf yazısının ortak sonucu: işaret ile darbe arasındaki süre
-oyuncunun algılayıp cevap verebileceği kadar uzun, dövüşü ağırlaştırmayacak kadar kısa
-olmalı — ve **tek bir doğru sayı yoktur**, beklenen cevabın süresine bağlıdır.
+**The ground — human reaction time.** Reaction to a simple visual stimulus is in the
+**200-300 ms** band; 12-18 frames at 60 fps. Common design guides suggest thinking in terms of
+a margin of about **0.25 s** in practice. The shared conclusion of the telegraphing literature:
+the time between the signal and the blow should be long enough for the player to perceive and
+answer, short enough not to make combat sluggish — and **there is no single right number**, it
+depends on how long the expected answer takes.
 
-**Bizim için anlamı:** 0.75 sn, tepki tabanının **~3 katı**. Yani birikme, izleyicinin
-"toparlanıyor, koşacak" diye okuyabileceği rahat bir pencere. Bizde oyuncunun refleksle
-cevap vermesi gerekmiyor (dövüş tam otomatik), o yüzden alt sınır bize dar gelmiyor —
-gereken şey *okunabilirlik*, ve 0.75 sn onun fazlasıyla üstünde.
+**What it means for us:** 0.75 s is **~3 times** the reaction floor. So the windup is a
+comfortable window in which a viewer can read "he is gathering, he will run". Our player does
+not have to answer with reflexes (combat is fully automatic), so the lower bound is not tight
+for us — what is needed is *readability*, and 0.75 s is well above it.
 
-**Dürüst sınır:** bu, 0.75'in **doğru** sayı olduğunu kanıtlamaz; yalnızca *okunamayacak
-kadar kısa olmadığını* gösterir. Sayının kendisi ölçümden geldi (dağılma oranı eğrisinin
-dizi).
+**The honest limit:** this does not prove that 0.75 is the **right** number; it only shows it
+is *not too short to read*. The number itself came from measurement (the string of the
+scatter-rate curve).
 
 > [Reaction Time and Game Design](https://www.retrogamedeconstructionzone.com/2020/05/reaction-time-and-game-design.html) ·
 > [How to Design Enemy Attack Telegraphs](https://bugnet.io/blog/how-to-design-enemy-attack-telegraphs) ·
@@ -66,173 +68,186 @@ dizi).
 
 ---
 
-## 3. Taahhüt: hız kazanılır, yavaşlayınca kaybedilir
+## 3. Commitment: speed is earned, and lost when you slow down
 
-**Dayanak — Mount & Blade, couched lance.** Mızrağı yatırmak **belli bir at hızının
-üstünde** olmayı gerektirir (Bannerlord'da eşik ~44 hız değeri); hız yetmiyorken mızrak
-yukarıda durur, yeterli hıza ulaşınca **görünür biçimde** koltuk altına iner. Tek vuruştan
-sonra ya da **yeterince yavaşlayınca** taahhüt bozulur. **Hasar hıza bağlıdır** — hızlı at
-daha çok vurur. Ayrıca couched vuruş normal yön bloklamasını **görmezden gelir**.
+**The ground — Mount & Blade, the couched lance.** Couching the lance requires being **above a
+certain horse speed** (in Bannerlord the threshold is a speed value of ~44); while the speed is
+insufficient the lance stays up, and when it is reached the lance **visibly** drops under the
+arm. The commitment breaks after a single strike, or **when you slow down enough**. **Damage
+depends on speed** — a faster horse hits harder. A couched hit also **ignores** normal
+directional blocking.
 
-**Ne doğruluyor:**
-- Hücumun **görünür bir hazırlık durumu** olması (bizde birikme; onlarda mızrağın inmesi)
-- Taahhüdün **koşullara bağlı bozulması**
+**What it verifies:**
+- The charge having a **visible preparation state** (our windup; their lance dropping)
+- The commitment breaking **under conditions**
 
-**Nerede bilerek ayrılıyoruz:** M&B'de couched vuruş savunmayı (yön bloklamasını) devre dışı
-bırakır. Bizde bir süre benzeri vardı — hücum eden kaçınamıyordu — ve **kaldırıldı**. Ölçüm
-sebebi gösterdi: savunmasızlık, hücumu *kimin yaptığına* göre asimetrik bir ceza üretiyordu
-(GDD §4, "Neden hücum savunmayı kapatmıyor"). M&B'de bunu taşıyabilen şey, oyuncunun
-kontrolündeki tek bir vuruş olması; bizde hücum otomatik ve iki taraf da yapıyor.
+**Where we deliberately depart:** in M&B a couched hit disables defence (directional blocking).
+We had something similar for a while — a charging warrior could not evade — and it was
+**removed**. Measurement showed the reason: defencelessness produced a penalty asymmetric in
+*who was charging* (GDD §4, "Why the charge does not close defence"). What lets M&B carry it is
+that the strike is a single one under the player's control; in our game the charge is automatic
+and both sides do it.
 
-**Uygulandı — ve iki adımda tuttu.** M&B'nin "hasar hıza bağlıdır" kalıbı alındı: varış
-vuruşunun çarpanı artık `1 + (varış hızı ÷ azami yürüme hızı) × oran`. **İlk ölçümde denge
-beklentisi doğrulanmadı:** `Speed` ekseni hâlâ atıldı (3v3 zaferi Hız 0'da %83.9, Hız 100'de
-%84.7). Sebep kalıbın kendisi değil, bizim tarafımızdaki ikinci bağdı — hücum zarı karar adımı
-başına atıldığı için hızlı savaşçı fırsat penceresinden çabuk geçiyor ve **daha seyrek** hücum
-ediyordu (2.20 → 1.20). Kalıbın verdiği artışı bizim kendi örnekleme biçimimiz yiyordu.
+**Applied — and it held in two steps.** M&B's "damage depends on speed" pattern was taken: the
+arrival blow's multiplier is now `1 + (arrival speed ÷ maximum walking speed) × share`. **The
+first measurement did not confirm the balance expectation:** the `Speed` axis was still inert
+(3v3 victory 83.9% at Speed 0, 84.7% at Speed 100). The reason was not the pattern but a second
+coupling on our side — because the charge die was rolled per decision step, a fast warrior
+passed through the opportunity window quickly and charged **less often** (2.20 → 1.20). Our own
+sampling was eating the increase the pattern gave.
 
-Zar fırsat başına bir kez atılınca sıklık hızdan koptu ve kalıp beklendiği gibi çalıştı:
-zafer Hız 0'da **%83.6**, Hız 100'de **%87.0** (GDD §4, "Fırsat başına tek zar").
+Once the die was rolled once per opportunity, frequency came loose from speed and the pattern
+worked as expected: victory **83.6%** at Speed 0 and **87.0%** at Speed 100 (GDD §4, "One die
+per opportunity").
 
-Ders: kaynak bir **kalıbı** doğrular, o kalıbın senin sisteminde ne yapacağını değil. M&B'de
-hız hücumun tek değişkeni; bizde hıza bağlı ikinci bir kanal daha vardı ve ters işaretliydi.
-Kalıbı ölçüp düz çıkması onu çürütmez — önce kendi sistemindeki karşı kanalı ara.
+The lesson: a source verifies a **pattern**, not what that pattern will do in your system. In
+M&B speed is the charge's only variable; in ours there was a second channel tied to speed and
+it had the opposite sign. Measuring a pattern and getting a flat result does not refute it —
+look for the counter-channel in your own system first.
 
 > [Couched lance damage (Mount & Blade Wiki)](https://mountandblade.fandom.com/wiki/Couched_lance_damage) ·
-> [Bannerlord couch lance rehberi](https://gamerempire.net/mount-blade-2-bannerlord-how-to-couch-lance/)
+> [Bannerlord couch lance guide](https://gamerempire.net/mount-blade-2-bannerlord-how-to-couch-lance/)
 
 ---
 
-## 4. "Yol boyunca fırsat saldırısı" — D&D bu kuralı iki kez daralttı
+## 4. "An opportunity attack along the way" — D&D narrowed this rule twice
 
-**Bizim mevcut kuralımız (GDD §4):** hücum eden savaşçının menzilinden geçtiği her düşman
-ona bir kez bedava vuruş yapar. Ölçüm: hücum başına **0.35** vuruş — neredeyse hiç, ve
-işlediği kadarı silah menzili farkının yan ürünü.
+**Our current rule (GDD §4):** every enemy whose reach the charging warrior passes through gets
+one free hit on him. Measured: **0.35** hits per charge — almost none, and what does fire is a
+by-product of the difference in weapon reach.
 
-**Dayanak — D&D'nin fırsat saldırısı (attack of opportunity).** Kural elli yıldır masada
-denenmiş ve **daraltıla daraltıla** bugünkü haline gelmiş:
+**The ground — D&D's attack of opportunity.** The rule has been tried at the table for fifty
+years and reached its present form by being **narrowed and narrowed**:
 
-| Sürüm | Tetik | Sayı sınırı |
+| Edition | Trigger | Count limit |
 |---|---|---|
-| 3.x | Tehdit edilen alanda hareket/eylem — geniş tetik | Combat Reflexes ile **artırılabilir** |
-| 5e | Yalnızca **menzilinden çıkarsan** | Tur başına **tek** tepki (reaction) |
+| 3.x | Movement/action in a threatened area — a broad trigger | **Can be raised** with Combat Reflexes |
+| 5e | Only if you **leave his reach** | **One** reaction per turn |
 
-5e'de düşmanın etrafında dönmek serbesttir; ancak menzilini terk edince provoke edersin.
-Ve **Disengage** eylemiyle tamamen kaçınılabilir. Gerekçe olarak öne çıkan iki şey: tepkiyi
-bir **karar** haline getirmek (oyuncu sırası gelmeden de dövüşe bağlı kalır) ve dövüşü
-hızlı tutmak.
+In 5e circling an enemy is free; you only provoke when you leave his reach. And it can be
+avoided entirely with the **Disengage** action. Two justifications stand out: making the
+reaction a **decision** (the player stays engaged with the fight even out of turn) and keeping
+combat fast.
 
-**Bizim için anlamı — bu, kullanıcının önerdiği yönü doğruluyor.** Yanından geçilen herkesin
-dönüp vurması 3.x'in terk edilmiş geniş tetiği. Yerleşik pratik şunu söylüyor:
+**What it means for us — it confirms the direction the user proposed.** Everyone you pass
+turning to hit you is 3.x's abandoned broad trigger. Established practice says:
 
-1. Tetik **"yanından geçti" değil, "seninle temastayken menzilini terk etti"** olmalı.
-2. Düşman başına **sert bir üst sınır** olmalı (bizde zaten hücum başına bir kez).
-3. Kaçınılabilir bir yolu olmalı (bizde: fırsat kuralı zaten hücumu kalabalıkken engelliyor).
+1. The trigger should be **"he left your reach while engaged with you", not "he went past you"**.
+2. There should be a **hard cap per enemy** (in our case already once per charge).
+3. There should be a way to avoid it (in our case: the opportunity rule already blocks a charge
+   in a crowd).
 
-Bu, GDD §5'teki kaçış penceresiyle de aynı kalıp — "taahhüde girerken menzilindekilere
-borçlanırsın". Yani yeni bir kavram değil, var olanın hücuma uzanması.
+This is the same pattern as the escape window in GDD §5 — "when you enter a commitment you owe
+a debt to everyone in reach". So it is not a new concept but the existing one extended to the
+charge.
 
 > [Opportunity Attacks in D&D 5e (Arcane Eye)](https://arcaneeye.com/mechanic-overview/opportunity-attack-5e/) ·
 > [Why Opportunity Attacks Matter in 5e](https://screenrant.com/dnd-5e-attack-opportunity-rules-good/)
 
 ---
 
-## 5. Varıştaki açı — Total War bizimle çelişiyor
+## 5. The angle on arrival — Total War contradicts us
 
-**Tartışılan öneri:** hücumun hedefi (kafa kafaya gelen) **düşük** oranla karşılık verir,
-yandan geçilen savaşçılar **yüksek** oranla vurur; çünkü hücum edenin böğrünü görürler.
+**The proposal discussed:** the charge's target (the one met head-on) answers at a **low** rate,
+while the warriors passed on the flank hit at a **high** rate, because they see the charger's
+flank.
 
-**Kaynak tersini söylüyor.** Total War serisinde hücumun karşılığı doğrudan **cepheye**
-bağlı: *charge defence* özelliğine sahip mızraklı birlik, **sabit durur (braced) ve
-cepheden hücuma uğrarsa** düşmanın charge bonusunu **tamamen iptal eder**. Yandan ya da
-arkadan gelen hücum ise bonusu iptal **etmez** — birlik tam hasarı yer.
+**The source says the opposite.** In the Total War series the answer to a charge is tied
+directly to the **front**: a spear unit with the *charge defence* attribute **completely
+cancels** the enemy's charge bonus **if it is braced and charged from the front**. A charge
+from the flank or the rear does **not** cancel the bonus — the unit takes full damage.
 
-Yani sektörün en çok denenmiş hücum modelinde **kafa kafaya gelmek hücum edenin en kötü
-açısıdır**, en iyisi değil. Gerekçesi sezgisel: sana bakan düşman, sana **hazır** olandır.
+So in the industry's most-tested charge model, **meeting head-on is the charger's worst angle**,
+not his best. The rationale is intuitive: an enemy who is looking at you is the one who is
+**ready** for you.
 
-**Ama koşulu var, ve asıl ders orada.** TW'de bunu yapan her birlik değil; **doğru silah +
-doğru duruş** gerekir. Mızrak cepheden hücumu durdurur, kılıç durduramaz.
+**But it has a condition, and that is the real lesson.** In TW not every unit does this; **the
+right weapon + the right stance** are required. A spear stops a frontal charge, a sword cannot.
 
-**Bizim sistemimize düşen sonuç:** açıyı değil **silahı** ölçüt yapmak. Bizde zaten menzil
-farkı var (katana 100, çift elli silahlar 150). Doğal kural:
+**The conclusion for our system:** make the **weapon**, not the angle, the criterion. We already
+have a reach difference (katana 100, two-handed weapons 150). The natural rule:
 
-> Hücumun hedefi, **hücum edenden uzun menzilli bir silah taşıyorsa** varışta bir karşılama
-> vuruşu kazanır. Kısa silahlı hedef momentumu durduramaz.
+> If the charge's target carries a weapon with **longer reach than the charger's**, he earns a
+> meeting blow on arrival. A target with a short weapon cannot stop the momentum.
 
-Bu, üç şeyi birden yapar: kullanıcının "herkes dönüp vurmasın" itirazını korur (yalnızca
-hedef, yalnızca koşulu sağlıyorsa), TW'nin doğrulanmış cephe kuralını alır, ve **yeni bir
-sayı doğurmaz** — mevcut menzil değerlerini kullanır. Ayrıca `Weapon.Reach`'e ikinci bir
-tasarım işi verir: uzun silah artık yalnızca "önce vurur" değil, "hücumu karşılar".
+That does three things at once: it preserves the user's objection ("not everyone should turn and
+hit" — only the target, and only if the condition holds), it takes TW's verified frontal rule,
+and it **spawns no new number** — it uses the existing reach values. It also gives
+`Weapon.Reach` a second design job: a long weapon is no longer only "strikes first" but "meets a
+charge".
 
-**Karara bağlandı (2026-09-02) — ve iki kaynak da kısmen haklı çıktı.** Kullanıcının açı
-modeli alındı: hedef karşılık verebilir ama **kesin değil**, zara bağlı (0.6); yoldan
-geçilen düşman vuruşunu kesin alır. Silah menzilini ölçüt yapan TW kuralı **alınmadı** —
-onun yerine TW'nin asıl fikri, *bracing hücum bonusunu iptal eder*, olduğu gibi taşındı:
-hedefin karşılığı tuttuğunda **momentum söner**, varış vuruşu hasar çarpanını kazanmaz.
-Böylece nadir karşılığın ağırlığı olur ve yine **yeni bir sayı doğmaz**.
+**Decided (2026-09-02) — and both sources were partly right.** The user's angle model was taken:
+the target can answer but **not certainly**, it depends on a die (0.6); an enemy passed on the
+way takes his hit for certain. The TW rule making weapon reach the criterion was **not taken** —
+instead TW's real idea, *bracing cancels the charge bonus*, was carried over as it stands: when
+the target's answer holds, **the momentum dies** and the arrival blow does not earn the damage
+multiplier. That gives the rare answer weight and again **spawns no new number**.
 
-Ölçüm bir de sürpriz verdi: bu oran hücumun bedelinden fazlasını taşıyor. Hedefin topladığı
-karşılıklar, **sayıca azalan tarafın başlıca geliri**; kısıldığında kalabalık tarafın
-avantajı katlanıyor ve §5'in kaçış vaadi çöküyor. 0.6, tüm kilitli vaatleri ayakta tutan en
-düşük değer olduğu için seçildi (tablo: GDD §4, "Hedefin karşılığı neyi taşıyor").
+The measurement also gave a surprise: this rate carries more than the charge's price. The
+answers the target collects are **the main income of the outnumbered side**; when it is turned
+down, the crowded side's advantage compounds and §5's escape promise collapses. 0.6 was chosen
+because it is the lowest value that keeps all the locked promises standing (the table: GDD §4,
+"What the target's answer carries").
 
-**Dürüst not:** TW'nin 13 sn'lik charge bonus süresi ve %20'lik bracing bonusu bize
-taşınamaz — onlar dakikalarca süren birlik ölçekli savaşlar; bizim dövüşler 14 sn ve bonus
-tek bir vuruşa biniyor. Kalıbı alıyoruz, sayıyı değil. Kaynaklar topluluk wiki'si ve forum
-ölçümü, resmî tasarım belgesi değil.
+**An honest note:** TW's 13 s charge bonus duration and 20% bracing bonus cannot be carried over
+to us — those are unit-scale battles lasting minutes; our fights are 14 s and the bonus rides on
+a single blow. We take the pattern, not the number. The sources are a community wiki and forum
+measurements, not an official design document.
 
 > [Charge Bonus (Total War: Warhammer Wiki)](https://totalwarwarhammer.fandom.com/wiki/Charge_Bonus) ·
 > [Charge Defence vs. Large](https://totalwarwarhammer.fandom.com/wiki/Charge_Defence_vs._Large)
 
 ---
 
-## 6. Hücum bir "karar" mı — ve kimin kararı
+## 6. Is the charge a "decision" — and whose
 
-**Ölçülen gerçek (güncel):** hücum artık her zaman doğru hamle **değil**. Düelloda nötr
-(%66.7 → %66.0), donanımlı veteran için **zararlı** (%98.3 → %96.1), 3v3'te ölçülü bir
-kazanç (%81.6 → %84.2). Savunmasızlık kuralı kaldırılmadan önce `veteran` dışında her
-senaryoda yarıyordu.
+**The measured reality (current):** the charge is **no longer** always the right move. In a duel
+it is neutral (66.7% → 66.0%), for an equipped veteran it is **harmful** (98.3% → 96.1%), and in
+3v3 it is a measured gain (81.6% → 84.2%). Before the defencelessness rule was removed it helped
+in every scenario except `veteran`.
 
-**Dayanak — Sid Meier, "interesting decisions".** Ölçüt şudur: oyuncu seçeneklerden hep
-aynısını seçiyorsa ya da seçim rastgeleyse, orada **ilginç bir karar yoktur**. Meier'in
-saydığı karar türleri: kişiselleştirme, **takas (trade-off)**, ve kısa vade-uzun vade
-gerilimi.
+**The ground — Sid Meier, "interesting decisions".** The criterion is this: if the player always
+picks the same option, or if the choice is random, there is **no interesting decision** there.
+The kinds of decision Meier lists: personalisation, a **trade-off**, and the tension between the
+short and the long term.
 
-**Bu ölçütü bize uygularken bir düzeltme gerekiyor.** Bizde dövüş tam otomatik; oyuncu
-hücuma karar vermiyor. O yüzden ölçüt **dövüş anına değil, dojo katmanına** uygulanmalı:
-hücum, oyuncunun *hazırlıkta* verdiği kararların (Saldırganlık antrenmanı, `Speed`, silah
-menzili, zırh) sahadaki karşılığı olmalı. Kararın ilginç olması için hazırlık ekseninde bir
-takas gerekir.
+**Applying that criterion to us needs a correction.** Our combat is fully automatic; the player
+does not decide to charge. So the criterion has to be applied **not to the moment of the fight
+but to the dojo layer**: the charge should be the field counterpart of the decisions the player
+makes *in preparation* (Aggression training, `Speed`, weapon reach, armour). For the decision to
+be interesting there has to be a trade-off on the preparation axis.
 
-**Şu anki durum:** Saldırganlık hücum sıklığını belirliyor ve hamlenin **gerçek bir bedeli
-var** — iki senaryoda katkısı sıfır ya da eksi. Takas ölçütü sağlanıyor. Eksik kalan iki
-eksen: `Speed` atıl (bkz. §3) ve silah menzili hücumda yalnızca kazara rol oynuyor
-(bkz. §5). İkisi de bağlanırsa hücum, üç hazırlık ekseninin birden okunduğu yer olur.
+**The current state:** Aggression sets the charge frequency and the move has a **real price** —
+in two scenarios its contribution is zero or negative. The trade-off criterion is met. Two axes
+are still missing: `Speed` is inert (see §3) and weapon reach only plays a role in a charge by
+accident (see §5). If both are wired up, the charge becomes the place where all three
+preparation axes are read at once.
 
 > [GDC 2012: Sid Meier on interesting decisions](https://www.gamedeveloper.com/design/gdc-2012-sid-meier-on-how-to-see-games-as-sets-of-interesting-decisions) ·
 > [Interesting Decisions (GDC Vault)](https://www.gdcvault.com/play/1015756/interesting)
 
 ---
 
-## Hangi sayı nereden geliyor
+## Where each number comes from
 
-Ticari oyunlar denge sabitlerini yayımlamaz. Bu yüzden **kaynaklardan sayı almıyoruz**;
-kaynaklar kalıbı ve gerekçeyi veriyor, sayılar `Domina.Sim` ölçümünden çıkıyor.
+Commercial games do not publish their balance constants. So **we take no numbers from the
+sources**; the sources give the pattern and the rationale, the numbers come out of the
+`Domina.Sim` measurement.
 
-| Sayı | Kaynağı |
+| Number | Its source |
 |---|---|
-| Birikme 0.75 sn | **Ölçüm** (dağılma eğrisinin dizi). Kaynaklar yalnızca *okunamayacak kadar kısa olmadığını* doğruluyor: tepki tabanı 200-300 ms |
-| Saldırganlık eğrisi 0.12-0.45 | **Ölçüm** — dövüş başına 1.71 tamamlanmış hücum |
-| Hasar çarpanı 1.5 | **Ölçüm** — 1.25-1.5 bandı oyuncu ölümünü en aza indiriyor |
-| Hız çarpanı 1.6 | **Sunum kararı** — ölçümde denge etkisi yok |
-| Süre sınırı 4.0 sn | **Emniyet supabı** — ölçümde hiç dolmuyor |
-| Fırsat saldırısı: düşman başına bir kez | **Kalıp doğrulanmış** — D&D 5e tur başına tek tepki |
-| Gereken mesafe | **Türetiliyor:** `düşmanın menzili + hızı × birikme` |
+| Windup 0.75 s | **Measurement** (the string of the scatter curve). The sources only confirm it is *not too short to read*: the reaction floor is 200-300 ms |
+| The Aggression curve 0.12-0.45 | **Measurement** — 1.71 completed charges per fight |
+| The damage multiplier 1.5 | **Measurement** — the 1.25-1.5 band minimises player deaths |
+| The speed multiplier 1.6 | **A presentation decision** — no balance effect in measurement |
+| The 4.0 s time limit | **A safety valve** — it never fills in measurement |
+| Opportunity attack: once per enemy | **The pattern is verified** — D&D 5e allows one reaction per turn |
+| The distance needed | **Derived:** `enemy reach + speed × windup` |
 
 ---
 
-## Bu dosyaya ne eklenir
+## What gets added to this file
 
-Yeni bir tasarım kararı GDD'ye girerken, dışarıda denenmiş bir karşılığı varsa buraya bir
-bölüm açılır: **ne yaptığımız, kaynağın ne dediği, nerede ayrıldığımız ve neden.** Kaynağın
-bizi çürüttüğü yerler (§5 gibi) **silinmez** — asıl değeri olan kayıt odur.
+When a new design decision enters the GDD, if it has a counterpart tried outside, a section is
+opened here: **what we did, what the source says, where we departed and why.** The places where
+a source refuted us (like §5) are **not deleted** — that record is the valuable part.

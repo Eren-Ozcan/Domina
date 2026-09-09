@@ -5,9 +5,9 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kayıt sistemi (GDD §2): versiyonlu, merge-on-load, hiçbir koşulda fırlatmayan.
-/// Korunan karar şu: dosyaya yalnızca oyuncunun ürettiği şey yazılır — denge sayıları
-/// yüklerken yeniden hesaplanır, yoksa eski kayıt yeni dengeyi geri getirirdi.
+/// The save system (GDD §2): versioned, merge-on-load, throwing under no circumstances.
+/// The decision protected is this: only what the player produced is written to the file — the balance
+/// numbers are recomputed on load, or an old save would bring back the old balance.
 /// </summary>
 public class DojoSaveTests
 {
@@ -75,8 +75,8 @@ public class DojoSaveTests
     }
 
     /// <summary>
-    /// Talim oyuncunun kararıdır, türetilen bir değer değil: kayıt onu taşımasaydı
-    /// oyun her açılışta savaşçıyı varsayılan talime döndürürdü.
+    /// The drill is the player's decision, not a derived value: if the save did not carry it, the game
+    /// would return the warrior to the default drill at every launch.
     /// </summary>
     [Fact]
     public void ARoundTripKeepsTheChosenDrill()
@@ -91,8 +91,8 @@ public class DojoSaveTests
     }
 
     /// <summary>
-    /// Okul ve yol kayda girer: ikisi de oyuncunun geri alınamaz kararı. Bonusların
-    /// büyüklüğü girmez — denge sayısı dosyadan değil koddan gelir (GDD §2).
+    /// The school and the path go into the save: both are the player's irreversible decisions. The size
+    /// of the bonuses does not — a balance number comes from the code, not from the file (GDD §2).
     /// </summary>
     [Fact]
     public void ARoundTripKeepsTheSchoolAndTheChosenPath()
@@ -119,7 +119,7 @@ public class DojoSaveTests
         Assert.Equal(WarriorPath.Stone, after.Roster.Find(source.Id)!.Warrior.Path);
     }
 
-    /// <summary>Bozuk kayıt kolun sırasını atlayamaz: ustası olan bir talimhane yoksa düşer.</summary>
+    /// <summary>A corrupted save cannot skip a branch's order: a master with no training ground is dropped.</summary>
     [Fact]
     public void ASaveCannotSkipAStepInASchoolBranch()
     {
@@ -222,7 +222,7 @@ public class DojoSaveTests
         LoadResult result = DojoSaveFile.Restore(fromTheFuture);
 
         Assert.True(result.Succeeded);
-        Assert.Contains(result.Warnings, w => w.Contains("daha yeni", StringComparison.Ordinal));
+        Assert.Contains(result.Warnings, w => w.Contains("newer version", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class DojoSaveTests
               "day": 1,
               "warriors": [
                 { "id": 1, "name": "Kenji", "isAlive": true },
-                { "id": 1, "name": "Çakışan", "isAlive": true },
+                { "id": 1, "name": "Clashing", "isAlive": true },
                 { "id": 2, "name": "Hana", "isAlive": true }
               ]
             }
@@ -281,7 +281,7 @@ public class DojoSaveTests
         LoadResult result = DojoSaveFile.Load(Json);
 
         Assert.True(result.Succeeded);
-        Assert.Equal("İsimsiz 9", result.State!.Roster.Find(new WarriorId(9))!.Name);
+        Assert.Equal("Nameless 9", result.State!.Roster.Find(new WarriorId(9))!.Name);
         Assert.Single(result.Warnings);
     }
 
@@ -295,8 +295,8 @@ public class DojoSaveTests
     }
 
     /// <summary>
-    /// Bugün alınmış aday kayda geçer: geçmeseydi oyuncu kaydı yeniden yükleyerek aynı
-    /// adamı tekrar tekrar satın alırdı (tezgâh gün içinde donuyor).
+    /// A candidate bought today goes into the save: without it the player could buy the same man over and
+    /// over by reloading (the stall is frozen within the day).
     /// </summary>
     [Fact]
     public void ALoadedSaveRemembersWhichCandidatesWereAlreadyBought()

@@ -1,17 +1,17 @@
-﻿using Domina.Core.Model;
+using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
 /// <summary>
-/// Dövüş sırasında olan biteni anlatan olay akışı.
+/// The event stream that tells what is happening during a fight.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Bu tasarımın can alıcı noktası:</b> Dövüş çözümleyici animasyon hakkında
-/// hiçbir şey bilmez — yalnızca bu olayları üretir. Godot katmanı olayları alıp
-/// oynatır. Ayrım bozulup çözümleyici animasyona bağlanırsa, motor açmadan toplu
-/// simülasyon yapmak imkânsızlaşır ve denge çalışması ölür
-/// (bkz. CLAUDE.md → "Mimari kuralı").
+/// <b>The crux of this design:</b> the combat resolver knows nothing about animation — it only
+/// produces these events. The Godot layer takes the events and plays them back. If the separation
+/// breaks and the resolver becomes coupled to animation, batch simulation without opening the engine
+/// becomes impossible and balance work dies
+/// (see CLAUDE.md → "Architecture rule").
 /// </para>
 /// </remarks>
 public abstract record BattleEvent(double AtSeconds);
@@ -24,7 +24,7 @@ public sealed record AttackStarted(double AtSeconds, WarriorId Attacker, Warrior
 public sealed record AttackMissed(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
-/// <summary>Kaçınma başarılı — hasar yok ama stamina gitti.</summary>
+/// <summary>The evasion succeeded — no damage, but stamina is gone.</summary>
 public sealed record AttackDodged(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
@@ -36,19 +36,19 @@ public sealed record AttackLanded(
     double DefenderHealthRemaining) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Darbe blok duruşuna geldi: hasarın çoğu silindi, uzuv kopmadı — ama darbe indi.
+/// The blow met a block stance: most of the damage was erased and no limb came off — but the blow landed.
 /// </summary>
 /// <remarks>
-/// Kaçınmadan ve yakalamadan ayrı bir olaydır çünkü üçü ekranda ayrı şeyler anlatır:
-/// kaçınan savaşçı çekilir, yakalayan kenetlenir, bloklayan <b>yerinde sarsılır</b>.
-/// <paramref name="Damage"/> bloktan sonra kalan hasardır — sıfır değildir, ve fark
-/// sunum katmanının bloğu "işe yaradı ama bedavaya değil" diye gösterebilmesi için var.
+/// It is a separate event from evasion and catching because the three tell different things on screen:
+/// an evading warrior pulls away, a catching one binds, a blocking one <b>is shaken in place</b>.
+/// <paramref name="Damage"/> is the damage left after the block — it is not zero, and the difference
+/// exists so the presentation layer can show the block as "it worked, but not for free".
 /// </remarks>
-/// <summary>Savaşçı blok duruşuna geçti — bu sürede vurmuyor.</summary>
+/// <summary>The warrior went into a block stance — he is not striking during it.</summary>
 /// <remarks>
-/// Duruşun kendisi ekranda görünmek zorunda: oyuncu, savaşçısının neden vurmadığını
-/// görebilmeli. <see cref="AttackBlocked"/> duruşun <b>işe yaradığı</b> andır; bu olay
-/// duruşun <b>alındığı</b> an.
+/// The stance itself has to be visible on screen: the player must be able to see why his warrior is not
+/// striking. <see cref="AttackBlocked"/> is the moment the stance <b>worked</b>; this event is the
+/// moment the stance was <b>taken</b>.
 /// </remarks>
 public sealed record BlockRaised(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
@@ -59,13 +59,13 @@ public sealed record AttackBlocked(
     double Damage) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Savunan, gelen silahı yakaladı: hasar yok ve saldıran <paramref name="BindSeconds"/>
-/// boyunca kilitli kalır.
+/// The defender caught the incoming weapon: no damage, and the attacker stays bound for
+/// <paramref name="BindSeconds"/>.
 /// </summary>
 /// <remarks>
-/// Kaçınmadan ayrı bir olaydır çünkü ekranda anlatacağı şey ayrı: kaçınmada savunan
-/// çekilir, yakalamada iki savaşçı bir an <b>birbirine kenetlenir</b>. Sunum katmanı
-/// bunu iki tarafı da içeren tek bir duruş olarak oynatmalı.
+/// It is a separate event from evasion because what it says on screen is separate: in an evasion the
+/// defender pulls away, in a catch the two warriors <b>lock together</b> for a moment. The presentation
+/// layer should play this as a single stance involving both sides.
 /// </remarks>
 public sealed record AttackCaught(
     double AtSeconds,
@@ -74,19 +74,19 @@ public sealed record AttackCaught(
     double BindSeconds) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Silah elden düştü: savaşçı dövüşün geri kalanını <b>yumrukla</b> geçirir.
+/// The weapon fell out of the hand: the warrior spends the rest of the fight with his <b>fists</b>.
 /// </summary>
 /// <remarks>
 /// <para>
-/// İki yerden gelebilir: zırha inen vuruşun geri tepmesi kavrayışı bozar, ya da
-/// yakalanan silah çengelde avuçtan sökülür. <paramref name="Disarmer"/> ikincisinde
-/// silahı düşüren savaşçıdır; plakaya vurup kendi silahını elinden kaçıranda
-/// <c>null</c>'dır — ortada düşüren kimse yok.
+/// It can come from two places: the rebound of a strike landing on armour breaks the grip, or a caught
+/// weapon is levered out of the palm by the hook. <paramref name="Disarmer"/> is the warrior who took
+/// the weapon in the second case; for a warrior who struck plate and lost his own weapon it is
+/// <c>null</c> — nobody disarmed him.
 /// </para>
 /// <para>
-/// Kayıp <b>dövüşe</b> aittir, kalıcı değildir: silah yerde kalır ve dövüş bitince
-/// savaşçıya geri döner. Kırılma yerine düşme seçildi ki ekipmanın bedeli ayrı bir
-/// envanter ve onarım defteri açmasın — bedel kalan dövüştür.
+/// The loss belongs to <b>the fight</b> and is not permanent: the weapon stays on the ground and
+/// returns to the warrior when the fight ends. Dropping was chosen over breaking so that equipment's
+/// price does not open a separate inventory and repair ledger — the price is the rest of the fight.
 /// </para>
 /// </remarks>
 public sealed record WeaponDropped(
@@ -96,14 +96,14 @@ public sealed record WeaponDropped(
     WarriorId? Disarmer) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Zırh parçası dağıldı: o bölge dövüşün geri kalanında <b>çıplak</b>, ve parça
-/// kalıcı olarak gitti.
+/// An armour piece broke: that region is <b>bare</b> for the rest of the fight, and the piece is gone
+/// permanently.
 /// </summary>
 /// <remarks>
-/// Silahtan farkı buradadır: düşen silah dövüş sonunda geri gelir, dağılan parça
-/// gelmez. Zırh oyunun sarf malzemesidir — en çok emen kuşam en çabuk tükenendir.
-/// Kalıcı sonucu çekirdek uygulamaz; uzuv kaybında olduğu gibi olayı ve dövüş özetini
-/// üretir, kuşamı defterden düşmek dojo katmanının işidir.
+/// This is where it differs from the weapon: a dropped weapon comes back at the end of the fight, a
+/// broken piece does not. Armour is the game's consumable — the kit that absorbs the most runs out the
+/// fastest. The core does not apply the permanent outcome; as with limb loss it produces the event and
+/// the fight summary, and striking the armour off the books is the dojo layer's job.
 /// </remarks>
 public sealed record ArmorDestroyed(
     double AtSeconds,
@@ -112,17 +112,17 @@ public sealed record ArmorDestroyed(
     string Piece) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Savaşçı yerden bir silah aldı.
+/// The warrior picked a weapon up from the ground.
 /// </summary>
 /// <remarks>
-/// Yalnızca <b>eli boş</b> savaşçı alır — silahı olan ne alır ne de arar; yerdeki
-/// namluya doğru bir adım bile atmaz. Bu sınır olmasaydı herkes sürekli daha iyi silah
-/// toplar, dövüş bir yağma turuna dönerdi.
+/// Only an <b>empty-handed</b> warrior picks one up — a warrior with a weapon neither picks up nor
+/// searches; he does not take a single step toward the blade on the ground. Without this limit everyone
+/// would constantly collect better weapons and the fight would turn into a looting round.
 /// </remarks>
 public sealed record WeaponPickedUp(double AtSeconds, WarriorId Warrior, string Weapon)
     : BattleEvent(AtSeconds);
 
-/// <summary>Ağır darbe savaşçıyı sersemletti: <paramref name="Seconds"/> boyunca donar.</summary>
+/// <summary>A heavy blow stunned the warrior: he freezes for <paramref name="Seconds"/>.</summary>
 public sealed record WarriorStunned(
     double AtSeconds,
     WarriorId Attacker,
@@ -130,15 +130,15 @@ public sealed record WarriorStunned(
     double Seconds) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Vuruş zehir taşıyordu: savunanın kanına doz girdi.
+/// The strike carried poison: a dose entered the defender's blood.
 /// </summary>
 /// <remarks>
-/// Hasarın kendisi ayrı bir olaydır (<see cref="PoisonTicked"/>). İkisi ayrı durur çünkü
-/// ekranda anlatacakları da ayrı: zehirlenme <b>bir kez</b> olur ve silahı ele verir,
-/// hasar süre boyunca tekrar eder.
+/// The damage itself is a separate event (<see cref="PoisonTicked"/>). The two stand apart because what
+/// they say on screen is different too: poisoning happens <b>once</b> and reveals the weapon, while the
+/// damage repeats over time.
 /// </remarks>
-/// <param name="Dose">Vuruştan sonra savunanın kanındaki toplam doz.</param>
-/// <param name="Seconds">Dozun yenilenen ömrü.</param>
+/// <param name="Dose">The total dose in the defender's blood after the strike.</param>
+/// <param name="Seconds">The dose's refreshed lifetime.</param>
 public sealed record WarriorPoisoned(
     double AtSeconds,
     WarriorId Attacker,
@@ -147,7 +147,7 @@ public sealed record WarriorPoisoned(
     double Seconds) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Zehir bir kez daha işledi. Vuran kimse yok; hasar zırhtan da savunmadan da geçmez.
+/// Poison worked once more. Nobody struck; the damage goes through neither armour nor defence.
 /// </summary>
 public sealed record PoisonTicked(
     double AtSeconds,
@@ -156,50 +156,50 @@ public sealed record PoisonTicked(
     double HealthRemaining) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Ağır darbe geldi ve savaşçı çekilmekte olduğu için <b>yaşadı ama uzvunu kaybetti</b>.
-/// Oyuncu zamanında müdahale etmeseydi bu olay <see cref="WarriorDied"/> olurdu.
+/// A heavy blow landed and, because the warrior was pulling out, he <b>lived but lost a limb</b>.
+/// Had the player not intervened in time, this event would have been <see cref="WarriorDied"/>.
 /// </summary>
 public sealed record WarriorDismembered(double AtSeconds, WarriorId Warrior, BodyPart Part)
     : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Tuşa temastan önce basıldı ve komut reddedildi (bkz. docs/GDD.md §5).
+/// The key was pressed before contact and the command was refused (see docs/GDD.md §5).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Kaçış yalnızca ilk isabetten sonra açılır: kimse dokunmadan çekilmek yok. Reddedilen
-/// basış yine de olay üretir, çünkü arayüzün söyleyecek bir şeyi var — kural ilk kez
-/// görülüyorsa öğretilmeli, ısrarla tekrarlanıyorsa cevaplanmalı.
+/// Escape only unlocks after the first hit: no pulling out before anyone is touched. A refused press
+/// still produces an event, because the interface has something to say — if the rule is being seen for
+/// the first time it should be taught, if it is being repeated insistently it should be answered.
 /// </para>
 /// <para>
-/// <paramref name="ConsecutivePresses"/> bu dövüşteki üst üste reddedilen basış
-/// sayısıdır; ilk kabul edilen komutta anlamını yitirir. Metni çekirdek üretmez —
-/// sayıyı verir, ne yazılacağına sunum katmanı karar verir.
+/// <paramref name="ConsecutivePresses"/> is the number of consecutive refused presses in this fight; it
+/// loses its meaning at the first accepted command. The core does not produce the text — it gives the
+/// number, and the presentation layer decides what to write.
 /// </para>
 /// </remarks>
 public sealed record RetreatRefused(double AtSeconds, int ConsecutivePresses) : BattleEvent(AtSeconds);
 
-/// <summary>Oyuncu "çek" tuşuna bastı. Henüz kaçış başlamamış olabilir (bkz. buffer).</summary>
+/// <summary>The player pressed the "pull out" key. The escape may not have started yet (see buffering).</summary>
 public sealed record RetreatCommanded(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Komut buffer'landı: savaşçı saldırı vuruşuna kilitliydi, mevcut hareketi bitince
-/// kaçış başlayacak (bkz. docs/GDD.md §5).
+/// The command was buffered: the warrior was locked into an attack strike, and the escape will start
+/// when his current move finishes (see docs/GDD.md §5).
 /// </summary>
 public sealed record RetreatBuffered(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
-/// <summary>Kaçış başladı. Bu andan itibaren savaşçı kaçınamaz/bloklayamaz.</summary>
+/// <summary>The escape started. From this moment the warrior cannot evade or block.</summary>
 public sealed record RetreatStarted(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Mermi havalandı. Görselleştirme uçuşu bu olaydan sürer.
+/// The projectile took off. The visualisation drives the flight from this event.
 /// </summary>
 /// <remarks>
-/// Mermi <b>anında çözülmez</b>: uçuş süresi boyunca havada durur ve varış anında
-/// <see cref="ProjectileHit"/> veya <see cref="ProjectileMissed"/> ile sonuçlanır.
-/// Anında çözülseydi ekrandaki uçuş ile hasarın anı birbirini tutmazdı.
+/// The projectile is <b>not resolved instantly</b>: it stays in the air for the flight time and, on
+/// arrival, results in <see cref="ProjectileHit"/> or <see cref="ProjectileMissed"/>. Resolved
+/// instantly, the flight on screen and the moment of damage would not match.
 /// </remarks>
-/// <param name="FlightSeconds">Varışa kalan süre — görselleştirme hızını buradan alır.</param>
+/// <param name="FlightSeconds">The time left until arrival — the visualisation takes its speed from this.</param>
 public sealed record ProjectileLaunched(
     double AtSeconds,
     WarriorId Attacker,
@@ -209,7 +209,7 @@ public sealed record ProjectileLaunched(
     ArenaPoint To,
     double FlightSeconds) : BattleEvent(AtSeconds);
 
-/// <summary>Mermi hedefe ulaştı.</summary>
+/// <summary>The projectile reached the target.</summary>
 public sealed record ProjectileHit(
     double AtSeconds,
     WarriorId Attacker,
@@ -218,53 +218,53 @@ public sealed record ProjectileHit(
     double DefenderHealthRemaining) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Mermi boşa gitti — ıskalandı ya da hedef varmadan sahadan çıktı.
+/// The projectile was wasted — it missed, or the target left the field before it arrived.
 /// </summary>
 public sealed record ProjectileMissed(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
-/// <summary>Savaşçı hücuma kalktı: yerinde güç topluyor, kıpırdamıyor.</summary>
+/// <summary>The warrior launched a charge: he is gathering force in place, not moving.</summary>
 public sealed record ChargeStarted(double AtSeconds, WarriorId Warrior, WarriorId Target)
     : BattleEvent(AtSeconds);
 
-/// <summary>Birikme tamamlandı, koşu başladı.</summary>
+/// <summary>The windup finished, the run started.</summary>
 /// <remarks>
-/// Görselleştirme için ayrı duruyor: birikme ile koşu aynı hamlenin iki farklı anıdır ve
-/// ekranda aynı görünemezler.
+/// It stands apart for the visualisation: the windup and the run are two different moments of the same
+/// move and cannot look the same on screen.
 /// </remarks>
 public sealed record ChargeLaunched(double AtSeconds, WarriorId Warrior, WarriorId Target)
     : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Birikme bir isabetle dağıldı — koşu hiç başlamadı, bonus alınmadı.
+/// The windup was scattered by a hit — the run never started, the bonus was not collected.
 /// </summary>
 public sealed record ChargeBroken(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Hücum hedefe vardı; bunu takip eden vuruş hasar çarpanı taşır.
+/// The charge reached the target; the strike that follows carries a damage multiplier.
 /// </summary>
 public sealed record ChargeConnected(double AtSeconds, WarriorId Warrior, WarriorId Target)
     : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Hücum boşa gitti: hedef öldü, kaçtı, sahadan çıktı ya da süre doldu.
+/// The charge was wasted: the target died, fled, left the field, or the time ran out.
 /// </summary>
 /// <remarks>
-/// Hücumun taahhüdünün ekranda görünen karşılığı bu — koşan savaşçı kimseye varamadan
-/// açıkta kalır.
+/// This is the on-screen counterpart of the charge's commitment — the running warrior is left exposed
+/// without reaching anyone.
 /// </remarks>
 public sealed record ChargeMissed(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
-/// <summary>Kaçan avın arkasından gelen bedava vuruş.</summary>
+/// <summary>The free hit that comes from behind at fleeing prey.</summary>
 public sealed record OpportunityAttack(double AtSeconds, WarriorId Attacker, WarriorId Defender)
     : BattleEvent(AtSeconds);
 
 /// <summary>
-/// Arenayı terk ederken alınan kaza yarası — kimsenin vurmadığı tek yara.
+/// The accidental wound taken while leaving the arena — the only wound nobody struck.
 /// </summary>
 /// <remarks>
-/// Görselleştirme bunu vuruş olarak değil <b>sendeleme</b> olarak oynatmalı; ortada
-/// vuran biri yok.
+/// The visualisation should play this as a <b>stumble</b> rather than a strike; there is nobody
+/// striking.
 /// </remarks>
 public sealed record EscapeMishap(
     double AtSeconds,
@@ -272,7 +272,7 @@ public sealed record EscapeMishap(
     double Damage,
     double HealthRemaining) : BattleEvent(AtSeconds);
 
-/// <summary>Savaşçı arenadan sağ çıktı.</summary>
+/// <summary>The warrior left the arena alive.</summary>
 public sealed record WarriorEscaped(double AtSeconds, WarriorId Warrior) : BattleEvent(AtSeconds);
 
 public sealed record WarriorDied(double AtSeconds, WarriorId Warrior, DeathCause Cause)
@@ -282,41 +282,41 @@ public sealed record BattleEnded(double AtSeconds, BattleOutcome Outcome) : Batt
 
 public enum DeathCause
 {
-    /// <summary>Can sıfırlandı.</summary>
+    /// <summary>Health hit zero.</summary>
     Wounds,
 
-    /// <summary>Ağır darbe geldi ve kimse çekmedi — uzuv kopmasıyla ölüm.</summary>
+    /// <summary>A heavy blow landed and nobody pulled him out — death by dismemberment.</summary>
     GrievousBlow,
 
     /// <summary>
-    /// Zehir bitirdi. Vuruşla ölümün arasında saniyeler var; ölümü <b>kimse</b> indirmedi.
-    /// </summary>
+    /// Poison finished him. There are seconds between the strike and the death; <b>nobody</b> landed the
+    /// killing blow.
     /// <remarks>
-    /// Ayrı bir sebep olarak durur çünkü onur hesabı ile ekranın söyleyeceği söz de ayrı:
-    /// zehirle düşen savaşçı savaş meydanında değil, ondan sonra ölür.
+    /// It stands as a separate cause because both the honour calculation and what the screen has to say
+    /// are separate: a warrior felled by poison dies not on the battlefield but after it.
     /// </remarks>
     Poison,
 }
 
 public enum BattleOutcome
 {
-    /// <summary>Dojo tarafı ayakta kaldı.</summary>
+    /// <summary>The dojo side is still standing.</summary>
     PlayerVictory,
 
     /// <summary>
-    /// Dojo tarafı sahayı <b>sağ</b> terk etti — en az bir savaşçı kaçarak kurtuldu.
+    /// The dojo side left the field <b>alive</b> — at least one warrior got away.
     /// </summary>
     /// <remarks>
-    /// Bozgundan ayrı tutulur. Oyun açısından ikisi de "dövüş kazanılmadı" demek ama
-    /// bedelleri taban tabana zıt: çekilmek seferi ve ödülü harcar, bozgun savaşçıları
-    /// harcar. Tek kutuya konursa hiçbir denge sorusu cevaplanamaz — "kaçan oyuncu
-    /// kaybediyor" gibi yanlış bir okuma çıkar.
+    /// It is kept apart from a rout. For the game both mean "the fight was not won", but their prices are
+    /// opposites: pulling out spends the expedition and the reward, a rout spends the warriors. Put in one
+    /// box, no balance question can be answered — you get a wrong reading like "a player who flees is
+    /// losing".
     /// </remarks>
     PlayerWithdrawal,
 
-    /// <summary>Dojo tarafında kimse kalmadı ve kimse kaçamadı — ekip kırıldı.</summary>
+    /// <summary>Nobody was left on the dojo side and nobody escaped — the team was wiped out.</summary>
     PlayerWipe,
 
-    /// <summary>Süre doldu — iki taraf da bitiremedi.</summary>
+    /// <summary>Time ran out — neither side could finish it.</summary>
     TimeLimit,
 }

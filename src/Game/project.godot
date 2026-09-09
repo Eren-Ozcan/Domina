@@ -1,12 +1,12 @@
-; Godot proje dosyası.
-; Bu dosya Godot editörü tarafından yönetilir — elle düzenlerken dikkatli ol.
+; The Godot project file.
+; This file is managed by the Godot editor — be careful when editing it by hand.
 
 config_version=5
 
 [application]
 
 config/name="Domina"
-config/description="Yokai/samuray temalı dojo yönetimi + otomatik dövüş oyunu."
+config/description="A yokai/samurai themed dojo management + automatic combat game."
 run/main_scene="res://dojo.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Domina.Sim;
 
-/// <summary>Toplu simülasyon aracının giriş noktası.</summary>
+/// <summary>The batch simulation tool's entry point.</summary>
 internal static class SimCli
 {
     public const int ExitOk = 0;
@@ -56,14 +56,14 @@ internal static class SimCli
             if (options.CsvPath is not null)
             {
                 output.WriteLine();
-                output.WriteLine($"CSV yazıldı: {Path.GetFullPath(options.CsvPath)}");
+                output.WriteLine($"CSV written: {Path.GetFullPath(options.CsvPath)}");
             }
 
             return ExitOk;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
-            error.WriteLine($"CSV yazılamadı: {ex.Message}");
+            error.WriteLine($"CSV could not be written: {ex.Message}");
             return ExitIoError;
         }
     }

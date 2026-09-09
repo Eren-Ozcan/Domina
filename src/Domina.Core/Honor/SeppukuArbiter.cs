@@ -5,14 +5,14 @@ namespace Domina.Core.Honor;
 
 public enum SeppukuOutcome
 {
-    /// <summary>Chat affetti — savaşçı yaşamaya devam eder.</summary>
+    /// <summary>Chat pardoned him — the warrior lives on.</summary>
     Pardoned,
 
-    /// <summary>Onursuz bulundu — kalıcı ölüm.</summary>
+    /// <summary>Found dishonourable — permanent death.</summary>
     Seppuku,
 }
 
-/// <summary>Açık bir seppuku oylaması.</summary>
+/// <summary>An open seppuku vote.</summary>
 public sealed class SeppukuVote
 {
     private readonly HashSet<string> _voters = new(StringComparer.OrdinalIgnoreCase);
@@ -35,10 +35,10 @@ public sealed class SeppukuVote
 
     public CrowdVerdict Tally { get; private set; } = CrowdVerdict.Silent;
 
-    /// <summary>Kaç farklı kullanıcı oy kullandı.</summary>
+    /// <summary>How many distinct users voted.</summary>
     public int VoterCount => _voters.Count;
 
-    /// <summary>Kullanıcı başına tek oy — spam sonucu belirlemesin.</summary>
+    /// <summary>One vote per user — spam must not decide the outcome.</summary>
     internal bool TryCast(string user, bool isBushi)
     {
         if (!_voters.Add(user))
@@ -51,7 +51,7 @@ public sealed class SeppukuVote
     }
 }
 
-/// <summary>Bir oylamanın sonucu.</summary>
+/// <summary>A vote's result.</summary>
 public sealed record SeppukuResolution(
     WarriorId WarriorId,
     string WarriorName,
@@ -60,19 +60,19 @@ public sealed record SeppukuResolution(
     bool DecidedByAudience);
 
 /// <summary>
-/// Hiç oy gelmediğinde kararı veren yapay seyirci.
+/// The artificial crowd that decides when no votes come in.
 /// </summary>
 /// <remarks>
-/// Faz 6'da (AI Seyirci) genişletilecek. Buradaki basit hâli bile çekirdeğin tek
-/// oyunculu modda eksiksiz çalışmasını sağlar: gerçek chat yoksa <b>veya</b> gerçek
-/// chat var ama kimse oy kullanmadıysa karar yine de verilir.
+/// It will be extended in phase 6 (AI Crowd). Even this simple form lets the core work completely in
+/// single-player mode: the decision is still made if there is no real chat <b>or</b> if there is real
+/// chat but nobody voted.
 /// </remarks>
 public interface ISeppukuFallback
 {
     bool ShouldPardon(double honor, IRandomSource rng);
 }
 
-/// <summary>Onur ne kadar düşükse af ihtimali o kadar azalır.</summary>
+/// <summary>The lower the honour, the smaller the chance of a pardon.</summary>
 public sealed class HonorWeightedFallback(HonorTuning? tuning = null) : ISeppukuFallback
 {
     private readonly HonorTuning _tuning = tuning ?? HonorTuning.Default;
@@ -81,21 +81,21 @@ public sealed class HonorWeightedFallback(HonorTuning? tuning = null) : ISeppuku
     {
         ArgumentNullException.ThrowIfNull(rng);
 
-        // Eşikte %50, sıfır onurda %5 af şansı.
+        // 50% at the threshold, 5% at zero honour.
         double t = Math.Clamp(honor / Math.Max(1, _tuning.SeppukuThreshold), 0, 1);
         return rng.Chance(0.05 + (0.45 * t));
     }
 }
 
 /// <summary>
-/// Seppuku oylamalarını sıraya alır ve çözer.
+/// Queues the seppuku votes and resolves them.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Neden kuyruk: <c>!bushi</c>/<c>!ronin</c> hem aktif dövüşe tepki hem de oylama oyu
-/// olarak kullanılıyor. Aynı anda hem dövüş hem oylama açık olsaydı chat'in yazdığı
-/// komut hangisine sayılacağı belirsiz kalırdı. Bu yüzden oylama dövüş bitene kadar
-/// bekler ve <b>aynı anda asla iki oylama açılmaz</b> (bkz. docs/GDD.md §6).
+/// Why a queue: <c>!bushi</c>/<c>!ronin</c> are used both as a reaction to a live fight and as a vote.
+/// If a fight and a vote were open at the same time, it would be unclear which one a command written in
+/// chat counted for. So a vote waits until the fight ends and <b>two votes are never open at once</b>
+/// (see docs/GDD.md §6).
 /// </para>
 /// </remarks>
 public sealed class SeppukuArbiter
@@ -107,8 +107,8 @@ public sealed class SeppukuArbiter
     private readonly Dictionary<WarriorId, DateTimeOffset> _immuneUntil = [];
 
     /// <summary>
-    /// Açık oylamanın savaşçısına ait kayıt. Kuyruktan çıkarıldığı için ayrıca
-    /// saklanır — sıfır oy durumunda AI kararı bu onur değerine bakar.
+    /// The record of the warrior in the open vote. It is stored separately because it has been taken out
+    /// of the queue — with zero votes the AI decision looks at this honour value.
     /// </summary>
     private PendingEntry? _activeEntry;
 
@@ -121,7 +121,7 @@ public sealed class SeppukuArbiter
         _fallback = fallback ?? new HonorWeightedFallback(_tuning);
     }
 
-    /// <summary>Meta katman bunu dövüş başlarken/biterken günceller.</summary>
+    /// <summary>The meta layer updates this when a fight starts and ends.</summary>
     public bool BattleInProgress { get; set; }
 
     public SeppukuVote? ActiveVote { get; private set; }
@@ -129,9 +129,9 @@ public sealed class SeppukuArbiter
     public int PendingCount => _queue.Count;
 
     /// <summary>
-    /// Savaşçının onurunu değerlendirir; eşiğin altındaysa kuyruğa alır.
+    /// Evaluates the warrior's honour; if it is below the threshold he is queued.
     /// </summary>
-    /// <returns>Bu çağrıda kuyruğa alındıysa true.</returns>
+    /// <returns>True if he was queued in this call.</returns>
     public bool Consider(Warrior warrior, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(warrior);
@@ -141,7 +141,7 @@ public sealed class SeppukuArbiter
             return false;
         }
 
-        // Af bağışıklığı: bu sürede eşiğin altına inse bile yeni oylama açılmaz.
+        // Pardon immunity: during this period no new vote opens even if he falls below the threshold.
         if (_immuneUntil.TryGetValue(warrior.Id, out DateTimeOffset until) && now < until)
         {
             return false;
@@ -157,9 +157,9 @@ public sealed class SeppukuArbiter
     }
 
     /// <summary>
-    /// Zamanı ilerletir: süresi dolan oylamayı çözer, uygunsa yeni oylama açar.
+    /// Advances time: resolves a vote whose duration is up and opens a new one if appropriate.
     /// </summary>
-    /// <returns>Bu çağrıda bir oylama çözüldüyse sonucu, yoksa <c>null</c>.</returns>
+    /// <returns>The result if a vote was resolved in this call, otherwise <c>null</c>.</returns>
     public SeppukuResolution? Tick(DateTimeOffset now)
     {
         if (ActiveVote is not null)
@@ -172,7 +172,7 @@ public sealed class SeppukuArbiter
             return CloseActiveVote(now);
         }
 
-        // Dövüş sürerken oylama açılmaz — komut belirsizliğini önleyen kural.
+        // No vote opens while a fight is running — the rule that avoids command ambiguity.
         if (BattleInProgress || _queue.Count == 0)
         {
             return null;
@@ -185,15 +185,15 @@ public sealed class SeppukuArbiter
         return null;
     }
 
-    /// <summary>Açık oylamaya oy verir.</summary>
-    /// <returns>Oy sayıldıysa true; oylama yoksa veya kullanıcı zaten oy verdiyse false.</returns>
+    /// <summary>Casts a vote in the open vote.</summary>
+    /// <returns>True if the vote was counted; false if there is no vote or the user has already voted.</returns>
     public bool CastVote(string user, bool isBushi)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(user);
         return ActiveVote?.TryCast(user, isBushi) ?? false;
     }
 
-    /// <summary>Süresini beklemeden oylamayı kapatır (test ve hızlandırma için).</summary>
+    /// <summary>Closes the vote without waiting for its duration (for tests and fast-forwarding).</summary>
     public SeppukuResolution? ForceResolve(DateTimeOffset now) =>
         ActiveVote is null ? null : CloseActiveVote(now);
 
@@ -209,7 +209,7 @@ public sealed class SeppukuArbiter
 
         double honor = entry?.Honor ?? _tuning.SeppukuThreshold / 2;
 
-        // Tek bir oy bile gerçek oydur; yalnızca sıfır oyda AI karar verir.
+        // Even a single vote is a real vote; the AI only decides at zero votes.
         bool pardon = decidedByAudience
             ? _fallback.ShouldPardon(honor, _rng)
             : verdict.FavorsMercy;
@@ -227,7 +227,7 @@ public sealed class SeppukuArbiter
             decidedByAudience);
     }
 
-    /// <summary>Af sonrası onurun çekileceği değer.</summary>
+    /// <summary>The value honour is pulled to after a pardon.</summary>
     public double PardonedHonor => _tuning.PardonedHonor;
 
     private sealed record PendingEntry(WarriorId Id, string Name, double Honor);

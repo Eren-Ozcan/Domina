@@ -3,118 +3,118 @@ using Domina.Core.Rng;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Pazardaki bir aday — statlarıyla ve fiyatıyla.</summary>
+/// <summary>A candidate in the market — with his stats and his price.</summary>
 /// <remarks>
 /// <para>
-/// Savaşçı almak bir <b>seçim</b> olmalı, bir düğme değil: adaylar farklı statlarla gelir,
-/// statlar alım öncesi <b>görünür</b> ve fiyat statın kendisinden çıkar. Sabit statlı sabit
-/// fiyatlı savaşçıda "kimi alayım" diye bir soru yoktur; para varsa alınır, yoksa alınmaz.
-/// </para>
+/// Buying a warrior should be a <b>choice</b>, not a button: candidates come with different stats, the
+/// stats are <b>visible</b> before the purchase, and the price comes out of the stats themselves. With
+/// a fixed-stat, fixed-price warrior there is no question of "whom shall I buy"; if you have the money
+/// you buy, if not you do not.
 /// <para>
-/// Aday satın alınana kadar kadroya girmez: <see cref="Warrior"/> nesnesi ancak alım anında
-/// üretilir. Pazarda gezinen altı adayın kalıcı kimlik taşıması, ölen savaşçılarla aynı
-/// kimlik uzayını kirletirdi.
+/// A candidate does not join the roster until he is bought: the <see cref="Warrior"/> object is only
+/// created at the moment of purchase. Having six candidates wandering the market carry permanent
+/// identities would pollute the same identity space as the dead warriors.
 /// </para>
 /// </remarks>
-/// <param name="Name">Adayın adı.</param>
-/// <param name="Stats">Görünen statlar — pazarlıkta gizli bir şey yok.</param>
+/// <param name="Name">The candidate's name.</param>
+/// <param name="Stats">The visible stats — nothing is hidden in the bargaining.</param>
 /// <param name="Talent">
-/// Antrenmandan ne kadar hızlı faydalanacağı (1.0 = ortalama) — bir antrenman gününün
-/// kazancını doğrudan çarpar (<see cref="TrainingGround"/>).
+/// How quickly he benefits from training (1.0 = average) — it multiplies the gain of a training day
+/// directly (<see cref="TrainingGround"/>).
 /// </param>
-/// <param name="Price">İstenen altın.</param>
+/// <param name="Price">The gold asked.</param>
 public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent, int Price);
 
-/// <summary>Köle pazarının ayarlanabilir sayıları.</summary>
+/// <summary>The slave market's tunable numbers.</summary>
 /// <remarks>
-/// Sayılar <b>kilitli değil</b>. Ölçümün sorusu belli: ucuz ham adayı alıp eğitmek ile
-/// pahalı hazır adayı almak <b>rakip</b> olmalı — biri her zaman doğruysa pazar yine bir
-/// düğmedir.
+/// The numbers are <b>not locked</b>. The measurement's question is clear: buying a cheap raw candidate
+/// and training him, and buying an expensive ready-made one, should be <b>rivals</b> — if one is always
+/// right, the market is a button again.
 /// </remarks>
 public sealed record MarketTuning
 {
-    /// <summary>Aynı anda pazarda duran aday sayısı.</summary>
+    /// <summary>The number of candidates standing in the market at once.</summary>
     /// <remarks>
     /// <para>
-    /// On aday, geniş tezgâh: alım <b>seçmek</b> olsun, eldekiyle yetinmek olmasın.
-    /// Referans oyunun tezgâhıyla aynı ölçek.
+    /// Ten candidates, a wide stall: buying should be <b>choosing</b>, not making do with what is there.
+    /// The same scale as the reference game's stall.
     /// </para>
     /// <para>
-    /// Sayının <b>denge etkisi ölçüldü ve yok</b>: 400 dojo × 60 günde 4, 6, 8 ve 10 aday
-    /// aynı bandı veriyor (bitiş kasası 1184-1301, ölüm %9.7-10.0). Pazarı bağlayan şey
-    /// liste uzunluğu değil, stat tavanı (<see cref="BestFollowCeiling"/>) ile kasa.
-    /// Yani bu sayı bir denge kolu değil, ekranın verdiği <b>his</b>.
+    /// The number's <b>balance effect was measured and there is none</b>: over 400 dojos × 60 days, 4, 6,
+    /// 8 and 10 candidates give the same band (ending treasury 1184-1301, death 9.7-10.0%). What binds
+    /// the market is not the list length but the stat ceiling (<see cref="BestFollowCeiling"/>) and the
+    /// treasury. So this number is not a balance lever but the <b>feel</b> the screen gives.
     /// </para>
     /// </remarks>
     public int Candidates { get; init; } = 10;
 
-    /// <summary>Pazarın kaç günde bir yenilendiği.</summary>
+    /// <summary>How often the market refreshes, in days.</summary>
     /// <remarks>
     /// <para>
-    /// Tezgâh <b>her gün</b> yenilenir. Beklemenin bedeli zaten var: bir gün beklemek
-    /// bir gün yer (yiyecek, su, ilaç ödenir ve o gün sefere çıkılmaz), o yüzden
-    /// "yarın daha iyisi gelir" bedava bir erteleme değil.
+    /// The stall refreshes <b>every day</b>. Waiting already has a price: waiting one day eats a day
+    /// (food, water and medicine are paid and no expedition goes out that day), so "something better
+    /// will come tomorrow" is not a free postponement.
     /// </para>
     /// <para>
-    /// Tezgâh gün <b>içinde</b> yine donar (<see cref="DojoState.Recruits"/>): oyuncu
-    /// gün boyu istediği zaman pazara girip çıkabilsin ama satın alarak listeyi yeniden
-    /// çeviremesin. Alınan aday da kayda geçer, aynı adam iki kez satılmaz
+    /// The stall is still frozen <b>within</b> the day (<see cref="DojoState.Recruits"/>): the player can
+    /// enter and leave the market whenever he likes during the day but cannot reroll the list by buying.
+    /// A bought candidate also goes on the record, and the same man is not sold twice
     /// (<see cref="DojoState.HireRecruit"/>).
     /// </para>
     /// </remarks>
     public int RefreshDays { get; init; } = 1;
 
-    /// <summary>Adayın statlarının taban etrafındaki oynama payı.</summary>
+    /// <summary>How far a candidate's stats swing around the base.</summary>
     public double Spread { get; init; } = 0.35;
 
     /// <summary>
-    /// Pazarın kadronun seviyesini ne kadar takip ettiği (0 = hiç, 1 = tamamen).
+    /// How closely the market tracks the roster's level (0 = not at all, 1 = fully).
     /// </summary>
     /// <remarks>
-    /// Erken oyunda pazarda usta savaşçı bulunmaz; kadro geliştikçe pazar da gelişir.
-    /// Takip olmasaydı ya baştan her şey satın alınabilir olurdu (antrenmanın anlamı
-    /// kalmaz), ya da geç oyunda pazar tamamen anlamsızlaşırdı.
+    /// In the early game there are no master warriors in the market; as the roster develops so does the
+    /// market. Without tracking, either everything would be buyable from the start (training would mean
+    /// nothing) or the market would become entirely pointless in the late game.
     /// </remarks>
     public double RosterFollow { get; init; } = 0.7;
 
     /// <summary>
-    /// Pazardaki en iyi adayın, dojonun <b>en iyi savaşçısına</b> göre üst sınırı.
+    /// The upper bound of the market's best candidate relative to the dojo's <b>best warrior</b>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Ortalama takibi (<see cref="RosterFollow"/>) pazarın nereye <i>oturduğunu</i>
-    /// söyler ama nereye kadar <i>çıkabileceğini</i> söylemez: <see cref="Spread"/>
-    /// üstten vurduğunda tek bir aday kadronun en iyisine yaklaşabilir. Bu tavan onu
-    /// keser — satın alınan savaşçı elindeki en iyinin bu oranını asla geçemez.
+    /// Average tracking (<see cref="RosterFollow"/>) says where the market <i>sits</i> but not how high
+    /// it can <i>climb</i>: when <see cref="Spread"/> hits from above, a single candidate can approach
+    /// the roster's best. This ceiling cuts that off — a bought warrior can never exceed this share of
+    /// the best one you have.
     /// </para>
     /// <para>
-    /// Referans <b>ortalama değil en iyi savaşçıdır</b>: ortalamaya bağlansaydı iki ucuz
-    /// acemi alıp ortalamayı düşürerek pazar sömürülebilirdi. En iyi savaşçı
-    /// düşürülemez, yalnızca ölerek kaybedilir — ölünce tavanın da düşmesi doğrudur.
+    /// The reference is <b>the best warrior, not the average</b>: tied to the average, the market could
+    /// be exploited by buying two cheap recruits to drag the average down. The best warrior cannot be
+    /// dragged down, he can only be lost by dying — and when he dies it is right for the ceiling to fall too.
     /// </para>
     /// <para>
-    /// Gerekçe: yetiştirilen savaşçı oyuncunun <b>eseri</b> olmalı; pazar onu
-    /// kopyalayabiliyorsa antrenmanın anlamı kalmaz. Pazar <b>yerine koyma</b> aracıdır,
-    /// <b>ilerleme</b> aracı değil. Stat tavanı sertken pazarın tam güçle satabildiği tek
-    /// şey <see cref="RecruitOffer.Talent"/> olarak kalır — ilerleme yolu ham adayı alıp
-    /// eğitmekten geçer.
+    /// The rationale: a trained warrior should be the player's <b>work</b>; if the market can copy him,
+    /// training means nothing. The market is a <b>replacement</b> tool, not a <b>progress</b> tool. With
+    /// the stat ceiling hard, the only thing the market can sell at full strength is
+    /// <see cref="RecruitOffer.Talent"/> — the road to progress runs through buying a raw candidate and
+    /// training him.
     /// </para>
     /// </remarks>
     public double BestFollowCeiling { get; init; } = 0.75;
 
-    /// <summary>Yeteneğin alt ve üst sınırı.</summary>
+    /// <summary>The lower bound of talent.</summary>
     public double MinTalent { get; init; } = 0.6;
 
-    /// <summary>Yeteneğin üst sınırı.</summary>
+    /// <summary>The upper bound of talent.</summary>
     public double MaxTalent { get; init; } = 1.4;
 
-    /// <summary>Yeteneğin fiyata etkisi — 1.0 yetenek fiyatı değiştirmez.</summary>
+    /// <summary>Talent's effect on price — at 1.0 talent does not change the price.</summary>
     public double TalentPriceWeight { get; init; } = 0.5;
 
-    /// <summary>Pazarın kullandığı isim havuzu.</summary>
+    /// <summary>The name pool the market uses.</summary>
     /// <remarks>
-    /// Geçici: GDD §8'e göre isimler yayın açıkken chat'ten gelecek (Faz 5). Havuz o zaman
-    /// buradan değil, izleyici listesinden okunacak; pazarın kendisi değişmeyecek.
+    /// Temporary: per GDD §8 the names will come from chat while streaming (phase 5). The pool will then
+    /// be read from the viewer list rather than from here; the market itself will not change.
     /// </remarks>
     public IReadOnlyList<string> Names { get; init; } =
     [
@@ -123,36 +123,36 @@ public sealed record MarketTuning
     ];
 }
 
-/// <summary>Pazarın etrafında üretileceği taban ve aşamayacağı tavan.</summary>
+/// <summary>The base the market is generated around and the ceiling it cannot pass.</summary>
 /// <remarks>
-/// İkisi ayrı sorulara cevap verir: <paramref name="Stats"/> adayların <b>nereye
-/// oturduğunu</b>, <paramref name="CeilingScore"/> ise <b>nereye kadar çıkabildiğini</b>
-/// söyler. Taban kadronun ortalamasını, tavan kadronun en iyisini izler.
+/// The two answer different questions: <paramref name="Stats"/> says <b>where</b> the candidates sit,
+/// <paramref name="CeilingScore"/> says <b>how high</b> they can climb. The base tracks the roster's
+/// average, the ceiling the roster's best.
 /// </remarks>
-/// <param name="Stats">Adayların etrafında oynatılacağı taban statlar.</param>
+/// <param name="Stats">The base stats the candidates are swung around.</param>
 /// <param name="CeilingScore">
-/// Bir adayın toplam stat skorunun üst sınırı; sınırsız için sonsuz.
+/// The upper bound of a candidate's total stat score; infinity for no bound.
 /// </param>
 public sealed record MarketAnchor(WarriorStats Stats, double CeilingScore)
 {
-    /// <summary>Tavansız taban — ölçüm ve test için.</summary>
+    /// <summary>An uncapped base — for measurement and tests.</summary>
     public static MarketAnchor Uncapped(WarriorStats stats) =>
         new(stats, double.PositiveInfinity);
 }
 
-/// <summary>Günün köle pazarını üretir.</summary>
+/// <summary>Produces the day's slave market.</summary>
 /// <remarks>
-/// Teklif ve olay gibi <b>saf</b>: aynı tohum, aynı dönem ve aynı kadro seviyesi daima aynı
-/// adayları verir. Pazar <see cref="MarketTuning.RefreshDays"/> günde bir yenilenir, yani
-/// gün numarası değil <b>dönem</b> numarası karıştırılır.
+/// <b>Pure</b> like the offer and the event: the same seed, the same period and the same roster level
+/// always give the same candidates. The market refreshes every <see cref="MarketTuning.RefreshDays"/>
+/// days, so what is mixed in is not the day number but the <b>period</b> number.
 /// </remarks>
 public sealed class RecruitMarket(MarketTuning? tuning = null)
 {
     public MarketTuning Tuning { get; } = tuning ?? new MarketTuning();
 
-    /// <summary>Verilen gündeki adaylar.</summary>
+    /// <summary>The candidates on the given day.</summary>
     /// <param name="anchor">
-    /// Pazarın etrafında üretileceği taban ve aşamayacağı tavan — bkz.
+    /// The base the market is generated around and the ceiling it cannot pass — see
     /// <see cref="AnchorFor(Roster)"/>.
     /// </param>
     public IReadOnlyList<RecruitOffer> Stock(int day, ulong seed, MarketAnchor anchor, int basePrice)
@@ -163,7 +163,7 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         return Stock(new SeededRandom(Mix(seed, period)), anchor, basePrice);
     }
 
-    /// <summary>Akışı dışarıdan verilen pazar — ölçüm ve test için.</summary>
+    /// <summary>A market whose stream is supplied from outside — for measurement and tests.</summary>
     public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, MarketAnchor anchor, int basePrice)
     {
         ArgumentNullException.ThrowIfNull(random);
@@ -178,23 +178,23 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         return stock;
     }
 
-    /// <summary>Tavansız pazar — ölçüm ve test için.</summary>
+    /// <summary>An uncapped market — for measurement and tests.</summary>
     public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, WarriorStats anchor, int basePrice) =>
         Stock(random, MarketAnchor.Uncapped(anchor), basePrice);
 
-    /// <summary>Kadroya bakarak pazarın tabanını ve tavanını çıkarır.</summary>
+    /// <summary>Derives the market's base and ceiling by looking at the roster.</summary>
     /// <remarks>
     /// <para>
-    /// <b>Taban</b> kadronun ortalaması ile acemi seviyesi arasındadır
-    /// (<see cref="MarketTuning.RosterFollow"/>). Kadro boşken (herkes öldüyse) taban
-    /// acemi statlarıdır — yoksa dojo çöktükten sonra pazar da çöker ve toparlanmanın
-    /// yolu kalmazdı.
+    /// The <b>base</b> sits between the roster's average and the recruit level
+    /// (<see cref="MarketTuning.RosterFollow"/>). With an empty roster (everyone dead) the base is the
+    /// recruit stats — otherwise the market would collapse after the dojo did and there would be no way
+    /// back.
     /// </para>
     /// <para>
-    /// <b>Tavan</b> ise ortalamayı değil kadronun <b>en iyi savaşçısını</b> izler
-    /// (<see cref="MarketTuning.BestFollowCeiling"/>): satın alınan hiçbir savaşçı elde
-    /// yetiştirilmiş en iyiyi geçemesin. Boş kadroda tavan acemi skorudur, yani ilk
-    /// alımlar da acemi bandında kalır.
+    /// The <b>ceiling</b> tracks not the average but the roster's <b>best warrior</b>
+    /// (<see cref="MarketTuning.BestFollowCeiling"/>): no bought warrior should surpass the best one
+    /// trained by hand. With an empty roster the ceiling is the recruit score, so the first purchases
+    /// stay in the recruit band too.
     /// </para>
     /// </remarks>
     public MarketAnchor AnchorFor(Roster roster)
@@ -221,10 +221,10 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         double follow = Math.Clamp(Tuning.RosterFollow, 0, 1);
         double best = living.Max(w => Score(w.BaseStats));
 
-        // Tavan acemi seviyesinin altına hiçbir zaman inmez: aksi halde tavan daha ilk
-        // günden ısırır ve pazar acemi kadroya acemiden zayıf adam satar — yerine koyma
-        // yolu kapanır, dojo toparlanamaz (ölçüldü: 400 dojonun tamamı kasayı sıfırladı).
-        // Tavan ancak en iyi savaşçı acemiyi belirgin şekilde geçtiğinde devreye girer.
+        // The ceiling never falls below the recruit level: otherwise it would bite from the very first
+        // day and the market would sell a recruit roster men weaker than a recruit — the replacement road
+        // would close and the dojo could not recover (measured: all 400 dojos zeroed their treasury).
+        // The ceiling only kicks in once the best warrior clearly passes a recruit.
         double ceiling = Math.Max(
             Score(recruit),
             best * Math.Max(0, Tuning.BestFollowCeiling));
@@ -251,17 +251,17 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
             anchor.CeilingScore);
 
         string name = Tuning.Names.Count == 0
-            ? "Adsız"
+            ? "Nameless"
             : Tuning.Names[random.NextInt(Tuning.Names.Count)];
 
         return new RecruitOffer(name, stats, talent, Price(stats, talent, around, basePrice));
     }
 
-    /// <summary>Tavanı aşan adayı statlarını oranlayarak aşağı çeker.</summary>
+    /// <summary>Pulls a candidate over the ceiling down by scaling his stats.</summary>
     /// <remarks>
-    /// Tek tek kırpmak yerine <b>hepsi aynı oranla</b> ölçeklenir: kırpma, tavana dayanan
-    /// her adayı aynı düz profile çevirirdi ve "kimi alayım" sorusu geri kaybolurdu.
-    /// Ölçekleme adayın şeklini korur, yalnızca ağırlığını düşürür.
+    /// Instead of clipping them one by one, they are all scaled by <b>the same ratio</b>: clipping would
+    /// turn every candidate who hits the ceiling into the same flat profile and the question "whom shall
+    /// I buy" would disappear again. Scaling preserves the candidate's shape and only lowers his weight.
     /// </remarks>
     private static WarriorStats Capped(WarriorStats stats, double ceilingScore)
     {
@@ -283,7 +283,7 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
             Math.Max(1, stats.Speed * scale));
     }
 
-    /// <summary>Tek bir statı taban etrafında oynatır.</summary>
+    /// <summary>Swings a single stat around the base.</summary>
     private double Roll(IRandomSource random, double around, bool cap = true)
     {
         double swing = ((random.NextDouble() * 2) - 1) * Tuning.Spread;
@@ -293,11 +293,11 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
     }
 
     /// <summary>
-    /// Fiyat adayın <b>tabana göre</b> ne kadar iyi olduğundan çıkar.
+    /// The price comes out of how good the candidate is <b>relative to the base</b>.
     /// </summary>
     /// <remarks>
-    /// Sabit fiyat, iyi adayı bedava; kötü adayı ise soygun yapardı. Yetenek de fiyata
-    /// girer ama statlardan daha az ağırlıkla: yetenek bir <b>vaat</b>, stat ise elde
+    /// A fixed price would make a good candidate free and a bad one a robbery. Talent enters the price
+    /// too but with less weight than the stats: talent is a <b>promise</b>, a stat is what you have.
     /// olan.
     /// </remarks>
     private int Price(WarriorStats stats, double talent, WarriorStats anchor, int basePrice)
@@ -329,7 +329,7 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
 
     private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
 
-    /// <summary>Tohumu <b>dönemle</b> karıştırır — teklif ve olay akışlarından ayrı tuzla.</summary>
+    /// <summary>Mixes the seed with the <b>period</b> — with a different salt from the offer and event streams.</summary>
     private static ulong Mix(ulong seed, int period)
     {
         ulong x = seed ^ ((ulong)period * 0xC2B2AE3D27D4EB4F) ^ 0x5DEECE66D;

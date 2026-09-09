@@ -1,46 +1,46 @@
 namespace Domina.Core.Dojo;
 
-/// <summary>Gün döngüsünün ayarlanabilir sayıları.</summary>
+/// <summary>The day loop's tunable numbers.</summary>
 /// <remarks>
-/// Buradaki hiçbir sayı <b>kilitli değil</b>. Onur decay'i Açık Karar #8'e, iyileşme
-/// hızı ve kaynak tüketimi Açık Karar #5'e bağlı; ikisi de ölçümle kapanacak. Varsayılanlar
-/// döngüyü çalışır tutmak içindir, denge iddiası taşımaz.
+/// None of the numbers here are <b>locked</b>. Honour decay depends on Open Decision #8, recovery speed
+/// and resource consumption on Open Decision #5; both will be settled by measurement. The defaults are
+/// there to keep the loop working, they make no balance claim.
 /// </remarks>
 public sealed record DojoTuning
 {
-    /// <summary>Antrenman gününün stat karşılığı.</summary>
+    /// <summary>A training day's stat return.</summary>
     public TrainingTuning Training { get; init; } = new();
 
-    /// <summary>Bir günde eriyen revir günü sayısı.</summary>
+    /// <summary>The infirmary days burnt in one day.</summary>
     public int NaturalRecoveryPerDay { get; init; } = 1;
 
     /// <summary>
-    /// Canının tamamına yakınını kaybederek dönen savaşçının yatacağı gün sayısı.
+    /// The days a warrior who comes back having lost nearly all his health spends in bed.
     /// </summary>
     public int RecoveryDaysAtFullDamage { get; init; } = 6;
 
-    /// <summary>Kaybedilen her uzvun eklediği revir günü.</summary>
+    /// <summary>The infirmary days each lost limb adds.</summary>
     /// <remarks>
-    /// Uzuv kaybı zaten kalıcı ceza taşır (GDD §7); buradaki gün, kaybın <b>üstüne</b>
-    /// gelen tedavi süresidir, cezanın kendisi değil.
+    /// Limb loss already carries a permanent penalty (GDD §7); the days here are the treatment time laid
+    /// <b>on top of</b> the loss, not the penalty itself.
     /// </remarks>
     public int RecoveryDaysPerLostLimb { get; init; } = 5;
 
     /// <summary>
-    /// Bedava sayılan hasar payı — bunun altında kalan sıyrık gün yemez.
+    /// The damage share counted as free — a scratch below this eats no day.
     /// </summary>
     /// <remarks>
-    /// Eşik olmasaydı her dövüş bir gün revir demek olurdu ve gün döngüsünün asıl
-    /// kararı ("bugün sefere mi, antrenmana mı") kendiliğinden ortadan kalkardı.
+    /// Without a threshold every fight would mean a day in the infirmary and the day loop's real
+    /// decision ("an expedition today, or training") would disappear on its own.
     /// </remarks>
     public double RecoveryFreeDamageShare { get; init; } = 0.25;
 
     /// <summary>
-    /// Onurun nötre (<see cref="Model.HonorScale.Starting"/>) doğru günlük kayması.
+    /// Honour's daily drift toward neutral (<see cref="Model.HonorScale.Starting"/>).
     /// </summary>
     /// <remarks>
-    /// GDD §6'nın gerekçesi: bir troll saldırısı kalıcı ceza olmamalı, yalnızca
-    /// <b>sürekli</b> onursuzluk seppuku'ya götürmeli. Decay o sürekliliği zorunlu kılar.
+    /// GDD §6's rationale: a troll attack must not be a permanent penalty, only <b>sustained</b>
+    /// dishonour should lead to seppuku. Decay is what makes that continuity compulsory.
     /// </remarks>
     public double HonorDecayPerDay { get; init; } = 0.5;
 }

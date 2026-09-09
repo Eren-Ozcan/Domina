@@ -6,12 +6,12 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Dövüş arayüzü: can/stamina barları ve <b>pes etme tuşu</b>.
+/// The combat interface: health/stamina bars and the <b>surrender key</b>.
 /// </summary>
 /// <remarks>
-/// Ne yazacağına <see cref="HudModel"/> karar verir (motorsuz, testli); buradaki iş
-/// düğümleri kurup metni basmak. Pes etmenin neden tek tuş olduğu ve tuşun neden
-/// kilitli savaşçı sayısını gösterdiği oraya yazılı.
+/// What it says is decided by <see cref="HudModel"/> (engine-free, tested); the job here is building
+/// the nodes and printing the text. Why surrendering is a single key and why the key shows the number
+/// of locked warriors is written there.
 /// </remarks>
 public sealed partial class BattleHud : CanvasLayer
 {
@@ -19,7 +19,7 @@ public sealed partial class BattleHud : CanvasLayer
     private static readonly Color StaminaColor = new(0.78f, 0.70f, 0.32f);
     private static readonly Color LockedColor = new(0.85f, 0.55f, 0.20f);
 
-    /// <summary>Savaş başlamadan basılan tuşun rengi: basılabilir ama sönük.</summary>
+    /// <summary>The colour of the key pressed before the fight starts: pressable but dim.</summary>
     private static readonly Color ShutColor = new(0.45f, 0.45f, 0.48f);
 
     private readonly Dictionary<WarriorId, WarriorPanel> _panels = [];
@@ -28,23 +28,23 @@ public sealed partial class BattleHud : CanvasLayer
     private Button _retreat = null!;
     private long _seed;
 
-    /// <summary>İşlenmiş son reddedilen basış sayısı — aynı basışa iki kez cevap verilmesin.</summary>
+    /// <summary>The last refused-press count processed — so the same press is not answered twice.</summary>
     private int _refusalsSeen;
 
     /// <summary>
-    /// Kuralı öğreten metnin bugüne dek kaç kez gösterildiği.
+    /// How many times the text that teaches the rule has been shown so far.
     /// </summary>
     /// <remarks>
-    /// Kalıcı hâli oyun kaydının işi; burada oturum boyunca tutuluyor. Kayıt katmanı
-    /// geldiğinde bu alan oradan doldurulmalı, yoksa kural her açılışta tekrar anlatılır.
+    /// Its persistent form is the save's job; here it is kept for the session. When the save layer
+    /// arrives this field should be filled from there, or the rule is explained again at every launch.
     /// </remarks>
     private int _teachingShown;
 
-    /// <summary>Arayüzü kurar.</summary>
-    /// <param name="battle">Gösterilecek dövüş.</param>
-    /// <param name="setup">İsimlerin okunacağı kadro.</param>
-    /// <param name="seed">Başlıkta gösterilen seed — bir dövüşü tekrar açmayı sağlar.</param>
-    /// <param name="onRetreat">"Çek" tuşuna basıldığında çağrılır — tüm ekip çekilir.</param>
+    /// <summary>Builds the interface.</summary>
+    /// <param name="battle">The fight to show.</param>
+    /// <param name="setup">The roster the names are read from.</param>
+    /// <param name="seed">The seed shown in the header — it makes reopening a fight possible.</param>
+    /// <param name="onRetreat">Called when the "pull out" key is pressed — the whole party pulls out.</param>
     public void Build(Battle battle, BattleSetup setup, long seed, Action onRetreat)
     {
         ArgumentNullException.ThrowIfNull(battle);
@@ -53,7 +53,7 @@ public sealed partial class BattleHud : CanvasLayer
 
         _seed = seed;
 
-        // İsim kadrodan gelir; dövüş sonucu daha yokken de gösterilebilmeli.
+        // The name comes from the roster; it must be showable before there is any fight result.
         Dictionary<WarriorId, string> names = [];
         foreach (Warrior warrior in setup.PlayerSide.Concat(setup.EnemySide))
         {
@@ -88,7 +88,7 @@ public sealed partial class BattleHud : CanvasLayer
         player.AddChild(_retreat);
     }
 
-    /// <summary>Her karede çağrılır.</summary>
+    /// <summary>Called every frame.</summary>
     public void Refresh(Battle battle)
     {
         ArgumentNullException.ThrowIfNull(battle);
@@ -126,11 +126,11 @@ public sealed partial class BattleHud : CanvasLayer
     }
 
     /// <summary>
-    /// Savaş başlamadan basılan tuşa cevap verir.
+    /// Answers a key pressed before the fight starts.
     /// </summary>
     /// <remarks>
-    /// Metni çekirdek üretmez: reddedilen basışın sayısını verir, ne yazılacağına
-    /// <see cref="HudModel.DescribeRefusal"/> karar verir.
+    /// The core does not produce the text: it gives the number of refused presses, and what is written
+    /// is decided by <see cref="HudModel.DescribeRefusal"/>.
     /// </remarks>
     private void ShowRefusalIfAny(Battle battle)
     {
@@ -158,7 +158,7 @@ public sealed partial class BattleHud : CanvasLayer
         return column;
     }
 
-    /// <summary>Tek bir savaşçının arayüz satırı.</summary>
+    /// <summary>A single warrior's interface row.</summary>
     private sealed class WarriorPanel
     {
         private readonly Label _name;

@@ -6,19 +6,19 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Kadro ekranı: savaşçılar, statlar, yaralar, onur, isim düzenleme (GDD §6, §8).
+/// The roster screen: warriors, stats, wounds, honour, name editing (GDD §6, §8).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Ne yazacağına ve satırların hangi sırada geleceğine <see cref="RosterModel"/> karar
-/// verir (motorsuz, testli); buradaki iş düğümleri kurup metni basmak. Ekran
-/// <see cref="Roster"/>'ı doğrudan yazmaz — talim, yol ve ad değişikliği
-/// <see cref="DojoState"/> üzerinden geçer, kurallar orada.
+/// What it says and the order the rows come in are decided by <see cref="RosterModel"/> (engine-free,
+/// tested); the job here is building the nodes and printing the text. The screen does not write to
+/// <see cref="Roster"/> directly — the drill, the path and a name change go through
+/// <see cref="DojoState"/>, and the rules live there.
 /// </para>
 /// <para>
-/// Ad değiştirme tuşu <see cref="RosterModel.JudgeRename"/> ile kapatılır: çakışan adda
-/// <see cref="Roster.Rename"/> fırlatır, oyuncu bunu istisnadan değil sönük tuştan
-/// öğrenmeli.
+/// The rename button is disabled through <see cref="RosterModel.JudgeRename"/>: on a clashing name
+/// <see cref="Roster.Rename"/> throws, and the player should learn that from a dimmed button rather
+/// than from an exception.
 /// </para>
 /// </remarks>
 public sealed partial class RosterScreen : DojoScreen
@@ -39,8 +39,8 @@ public sealed partial class RosterScreen : DojoScreen
     private HBoxContainer _pathRow = null!;
     private WarriorId? _selected;
 
-    /// <summary>Ekranı kurar ve kadroyu basar.</summary>
-    /// <param name="dojo">Gösterilecek dojo — ekran bunu okur ve komutları buna verir.</param>
+    /// <summary>Builds the screen and prints the roster.</summary>
+    /// <param name="dojo">The dojo to show — the screen reads it and gives its commands to it.</param>
     public override void Build(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -67,8 +67,8 @@ public sealed partial class RosterScreen : DojoScreen
 
     private Control BuildDetailPanel()
     {
-        // Ayrıntı sütunu geniş ekranda sonsuza uzamamalı: satırlar okunacak kadar dar
-        // kalsın, aradaki boşluk listeye değil kenara gitsin.
+        // The detail column must not stretch forever on a wide screen: the rows should stay narrow
+        // enough to read, and the space in between should go to the margin rather than to the list.
         VBoxContainer panel = new()
         {
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
@@ -84,13 +84,13 @@ public sealed partial class RosterScreen : DojoScreen
 
         _nameEdit = new LineEdit
         {
-            PlaceholderText = "Yeni ad",
+            PlaceholderText = "New name",
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         _nameEdit.TextChanged += _ => UpdateRenameControls();
         renameRow.AddChild(_nameEdit);
 
-        _renameButton = new Button { Text = "Adını değiştir" };
+        _renameButton = new Button { Text = "Rename" };
         _renameButton.Pressed += ApplyRename;
         renameRow.AddChild(_renameButton);
 
@@ -112,7 +112,7 @@ public sealed partial class RosterScreen : DojoScreen
         return panel;
     }
 
-    /// <summary>Kadroyu ve seçili savaşçının ayrıntısını yeniden basar.</summary>
+    /// <summary>Reprints the roster and the selected warrior's detail.</summary>
     public void Refresh()
     {
         Clear(_list);
@@ -143,9 +143,9 @@ public sealed partial class RosterScreen : DojoScreen
 
         RosterSummary summary = RosterModel.Summarize(_dojo);
         _summary.Text =
-            $"Gün {_dojo.Day}  ·  Kadro {summary.Living}  ·  Sefere hazır {summary.Fit}" +
-            $"  ·  Revirde {summary.Recovering}  ·  Ölü {summary.Fallen}" +
-            $"  ·  Sefer kadrosu en çok {summary.PartyCapacity}";
+            $"Day {_dojo.Day}  ·  Roster {summary.Living}  ·  Ready {summary.Fit}" +
+            $"  ·  Infirmary {summary.Recovering}  ·  Dead {summary.Fallen}" +
+            $"  ·  Party of at most {summary.PartyCapacity}";
 
         ShowDetail(rows.FirstOrDefault(r => r.Id == _selected));
     }
@@ -154,7 +154,7 @@ public sealed partial class RosterScreen : DojoScreen
     {
         if (row.Name is null)
         {
-            _detail.Text = "Kadro boş.";
+            _detail.Text = "The roster is empty.";
             _nameEdit.Editable = false;
             _drillPicker.Disabled = true;
             _renameButton.Disabled = true;
@@ -169,24 +169,24 @@ public sealed partial class RosterScreen : DojoScreen
             '\n',
             $"{row.Name}  ({StatusName(row.Status)})",
             row.IsAlive
-                ? $"Onur {row.Honor:0}  ·  Antrenman günü {row.TrainingDays}"
-                : "Bu savaşçı öldü — kayıt kadroda kalır.",
+                ? $"Honour {row.Honor:0}  ·  Training days {row.TrainingDays}"
+                : "This warrior died — the record stays on the roster.",
             row.RecoveryDaysRemaining > 0
-                ? $"Revirde: {row.RecoveryDaysRemaining} gün"
-                : "Sefere hazır",
+                ? $"Infirmary: {row.RecoveryDaysRemaining} days"
+                : "Ready",
             string.Empty,
-            $"Can       {Pair(raw.MaxHealth, live.MaxHealth)}",
-            $"Saldırganlık {Pair(raw.Aggression, live.Aggression)}",
-            $"Savunma   {Pair(raw.Defense, live.Defense)}",
-            $"Kaçınma   {Pair(raw.Evasion, live.Evasion)}",
-            $"Güç       {Pair(raw.Strength, live.Strength)}",
-            $"İsabet    {Pair(raw.Accuracy, live.Accuracy)}",
-            $"Stamina   {Pair(raw.MaxStamina, live.MaxStamina)}",
-            $"Hız       {Pair(raw.Speed, live.Speed)}",
+            $"Health      {Pair(raw.MaxHealth, live.MaxHealth)}",
+            $"Aggression  {Pair(raw.Aggression, live.Aggression)}",
+            $"Defence     {Pair(raw.Defense, live.Defense)}",
+            $"Evasion     {Pair(raw.Evasion, live.Evasion)}",
+            $"Strength    {Pair(raw.Strength, live.Strength)}",
+            $"Accuracy    {Pair(raw.Accuracy, live.Accuracy)}",
+            $"Stamina     {Pair(raw.MaxStamina, live.MaxStamina)}",
+            $"Speed       {Pair(raw.Speed, live.Speed)}",
             string.Empty,
-            $"Silah: {row.WeaponName}   Kuşam: {row.ArmorName} (yıpranma {row.ArmorWear:0.0})",
-            $"Kalıcı sakatlık: {LostText(row.Lost)}",
-            $"Yol: {PathName(row.Path)}");
+            $"Weapon: {row.WeaponName}   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})",
+            $"Limb loss: {LostText(row.Lost)}",
+            $"Path: {PathName(row.Path)}");
 
         _nameEdit.Editable = row.IsAlive;
         _drillPicker.Disabled = !row.IsFitForCampaign;
@@ -208,7 +208,7 @@ public sealed partial class RosterScreen : DojoScreen
 
         if (row.Path != WarriorPath.None)
         {
-            _pathRow.AddChild(new Label { Text = $"Yol seçildi: {PathName(row.Path)} — geri alınmaz." });
+            _pathRow.AddChild(new Label { Text = $"Path chosen: {PathName(row.Path)} — it cannot be undone." });
             return;
         }
 
@@ -216,7 +216,7 @@ public sealed partial class RosterScreen : DojoScreen
         {
             _pathRow.AddChild(new Label
             {
-                Text = $"Yol seçimi {row.TrainingDaysToPath} antrenman günü sonra açılır.",
+                Text = $"The path opens after {row.TrainingDaysToPath} more training days.",
             });
             return;
         }
@@ -249,8 +249,8 @@ public sealed partial class RosterScreen : DojoScreen
         _renameButton.Disabled = !alive || verdict != RenameVerdict.Ok;
         _renameNotice.Text = verdict switch
         {
-            RenameVerdict.Taken => "Bu ad canlı bir savaşçıda.",
-            RenameVerdict.Unchanged => "Ad zaten bu.",
+            RenameVerdict.Taken => "A living warrior has this name.",
+            RenameVerdict.Unchanged => "The name is already this.",
             _ => string.Empty,
         };
         _renameNotice.AddThemeColorOverride("font_color", WarningColor);
@@ -282,10 +282,10 @@ public sealed partial class RosterScreen : DojoScreen
 
     private static string RowText(RosterRow row) => row.Status switch
     {
-        RosterStatus.Recovering => $"{row.Name}  —  revir {row.RecoveryDaysRemaining}g",
-        RosterStatus.Fallen => $"{row.Name}  —  ölü",
+        RosterStatus.Recovering => $"{row.Name}  —  infirmary {row.RecoveryDaysRemaining}d",
+        RosterStatus.Fallen => $"{row.Name}  —  dead",
         RosterStatus.Training => $"{row.Name}  —  {DrillName(row.Drill)}",
-        _ => $"{row.Name}  —  hazır",
+        _ => $"{row.Name}  —  ready",
     };
 
     private static string Pair(double raw, double effective) =>
@@ -297,33 +297,33 @@ public sealed partial class RosterScreen : DojoScreen
     {
         if (lost == BodyPartSet.None)
         {
-            return "yok";
+            return "none";
         }
 
         List<string> parts = [];
         if (lost.HasFlag(BodyPartSet.SwordArm))
         {
-            parts.Add("kılıç kolu");
+            parts.Add("sword arm");
         }
 
         if (lost.HasFlag(BodyPartSet.OffArm))
         {
-            parts.Add("boştaki kol");
+            parts.Add("off arm");
         }
 
         if (lost.HasFlag(BodyPartSet.RightLeg))
         {
-            parts.Add("sağ bacak");
+            parts.Add("right leg");
         }
 
         if (lost.HasFlag(BodyPartSet.LeftLeg))
         {
-            parts.Add("sol bacak");
+            parts.Add("left leg");
         }
 
         if (lost.HasFlag(BodyPartSet.Eye))
         {
-            parts.Add("göz");
+            parts.Add("eye");
         }
 
         return string.Join(", ", parts);
@@ -339,25 +339,25 @@ public sealed partial class RosterScreen : DojoScreen
 
     private static string StatusName(RosterStatus status) => status switch
     {
-        RosterStatus.Training => "antrenmanda",
-        RosterStatus.Recovering => "revirde",
-        RosterStatus.Fallen => "ölü",
-        _ => "hazır",
+        RosterStatus.Training => "training",
+        RosterStatus.Recovering => "infirmary",
+        RosterStatus.Fallen => "dead",
+        _ => "ready",
     };
 
     private static string DrillName(Drill drill) => drill switch
     {
-        Drill.Guard => "Siper talimi",
-        Drill.Footwork => "Ayak talimi",
-        Drill.Conditioning => "Kondisyon",
-        _ => "Vuruş talimi",
+        Drill.Guard => "Guard drill",
+        Drill.Footwork => "Footwork drill",
+        Drill.Conditioning => "Conditioning",
+        _ => "Striking drill",
     };
 
     private static string PathName(WarriorPath path) => path switch
     {
-        WarriorPath.Blade => "Kılıç",
-        WarriorPath.Stone => "Kaya",
-        WarriorPath.Shadow => "Gölge",
-        _ => "seçilmedi",
+        WarriorPath.Blade => "Blade",
+        WarriorPath.Stone => "Stone",
+        WarriorPath.Shadow => "Shadow",
+        _ => "not chosen",
     };
 }

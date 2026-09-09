@@ -5,9 +5,9 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Determinizm, Faz 1'in pazarlık edilemez şartıdır: sonradan eklenemez, çünkü
-/// rastgelelik her yere sızmış olur. Bu testler bozulursa denge çalışması ve
-/// hata tekrar üretimi (replay) imkânsız hale gelir.
+/// Determinism is phase 1's non-negotiable condition: it cannot be added later, because by then
+/// randomness has leaked everywhere. If these tests break, balance work and reproducing a bug
+/// (replay) become impossible.
 /// </summary>
 public class DeterminismTests
 {
@@ -53,8 +53,8 @@ public class DeterminismTests
 
         Assert.Equal(a.Outcome, b.Outcome);
 
-        // Olay akışı görselleştirmeyi besliyor; birebir aynı olmalı ki bir hata
-        // "şu seed'de şu an" diye tekrar üretilebilsin.
+        // The event stream feeds the visualisation; it must be identical so that a bug can be reproduced
+        // as "this moment on this seed".
         var eventsA = new Battle(ThreeVsThree(), new SeededRandom(7));
         eventsA.Run();
         var eventsB = new Battle(ThreeVsThree(), new SeededRandom(7));
@@ -79,8 +79,8 @@ public class DeterminismTests
             seen.Add($"{result.Outcome}|{result.ElapsedSeconds:F2}|{battle.Events.Count}");
         }
 
-        // Aynı kurulum farklı seed'lerde aynı dövüşü üretiyorsa rastgelelik akmıyordur.
-        Assert.True(seen.Count > 1, "Farklı seed'ler ayırt edilebilir dövüşler üretmeli.");
+        // If the same setup produces the same fight on different seeds, the randomness is not flowing.
+        Assert.True(seen.Count > 1, "Different seeds must produce distinguishable fights.");
     }
 
     [Fact]

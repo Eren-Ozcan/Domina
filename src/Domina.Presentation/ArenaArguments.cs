@@ -2,23 +2,23 @@ using System.Globalization;
 
 namespace Domina.Presentation;
 
-/// <summary>Arenanın komut satırı argümanları.</summary>
-/// <param name="Seed">İzlenecek dövüşün seed'i.</param>
-/// <param name="SpeedMultiplier">Oynatma hızı; 1 = gerçek zaman.</param>
+/// <summary>The arena's command-line arguments.</summary>
+/// <param name="Seed">The seed of the fight to watch.</param>
+/// <param name="SpeedMultiplier">Playback speed; 1 = real time.</param>
 public readonly record struct ArenaArguments(long? Seed, double? SpeedMultiplier)
 {
     /// <summary>
-    /// <c>-- --seed 52 --speed 4</c> biçimindeki argümanları okur.
+    /// Reads arguments in the form <c>-- --seed 52 --speed 4</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Determinizmin pratik karşılığı: toplu simülasyon ilginç bir dövüş bildirdiğinde
-    /// ("52 numaralı seed'de savaşçı kolunu kaybediyor") o dövüş arenada birebir
-    /// izlenebilir. Hata ayıklamanın ana yolu bu.
+    /// What determinism buys in practice: when batch simulation reports an interesting fight ("the
+    /// warrior loses an arm on seed 52"), that fight can be watched in the arena exactly as it was. This
+    /// is the main route for debugging.
     /// </para>
     /// <para>
-    /// Tanınmayan argümanlar sessizce atlanır: Godot kendi argümanlarını da aynı
-    /// diziye koyabilir, arena onların ne olduğunu bilmek zorunda değil.
+    /// Unrecognised arguments are silently skipped: Godot can put its own arguments in the same array,
+    /// and the arena does not have to know what they are.
     /// </para>
     /// </remarks>
     public static ArenaArguments Parse(IReadOnlyList<string> args)

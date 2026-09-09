@@ -5,9 +5,9 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Kasa, ambar ve fiyatlar (GDD §11, Açık Karar #5). Korunan üç kural: kasa eksiye
-/// düşmez, onarım her zaman yenisinden ucuzdur, ve aç kalan savaşçının bedeli
-/// <b>zaman</b>dır — ölüm değil.
+/// The treasury, the store and the prices (GDD §11, Open Decision #5). Three rules are protected: the
+/// treasury does not go negative, a repair is always cheaper than a new piece, and the price of a hungry
+/// warrior is <b>time</b> — not death.
 /// </summary>
 public class EconomyTests
 {
@@ -29,8 +29,8 @@ public class EconomyTests
     }
 
     /// <summary>
-    /// Kuralın kendisi: onarımın puan başına fiyatı yeninin altında kalmazsa onarım
-    /// diye bir karar kalmaz, herkes parçayı dağılana kadar kullanır.
+    /// The rule itself: if a repair's price per point does not stay below a new piece's, there is no
+    /// decision called repairing left, and everyone uses a piece until it breaks.
     /// </summary>
     [Fact]
     public void RepairingIsAlwaysCheaperThanReplacing()
@@ -44,7 +44,7 @@ public class EconomyTests
             ArmorWear = new ArmorWearSet().With(HitLocation.Torso, 500),
         };
 
-        // Havuzundan fazlası ödenmez: dağılmak üzere olan parça yenisinden pahalıya onarılmaz.
+        // Nothing above its pool is paid: a piece about to break is not repaired for more than a new one.
         Assert.True(market.RepairPrice(warrior, HitLocation.Torso) < market.PiecePrice(ArmorPiece.DoMaru));
     }
 
@@ -85,7 +85,7 @@ public class EconomyTests
         Assert.Empty(state.Roster.Entries);
     }
 
-    /// <summary>Yıpranma parçaya aittir: yeni parça dağılanın defterini devralmaz.</summary>
+    /// <summary>Wear belongs to the piece: a new piece does not inherit the broken one's ledger.</summary>
     [Fact]
     public void NewPieceComesWithACleanLedger()
     {
@@ -132,8 +132,8 @@ public class EconomyTests
     [Fact]
     public void RewardComesFromTheEncounterNotFromTheFight()
     {
-        // Prim kapalı: bu test ödülün <b>nereden</b> geldiğini tutuyor, ağırlığa binen
-        // primi değil (o aşağıda ayrı duruyor).
+        // The premium is off: this test holds <b>where</b> the reward comes from, not the premium laid
+        // on weight (that stands separately below).
         Quartermaster market = new(
             new EconomyTuning { VictoryGoldPerEnemyHealth = 2, RiskPremium = 0 });
         BattleSetup setup = new(
@@ -143,18 +143,18 @@ public class EconomyTests
         Assert.Equal(300, market.PromisedReward(setup));
         Assert.Equal(300, market.RewardFor(setup, BattleOutcome.PlayerVictory));
 
-        // GDD §10: çekilmek o seferin ödülünü siler; bozgun da öyle.
+        // GDD §10: pulling out erases that expedition's reward; so does a rout.
         Assert.Equal(0, market.RewardFor(setup, BattleOutcome.PlayerWithdrawal));
         Assert.Equal(0, market.RewardFor(setup, BattleOutcome.PlayerWipe));
     }
 
     /// <summary>
-    /// Ağırlaşan karşılaşma orantısından <b>fazlasını</b> öder.
+    /// A heavier encounter pays <b>more</b> than its proportion.
     /// </summary>
     /// <remarks>
-    /// Düz orantıda eğrinin üst ucu hiçbir zaman alınmaya değmiyordu: üç güçlü düşman üç
-    /// katı can taşır ama üç katından fazla risk taşır. Ölçüm GDD §11'de — prim olmadan
-    /// uzun vadede dövüş başına net sıfırın altına iniyor.
+    /// With direct proportion the curve's top end was never worth taking: three strong enemies carry
+    /// three times the health but more than three times the risk. The measurement is in GDD §11 — without
+    /// the premium it falls below zero net per fight in the long run.
     /// </remarks>
     [Fact]
     public void AHeavierEncounterPaysMoreThanItsShare()
@@ -215,8 +215,8 @@ public class EconomyTests
     }
 
     /// <summary>
-    /// Kıtlığın bedeli zaman: aç savaşçı o gün ne iyileşir ne antrenman yapar.
-    /// Kimse ölmez — açlık geri dönüşsüz bir ceza değildir.
+    /// The price of scarcity is time: a hungry warrior neither heals nor trains that day.
+    /// Nobody dies — hunger is not an irreversible penalty.
     /// </summary>
     [Fact]
     public void HungerCostsTheDayNotTheWarrior()
@@ -237,11 +237,11 @@ public class EconomyTests
         Assert.True(student.Warrior.IsAlive);
     }
 
-    /// <summary>Ambar yetmezse revirdeki önce doyar — yaralıyı aç bırakmak kıtlığı katmerlerdi.</summary>
+    /// <summary>If the store is short, those in the infirmary eat first — leaving the wounded hungry would compound the scarcity.</summary>
     [Fact]
     public void TheInfirmaryEatsFirst()
     {
-        // Tek kişilik yiyecek: iki savaşçıdan biri aç kalacak.
+        // Food for one: one of the two warriors will go hungry.
         DojoState state = Funded(
             gold: 0,
             economy: new EconomyTuning { MedicinePerInfirmaryDay = 0, MedicineRecoveryDays = 0 });

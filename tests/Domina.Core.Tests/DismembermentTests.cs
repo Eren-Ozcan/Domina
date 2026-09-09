@@ -1,28 +1,27 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Uzuv kaybı sonuç ağacı (GDD §7). Belirleyici olan darbenin <b>öldürücü olup
-/// olmadığı</b>:
+/// The limb-loss outcome tree (GDD §7). What decides is whether the blow is <b>lethal</b>:
 /// <code>
-/// ağır darbe + kopma zarı tuttu
-///   ├─ can > 0  → uzuv gider, dövüş sürer
-///   └─ can ≤ 0  → tuşa basılmışsa uzuvla yaşar, basılmamışsa ölür
+/// heavy blow + dismemberment die held
+///   ├─ health > 0  → the limb goes, the fight continues
+///   └─ health ≤ 0  → if the key was pressed he lives with the limb lost, otherwise he dies
 /// </code>
-/// Bu ağaç oyunun kimliğini belirleyen mekanik — "tuşa basmak hayat kurtarır ama
-/// bedelsiz değildir".
+/// This tree is the mechanic that defines the game's identity — "pressing the key saves a life but is
+/// not free".
 /// </summary>
 public class DismembermentTests
 {
     /// <summary>
-    /// Her darbeyi bacağa indiren ayar.
+    /// A setting that lands every blow on a leg.
     /// </summary>
     /// <remarks>
-    /// Sonuç ağacını sınayan testler darbenin <b>koparılabilir</b> bir bölgeye inmesini
-    /// ister; gövdeye inen darbenin koparacak bir şeyi yoktur. Bölge dağılımı ayrı
-    /// testlerin konusu.
+    /// Tests exercising the outcome tree need the blow to land on a <b>severable</b> region; a blow to
+    /// the torso has nothing to take off. The region distribution is the subject of separate
+    /// tests.
     /// </remarks>
     private static CombatTuning AlwaysLimb { get; } = TestBuilders.PointBlank with
     {
@@ -32,24 +31,24 @@ public class DismembermentTests
         LegHitWeight = 100,
     };
 
-    /// <summary>Tek vuruşta ağır darbe eşiğini aşan ama öldürmeyen kurulum.</summary>
+    /// <summary>A setup that passes the heavy-blow threshold in one strike without killing.</summary>
     /// <summary>
-    /// Hafif ve hızlı silah: ağır darbe eşiğini aşmadan <b>ilk kanı akıtır</b>.
+    /// A light, fast weapon: it <b>draws first blood</b> without passing the heavy-blow threshold.
     /// </summary>
     /// <remarks>
-    /// "Çek" tuşu ilk isabetten önce kapalı olduğu için (GDD §5) müdahale dalını ölçen
-    /// testin savaşı önce başlatması gerekir. Kurbanın kendi vuruşu bunun en ucuz yolu:
-    /// kimsenin canını riske atmadan tuşu açar.
+    /// Because the "pull out" key is closed before the first hit (GDD §5), a test measuring the
+    /// intervention branch has to start the fight first. The victim's own strike is the cheapest way:
+    /// it unlocks the key without risking anyone's life.
     /// </remarks>
     private static Weapon Quick { get; } =
         new("Test-Tantō", WeaponClass.Cutting, 12, TwoHanded: false, AttackSeconds: 0.4);
 
     /// <summary>
-    /// Savaşı başlatır, sonra "çek" tuşuna basar.
+    /// Starts the fight, then presses the "pull out" key.
     /// </summary>
     /// <remarks>
-    /// Tuş ilk isabete kadar kapalıdır (GDD §5): temas öncesi kaçış diye bir şey yok.
-    /// Müdahale dalını ölçen testlerin konusu bu değil, ön koşulu.
+    /// The key is closed until the first hit (GDD §5): there is no such thing as fleeing before contact.
+    /// That is not the subject of the tests measuring the intervention branch, it is their precondition.
     /// </remarks>
     private static bool PressAfterFirstBlood(Battle battle)
     {
@@ -75,18 +74,18 @@ public class DismembermentTests
                 armor: armor),
         ],
         [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
-    {
-        Tuning = AlwaysLimb,
-    };
+        {
+            Tuning = AlwaysLimb,
+        };
 
     /// <summary>
-    /// Öldürmeyen ağır darbe hiçbir tuşa basılmadan uzva mal olur ve savaşçı sahada
-    /// kalır.
+    /// A heavy blow that does not kill costs a limb without any key being pressed, and the warrior stays
+    /// on the field.
     /// </summary>
     /// <remarks>
-    /// Bu dalın varlık sebebi: kopma yalnızca <c>PlayerIntervened</c> iken oluşurken,
-    /// o bayrağı da yalnızca seferi bitiren "Kaç" tuşu açtığı için <b>uzuv kaybederek
-    /// kazanmak imkânsızdı</b> (20.000 dövüş, zafer + uzuv kaybı: 0 kez).
+    /// The reason this branch exists: while dismemberment only happened when <c>PlayerIntervened</c> was
+    /// set, and only the "Flee" key that ended the expedition set that flag, <b>winning while losing a
+    /// limb was impossible</b> (20,000 fights, victory + limb loss: 0 times).
     /// </remarks>
     [Fact]
     public void ANonLethalGrievousBlowCostsALimbWithNoButtonPressed()
@@ -94,7 +93,7 @@ public class DismembermentTests
         var battle = new Battle(Executioner(), new FixedRandom(0.0));
         battle.Run();
 
-        // İlk kopma, savaşçı hâlâ ayaktayken olmalı: canı 300, tek darbe ~90.
+        // The first severing must happen while the warrior is still standing: health 300, one blow ~90.
         WarriorDismembered first = battle.Events.OfType<WarriorDismembered>().First();
         AttackLanded blow = battle.Events
             .OfType<AttackLanded>()
@@ -103,22 +102,22 @@ public class DismembermentTests
         Assert.Equal(first.Warrior, blow.Defender);
         Assert.True(blow.DefenderHealthRemaining > 0);
 
-        // Ve dövüş kopmadan sonra devam etmiş olmalı.
+        // And the fight must have continued after the severing.
         Assert.Contains(
             battle.Events.OfType<AttackLanded>(),
             e => e.AtSeconds > first.AtSeconds);
     }
 
-    /// <summary>Uzvunu kaybeden savaşçı dövüşü kazanabilir — eve sakat şampiyon gelir.</summary>
+    /// <summary>A warrior who loses a limb can win the fight — a maimed champion comes home.</summary>
     /// <remarks>
-    /// Eski sonuç ağacında bu imkânsızdı: kopma "Kaç" tuşunu gerektiriyordu, tuş da
-    /// seferi bitiriyordu. 20.000 dövüş ölçüldü, zafer + uzuv kaybı hiç görülmedi.
+    /// In the old outcome tree this was impossible: severing required the "Flee" key, and the key ended
+    /// the expedition. 20,000 fights were measured, victory + limb loss never appeared.
     /// </remarks>
     [Fact]
     public void AWarriorCanWinTheBattleAfterLosingALimb()
     {
-        // Kurban sert vuruyor (2 darbede bitirir), cellat sık ama hafif vuruyor:
-        // eşik düşürüldüğü için o hafif darbeler de uzva mal olur.
+        // The victim strikes hard (finishes in 2 blows), the executioner strikes often but light:
+        // because the threshold was lowered, those light blows cost a limb too.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, "Kurban", health: 400, aggression: 100, weapon: TestBuilders.Executioner())],
             [
@@ -146,7 +145,7 @@ public class DismembermentTests
     [Fact]
     public void ALethalGrievousBlowWithoutInterventionKills()
     {
-        // Canı 60: tek darbe hem eşiği aşar hem canı bitirir, tuşa da basılmamış.
+        // Health 60: one blow both passes the threshold and ends the health, and no key was pressed.
         var battle = new Battle(Executioner(defenderHealth: 60), new FixedRandom(0.0));
         BattleResult result = battle.Run();
 
@@ -159,12 +158,12 @@ public class DismembermentTests
     }
 
     /// <summary>
-    /// Tuşun işi: öldürücü darbeyi uzuv kaybına çevirmek.
+    /// The key's job: turning a lethal blow into limb loss.
     /// </summary>
     /// <remarks>
-    /// Kurtuluş <b>ölümsüzlük değil</b> — kurtulan savaşçı 1 canla kalır ve kaçışın geri
-    /// kalanını bir sonraki darbede ölecek durumda geçirir. Bu test o dalı izole etmek
-    /// için celladı yavaş tutuyor: peşinden yetişemesin, tek darbenin sonucu ölçülebilsin.
+    /// Survival is <b>not immortality</b> — the saved warrior is left with 1 health and spends the rest
+    /// of the escape one blow away from dying. This test keeps the executioner slow to isolate that
+    /// branch: he must not catch up, so a single blow's outcome can be measured.
     /// </remarks>
     [Fact]
     public void InterventionTurnsALethalBlowIntoALimbLoss()
@@ -180,8 +179,8 @@ public class DismembermentTests
 
         var battle = new Battle(setup, new FixedRandom(0.0));
 
-        // Tuşa basmak "zamanında müdahale" sayılır — kaçış henüz başlamamış olsa bile.
-        // Tuş ancak savaş başlayınca açılır (§5), o yüzden önce ilk kan akmalı.
+        // Pressing the key counts as "intervening in time" — even if the escape has not started yet.
+        // The key only unlocks once the fight has begun (§5), so first blood has to be drawn first.
         Assert.True(PressAfterFirstBlood(battle));
 
         WarriorBattleSummary victim = battle.Run().SummaryFor(new WarriorId(1));
@@ -193,13 +192,13 @@ public class DismembermentTests
     }
 
     /// <summary>
-    /// Koparacak uzvu kalmamış savaşçıyı tuş kurtaramaz — çevrilecek bir bedel yoktur.
+    /// The key cannot save a warrior with no limb left to take — there is no price to convert.
     /// </summary>
     [Fact]
     public void InterventionCannotSaveAWarriorWithNoLimbsLeftToLose()
     {
-        // Kurban tuşu açacak kadar dövüşür: hızlı ve hafif silahla ilk kanı akıtır,
-        // sonra basar. Aksi hâlde tuş hiç açılmadan ölürdü ve dal ölçülmemiş olurdu.
+        // The victim fights just enough to unlock the key: he draws first blood with a fast, light weapon,
+        // then presses. Otherwise he would die without the key ever unlocking and the branch would go unmeasured.
         Warrior victim = TestBuilders.Warrior(
             1, "Kurban", health: 60, aggression: 100, weapon: Quick);
         victim.AddDisability(BodyPart.SwordArm);
@@ -225,7 +224,7 @@ public class DismembermentTests
     [Fact]
     public void LightBlowsNeverTriggerTheGrievousTree()
     {
-        // Yumruk: hasar/azami can oranı eşiğin (0.28) çok altında kalır.
+        // Fists: the damage/max health ratio stays well below the threshold (0.28).
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 300, aggression: 0)],
             [TestBuilders.Warrior(101, aggression: 100, weapon: Weapon.Fists())])
@@ -244,8 +243,8 @@ public class DismembermentTests
     [Fact]
     public void BluntWeaponsRarelyDismember()
     {
-        // Zar 0.20: kesici için 0.35 eşiğinin altında (kopar), künt için
-        // 0.35 × 0.15 = 0.0525 eşiğinin üstünde (kopmaz).
+        // Die 0.20: below the 0.35 threshold for a blade (it severs), above the
+        // 0.35 × 0.15 = 0.0525 threshold for a blunt weapon (it does not).
         Weapon blunt = TestBuilders.Executioner() with { Class = WeaponClass.Blunt };
 
         var setup = new BattleSetup(
@@ -266,8 +265,8 @@ public class DismembermentTests
     [Fact]
     public void HeavyArmorPreventsDismembermentThatBareSkinAllows()
     {
-        // Ekipmana yatırımı anlamlı kılan kalem: aynı darbe, aynı zar, farklı zırh.
-        // Bacağa inen darbe — çıplak bacakta 0.35, ağır suneate altında 0.35 × 0.60 = 0.21.
+        // The item that makes investing in equipment worthwhile: the same blow, the same die, different armour.
+        // A blow to the leg — 0.35 on a bare leg, 0.35 × 0.60 = 0.21 under heavy suneate.
         var unarmored = new Battle(Executioner(armor: Armor.None()), new FixedRandom(0.30));
         PressAfterFirstBlood(unarmored);
         unarmored.Run();
@@ -281,20 +280,20 @@ public class DismembermentTests
     }
 
     /// <summary>
-    /// Direnç, darbenin indiği <b>bölgenin</b> parçasından okunur — takımın ortalamasından
-    /// değil.
+    /// Resistance is read from the piece of the <b>region</b> the blow landed on — not from the kit's
+    /// average.
     /// </summary>
     /// <remarks>
-    /// Yuva yuva zırhın bütün gerekçesi bu: hafif keikogi gövdeyi örter, kolu örtmez.
-    /// Aynı kuşam, aynı zar, aynı silah — darbe kola inince kol kopar, gövdeye inince
-    /// kopmaz. Direnç tek skaler kalsaydı ikisi de aynı sonucu verirdi ve "ucuz kuşam
-    /// al, kollarını riske at" diye bir karar hiç var olmazdı.
+    /// This is the whole rationale for slot-by-slot armour: a light keikogi covers the torso, not the
+    /// arm. The same kit, the same die, the same weapon — when the blow lands on the arm the arm comes
+    /// off, when it lands on the torso it does not. Had resistance stayed a single scalar, both would
+    /// give the same result and the decision "buy the cheap kit, risk your arms" would never exist.
     /// </remarks>
     [Fact]
     public void TheStruckRegionDecidesResistanceNotTheSuit()
     {
-        // Zar 0.30 — keikogi'li gövde: 0.35 × 0.80 = 0.28 (kopmaz).
-        //            Açık kol:         0.35 × 1.00 = 0.35 (kopar).
+        // Die 0.30 — torso with keikogi: 0.35 × 0.80 = 0.28 (no severing).
+        //            Bare arm:          0.35 × 1.00 = 0.35 (severs).
         var toTheArm = new Battle(AtRegion(HitLocation.SwordArm, Armor.Light()), new FixedRandom(0.30));
         PressAfterFirstBlood(toTheArm);
         toTheArm.Run();
@@ -307,7 +306,7 @@ public class DismembermentTests
         Assert.DoesNotContain(toTheTorso.Events, e => e is WarriorDismembered);
     }
 
-    /// <summary>Kolu örten parça, kolu örtmeyen kuşamın izin verdiği kopmayı durdurur.</summary>
+    /// <summary>A piece covering the arm stops the severing a kit that leaves the arm bare allows.</summary>
     [Fact]
     public void KoteProtectsTheArmThatAKeikogiLeavesBare()
     {
@@ -315,7 +314,7 @@ public class DismembermentTests
         PressAfterFirstBlood(bareArms);
         bareArms.Run();
 
-        // Dō-maru'nun kotesi: 0.35 × 0.70 = 0.245, zarın altında kalır.
+        // The dō-maru's kote: 0.35 × 0.70 = 0.245, which stays below the die.
         var withKote = new Battle(AtRegion(HitLocation.SwordArm, Armor.Medium()), new FixedRandom(0.30));
         PressAfterFirstBlood(withKote);
         withKote.Run();
@@ -325,12 +324,12 @@ public class DismembermentTests
     }
 
     /// <summary>
-    /// Bir savaşçı aynı uzvu iki kez kaybedemez — kaçış boyunca kaç darbe yerse yesin.
+    /// A warrior cannot lose the same limb twice — however many blows he takes during the escape.
     /// </summary>
     /// <remarks>
-    /// Kayıtlar savaşçı başına tek parça tutulurken her yeni kayıp öncekini siliyordu:
-    /// kolunu kaybeden savaşçı bacağını kaybedince "kolu duruyor" sayılıyor, kol tekrar
-    /// kopabiliyordu. Ölçüldü: tek savaşçıda 22 kopma, Kol/Bacak sırayla.
+    /// While the records kept a single part per warrior, every new loss erased the previous one: a
+    /// warrior who had lost an arm counted as "his arm is still there" once he lost a leg, and the arm
+    /// could come off again. Measured: 22 severings on one warrior, arm/leg in turn.
     /// </remarks>
     [Fact]
     public void ALimbCanOnlyBeLostOncePerWarrior()
@@ -343,8 +342,8 @@ public class DismembermentTests
                 TestBuilders.Warrior(103, "Cellat3", aggression: 100, weapon: TestBuilders.Executioner()),
             ])
         {
-            // Can devasa, her darbe ağır, her zar kopmayı tutturuyor: kurban yalnızca
-            // "kaybedecek uzvu kalmadı" kuralıyla durabilir.
+            // Health is enormous, every blow is heavy, every die holds the severing: the victim can only
+            // be stopped by the rule "no limb left to lose".
             Tuning = TestBuilders.PointBlank with { GrievousSeverityThreshold = 0.0 },
         };
 
@@ -359,7 +358,7 @@ public class DismembermentTests
         Assert.Equal(lost.Order(), result.SummaryFor(new WarriorId(1)).LostParts.Parts().Order());
     }
 
-    /// <summary>Her darbeyi verilen bölgeye indiren kurulum.</summary>
+    /// <summary>A setup that lands every blow on the given region.</summary>
     private static BattleSetup AtRegion(HitLocation location, Armor armor)
     {
         CombatTuning tuning = TestBuilders.PointBlank with
@@ -395,12 +394,11 @@ public class DismembermentTests
     }
 
     /// <summary>
-    /// Gövdeye inen ağır darbe de bir uzva mal olur — müdahale asla bedava değildir.
+    /// A heavy blow to the torso costs a limb too — intervention is never free.
     /// </summary>
     /// <remarks>
-    /// Gövde vuruşları koparmasın denince müdahale risksizleşiyor ve oyuncu zaferi
-    /// %36'dan %53'e çıkıyordu (10.000 dövüş, 3v3). Bölge hasarı ve zırhı ilgilendirir,
-    /// sonuç ağacını değil.
+    /// With torso hits made not to sever, intervention became riskless and player victory rose from 36%
+    /// to 53% (10,000 fights, 3v3). The region concerns damage and armour, not the outcome tree.
     /// </remarks>
     [Fact]
     public void BlowsToTheTorsoStillCostALimb()
@@ -409,8 +407,8 @@ public class DismembermentTests
             [TestBuilders.Warrior(1, "Kurban", health: 300, aggression: 0)],
             [TestBuilders.Warrior(101, "Cellat", aggression: 100, weapon: TestBuilders.Executioner())])
         {
-            // Her darbe gövdeye iniyor; kalan uzuvların ağırlıkları varsayılan kalır,
-            // çünkü kopacak uzuv onların arasından seçilecek.
+            // Every blow lands on the torso; the weights of the remaining limbs stay at their defaults,
+            // because the limb to come off will be chosen among them.
             Tuning = TestBuilders.PointBlank with { TorsoHitWeight = 1000 },
         };
 
@@ -424,8 +422,8 @@ public class DismembermentTests
     [Fact]
     public void BattleNeverMutatesThePermanentWarrior()
     {
-        // Kalıcı hali işlemek meta katmanın işi. Bu bozulursa aynı kadroyla
-        // on binlerce dövüş simüle edilemez — toplu simülasyonun temel varsayımı.
+        // Writing the persistent state is the meta layer's job. If this breaks, tens of thousands of
+        // fights cannot be simulated with the same roster — the basic assumption of batch simulation.
         Warrior victim = TestBuilders.Warrior(1, health: 300, aggression: 0);
 
         var setup = new BattleSetup(

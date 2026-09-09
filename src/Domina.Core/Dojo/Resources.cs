@@ -1,16 +1,16 @@
 namespace Domina.Core.Dojo;
 
-/// <summary>Dojo'nun kasası ve ambarı.</summary>
+/// <summary>The dojo's treasury and store.</summary>
 /// <remarks>
 /// <para>
-/// Kaynak <b>türleri</b> GDD §11'den gelir (altın, yiyecek/su, ilaç); <b>sayıları</b>
-/// gelmez — fiyatlar, günlük tüketim ve başlangıç stoğu Açık Karar #5'te duruyor.
-/// Bu yüzden burada tek bir sabit yok: tür bir değer taşıyıcısı, aritmetiği ve
-/// "yeter mi" sorusu kilitli sayı beklemeden yazılabilir.
+/// The resource <b>kinds</b> come from GDD §11 (gold, food/water, medicine); the <b>numbers</b> do not
+/// — prices, daily consumption and the starting stock sit in Open Decision #5. So there is not a single
+/// constant here: the type is a value carrier, and its arithmetic and the question "is it enough" can
+/// be written without waiting for a locked number.
 /// </para>
 /// <para>
-/// Sayılar tam sayı: kaynak sayılabilir bir şeydir, kesirli altın bir tarafın
-/// yuvarlamasıyla kaybolur ve kayıt/yükleme arasında birebir eşleşmez.
+/// The numbers are integers: a resource is something countable, and fractional gold is lost to one
+/// side's rounding and does not match exactly across save and load.
 /// </para>
 /// </remarks>
 public readonly record struct Resources(int Gold = 0, int Food = 0, int Water = 0, int Medicine = 0)
@@ -29,14 +29,14 @@ public readonly record struct Resources(int Gold = 0, int Food = 0, int Water = 
         a.Water - b.Water,
         a.Medicine - b.Medicine);
 
-    /// <summary>Verilen gideri karşılayabilir mi?</summary>
+    /// <summary>Can it cover the given cost?</summary>
     public bool Covers(Resources cost) =>
         Gold >= cost.Gold && Food >= cost.Food && Water >= cost.Water && Medicine >= cost.Medicine;
 
-    /// <summary>Herhangi bir kalem eksiye düşmüş mü?</summary>
+    /// <summary>Has any item gone negative?</summary>
     public bool AnyNegative => Gold < 0 || Food < 0 || Water < 0 || Medicine < 0;
 
-    /// <summary>Eksileri sıfıra çeker — açık verilen kalemleri ayrıca bildirmek çağıranın işi.</summary>
+    /// <summary>Pulls negatives to zero — reporting which items went short is the caller's job.</summary>
     public Resources ClampedToZero() => new(
         Math.Max(0, Gold),
         Math.Max(0, Food),

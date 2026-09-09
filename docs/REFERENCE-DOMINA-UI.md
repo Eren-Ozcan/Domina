@@ -1,19 +1,20 @@
-# Referans oyun: Domina — ekran ve arayüz dökümü
+# The reference game: Domina — a screen and interface breakdown
 
-`REFERENCE-DOMINA.md` **sistemleri** anlatır; bu dosya **ekranları**: hangi bilgi nerede
-duruyor, hangi kontrol neye benziyor, oyuncu bir kararı hangi kutuya bakarak veriyor.
+`REFERENCE-DOMINA.md` describes the **systems**; this file describes the **screens**: which
+information sits where, what each control looks like, and which box the player looks at to make
+a decision.
 
-Kaynak: "Domina Beginners Guide To Starting Right PLUS Tips & Tricks (2018 Edition)"
-videosundan 84 kare (1280×720). Her şey **görüldüğü kadarıyla** yazıldı; okunamayan yerler
-"belirsiz" diye geçiyor. Oyun 2018 sürümü.
+Source: 84 frames (1280×720) from the video "Domina Beginners Guide To Starting Right PLUS Tips
+& Tricks (2018 Edition)". Everything is written **as far as it could be seen**; what could not
+be read is marked "unclear". The game is the 2018 version.
 
-> **Neden var:** bizde dört ekran var (gün, kadro, pazar, okul) ve hepsi düz `VBoxContainer`
-> listesi. Referansın arayüzü **yirmi yaşında bir tür**ün yerleşik çözümlerini taşıyor;
-> hangisini alacağımıza bakmadan önce ne olduğunu görmek gerekiyor.
+> **Why it exists:** we have four screens (day, roster, market, school) and all of them are a
+> flat `VBoxContainer` list. The reference's interface carries the established solutions of a
+> **twenty-year-old genre**; before deciding what to take from it we need to see what it is.
 
 ---
 
-## 0. Sürekli duran üst çubuk
+## 0. The permanent top bar
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -23,88 +24,90 @@ videosundan 84 kare (1280×720). Her şey **görüldüğü kadarıyla** yazıld�
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Solda dört kaynak: **etiket + sayı + küçük renkli ikon**. Bar yok, yüzde yok, hep tam
-  sayı. Hiçbir panel bu çubuğun üstüne binmiyor.
-- Sağda iki satır: `Next Battle` (mecburi dövüşe kalan gün) ve `Days Left` (yılın sonu).
-- En sağda küçük bir simge oyunun akıp akmadığını gösteriyor; duraklatınca ekranın
-  ortasında büyük **PAUSED** yazısı beliriyor **ve bütün dünya mavimsi-gri bir filtreye
-  giriyor** — yani "duraklatıldı" bilgisi tek bir yazıya değil, ekranın rengine bağlı.
+- On the left, four resources: **a label + a number + a small coloured icon**. No bars, no
+  percentages, always whole numbers. No panel is laid over this bar.
+- On the right, two lines: `Next Battle` (the days left until the compulsory fight) and
+  `Days Left` (the end of the year).
+- At the far right a small symbol shows whether the game is running; when paused, a large
+  **PAUSED** appears in the middle of the screen **and the whole world goes into a bluish-grey
+  filter** — so "paused" is carried not by a single word but by the screen's colour.
 
-**Eksik olan:** hiçbir kaynağın **eğilimi** yok. "800 yiyecek" yazıyor ama günde kaç
-eriyor, kaç geliyor yazmıyor; onu görmek için Architect panelini açman gerekiyor. Kıtlık
-oyunun ana baskısıyken bu bilgi HUD'da yok.
+**What is missing:** none of the resources has a **trend**. It says "800 food" but not how much
+melts a day or how much comes in; to see that you have to open the Architect panel. Scarcity is
+the game's main pressure and that information is not in the HUD.
 
-## 1. Ana ekran: avlu
+## 1. The main screen: the courtyard
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ [üst çubuk]                                                               │
-│  ▯▯▯▯▯▯▯ revak / bina cephesi — personel burada yürüyor                  │
+│ [the top bar]                                                             │
+│  ▯▯▯▯▯▯▯ a portico / building facade — the staff walk here                │
 │                                                                           │
-│            açık kum avlusu — gladyatörler burada talim ediyor            │
-│            (birimin altında ince yeşil bar + ad etiketi)                 │
-│            üstünde metin: "Granius is Strength Training"                 │
+│            an open sand courtyard — the gladiators drill here            │
+│            (a thin green bar under the unit + a name label)              │
+│            text above him: "Granius is Strength Training"                │
 │                                                                           │
-│  ─── parmaklık ───                                                        │
-│  NPC'ler (Legate kırmızı cübbe, rahibe beyaz) ve eşya nesneleri:         │
-│  örs, evrak masası, kuyu, "Map of Games" tabelası                        │
+│  ─── railing ───                                                          │
+│  NPCs (the Legate in a red robe, a priestess in white) and object props:  │
+│  an anvil, a paperwork desk, a well, a "Map of Games" sign                │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Ekran bir **menü değil, diyorama**: sabit kamera, canlı bir avlu. Bütün paneller bunun
-  **üstüne** açılıyor; hiçbiri tam ekran değil, arkada dünya görünmeye ve oynamaya devam
-  ediyor.
-- **Dünyanın kendisi menü:** personeli ve NPC'yi açmak için figürüne tıklıyorsun, pazarı
-  açmak için masaya. Ayrı bir gezinme çubuğu **yok**.
-- Birimin durumu tek bir birleşik "birim kartı" ile anlatılıyor: **portre + ad + renkli can
-  barı**. Aynı kart avluda, dövüş HUD'ında ve dövüş sözleşmesinde birebir aynı.
-- Köleler **çıplak ve yeşil şortlu**; gladyatörler zırhlı. Kim ne, etiket okumadan
-  anlaşılıyor.
-- Bir birimin ne yaptığı **üstünde yazan düz metinle** anlatılıyor ("X is Strength
-  Training"). İkon yok, ilerleme çubuğu yok.
+- The screen is **not a menu but a diorama**: a fixed camera, a living courtyard. All the panels
+  open **on top** of it; none is full screen, and the world behind keeps being visible and
+  playing.
+- **The world itself is the menu:** you click a figure to open a staff member or an NPC, and the
+  desk to open the market. There is **no** separate navigation bar.
+- A unit's state is told with a single combined "unit card": **a portrait + a name + a coloured
+  health bar**. The same card appears in the courtyard, in the combat HUD and in the battle
+  contract, identically.
+- The slaves are **naked and in green shorts**; the gladiators are armoured. Who is what is clear
+  without reading a label.
+- What a unit is doing is told with **plain text written above him** ("X is Strength Training").
+  No icon, no progress bar.
 
-## 2. Panellerin ortak iskeleti
+## 2. The panels' shared skeleton
 
-Bütün personel panelleri **aynı** kalıp:
+All the staff panels use **the same** template:
 
 ```
 ┌──────────────────────────────────────────┐
-│ <Ad> Info                                 │
-│  [Düğme]        [Düğme]                   │
-│  [Düğme]        [Düğme]                   │
-│  [Düğme]        [Düğme]                   │
+│ <Name> Info                               │
+│  [Button]        [Button]                 │
+│  [Button]        [Button]                 │
+│  [Button]        [Button]                 │
 │                                            │
 │ [Fire Employee]              [ Close ]     │
 └──────────────────────────────────────────┘
 ```
 
-- Bordo, benekli parşömen zemin; başlık sol üstte; **iki (bazen üç) sütunlu düz metin
-  düğmesi ızgarası**; sol altta **Fire Employee**, sağ altta **Close** (kırmızı odak
-  çerçevesiyle).
-- **İkon yok.** Architect paneli, Bard paneli ve rahip paneli — başlığı okumazsan
-  birbirinden ayırt edilemiyor. Tutarlılık kazanılmış, **tanınabilirlik kaybedilmiş**.
-- Bir araştırma sürerken **bütün ızgara soluklaşıyor** — tek tek değil, panel bütün olarak
-  kilitleniyor.
+- A maroon, speckled parchment ground; the title at the top left; **a grid of plain text buttons
+  in two (sometimes three) columns**; **Fire Employee** at the bottom left, **Close** at the
+  bottom right (with a red focus frame).
+- **No icons.** The Architect panel, the Bard panel and the priest panel — without reading the
+  title they cannot be told apart. Consistency was won, **recognisability lost**.
+- While a research is running **the whole grid dims** — not item by item, the panel locks as a
+  whole.
 
-### Fare üstüne gelince: iki parçalı bilgi
+### On hover: information in two parts
 
-- Düğmenin **üstünde** maliyet rozeti: `-30 altın · -30 su · -15 taş` gibi.
-- Düğmenin **altında** ipucu kutusu: bir cümlelik açıklama.
-- **Çakışma önleme yok:** rozet üstteki düğmenin yazısını kesiyor, ipucu alttaki düğmeleri
-  örtüyor. Bu, bütün oyunun en sık tekrar eden arayüz kusuru.
+- **Above** the button, a cost badge: something like `-30 gold · -30 water · -15 stone`.
+- **Below** the button, a tooltip box: a one-sentence explanation.
+- **No collision avoidance:** the badge cuts across the text of the button above, and the tooltip
+  covers the buttons below. This is the whole game's most frequently repeated interface flaw.
 
-## 3. Gladyatör paneli (en yoğun ekran)
+## 3. The gladiator panel (the densest screen)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Gladiator Info                                                          │
 │ Vettius of Melitensium      Weight: 91kg    ┌─PRIMARY──────┐           │
 │ Temperament  -[===|===]+    Total: 124kg    │ Basic Pugio  │  ┌──────┐ │
-│              "Satisfied"                     │ A:+7 D:+7 1kg│  │ tam  │ │
-│ Health [======yeşil======] [Heal]           │ [==bar==]    │  │ boy  │ │
-│        145/145                               └──────────────┘  │portre│ │
+│              "Satisfied"                     │ A:+7 D:+7 1kg│  │ full │ │
+│ Health [======green======] [Heal]           │ [==bar==]    │  │ body │ │
+│        145/145                               └──────────────┘  │portrait│
 │                                              ┌─SECONDARY────┐  │      │ │
-│ Training Balance   Level  Points             │ (varsa)      │  │THRAEX│ │
+│ Training Balance   Level  Points             │ (if any)     │  │THRAEX│ │
 │  Agility  ─●────    13     62                └──────────────┘  └──────┘ │
 │  Weapon   ─●────    14     34                                            │
 │  Defense  ─●────    13     49                                            │
@@ -112,62 +115,63 @@ Bütün personel panelleri **aynı** kalıp:
 │  Meditate ●─────   100     [Train]                                       │
 │  Aggro:79  Turtle:21  Evasive:56  Stamina:50                            │
 │  Victories: 3, Losses: 1                                                 │
-│ [Reward Wine 1▲▼][Reward Coin 1▲▼][Award Private Room (kapalı)]        │
+│ [Reward Wine 1▲▼][Reward Coin 1▲▼][Award Private Room (disabled)]      │
 │              [Put to Death][Grant Freedom][Sell] [<][>] [Close]         │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-Aynı anda ekranda **25-30 ayrı sayı** var. Öğrenilecek üç şey:
+There are **25-30 separate numbers** on screen at once. Three things to learn:
 
-1. **Eğitim iki katmanlı gösteriliyor:** her stat için hem bir **kaydırıcı** (vaktin ne
-   kadarını yiyor) hem **Level** hem **Points**. Yani oyuncu "neyi eğitiyorum" ile "ne
-   kadar ilerledim"i aynı satırda görüyor.
-2. **Türetilmiş sayılar açıkta:** Aggro / Turtle / Evasive / Stamina düz sayı olarak
-   yazıyor. Davranış gizli değil.
-3. **`<` `>` okları var** — panel kapanmadan kadroda gezilebiliyor. Kadro ekranı ile
-   savaşçı ekranı **aynı ekran**.
+1. **Training is shown in two layers:** for every stat there is a **slider** (how much of his
+   time it eats), a **Level** and **Points**. So the player sees "what am I training" and "how
+   far have I come" on the same line.
+2. **The derived numbers are exposed:** Aggro / Turtle / Evasive / Stamina are written as plain
+   numbers. The behaviour is not hidden.
+3. **There are `<` `>` arrows** — the roster can be browsed without closing the panel. The roster
+   screen and the warrior screen are **the same screen**.
 
-**Kusurlar:** `Put to Death` — geri dönüşü olmayan bir eylem — `Sell` ve `Close` ile
-**birebir aynı** görünüyor; hiçbir yerde kırmızı "tehlike" rengi yok. `Award Private Room`
-kapalı ama **neden kapalı olduğu yazmıyor** (Architect'in özel oda binasını gerektiriyor).
-Beş kaydırıcı için **tek** `Train` düğmesi var, hangisini eğittiği belirsiz.
+**The flaws:** `Put to Death` — an irreversible action — looks **exactly the same** as `Sell` and
+`Close`; there is no red "danger" colour anywhere. `Award Private Room` is disabled but **it does
+not say why** (it needs the Architect's private-room building). There is **one** `Train` button
+for five sliders, and which one it trains is unclear.
 
-## 4. Doctore: beceri ağacı
+## 4. The Doctore: the skill tree
 
-Tek "tam genişlik" panel. ~30 düğüm, iki küme, aralarında **dikey bağlantı çizgileri** (ön
-koşul). Altta sol köşede `Fire Employee`, sağda **`Enable Automatic Gladiator Training`
-onay kutusu** ve `Close`.
+The one "full width" panel. ~30 nodes, two clusters, with **vertical connecting lines**
+(prerequisites) between them. At the bottom left `Fire Employee`, on the right an
+**`Enable Automatic Gladiator Training` checkbox** and `Close`.
 
-- Sıradan bir düğüm ~20-70 altın; **sınıf açan düğüm 400-500 altın ve 16-17 tur**. Ama
-  **düğmenin boyu ve yazı tipi aynı** — "bu büyük bir karar" bilgisi yalnızca sayıda.
-- Alınmış / alınabilir / kilitli düğümler **neredeyse aynı soluklukta** görünüyor. Ağaç
-  "nerede kaldım" sorusuna bakışta cevap vermiyor.
-- İpucu kutusu büyük olduğunda arkasındaki düğümleri tamamen örtüyor.
+- An ordinary node is ~20-70 gold; **a node that unlocks a class is 400-500 gold and 16-17
+  turns**. But **the button's size and font are the same** — the information "this is a big
+  decision" lives only in the number.
+- Bought / buyable / locked nodes look **almost equally dim**. The tree does not answer "where
+  did I get to" at a glance.
+- When the tooltip box is large it completely covers the nodes behind it.
 
-## 5. Pazar
+## 5. The market
 
 ```
 ┌───────────────────────────────────┐
 │ City Market                        │
-│  [maliyet önizleme şeridi]         │
+│  [the cost preview strip]          │
 │ ┌───────┐ ┌───────┐ ┌───────┐      │
 │ │x10 🍎 │ │ x0 🍯 │ │ x5 ◆ │      │
 │ │Buy Food│ │Buy Wine│ │Buy Water│  │
 │ │Buy All │ │Buy All │ │Buy All │   │
 │ └───────┘ └───────┘ └───────┘      │
 │              Sell                   │
-│ [Sell Food][Sell Wine][Sell Water]  │  (üçü de kapalı)
+│ [Sell Food][Sell Wine][Sell Water]  │  (all three disabled)
 │ [Attend Pit Fight] [Hire Employees] │
 │                          [ Close ]  │
 └───────────────────────────────────┘
 ```
 
-- Pazar aynı zamanda bir **kavşak**: pit dövüşü ve personel alımı buradan açılıyor.
-- Stok, ürünün üstünde küçük bir **rozet** (`x10`). Fiyat düğmede **yazmıyor** — üstteki
-  önizleme şeridinde çıkıyor.
-- Alma hücrelerinde ikon var, satma hücrelerinde yok; iki sıra birbirine benzemiyor.
+- The market is also a **junction**: the pit fight and hiring staff open from here.
+- The stock is a small **badge** above the item (`x10`). The price is **not written** on the
+  button — it appears in the preview strip above.
+- The buy cells have icons, the sell cells do not; the two rows do not resemble each other.
 
-## 6. Legate / Magistrate paneli
+## 6. The Legate / Magistrate panel
 
 ```
 ┌───────────────────────────────────────┐
@@ -176,120 +180,125 @@ onay kutusu** ve `Close`.
 │ Bribery: [2 ▲▼]        [ Send Wine ]   │
 │ [ Suggest Gladiator Patronage ]        │
 │ [ Purchase Gladiators ]                │
-│ [ Arrange Exhibition Match ]  (kapalı) │
-│ [ Sell Secret <Magistrate> ]  (kapalı) │
-│ [ Blackmail <Legate Secret> ] (kapalı) │
+│ [ Arrange Exhibition Match ]  (disabled)│
+│ [ Sell Secret <Magistrate> ]  (disabled)│
+│ [ Blackmail <Legate Secret> ] (disabled)│
 │                              [ Close ] │
 └───────────────────────────────────────┘
 ```
 
-- Başlık **rolün değil kişinin adı** — personel panelleri "X Info" derken NPC paneli
-  kişiselleşiyor.
-- **Temperament çubuğu gladyatör panelindekiyle aynı widget.** Yani "moral" ve "ilişki"
-  oyunda tek bir kavram olarak gösteriliyor. Bu, arayüzün en zarif kararı.
-- Sayaç + düğme ikilisi (`Bribery: 2 ▲▼` + `Send Wine`) oyunun en anlaşılır kontrolü.
-- Üç seçenek kapalı ve **hiçbiri neden kapalı olduğunu söylemiyor**.
+- The title is **the person's name, not the role's** — where the staff panels say "X Info", the
+  NPC panel becomes personal.
+- **The Temperament bar is the same widget as in the gladiator panel.** So "morale" and
+  "relationship" are shown as a single concept in the game. This is the interface's most elegant
+  decision.
+- The counter + button pair (`Bribery: 2 ▲▼` + `Send Wine`) is the game's most understandable
+  control.
+- Three options are disabled and **none of them says why**.
 
-## 7. Dövüş sözleşmesi
+## 7. The battle contract
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ Arena Battle   Host: The Emperor        Game Type: Championship       │
 │ Victory Reward: 131● 166🍎 155◆ 22🍯 2 Slaves   "A battle to the      │
-│ Participation Cost: 11● 2🍎 1◆ 6 gün             death against Ancus" │
+│ Participation Cost: 11● 2🍎 1◆ 6 days            death against Ancus" │
 │ Surrender Allowed: No                   Obstacles: Tigers             │
 │                                                                        │
 │ Pick Your Gladiators                    Opponent Gladiators           │
 │ (Mind Control Not Researched)           ┌──────────────┐              │
-│ ┌────────────────────┐        vs        │ portre  AI   │              │
-│ │  (seçim kutusu)     │                  │ Ancus...     │              │
-│ └────────────────────┘                  │ [can barı]   │              │
+│ ┌────────────────────┐        vs        │ portrait AI  │              │
+│ │  (the pick box)     │                  │ Ancus...     │              │
+│ └────────────────────┘                  │ [health bar] │              │
 │ [Pick Gladiators]  Selected/MAX: 0/3                                  │
 │                        [Reject Terms]        [Accept Terms]           │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- Simetrik: solda **senin maliyetin**, sağda **rakip ve şartlar**, ortada "vs".
-- Oyunun **en ikonlu** ekranı: ödül ve maliyet satırları ikon+sayı, çünkü bu satırlar sık
-  tekrar ediyor.
-- `Selected/MAX: 0/3` canlı sayaç ve kimse seçilmeden kapalı duran `Accept Terms` —
-  oyunun en temiz kapı mantığı.
-- `(Mind Control Not Researched)` parantezi: kilit **kararın önünde**, ama nereden
-  açılacağı yazmıyor.
+- Symmetrical: **your cost** on the left, **the opponent and the terms** on the right, "vs" in
+  the middle.
+- The game's **most icon-heavy** screen: the reward and cost lines are icon+number, because those
+  lines repeat often.
+- The live `Selected/MAX: 0/3` counter and the `Accept Terms` that stays disabled until someone
+  is selected — the game's cleanest gating logic.
+- The `(Mind Control Not Researched)` parenthesis: the lock is **in front of the decision**, but
+  where it unlocks is not written.
 
-## 8. Dövüş ekranı
+## 8. The battle screen
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                            [Tullus 141/141][Vettius 24/145]   │
 │                                              2:39             │
-│         toz + kan parçacıkları; savaşçılar bulutun içinde    │
+│         dust + blood particles; the fighters inside the cloud │
 │                                                                │
-│   ekranın alt %40'ı: kalabalık                                │
+│   the bottom 40% of the screen: the crowd                     │
 │                                        [Ancus 106/550]        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-- Üstte senin savaşçıların (portre + can barı + **sayı**), altında **geri sayan süre**;
-  sağ altta rakip.
-- Yetenek tuşu, bekleme süresi, komut çubuğu **yok**. İzleniyor.
-- **Okunabilirlik zayıf:** savaşçılar toz efektinin içinde kayboluyor; kimin kazandığı
-  ancak köşedeki barlardan anlaşılıyor. Arena "bilgi" değil "atmosfer" veriyor.
+- Your fighters at the top (a portrait + a health bar + **a number**), with a **countdown timer**
+  below; the opponent at the bottom right.
+- There is **no** ability key, cooldown or command bar. It is watched.
+- **Readability is poor:** the fighters get lost inside the dust effect; who is winning can only
+  be told from the bars in the corner. The arena gives "atmosphere", not "information".
 
-## 9. Zafer ekranı ve kartlar
+## 9. The victory screen and the cards
 
-- **VICTORY** başlığı; altında her savaşçı için **"AI Training MAX"** kartı ve dövüşten
-  kazanılan eğitim (`Agility +13 · Weapon +12 · Strength +8 · Defense +4`).
-- Ödüller ikon+sayı olarak sıralanıyor; **köleler portre olarak**, kartlar kart olarak,
-  ve ayrı bir kalem: **`73` Crowd Favour**.
-- **Kart eli** ekranın altında duruyor: krem/parşömen, altın köşe süslü kartlar — oyunun
-  geri kalanının bordo panellerinden **bilerek ayrılan** tek görsel dil. Kartta **maliyet
-  yok** (bunlar satın alınmıyor, veriliyor).
-- Kart **sürüklenip** sol üstteki küçük portre yuvalarına (Doctore, Educator, gladyatör)
-  bırakılıyor. Altta **SORT** ve **DISCARD**.
-- Kusur: sürükleme hedefleri çok küçük ve hareketli kalabalığın üstünde duruyor.
+- A **VICTORY** header; below it, for each fighter an **"AI Training MAX"** card and the training
+  earned from the fight (`Agility +13 · Weapon +12 · Strength +8 · Defense +4`).
+- The rewards are listed as icon+number; **slaves as portraits**, cards as cards, and a separate
+  item: **`73` Crowd Favour**.
+- **The card hand** sits at the bottom of the screen: cream/parchment cards with gilded corners —
+  the only visual language **deliberately separated** from the maroon panels of the rest of the
+  game. There is **no cost** on a card (these are not bought, they are given).
+- A card is **dragged** and dropped onto the small portrait slots at the top left (Doctore,
+  Educator, gladiator). Below are **SORT** and **DISCARD**.
+- The flaw: the drag targets are very small and sit on top of the moving crowd.
 
-## 10. Tören ekranları
+## 10. The ceremonial screens
 
-- `PREPARE FOR BATTLE` ve `SELECT GLADIATOR CLASS` — **tek** yerde büyük, gösterişli yazı
-  tipi kullanılıyor. Geri kalan her yer aynı küçük piksel yazı tipi. Gösteri yazısı
-  **kıtlıkla** harcanıyor; bu yüzden işe yarıyor.
-- Patron bildirimi tuşsuz: sadece metin ve "Press any key".
-
----
-
-## Bizim dört ekranımız için çıkarımlar
-
-Referansın işe yarayan kararları:
-
-1. **Tek birim kartı, her yerde aynı.** Portre + ad + can barı; avluda, dövüşte,
-   sözleşmede. Bizde savaşçı üç ekranda üç farklı satır biçiminde yazılıyor — birleştirmeye
-   değer.
-2. **Aynı widget iki kavram için.** Temperament çubuğu hem gladyatörün moralini hem
-   NPC ilişkisini gösteriyor. Bizde onur ve (gelecekteki) chat ilişkisi aynı görsel dili
-   paylaşabilir.
-3. **Kararın maliyeti kararın yanında.** Yükseltme ekranı yükseltmenin **ve** düşürmenin
-   fiyatını aynı anda gösteriyor; sözleşme ekranı ödülü ve gün bedelini yan yana koyuyor.
-   Bizim gün ekranımız ödülü yazıyor ama **bedeli** yazmıyor.
-4. **Canlı sayaç + kapalı onay tuşu** (`Selected/MAX: 2/3`, kapalı `Accept Terms`). Bizde
-   zaten var (`PartyVerdict`), ama sayacı ekranda göstermiyoruz.
-5. **Kadroda panel içinden gezinme** (`<` `>`). Bizde her savaşçı için listeye dönmek
-   gerekiyor.
-
-Kopyalanmayacaklar:
-
-1. **İkonsuz, birbirinin aynı paneller.** Dört ekranımız zaten birbirine benziyor; referans
-   bunun sonunu gösteriyor.
-2. **Tehlikeli eylemin sıradan görünmesi.** `Put to Death` ile `Close` aynı düğme. Bizde
-   seppuku ve azat benzeri kararlar gelirse ayrışmalı.
-3. **Sebepsiz kapalı seçenek.** Kapalı tuş neden kapalı olduğunu söylemeli — bizim
-   `RefusalText` bunu doğru yapıyor, korunmalı.
-4. **Çakışan ipucu ve maliyet rozetleri.**
-5. **Eğilimi olmayan kaynak göstergesi.** Bizim gün ekranı da bugün sadece stok yazıyor;
-   "günlük tüketim" satırı eklenmeli.
-6. **Bilgi vermeyen dövüş görüntüsü.** Bizim arena da izleniyor; toz altında kaybolan
-   dövüş yerine kimin kazandığı okunabilir kalmalı.
+- `PREPARE FOR BATTLE` and `SELECT GLADIATOR CLASS` — the **only** place a large, ornate font is
+  used. Everywhere else uses the same small pixel font. The display font is spent **sparingly**;
+  that is why it works.
+- The patron notification has no button: only text and "Press any key".
 
 ---
 
-*Kaynak kareler: `scratchpad/domina-ref/frames` ve `.../ui` (oturumluk; repoya girmez).*
+## Conclusions for our four screens
+
+The reference's decisions that work:
+
+1. **One unit card, the same everywhere.** A portrait + a name + a health bar; in the courtyard,
+   in the fight, in the contract. In our game a warrior is written as three different row formats
+   on three screens — worth unifying.
+2. **The same widget for two concepts.** The Temperament bar shows both a gladiator's morale and
+   an NPC relationship. In our game, honour and the (future) chat relationship could share the
+   same visual language.
+3. **The decision's cost next to the decision.** The upgrade screen shows the price of the
+   upgrade **and** of the downgrade at once; the contract screen puts the reward and the day cost
+   side by side. Our day screen writes the reward but not **the cost**.
+4. **A live counter + a disabled confirm button** (`Selected/MAX: 2/3`, a disabled
+   `Accept Terms`). We already have this (`PartyVerdict`), but we do not show the counter on
+   screen.
+5. **Browsing the roster from inside the panel** (`<` `>`). In our game you have to go back to
+   the list for each warrior.
+
+What will not be copied:
+
+1. **Icon-less panels that all look the same.** Our four screens already resemble each other; the
+   reference shows where that ends.
+2. **A dangerous action looking ordinary.** `Put to Death` and `Close` are the same button. If
+   decisions like seppuku and manumission arrive in our game, they must be set apart.
+3. **An option disabled without a reason.** A disabled button should say why it is disabled — our
+   `RefusalText` does this correctly and should be kept.
+4. **Overlapping tooltips and cost badges.**
+5. **A resource indicator with no trend.** Our day screen today also writes only the stock; a
+   "daily consumption" line should be added.
+6. **A fight view that gives no information.** Our arena is watched too; instead of a fight lost
+   under dust, who is winning must stay readable.
+
+---
+
+*The source frames: `scratchpad/domina-ref/frames` and `.../ui` (session-scoped; they do not go
+into the repo).*

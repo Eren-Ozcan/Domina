@@ -1,99 +1,99 @@
-﻿using Domina.Core.Model;
+using Domina.Core.Model;
 
 namespace Domina.Core.Combat;
 
-/// <summary>Bir savaşçının dövüş sırasındaki geçici durumu.</summary>
+/// <summary>A warrior's temporary state during a fight.</summary>
 public enum CombatState
 {
-    /// <summary>Mesafe alıyor / bir sonraki saldırıyı bekliyor. Kesilebilir.</summary>
+    /// <summary>Taking distance / waiting for the next attack. Interruptible.</summary>
     Idle,
 
-    /// <summary>Saldırıya kilitli. <b>Kesilemez</b> — kaçış komutu buffer'lanır.</summary>
+    /// <summary>Locked into an attack. <b>Not interruptible</b> — a flee command is buffered.</summary>
     AttackWindup,
 
-    /// <summary>Saldırı sonrası toparlanma. Kesilebilir.</summary>
+    /// <summary>Recovery after an attack. Interruptible.</summary>
     AttackRecovery,
 
-    /// <summary>Fırlatma hamlesine kilitli. <b>Kesilemez</b>, tıpkı yakın dövüş vuruşu gibi.</summary>
+    /// <summary>Locked into a throwing move. <b>Not interruptible</b>, just like a melee strike.</summary>
     ThrowWindup,
 
-    /// <summary>Fırlatma sonrası toparlanma. Kesilebilir.</summary>
+    /// <summary>Recovery after a throw. Interruptible.</summary>
     ThrowRecovery,
 
     /// <summary>
-    /// Hücum öncesi birikme: savaşçı yerinde durup güç toplar ve <b>yediği ilk isabetle
-    /// hücum dağılır</b>. Savunması normal oranıyla çalışmaya devam eder.
+    /// The windup before a charge: the warrior stands in place gathering force and <b>the first hit
+    /// he takes scatters the charge</b>. His defence keeps working at its normal rate.
     /// </summary>
     /// <remarks>
-    /// Hücumun bedeli burada ödenir — savunmayı kapatarak değil, <b>taahhüdü açıkta
-    /// bırakarak</b>: savaşçı yerinden kıpırdamaz, ve yediği tek bir isabet hamleyi
-    /// harcatır. Kaçınma hakkı elinden alınmaz; kaçınamadığı darbe hücumunu götürür.
+    /// The charge's price is paid here — not by closing defence but by <b>leaving the commitment
+    /// exposed</b>: the warrior does not move, and a single hit he takes spends the move. His right
+    /// to evade is not taken away; the blow he cannot evade takes his charge.
     /// </remarks>
     ChargeWindup,
 
     /// <summary>
-    /// Hedefe hücum ediyor: hızlanmış, taahhütlü. <b>Kesilemez</b> — ama savunması
-    /// normal oranıyla sürer.
+    /// Charging the target: accelerated, committed. <b>Not interruptible</b> — but his defence
+    /// continues at its normal rate.
     /// </summary>
     Charging,
 
     /// <summary>
-    /// Blok duruşunda: silahını gelen darbenin önüne koymuş, kendisi vurmuyor.
+    /// In a block stance: his weapon is placed in front of the incoming blow, he is not striking.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kaçınmadan ayrı bir eksendir. Kaçınma darbeyi <b>ıskalatır</b> ve savaşçıyı olduğu
-    /// yerde bırakır; blok darbeyi <b>karşılar</b> — hasar düşer, uzuv kopmaz, ama darbe
-    /// gelmiştir. Bedeli saldırı döngüsüdür: blokta geçen süre vurulmayan vuruştur.
+    /// It is a separate axis from evasion. Evasion makes the blow <b>miss</b> and leaves the warrior
+    /// where he was; a block <b>meets</b> the blow — damage drops, no limb comes off, but the blow
+    /// has landed. Its price is the attack cycle: time spent blocking is a strike not made.
     /// </para>
     /// <para>
-    /// Künt silah bloğun içinden geçer: sersemletme payı blokta da işler
-    /// (<see cref="CombatTuning.BlockStunShare"/>). Kalkan yokken künt sınıfın
-    /// dördüncü kazancı budur — duruş çelikten korur, sarsıntıdan korumaz.
+    /// A blunt weapon goes through the block: the stun share works during a block too
+    /// (<see cref="CombatTuning.BlockStunShare"/>). With no shield, this is the blunt class's fourth
+    /// gain — the stance protects against steel, not against concussion.
     /// </para>
     /// <para>
-    /// Kaçış komutu bu durumu <b>anında</b> keser (docs/GDD.md §5 kesme tablosu).
+    /// A flee command interrupts this state <b>immediately</b> (docs/GDD.md §5 interruption table).
     /// </para>
     /// </remarks>
     Blocking,
 
     /// <summary>
-    /// Ağır bir darbeyle sersemledi: yürüyemez, vuramaz, <b>kaçınamaz</b>.
+    /// Stunned by a heavy blow: he cannot walk, cannot strike, <b>cannot evade</b>.
     /// </summary>
     /// <remarks>
-    /// Künt silahın takasının diğer yarısı (docs/GDD.md §7). Kesilemez ama kendi süresi
-    /// bitince savaşçı normal karar döngüsüne döner; buffer'lanmış kaçış komutu da
-    /// orada işlenir — sersemletme komutu <b>yutmaz</b>, geciktirir.
+    /// The other half of the blunt weapon's trade (docs/GDD.md §7). It is not interruptible, but when
+    /// its duration ends the warrior returns to the normal decision loop; a buffered flee command is
+    /// processed there too — a stun does not <b>swallow</b> the command, it delays it.
     /// </remarks>
     Stunned,
 
     /// <summary>
-    /// Silahı yakalandı: kilitli kaldığı süre boyunca yürüyemez, vuramaz, <b>kaçınamaz</b>.
+    /// His weapon was caught: for as long as he is bound he cannot walk, strike or <b>evade</b>.
     /// </summary>
     /// <remarks>
-    /// Sersemletmeden ayrı bir durumdur, çünkü sebebi de görüntüsü de ayrıdır: sersemleyen
-    /// savaşçı kendi ağırlığıyla sendeler, silahı yakalanan savaşçı <b>karşısındakine
-    /// bağlı</b> durur. Tek durumda birleştirilseydi ne ekranda ayrışabilirlerdi ne de
-    /// jitte'nin karşılığı ölçümde kendi sayacını taşıyabilirdi.
+    /// It is a separate state from a stun, because both its cause and its look are separate: a stunned
+    /// warrior staggers under his own weight, a warrior whose weapon is caught stands <b>tied to the
+    /// other man</b>. Merged into one state they could neither be told apart on screen nor could the
+    /// jitte's return carry its own counter in measurement.
     /// </remarks>
     WeaponBound,
 
-    /// <summary>Arenadan çıkıyor. Kaçınamaz, bloklayamaz.</summary>
+    /// <summary>Leaving the arena. Cannot evade, cannot block.</summary>
     Retreating,
 
-    /// <summary>Sağ olarak arenadan çıktı.</summary>
+    /// <summary>Left the arena alive.</summary>
     Escaped,
 
-    /// <summary>Öldü.</summary>
+    /// <summary>Dead.</summary>
     Dead,
 }
 
 /// <summary>
-/// Dövüşe katılan bir savaşçının çalışma zamanı hali.
+/// The runtime state of a warrior taking part in a fight.
 /// </summary>
 /// <remarks>
-/// <see cref="Warrior"/> kalıcı hali tutar; burası yalnızca <b>bu dövüşe</b> ait
-/// geçici durumdur. Dövüş bitince kalıcı sonuçlar (ölüm, sakatlık) savaşçıya işlenir.
+/// <see cref="Warrior"/> holds the persistent state; this is only the temporary state of <b>this
+/// fight</b>. When the fight ends, the persistent outcomes (death, maiming) are written to the warrior.
 /// </remarks>
 internal sealed class Combatant(Warrior warrior, int team)
 {
@@ -103,37 +103,37 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public WarriorId Id => Warrior.Id;
 
-    /// <summary>Bu dövüşte dağılan zırh parçaları.</summary>
+    /// <summary>The armour pieces destroyed in this fight.</summary>
     /// <remarks>
-    /// Dağılan parça o bölgeyi <b>çıplak</b> bırakır: hasar azaltımı, kopma direnci ve
-    /// sertlik birden gider — yani zırhı biten savaşçı hem daha çok hasar yer hem uzuv
-    /// kaybetmeye başlar hem de vurduğu düşmanın silahını artık düşürmez.
+    /// A destroyed piece leaves that region <b>bare</b>: damage reduction, dismemberment resistance
+    /// and hardness all go at once — so a warrior whose armour is gone takes more damage, starts
+    /// losing limbs, and no longer knocks the weapon out of the enemy he strikes.
     /// </remarks>
     public HitLocationSet DestroyedArmor { get; private set; }
 
-    /// <summary>Yuvaların kalan dayanıklılığı; ilk yıpranmada kurulur.</summary>
+    /// <summary>The slots' remaining durability; built on the first wear.</summary>
     /// <remarks>
-    /// Havuz <b>kalıcı</b> yıpranmanın üstüne kurulur: savaşçı dövüşe geçmiş seferlerden
-    /// kalan zırhıyla girer (<see cref="Model.Warrior.ArmorWear"/>).
+    /// The pool is built on top of <b>permanent</b> wear: the warrior enters the fight with the armour
+    /// left over from past expeditions (<see cref="Model.Warrior.ArmorWear"/>).
     /// </remarks>
     private double[]? _durability;
 
-    /// <summary>Bu dövüşte kuşamın emdiği hasar — yuva yuva.</summary>
+    /// <summary>The damage the armour absorbed in this fight — slot by slot.</summary>
     /// <remarks>
-    /// Dojo katmanı bunu savaşçının kalıcı yıpranmasına ekler; çekirdek kalıcı hale
-    /// dokunmaz.
+    /// The dojo layer adds this to the warrior's permanent wear; the core does not touch persistent
+    /// state.
     /// </remarks>
     public ArmorWearSet ArmorWear { get; private set; }
 
-    /// <summary>Bu bölgeyi <b>şu an</b> örten parça.</summary>
+    /// <summary>The piece covering this region <b>right now</b>.</summary>
     /// <remarks>
-    /// Dövüşün tamamı bunu okur, <c>Warrior.Armor.At</c>'ı değil — tıpkı silahta olduğu
-    /// gibi: dağılan parça ekranda gidip mekanikte kalamaz.
+    /// The whole fight reads this, not <c>Warrior.Armor.At</c> — just as with the weapon: a destroyed
+    /// piece cannot be gone on screen and still there in the mechanics.
     /// </remarks>
     public ArmorPiece ArmorAt(HitLocation location) =>
         DestroyedArmor.Has(location) ? ArmorPiece.Bare : Warrior.Armor.At(location);
 
-    /// <summary>Üstünde kalan kuşamın ağırlığı — dağılan parça artık yavaşlatmaz.</summary>
+    /// <summary>The weight of the armour still on him — a destroyed piece no longer slows him.</summary>
     public double ArmorWeight
     {
         get
@@ -149,12 +149,12 @@ internal sealed class Combatant(Warrior warrior, int team)
     }
 
     /// <summary>
-    /// Bir parçanın emdiği hasarı dayanıklılığından düşer.
+    /// Subtracts the damage a piece absorbed from its durability.
     /// </summary>
-    /// <returns>Parça bu darbede dağıldıysa true.</returns>
+    /// <returns>True if the piece broke on this blow.</returns>
     /// <remarks>
-    /// Havuz <b>emilen</b> hasardan düşer, gelenden değil: parçayı yıpratan şey
-    /// durdurduğu darbedir (docs/GDD.md §7).
+    /// The pool is reduced by the <b>absorbed</b> damage, not the incoming damage: what wears a piece
+    /// is the blow it stops (docs/GDD.md §7).
     /// </remarks>
     public bool WearArmor(HitLocation location, double absorbed, double scale)
     {
@@ -195,48 +195,48 @@ internal sealed class Combatant(Warrior warrior, int team)
         return pools;
     }
 
-    /// <summary>Silahı bu dövüşte elinden düştü mü?</summary>
+    /// <summary>Did his weapon fall out of his hand in this fight?</summary>
     /// <remarks>
-    /// Kayıp <b>dövüşe</b> aittir: <see cref="Model.Warrior"/> kalıcı hali tutar ve dövüş
-    /// ona dokunmaz (toplu simülasyon aynı kadroyu on binlerce kez koşturur). Düşen silah
-    /// dövüş bitince savaşçıya geri döner; bedel kalan dövüştür
+    /// The loss belongs to <b>the fight</b>: <see cref="Model.Warrior"/> holds the persistent state and
+    /// the fight does not touch it (batch simulation runs the same roster tens of thousands of times).
+    /// A dropped weapon returns to the warrior when the fight ends; the price is the rest of the fight
     /// (<see cref="WeaponDropped"/>).
     /// </remarks>
     public bool Disarmed { get; set; }
 
     /// <summary>
-    /// Şu an elindeki silah. Düştüyse yumruk.
+    /// The weapon in his hand right now. Fists if it was dropped.
     /// </summary>
     /// <remarks>
-    /// Dövüşün tamamı bunu okur, <c>Warrior.UsableWeapon</c>'ı değil: menzil, hız, hasar,
-    /// yakalanabilirlik — hepsi silah elden çıkınca değişir. Tek bir yerde bile kalıcı
-    /// silah okunsaydı düşen silah ekranda yerde, mekanikte elde kalırdı.
+    /// The whole fight reads this, not <c>Warrior.UsableWeapon</c>: reach, speed, damage,
+    /// catchability — all change when the weapon leaves the hand. If even one place read the
+    /// persistent weapon, a dropped weapon would be on the ground on screen and in the hand in the mechanics.
     /// </remarks>
     public Weapon Weapon => Disarmed ? _fists : HeldWeapon ?? Warrior.UsableWeapon;
 
-    /// <summary>Tek bir yumruk örneği — dövüş döngüsü bunu tick başına defalarca okur.</summary>
+    /// <summary>A single fists instance — the combat loop reads this many times per tick.</summary>
     /// <remarks>
-    /// Her okumada yeni bir kayıt üretmek dövüş başına yüz kilobayta yakın ayırma demekti
-    /// (<c>ThroughputTests</c> yakaladı); silah değişmeyen bir değer olduğu için tek örnek
-    /// yeter.
+    /// Producing a new record on every read meant close to a hundred kilobytes of allocation per
+    /// fight (<c>ThroughputTests</c> caught it); since the weapon is an unchanging value, one instance
+    /// is enough.
     /// </remarks>
     private static readonly Weapon _fists = Model.Weapon.Fists();
 
     /// <summary>
-    /// Yerden alınmış silah. <c>null</c> ise savaşçı kendi silahını taşıyor.
+    /// A weapon picked up from the ground. <c>null</c> means the warrior carries his own.
     /// </summary>
     /// <remarks>
-    /// Yerden alınan silah <b>düşmanın</b> silahı da olabilir: arenada duran namlunun
-    /// kimin olduğu sorulmaz. Kalıcı hale yazılmaz — dövüş bitince herkes kendi
-    /// kuşamına döner.
+    /// A weapon picked up may well be <b>the enemy's</b>: nobody asks whose the blade lying in the
+    /// arena is. It is not written to persistent state — when the fight ends everyone returns to his
+    /// own kit.
     /// </remarks>
     public Weapon? HeldWeapon { get; set; }
 
-    /// <summary>Eli boş mu — yani yerdeki bir silaha yürür mü?</summary>
+    /// <summary>Is he empty-handed — that is, will he walk to a weapon on the ground?</summary>
     /// <remarks>
-    /// Ölçü silahın <b>yumruk olması</b>, "düşürdü mü" değil: kolunu kaybettiği için çift
-    /// el silahını kullanamayan savaşçı da eli boştur ve yerdeki tek el silahı alabilir.
-    /// Elinde silah olan ne alır ne arar (docs/GDD.md §7).
+    /// The measure is the weapon <b>being fists</b>, not "did he drop it": a warrior who cannot use his
+    /// two-handed weapon because he lost an arm is empty-handed too and can pick up a one-handed weapon
+    /// from the ground. A warrior with a weapon in hand neither picks up nor searches (docs/GDD.md §7).
     /// </remarks>
     public bool Unarmed => Weapon == _fists;
 
@@ -246,35 +246,35 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public CombatState State { get; set; } = CombatState.Idle;
 
-    /// <summary>Mevcut durumun bitmesine kalan süre.</summary>
+    /// <summary>The time left until the current state ends.</summary>
     public double StateTimer { get; set; }
 
     /// <summary>
-    /// Şu an vurmaya çalıştığı düşman. Ölene ya da kaçana kadar korunur
-    /// (bkz. <c>Battle.FindTarget</c>).
+    /// The enemy he is currently trying to strike. Kept until that enemy dies or flees
+    /// (see <c>Battle.FindTarget</c>).
     /// </summary>
     public Combatant? Target { get; set; }
 
-    /// <summary>Arena düzlemindeki yeri.</summary>
+    /// <summary>His place on the arena plane.</summary>
     public ArenaPoint Position { get; set; }
 
     /// <summary>
-    /// Baktığı yön: +1 sağa, -1 sola. Arkadan saldırı bunun üzerinden belirlenir.
+    /// The direction he faces: +1 right, -1 left. An attack from behind is decided from this.
     /// </summary>
     public int Facing { get; set; } = 1;
 
-    /// <summary>Bu tick'te ne kadar yol aldı — görselleştirme yürüme döngüsünü buradan sürer.</summary>
+    /// <summary>How far he travelled this tick — the visualisation drives the walk cycle from it.</summary>
     public double SpeedThisTick { get; set; }
 
-    /// <summary>Mevcut duruma girildiğindeki toplam süre.</summary>
+    /// <summary>The total duration set when the current state was entered.</summary>
     /// <remarks>
-    /// Görselleştirme, animasyonu durumun neresinde olunduğuna göre sürer; bunun için
-    /// kalan süre tek başına yetmez, toplam süre de gerekir
-    /// (bkz. <see cref="CombatantSnapshot.StateProgress"/>).
+    /// The visualisation drives the animation by where in the state we are; the time left is not enough
+    /// for that on its own, the total duration is needed too
+    /// (see <see cref="CombatantSnapshot.StateProgress"/>).
     /// </remarks>
     public double StateDuration { get; private set; }
 
-    /// <summary>Yeni bir duruma geçer ve sayaçları birlikte kurar.</summary>
+    /// <summary>Enters a new state and sets the timers along with it.</summary>
     public void BeginState(CombatState state, double duration)
     {
         State = state;
@@ -282,49 +282,49 @@ internal sealed class Combatant(Warrior warrior, int team)
         StateDuration = duration;
     }
 
-    /// <summary>Durumun tamamlanma oranı (0-1).</summary>
+    /// <summary>How far the state has progressed (0-1).</summary>
     public double StateProgress =>
         StateDuration <= 0 ? 1 : Math.Clamp(1 - (StateTimer / StateDuration), 0, 1);
 
-    /// <summary>Oyuncu "çek" dedi mi? Buffer'lanmış olabilir.</summary>
+    /// <summary>Did the player say "pull out"? It may be buffered.</summary>
     public bool RetreatRequested { get; set; }
 
     /// <summary>
-    /// Ağır darbede hayatta kalmayı sağlayan koşul: oyuncu müdahale etmiş mi?
-    /// Komut verilmişse (henüz kaçış başlamamış olsa bile) sayılır — tuşa basmak
-    /// "zamanında müdahale" demektir (bkz. docs/GDD.md §7).
+    /// The condition that allows surviving a heavy blow: did the player intervene? It counts if the
+    /// command was given (even if the escape has not started yet) — pressing the key means
+    /// "intervening in time" (see docs/GDD.md §7).
     /// </summary>
     public bool PlayerIntervened => RetreatRequested || State == CombatState.Retreating;
 
-    /// <summary>Öldüyse ölümün sebebi.</summary>
+    /// <summary>The cause of death, if he died.</summary>
     /// <remarks>
-    /// Olay akışı sebebi zaten taşıyor, ama toplu simülasyon olayları biriktirmez
-    /// (<c>BattleSetup.CollectEvents</c>). Zehirle ölüm ancak burada sayılabilir.
+    /// The event stream already carries the cause, but batch simulation does not collect events
+    /// (<c>BattleSetup.CollectEvents</c>). Death by poison can only be counted here.
     /// </remarks>
     public DeathCause? DeathCause { get; set; }
 
-    /// <summary>Hâlâ dövüşe katılıyor mu?</summary>
+    /// <summary>Is he still taking part in the fight?</summary>
     public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
 
     /// <summary>
-    /// Kaçınma/blok zarı atılabilir mi?
+    /// Can an evasion/block die be rolled?
     /// </summary>
     /// <remarks>
-    /// <b>Hücum savunmayı kapatmaz.</b> Koşan ya da güç toplayan savaşçı normal oranıyla
-    /// kaçınır (docs/GDD.md §4). Sırtını dönüp kaçan dönmez — savunmasızlık kaçışa özgüdür.
+    /// <b>A charge does not close defence.</b> A warrior who is running or gathering force evades at
+    /// his normal rate (docs/GDD.md §4). One who turns his back and flees does not — defencelessness belongs to escape.
     /// </remarks>
     public bool CanDefend => State is not (
         CombatState.Retreating or CombatState.Stunned or CombatState.WeaponBound);
 
-    /// <summary>Kaçış komutu bu durumda anında işlenebilir mi?</summary>
+    /// <summary>Can a flee command be processed immediately in this state?</summary>
     /// <remarks>
-    /// <b>Hücum kaçış komutuyla kesilir.</b> Hücum kendi kararlarına karşı taahhütlüdür —
-    /// savaşçı ondan vazgeçip başka bir hamle seçemez — ama oyuncunun "çek" komutu ayrı
-    /// bir eksendir. Kesilemez olsaydı komut anında koşmakta olan savaşçı hücumu
-    /// bitirmek, düşman hattına varmak ve oradan kaçmaya başlamak zorunda kalırdı;
-    /// ölçüldü, bu <b>ilk temasta basmayı geç basmaktan ölümcül</b> yapıp docs/GDD.md
-    /// §5'in merdivenini ters çeviriyordu. Kesilse bile hücumun bedeli ödenmiştir: yol
-    /// boyunca yenen bedava vuruşlar geri gelmez ve hasar çarpanı harcanmaz.
+    /// <b>A charge is interrupted by a flee command.</b> The charge is committed against his own
+    /// decisions — the warrior cannot give it up and choose another move — but the player's "pull out"
+    /// command is a separate axis. Were it not interruptible, a warrior running at the moment of the
+    /// command would have to finish the charge, reach the enemy line and start fleeing from there;
+    /// measured, this made <b>pressing at first contact more lethal than pressing late</b> and inverted
+    /// docs/GDD.md §5's ladder. Even when interrupted, the charge's price is paid: the free hits taken
+    /// along the way do not come back and the damage multiplier is not spent.
     /// </remarks>
     public bool IsCancellable =>
         State is CombatState.Idle
@@ -334,57 +334,57 @@ internal sealed class Combatant(Warrior warrior, int team)
             or CombatState.ChargeWindup
             or CombatState.Blocking;
 
-    // ---- Hücum ----
+    // ---- Charge ----
 
     /// <summary>
-    /// Hücumla varılan ilk vuruş henüz çözülmedi: hasar çarpanı bu vuruşta harcanır.
+    /// The first strike reached by a charge has not resolved yet: the damage multiplier is spent on it.
     /// </summary>
     public bool ChargeBonusPending { get; set; }
 
-    /// <summary>Hücumun hedefe vardığı andaki hızı — varış vuruşunun sertliği buradan çıkar.</summary>
+    /// <summary>The charge's speed at the moment it reaches the target — the arrival blow's force comes from it.</summary>
     public double ChargeImpactSpeed { get; set; }
 
     /// <summary>
-    /// Hedefin karşı vuruşu tuttu: hücum varır ama <b>momentumunu kaybetmiş</b> olarak.
+    /// The target's counter-hit held: the charge arrives but <b>having lost its momentum</b>.
     /// </summary>
     /// <remarks>
-    /// Varış vuruşu yine yapılır, hasar çarpanı kazanılmaz (docs/GDD.md §4). Ayrı bir
-    /// bayrak gerekiyor çünkü karşı vuruş yolda, çarpanın kazanıldığı an ise varışta.
+    /// The arrival blow is still made, the damage multiplier is not earned (docs/GDD.md §4). A separate
+    /// flag is needed because the counter-hit happens on the way, while the multiplier is earned on arrival.
     /// </remarks>
     public bool ChargeMomentumBroken { get; set; }
 
-    /// <summary>Mevcut hücumun başlangıcından bu yana geçen süre.</summary>
+    /// <summary>The time since the current charge started.</summary>
     public double ChargeSeconds { get; set; }
 
     /// <summary>
-    /// Geçen karar adımında ortada hücuma elverişli bir açıklık var mıydı?
+    /// Was there an opening suitable for a charge at the last decision step?
     /// </summary>
     /// <remarks>
-    /// Hücum kararı <b>açıklık doğduğu anda bir kez</b> verilir, açıklık sürdükçe her
-    /// 0.2 saniyede bir yeniden değil (docs/GDD.md §4). Bu bayrak o "doğduğu an"ı
-    /// yakalar. Yoksa hücum sıklığı, savaşçının açıklıkta ne kadar oyalandığına —
-    /// yani <b>ters orantılı olarak kendi hızına</b> — bağlı kalırdı.
+    /// The charge decision is made <b>once, the moment the opening appears</b>, not again every 0.2
+    /// seconds for as long as the opening lasts (docs/GDD.md §4). This flag catches that "moment it
+    /// appeared". Otherwise charge frequency would depend on how long the warrior loitered in the
+    /// opening — that is, <b>inversely on his own speed</b>.
     /// </remarks>
     public bool SawChargeOpening { get; set; }
 
     /// <summary>
-    /// Bu hücum boyunca hangi düşmanlar bedava vuruşunu kullandı.
+    /// Which enemies used their free hit during this charge.
     /// </summary>
     /// <remarks>
-    /// Fırsat saldırısı hücum başına <b>düşman başına bir kez</b>: aksi halde yanından
-    /// geçilen düşman her tick'te vurur ve hücum bir hamle değil bir infaz olurdu.
+    /// An opportunity attack happens <b>once per enemy</b> per charge: otherwise the enemy run past
+    /// would strike on every tick and the charge would be an execution, not a move.
     /// </remarks>
     public HashSet<WarriorId> ChargeOpportunists { get; } = [];
 
-    /// <summary>Hücumun kalktığı hedef.</summary>
+    /// <summary>The target the charge launched at.</summary>
     /// <remarks>
-    /// Hücum <b>bu hedefe</b> taahhütlüdür (docs/GDD.md §4). Genel hedef seçiminden ayrı
-    /// tutulur: hedef ölürse savaşçı koşarken en yakındakine nişan alamaz, hücum boşa
-    /// gider. Aksi halde ıskalama dalı hiç işlemez ve hücum bedelsiz bir hamle olur.
+    /// The charge is committed <b>to this target</b> (docs/GDD.md §4). It is kept separate from general
+    /// target selection: if the target dies, the warrior cannot aim at the nearest one while running,
+    /// and the charge is wasted. Otherwise the miss branch would never fire and the charge would be a free move.
     /// </remarks>
     public WarriorId? ChargeTarget { get; set; }
 
-    /// <summary>Hücum sayaçlarını sıfırlar.</summary>
+    /// <summary>Resets the charge counters.</summary>
     public void ClearCharge()
     {
         ChargeBonusPending = false;
@@ -395,7 +395,7 @@ internal sealed class Combatant(Warrior warrior, int team)
         ChargeOpportunists.Clear();
     }
 
-    /// <summary>Bekleyen hücum bonusunu okur ve harcar.</summary>
+    /// <summary>Reads and spends a pending charge bonus.</summary>
     public bool ConsumeChargeBonus()
     {
         if (!ChargeBonusPending)
@@ -407,39 +407,39 @@ internal sealed class Combatant(Warrior warrior, int team)
         return true;
     }
 
-    // ---- Zehir ----
+    // ---- Poison ----
 
     /// <summary>
-    /// Kanındaki zehrin gücü. 0 = temiz.
+    /// The strength of the poison in his blood. 0 = clean.
     /// </summary>
     /// <remarks>
-    /// Doz <b>birikir</b>, süre yenilenir: ikinci vuruş ilk vuruşun zehrini silmez, üstüne
-    /// koyar (tavanı <c>CombatTuning.PoisonMaxDose</c>). Tek bir "zehirli mi" bayrağı
-    /// olsaydı zehirli silahın sürekli vurmasının hiçbir karşılığı olmazdı.
+    /// The dose <b>accumulates</b>, the timer is refreshed: the second strike does not erase the first
+    /// strike's poison, it adds to it (capped by <c>CombatTuning.PoisonMaxDose</c>). With a single
+    /// "is he poisoned" flag, a poisoned weapon striking repeatedly would count for nothing.
     /// </remarks>
     public double PoisonDose { get; set; }
 
-    /// <summary>Zehrin bitmesine kalan süre.</summary>
+    /// <summary>The time left until the poison runs out.</summary>
     public double PoisonSecondsLeft { get; set; }
 
-    /// <summary>Bir sonraki zehir hasarına kalan süre.</summary>
+    /// <summary>The time left until the next poison damage.</summary>
     /// <remarks>
-    /// Zehir kendi saatiyle işler, simülasyon adımıyla değil — aksi hâlde tick
-    /// çözünürlüğü değişince zehrin gücü de değişirdi.
+    /// Poison runs on its own clock, not on the simulation step — otherwise the poison's strength would
+    /// change whenever the tick resolution changed.
     /// </remarks>
     public double PoisonTickTimer { get; set; }
 
-    /// <summary>Zehri kim verdi — hasarın yazılacağı savaşçı.</summary>
+    /// <summary>Who gave the poison — the warrior the damage is credited to.</summary>
     /// <remarks>
-    /// Son vuran tutulur. Zehir zamana yayıldığı için hasarın sahibi vuruş anında
-    /// kaybolur; kaydedilmezse zehirle öldüren savaşçı hiçbir sayaçta görünmez.
+    /// The last striker is kept. Because poison is spread over time, the owner of the damage is lost at
+    /// the moment of the strike; unrecorded, a warrior who kills with poison appears in no counter.
     /// </remarks>
     public Combatant? PoisonSource { get; set; }
 
-    /// <summary>Zehirli mi?</summary>
+    /// <summary>Is he poisoned?</summary>
     public bool IsPoisoned => PoisonDose > 0 && PoisonSecondsLeft > 0;
 
-    /// <summary>Zehri temizler — dozu, süreyi ve kaynağı birlikte.</summary>
+    /// <summary>Clears the poison — dose, timer and source together.</summary>
     public void ClearPoison()
     {
         PoisonDose = 0;
@@ -448,13 +448,13 @@ internal sealed class Combatant(Warrior warrior, int team)
         PoisonSource = null;
     }
 
-    /// <summary>Bu dövüşte kalan mermi. Kalıcı hale dokunulmaz, sayaç burada tutulur.</summary>
+    /// <summary>The projectiles left in this fight. Persistent state is untouched, the counter is kept here.</summary>
     public int ThrowsLeft { get; set; } = warrior.UsableThrown?.Ammo ?? 0;
 
-    /// <summary>Atacak mermisi var mı?</summary>
+    /// <summary>Does he have a projectile to throw?</summary>
     public bool CanThrow => ThrowsLeft > 0 && Warrior.UsableThrown is not null;
 
-    // ---- Performans sayaçları (onur hesabını ve toplu simülasyonu besler) ----
+    // ---- Performance counters (they feed the honour calculation and batch simulation) ----
 
     public int AttacksMade { get; set; }
 
@@ -464,17 +464,17 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public int DodgesPerformed { get; set; }
 
-    /// <summary>Kaç darbeyi blokla karşıladı.</summary>
+    /// <summary>How many blows he met with a block.</summary>
     public int BlocksPerformed { get; set; }
 
     /// <summary>
-    /// Son karar adımı blok duruşuydu — sıradaki adımda tekrar bloklayamaz.
+    /// The last decision step was a block stance — he cannot block again on the next step.
     /// </summary>
     /// <remarks>
-    /// Blok bir <b>duruş</b>tur, bir kabuk değil. Zar her karar adımında yeniden atılsaydı
-    /// savunması yüksek savaşçı arka arkaya bloklayıp hiç vurmayabilirdi: dövüş kilitlenir,
-    /// ve savunma statı bedelini ödemeden en iyi hamle olurdu. Kural, duruşu bir <b>ritme</b>
-    /// bağlar — karşıla, sonra karşılık ver.
+    /// A block is a <b>stance</b>, not a shell. Were the die rolled again at every decision step, a
+    /// warrior with high defence could block back to back and never strike: the fight would lock up, and
+    /// the defence stat would be the best move without paying its price. The rule binds the stance to a
+    /// <b>rhythm</b> — meet the blow, then answer it.
     /// </remarks>
     public bool JustBlocked { get; set; }
 
@@ -484,76 +484,76 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public bool LostLimb { get; set; }
 
-    /// <summary>Bu dövüşte kaç kez sersemledi.</summary>
+    /// <summary>How many times he was stunned in this fight.</summary>
     public int TimesStunned { get; set; }
 
-    /// <summary>Kaç düşmanı sersemletti — künt silahın karşılığının ölçüldüğü sayaç.</summary>
+    /// <summary>How many enemies he stunned — the counter where the blunt weapon's return is measured.</summary>
     public int StunsInflicted { get; set; }
 
-    /// <summary>Kaç kez gelen silahı yakaladı — jitte/sai'nin karşılığının sayacı.</summary>
+    /// <summary>How many incoming weapons he caught — the counter for the jitte/sai's return.</summary>
     public int CatchesMade { get; set; }
 
-    /// <summary>Kaç kez kendi silahı yakalanıp açıkta kaldı.</summary>
+    /// <summary>How many times his own weapon was caught and left him exposed.</summary>
     public int TimesCaught { get; set; }
 
-    /// <summary>Bu dövüşte kaç kez silahı elinden düştü.</summary>
+    /// <summary>How many times his weapon fell out of his hand in this fight.</summary>
     /// <remarks>
-    /// Dövüş sonundaki <see cref="Disarmed"/> bayrağı yetmez: silahını düşürüp geri alan
-    /// savaşçı orada silahlı görünür, oysa bedeli ödemiştir. Kural ancak olay sayılırsa
-    /// ölçülebilir.
+    /// The <see cref="Disarmed"/> flag at the end of the fight is not enough: a warrior who drops his
+    /// weapon and picks it up again looks armed there, yet he has paid the price. The rule can only be
+    /// measured if the event is counted.
     /// </remarks>
     public int TimesDisarmed { get; set; }
 
-    /// <summary>Kaç kez yerden silah aldı.</summary>
+    /// <summary>How many times he picked a weapon up from the ground.</summary>
     /// <remarks>
-    /// Düşürmenin bedelinin gerçekte ne kadar sürdüğünü söyleyen sayı budur: silahsız
-    /// geçen dövüş mü, yoksa birkaç saniyelik bir yürüyüş mü.
+    /// This is the number that says how long the price of disarming really lasts: a fight spent unarmed,
+    /// or a walk of a few seconds.
     /// </remarks>
     public int WeaponsPickedUp { get; set; }
 
-    /// <summary>Kaç düşmanın silahını düşürdü.</summary>
+    /// <summary>How many enemies' weapons he knocked out.</summary>
     /// <remarks>
-    /// Yakalama aletinin ikinci karşılığı buradan okunur — düşürülen silah ne hasarda ne
-    /// uzuv kaybında görünür.
+    /// The catching implement's second return is read here — a knocked-out weapon shows up in neither
+    /// damage nor limb loss.
     /// </remarks>
     public int DisarmsInflicted { get; set; }
 
-    /// <summary>Kaç kez zehirli bir vuruş yedi.</summary>
+    /// <summary>How many poisoned strikes he took.</summary>
     /// <remarks>
-    /// Zehrin karşılığı tek sayıda okunamaz: kaç kez zehirlendiği silahın <b>temas</b>
-    /// sıklığını, aldığı zehir hasarı ise dozun ne kadar iş yaptığını söyler.
+    /// Poison's return cannot be read from a single number: how often he was poisoned says how often the
+    /// weapon <b>connects</b>, while the poison damage he took says how much work the dose did.
     /// </remarks>
     public int TimesPoisoned { get; set; }
 
-    /// <summary>Kaç düşmanı zehirledi.</summary>
+    /// <summary>How many enemies he poisoned.</summary>
     public int PoisonsInflicted { get; set; }
 
-    /// <summary>Zehirden yediği toplam hasar.</summary>
+    /// <summary>The total damage he took from poison.</summary>
     public double PoisonDamageTaken { get; set; }
 
-    /// <summary>Zehriyle verdiği toplam hasar.</summary>
+    /// <summary>The total damage he dealt with his poison.</summary>
     public double PoisonDamageDealt { get; set; }
 
-    /// <summary>Bu dövüşte kaç kez hücuma kalktı.</summary>
+    /// <summary>How many times he launched a charge in this fight.</summary>
     public int ChargesStarted { get; set; }
 
-    /// <summary>Kaç hücum hedefe vardı — başlayanların kaçının karşılığı alındı.</summary>
+    /// <summary>How many charges reached the target — how many of those started collected their return.</summary>
     public int ChargesConnected { get; set; }
 
-    /// <summary>Hücumları sırasında yediği bedava vuruş sayısı — hücumun ödenen bedeli.</summary>
+    /// <summary>The number of free hits he took during his charges — the charge's paid price.</summary>
     public int ChargeOpportunitiesTaken { get; set; }
 
-    /// <summary>Birikme aşamasında dağılan hücum sayısı.</summary>
+    /// <summary>The number of charges scattered during the windup.</summary>
     public int ChargesBroken { get; set; }
 
-    /// <summary>Hücumların kalkış anlarının toplamı — ortalamayı çıkarmak için.</summary>
+    /// <summary>The sum of the moments the charges launched at — for working out the average.</summary>
     public double ChargeStartSecondsSum { get; set; }
 
-    /// <summary>Bu dövüşte en geç kalkılan hücumun anı.</summary>
+    /// <summary>The moment of the latest charge launched in this fight.</summary>
     /// <remarks>
-    /// Hücumun yalnızca açılış hamlesi mi olduğunu söyleyen sayı budur: dövüş 14 sn
-    /// sürerken en geç kalkış 1 sn'deyse mesafe eşiği dövüşün geri kalanında hiç
-    /// sağlanmıyor demektir.
+    /// This is the number that says whether the charge is only an opening move: if the fight lasts
+    /// 14 s and the latest launch is at 1 s, the distance threshold is never met in the rest of the
+    /// fight.
     /// </remarks>
     public double LastChargeStartSeconds { get; set; }
 }

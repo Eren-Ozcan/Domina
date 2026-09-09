@@ -5,10 +5,10 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Pes etme mekaniği (GDD §5). Buradaki kuralların tamamı aynı amaca hizmet eder:
-/// "çek" tuşuna basmak <b>bedava kurtuluş olmasın</b>. Komut hemen işlemez, kaçış
-/// süresince savunma yoktur ve rakip bedava vuruş kazanır. Bu üçü olmadan doğru
-/// oynanış "her savaşçıyı ilk yara alınca çek" olurdu.
+/// The surrender mechanic (GDD §5). All the rules here serve the same purpose: pressing the "pull out"
+/// key must <b>not be a free rescue</b>. The command does not take effect at once, there is no defence
+/// during the escape, and the opponent earns a free hit. Without those three, the right play would be
+/// "pull every warrior at the first wound".
 /// </summary>
 public class RetreatTests
 {
@@ -22,7 +22,7 @@ public class RetreatTests
         Tuning = TestBuilders.PointBlank,
     };
 
-    /// <summary>Belirli bir duruma girene kadar adımlar.</summary>
+    /// <summary>Steps until a given state is entered.</summary>
     private static bool StepUntil(Battle battle, Func<Battle, bool> predicate, int maxSteps = 400)
     {
         for (int i = 0; i < maxSteps; i++)
@@ -42,21 +42,21 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Tuşu açan ana kadar adımlar: kaçış ancak ilk isabetten sonra mümkün (GDD §5).
+    /// Steps until the moment the key unlocks: escape is only possible after the first hit (GDD §5).
     /// </summary>
     /// <remarks>
-    /// Buradaki testlerin çoğu "komut verildi" anından sonrasını ölçer; savaşın
-    /// başlamasını beklemek onların konusu değil, ön koşulu.
+    /// Most of the tests here measure what happens after the moment the command is given; waiting for
+    /// the fight to start is not their subject but their precondition.
     /// </remarks>
     private static void OpenTheButton(Battle battle) =>
-        Assert.True(StepUntil(battle, b => b.ContactMade), "İlk isabet düşmedi.");
+        Assert.True(StepUntil(battle, b => b.ContactMade), "The first hit did not land.");
 
     /// <summary>
-    /// Savaş başlamadan çekilinmez: kimse dokunmadan tuş kapalıdır (GDD §5).
+    /// No pulling out before the fight starts: the key is closed until someone is touched (GDD §5).
     /// </summary>
     /// <remarks>
-    /// Eşik <b>isabet</b>, hamle değil. Bu, temas öncesi kaçışın eskiden ölçülen
-    /// %35'lik tamamen sağlam dönüş dalını komple kaldırır — sakatlanmaya yeni bir
+    /// The threshold is a <b>hit</b>, not a move. This removes entirely the branch of pre-contact escape
+    /// that used to measure a 35% completely unharmed return — a new
     /// kural eklemeden.
     /// </remarks>
     [Fact]
@@ -74,11 +74,11 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Reddedilen basış sessizce yutulmaz: sayılır ve olay üretir.
+    /// A refused press is not silently swallowed: it is counted and produces an event.
     /// </summary>
     /// <remarks>
-    /// Sayı sunum katmanı içindir — kuralı ilk kez görene öğretmek, ısrarla basana
-    /// cevap vermek için. Metni çekirdek üretmez.
+    /// The number is for the presentation layer — to teach the rule to someone seeing it for the first
+    /// time, and to answer someone who keeps pressing. The core does not produce the text.
     /// </remarks>
     [Fact]
     public void RefusedPressesAreCountedNotSwallowed()
@@ -123,7 +123,7 @@ public class RetreatTests
 
         Assert.True(battle.CommandRetreat());
 
-        // Komut kabul edildi ama vuruş tamamlanmadan kaçış başlamaz.
+        // The command was accepted, but the escape does not start before the strike finishes.
         Assert.Contains(battle.Events, e => e is RetreatBuffered);
         Assert.DoesNotContain(battle.Events, e => e is RetreatStarted);
         Assert.Equal(CombatState.AttackWindup, battle.SnapshotOf(_fighter).State);
@@ -143,10 +143,10 @@ public class RetreatTests
         Assert.True(StepUntil(battle, b => b.SnapshotOf(_fighter).State == CombatState.Retreating));
         Assert.Contains(battle.Events, e => e is RetreatStarted);
 
-        // Buffer'lanan komut önce vuruşu tamamlatır: kaçış, saldırıdan sonra başlar.
+        // The buffered command lets the strike finish first: the escape starts after the attack.
         double buffered = battle.Events.OfType<RetreatBuffered>().First().AtSeconds;
         double started = battle.Events.OfType<RetreatStarted>().First().AtSeconds;
-        Assert.True(started > buffered, "Buffer'lanan kaçış anında başlamamalı.");
+        Assert.True(started > buffered, "A buffered escape must not start immediately.");
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class RetreatTests
     [Fact]
     public void ARetreatingWarriorCannotDodge()
     {
-        // Kaçınma 100 ve zar 0.40: normalde kaçınır (şans 0.45), çekilirken kaçamaz.
+        // Evasion 100 and the die at 0.40: normally he would evade (chance 0.45), while pulling out he cannot.
         var defending = new Battle(Duel(playerEvasion: 100), new FixedRandom(0.40));
         StepUntil(defending, b => b.Events.Any(e => e is AttackDodged));
 
@@ -177,9 +177,9 @@ public class RetreatTests
 
         fleeing.Run();
 
-        // Karşılaştırma kaçış BAŞLADIKTAN sonrasına bakar; öncesi normal dövüştür.
-        // Aynı tick içinde ikisi de görülüyor: duran savaşçı hamleyi kaçınıyor,
-        // kaçmaya başladıktan sonra gelen bedava vuruş kaçınılmadan yiyor.
+        // The comparison looks at what happens AFTER the escape started; before that it is a normal fight.
+        // Both are seen within the same tick: the standing warrior evades the move, and after he starts
+        // fleeing he takes the free hit without evading.
         int left = fleeing.Events.ToList().FindIndex(e => e is RetreatStarted);
         List<BattleEvent> afterLeaving = fleeing.Events.Skip(left).ToList();
 
@@ -203,8 +203,8 @@ public class RetreatTests
         Assert.False(summary.Died);
         Assert.True(summary.HealthRemaining > 0);
 
-        // Sağ kalmak zafer değildir ama bozgun da değildir: dövüş kazanılmadı,
-        // savaşçı hayatta. İkisi ayrı sonuçlar.
+        // Surviving is not victory, but it is not a rout either: the fight was not won and the warrior is
+        // alive. The two are separate outcomes.
         Assert.Equal(BattleOutcome.PlayerWithdrawal, result.Outcome);
         Assert.Contains(battle.Events, e => e is WarriorEscaped);
     }
@@ -236,9 +236,9 @@ public class RetreatTests
             new Battle(Duel(), new SeededRandom(8)).SnapshotOf(new WarriorId(999)));
 
     /// <summary>
-    /// GDD §5'in ana kuralı: komut <b>ekibin tamamını</b> kapsar. Savaşçı bazlı
-    /// olsaydı doğru oynanış "yara alanı çek, kalanla devam et" olurdu — kayıpsız,
-    /// sürekli tekrarlanan bir optimizasyon. Bu test o kapıyı kapalı tutar.
+    /// GDD §5's main rule: the command covers <b>the whole party</b>. Were it per-warrior, the right play
+    /// would be "pull the wounded one, continue with the rest" — a losslessly repeatable optimisation.
+    /// This test keeps that door closed.
     /// </summary>
     [Fact]
     public void TheWholePartyRetreatsTogether()
@@ -265,15 +265,15 @@ public class RetreatTests
 
         BattleResult result = battle.Run();
 
-        // Kimse geride bırakılmaz; sahada dojo adına kimse kalmadı ama kimse de ölmedi.
+        // Nobody is left behind; nobody remains on the field for the dojo, but nobody died either.
         Assert.Equal(3, result.Summaries.Count(s => s.Team == Battle.PlayerTeam && s.Escaped));
         Assert.Equal(BattleOutcome.PlayerWithdrawal, result.Outcome);
     }
 
     /// <summary>
-    /// Tek tuş, üç farklı anda devreye girebilir: kılıcı havada olan savaşçının
-    /// komutu buffer'lanır, boşta olan hemen kaçar. Ekip komutu bu inceliği
-    /// ortadan kaldırmaz.
+    /// A single key can take effect at three different moments: the command of a warrior with his sword
+    /// in the air is buffered, an idle one flees at once. The team command does not remove that
+    /// subtlety.
     /// </summary>
     [Fact]
     public void OnePressResolvesPerWarriorTiming()
@@ -290,7 +290,7 @@ public class RetreatTests
 
         var battle = new Battle(setup, new SeededRandom(21));
 
-        // Biri vuruşa kilitlenene kadar ilerlet; diğeri hâlâ bekliyor olacak.
+        // Advance until one is locked into a strike; the other will still be waiting.
         StepUntil(
             battle,
             b => b.ContactMade
@@ -307,14 +307,14 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Tuşa basmak <b>herkesi</b> ölüm yerine sakatlıkla kurtarır — tek bir savaşçıyı
-    /// değil. Bedeli de herkesin ödemesi bu yüzden şart (bkz. <see cref="HonorTests"/> —
-    /// kaçan savaşçı onur kazanmaz).
+    /// Pressing the key saves <b>everyone</b> with maiming instead of death — not a single warrior. That
+    /// is why everyone must pay the price too (see <see cref="HonorTests"/> — a fleeing warrior earns no
+    /// honour).
     /// </summary>
     /// <remarks>
-    /// Koruma <b>ölümsüzlük değil</b>: kaçan savaşçının peşine yetişen düşman takılabilir
-    /// ve onu sahadan çıkmadan devirebilir. Bu yüzden test "kimse ölmedi" demiyor,
-    /// "öldürücü darbe herkeste uzuv kaybına çevrildi" diyor — asıl kural bu.
+    /// The protection is <b>not immortality</b>: an enemy who catches the fleeing warrior can still fell
+    /// him before he leaves the field. That is why the test does not say "nobody died" but "every lethal
+    /// blow was turned into limb loss" — that is the real rule.
     /// </remarks>
     [Fact]
     public void InterventionProtectsEveryWarriorNotJustOne()
@@ -334,7 +334,7 @@ public class RetreatTests
         battle.CommandRetreat();
         BattleResult result = battle.Run();
 
-        // Vurulan her savaşçı uzvunu kaybetmiş olmalı; kimse "sadece öldü" olmamalı.
+        // Every warrior who was hit must have lost a limb; nobody should have "just died".
         foreach (WarriorBattleSummary s in result.Summaries.Where(s => s.Team == Battle.PlayerTeam))
         {
             if (s.TimesHit > 0)
@@ -349,9 +349,9 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Politika tek bir savaşçının haline bakar ama tuşla aynı kuralı izler: tetiklenen
-    /// komut ekibin tamamını çeker. Aksi hâlde toplu simülasyon oyunda mümkün olmayan
-    /// bir oynanışı ölçer ve denge sayıları yanlış çıkardı.
+    /// The policy looks at a single warrior's state but follows the same rule as the key: the command it
+    /// triggers pulls the whole party. Otherwise batch simulation would measure a way of playing that is
+    /// not possible in the game and the balance numbers would come out wrong.
     /// </summary>
     [Fact]
     public void ThePolicyPullsTheWholePartyAndNeverTheEnemy()
@@ -363,21 +363,21 @@ public class RetreatTests
             ],
             [TestBuilders.Warrior(101, health: 400)])
         {
-            // Yalnızca ilk savaşçının canı eşiğin altına inecek şekilde değil —
-            // eşik 1.0, yani ilk adımda tetikler.
+            // Not so that only the first warrior's health falls below the threshold —
+            // the threshold is 1.0, so it triggers on the first step.
             RetreatPolicy = new RetreatBelowHealth(1.0),
         };
 
         var battle = new Battle(setup, new SeededRandom(10));
 
-        // Politika da tuşla aynı kapıdan geçer: ilk isabete kadar susar. Sessizlik,
-        // temasın düştüğü tick'in sonunda değil ondan ÖNCEKİ her tick'te sınanır:
-        // aynı tick içinde önce vuruş çözülür, sonra sıradaki savaşçının politikası
-        // okunur — yani temas tick'inde komut çoktan kabul edilmiş olabilir.
+        // The policy goes through the same door as the key: it stays silent until the first hit. The
+        // silence is tested not at the end of the tick contact lands on but on every tick BEFORE it:
+        // within the same tick the strike resolves first and the next warrior's policy is read after —
+        // so on the contact tick the command may already have been accepted.
         while (!battle.ContactMade)
         {
             Assert.False(battle.SnapshotOf(new WarriorId(1)).RetreatRequested);
-            Assert.True(battle.Step(), "Dövüş hiç temas olmadan bitti.");
+            Assert.True(battle.Step(), "The fight ended without any contact.");
         }
 
         Assert.True(StepUntil(battle, b => b.SnapshotOf(new WarriorId(1)).RetreatRequested));
@@ -388,9 +388,9 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Görselleştirmenin sözleşmesi: <see cref="CombatantSnapshot.CanCancel"/>, "çek"
-    /// tuşunun anında mı işleyeceğini yoksa buffer'lanacağını mı söyler. Oyuncunun
-    /// tuşa basmadan önce bunu görebilmesi gerekiyor, yoksa buffer'lama sürpriz olur.
+    /// The visualisation's contract: <see cref="CombatantSnapshot.CanCancel"/> says whether the "pull
+    /// out" key will take effect at once or be buffered. The player has to see this before pressing, or
+    /// the buffering comes as a surprise.
     /// </summary>
     [Fact]
     public void TheSnapshotTellsWhetherACommandWouldBeBuffered()
@@ -407,8 +407,8 @@ public class RetreatTests
     }
 
     /// <summary>
-    /// Animasyon, durumun neresinde olunduğuna göre sürülür; oran durum boyunca
-    /// 0'dan 1'e ilerlemeli, yoksa vuruş animasyonu çözümlemeyle senkron tutmaz.
+    /// The animation is driven by where in the state we are; the ratio must advance from 0 to 1 through
+    /// the state, or the strike animation does not stay in sync with the resolution.
     /// </summary>
     [Fact]
     public void StateProgressAdvancesFromStartToEnd()
@@ -432,7 +432,7 @@ public class RetreatTests
             }
         }
 
-        Assert.True(last > first, "Windup boyunca ilerleme artmalı.");
+        Assert.True(last > first, "The progress must rise through the windup.");
     }
 
     [Fact]

@@ -4,17 +4,17 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Okul ağacı ve savaşçının yolu (GDD §10 "Skill tree derinliği"). Korunan kararlar: kol
-/// içinde sıra zorunludur, tesis peşin ödenir ve geri satılmaz, bonuslar <b>bütün</b>
-/// okumalara işler, ve savaşçının yolu satın alınmaz — antrenman günüyle açılır.
+/// The school tree and the warrior's path (GDD §10 "Skill tree depth"). The decisions protected: the
+/// order within a branch is compulsory, a facility is paid up front and not sold back, the bonuses apply
+/// to <b>all</b> reads, and a warrior's path is not bought — it is unlocked with training days.
 /// </summary>
 public class SchoolTests
 {
     private static DojoState Rich(int gold = 5000) =>
-        // Aksilik kapalı: ölçülen şey ağacın kendisi, günün şansı değil.
+        // Mishaps off: what is measured is the tree itself, not the day's luck.
         new(events: new EventTuning { ChancePerDay = 0 }) { Resources = new Resources(Gold: gold) };
 
-    /// <summary>Savaşçıyı verilen gün kadar talime yazar ve günleri kapatır.</summary>
+    /// <summary>Puts the warrior on drill for the given number of days and closes the days.</summary>
     private static void Drills(DojoState state, RosterEntry entry, int days)
     {
         for (int day = 0; day < days; day++)
@@ -44,7 +44,7 @@ public class SchoolTests
         Assert.False(state.BuySchoolNode(SchoolNodeId.TrainingGround));
     }
 
-    /// <summary>Kasa eksiye düşmez: parası yetmeyen tesis alınmaz, ağaç da değişmez.</summary>
+    /// <summary>The treasury does not go negative: a facility that cannot be afforded is not bought, and the tree does not change.</summary>
     [Fact]
     public void AFacilityBeyondThePurseChangesNothing()
     {
@@ -108,7 +108,7 @@ public class SchoolTests
         Assert.True(state.Economy.RecruitPrice < recruit);
     }
 
-    /// <summary>İndirim bir kalemi bedavaya çeviremez.</summary>
+    /// <summary>A discount cannot make an item free.</summary>
     [Fact]
     public void ADiscountNeverReachesZero()
     {
@@ -183,8 +183,8 @@ public class SchoolTests
     }
 
     /// <summary>
-    /// Yol sakatlığın <b>altında</b> uygulanır: kaybedilen uzvun cezası yolu da keser,
-    /// yol cezayı büyütmez.
+    /// The path is applied <b>underneath</b> the disability: a lost limb's penalty cuts the path too, the
+    /// path does not magnify the penalty.
     /// </summary>
     [Fact]
     public void ThePathIsCutByADisabilityRatherThanFeedingIt()

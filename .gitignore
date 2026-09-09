@@ -2,10 +2,10 @@
 .godot/
 *.translation
 
-# Motor ikili dosyaları (repo'ya girmez, tools/ altına indirilir)
+# The engine binaries (they do not go into the repo, they are downloaded into tools/)
 tools/
 
-# Yerel dışa aktarım çıktıları
+# Local export output
 /build/
 export_presets.cfg.local
 

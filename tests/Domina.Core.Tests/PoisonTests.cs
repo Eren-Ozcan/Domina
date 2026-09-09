@@ -5,17 +5,17 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Zehir, hasar azaltımının etrafından dolaşan tek yoldur: doz kana girer, zırh onu
-/// okuyamaz. Bu testler kuralın iki ucunu bağlar — doz zamanla işler, zırh ve Savunma
-/// onu azaltmaz — ve zehrin <b>karışmaması</b> gereken yerleri (uzuv kopma, sersemletme,
-/// temiz silah) kapalı tutar.
+/// Poison is the only route around damage reduction: the dose enters the blood and armour cannot read
+/// it. These tests tie down both ends of the rule — the dose works over time, armour and Defence do not
+/// reduce it — and keep the places poison must <b>not touch</b> (dismemberment, stun, a clean weapon)
+/// closed.
 /// </summary>
 public class PoisonTests
 {
-    /// <summary>Zehrin izole edildiği ayar: kopma ve sersemletme dalları kapalı.</summary>
+    /// <summary>The setting that isolates poison: the dismemberment and stun branches are off.</summary>
     /// <remarks>
-    /// Üçü de aynı vuruştan çıkar; açık bırakılsalardı test zehrin değil sonuç ağacının
-    /// davranışını ölçerdi.
+    /// All three come out of the same strike; left open, the test would measure the outcome tree's
+    /// behaviour rather than poison's.
     /// </remarks>
     private static CombatTuning PoisonOnly { get; } = TestBuilders.PointBlank with
     {
@@ -24,14 +24,14 @@ public class PoisonTests
         MaxBattleSeconds = 12,
     };
 
-    /// <summary>Zehirli alet: çeliği hafif, karşılığı doz.</summary>
+    /// <summary>The poisoned implement: light on steel, its return is the dose.</summary>
     private static Weapon Fang { get; } =
         new("Test-Zehirli", WeaponClass.Cutting, 5, TwoHanded: false, AttackSeconds: 1.0)
         {
             Poison = 1.0,
         };
 
-    /// <summary>Aynı aletin temiz hâli — kontrol tarafı.</summary>
+    /// <summary>The clean version of the same implement — the control side.</summary>
     private static Weapon CleanFang { get; } = Fang with { Name = "Test-Temiz", Poison = 0 };
 
     private static BattleSetup Bout(
@@ -50,11 +50,11 @@ public class PoisonTests
                 armor: defenderArmor),
         ],
         [TestBuilders.Warrior(101, "Zehirleyen", aggression: 100, weapon: attackerWeapon)])
-    {
-        Tuning = tuning ?? PoisonOnly,
-    };
+        {
+            Tuning = tuning ?? PoisonOnly,
+        };
 
-    /// <summary>Zehirli vuruş doz bırakır ve doz zamanla can yer.</summary>
+    /// <summary>A poisoned strike leaves a dose and the dose eats health over time.</summary>
     [Fact]
     public void APoisonedBlowLeavesADoseThatKeepsWorking()
     {
@@ -66,18 +66,18 @@ public class PoisonTests
         Assert.Equal(new WarriorId(101), poisoned.Attacker);
         Assert.Equal(PoisonOnly.PoisonSeconds, poisoned.Seconds);
 
-        // Hasar vuruşun anında değil, sonrasında gelir.
+        // The damage comes not at the moment of the strike but afterwards.
         List<PoisonTicked> ticks = [.. battle.Events.OfType<PoisonTicked>()];
         Assert.NotEmpty(ticks);
         Assert.All(ticks, t => Assert.True(t.AtSeconds > poisoned.AtSeconds));
     }
 
     /// <summary>
-    /// Zehir hasarı zırhtan da Savunma statından da geçmez.
+    /// Poison damage goes through neither armour nor the Defence stat.
     /// </summary>
     /// <remarks>
-    /// Kuralın tamamı bunun üstüne kurulu. Zırh dozu azaltsaydı zehir yalnızca "biraz
-    /// daha hasar" olurdu ve zehirli silahın düşük çeliği hiçbir şeyin bedeli olmazdı.
+    /// The whole rule is built on this. If armour reduced the dose, poison would be only "a bit more
+    /// damage" and the poisoned weapon's low steel would be the price of nothing.
     /// </remarks>
     [Fact]
     public void PoisonIgnoresArmorAndDefense()
@@ -96,7 +96,7 @@ public class PoisonTests
         }
     }
 
-    /// <summary>Doz birikir — ama tavanı aşmaz.</summary>
+    /// <summary>The dose accumulates — but does not pass the cap.</summary>
     [Fact]
     public void DosesStackUpToTheCap()
     {
@@ -106,17 +106,17 @@ public class PoisonTests
 
         List<WarriorPoisoned> doses = [.. battle.Events.OfType<WarriorPoisoned>()];
 
-        Assert.True(doses.Count >= 3, $"Yeterli zehirli vuruş düşmedi ({doses.Count}).");
+        Assert.True(doses.Count >= 3, $"Not enough poisoned strikes landed ({doses.Count}).");
         Assert.Equal(1.0, doses[0].Dose);
         Assert.Equal(2.0, doses[1].Dose);
         Assert.All(doses, d => Assert.True(d.Dose <= tuning.PoisonMaxDose));
     }
 
-    /// <summary>Süre dolunca zehir kendiliğinden biter.</summary>
+    /// <summary>When the time is up the poison ends on its own.</summary>
     [Fact]
     public void PoisonExpiresOnItsOwn()
     {
-        // Tek bir zehirli vuruş: saldıran bir daha vuramayacak kadar yavaş.
+        // A single poisoned strike: the attacker is too slow to strike again.
         Weapon slowFang = Fang with { AttackSeconds = 30 };
         var battle = new Battle(
             Bout(slowFang, tuning: PoisonOnly with { MaxBattleSeconds = 20 }),
@@ -128,10 +128,10 @@ public class PoisonTests
 
         Assert.True(
             lastTick <= poisoned.AtSeconds + PoisonOnly.PoisonSeconds,
-            $"Zehir ömrünü aştı ({lastTick:F2} > {poisoned.AtSeconds + PoisonOnly.PoisonSeconds:F2}).");
+            $"The poison outlived its duration ({lastTick:F2} > {poisoned.AtSeconds + PoisonOnly.PoisonSeconds:F2}).");
     }
 
-    /// <summary>Temiz silah doz bırakmaz — kontrol tarafı.</summary>
+    /// <summary>A clean weapon leaves no dose — the control side.</summary>
     [Fact]
     public void ACleanWeaponNeverPoisons()
     {
@@ -147,9 +147,9 @@ public class PoisonTests
     /// Zehir uzuv koparmaz ve sersemletmez: ikisi de <b>darbenin</b> sonucudur.
     /// </summary>
     /// <remarks>
-    /// Eşikler erişilemeyecek kadar yükseğe çekilir, yani vuruşun kendisi hiçbir zar
-    /// attırmaz; geriye yalnızca zehir kalır. Zehir bu dalları da açsaydı zehirli silah
-    /// hem oyunun imza mekaniğinden pay alır hem künt sınıfın işini yapardı.
+    /// The thresholds are pulled unreachably high, so the strike itself rolls no dice; only poison is
+    /// left. If poison opened those branches too, the poisoned weapon would take a share of the game's
+    /// signature mechanic and do the blunt class's job as well.
     /// </remarks>
     [Fact]
     public void PoisonNeitherSeversNorStuns()
@@ -170,11 +170,11 @@ public class PoisonTests
         Assert.Empty(battle.Events.OfType<WarriorStunned>());
     }
 
-    /// <summary>Zehrin indirdiği ölüm ayrı bir sebep taşır: kimse vurmamıştır.</summary>
+    /// <summary>A death brought by poison carries a separate cause: nobody struck.</summary>
     [Fact]
     public void PoisonKillsUnderItsOwnCause()
     {
-        // Tek vuruş, sonra saldıran susar; canı bitiren şey yalnızca doz olabilir.
+        // One strike, then the attacker falls silent; the only thing that can end the health is the dose.
         Weapon slowFang = Fang with { AttackSeconds = 30 };
         BattleSetup setup = Bout(slowFang, tuning: PoisonOnly with { MaxBattleSeconds = 30 }) with
         {
@@ -193,12 +193,12 @@ public class PoisonTests
     }
 
     /// <summary>
-    /// Çekilen savaşçının zehri durmaz — tuş bir panzehir değildir.
+    /// The poison of a warrior pulling out does not stop — the key is not an antidote.
     /// </summary>
     /// <remarks>
-    /// Sersemletme ve yakalama çekilene işlemez, çünkü ikisi de kaçış vaadinin üstüne
-    /// <b>yeni bir zar</b> koyar. Zehir yeni bir zar değil, çoktan ödenmiş bir bedelin
-    /// devamıdır; durdurulsaydı kaçış komutu aynı zamanda bir tedavi olurdu.
+    /// Stun and catching do not apply to a fleeing warrior, because both put <b>a new die</b> on top of
+    /// the escape promise. Poison is not a new die but the continuation of a price already paid; stopped,
+    /// the flee command would also be a cure.
     /// </remarks>
     [Fact]
     public void PoisonKeepsWorkingOnARetreatingWarrior()
@@ -219,7 +219,7 @@ public class PoisonTests
             t => t.Warrior == new WarriorId(1) && t.AtSeconds > commandedAt);
     }
 
-    /// <summary>Zehir mermide de taşınır — kural yakın dövüşe ait değil, namluya ait.</summary>
+    /// <summary>Poison is carried on a projectile too — the rule belongs to the blade, not to melee.</summary>
     [Fact]
     public void ThrownWeaponsCarryPoison()
     {
@@ -230,7 +230,7 @@ public class PoisonTests
             [
                 TestBuilders.Warrior(
                     101,
-                    "Atıcı",
+                    "Thrower",
                     aggression: 100,
                     weapon: CleanFang,
                     thrown: ThrownWeapon.PoisonedShuriken()),

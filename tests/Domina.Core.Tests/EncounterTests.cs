@@ -7,9 +7,9 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Günün karşılaşma teklifi (GDD §10). Korunan üç karar: günde <b>tek</b> teklif gelir,
-/// teklif gün ve tohumun <b>saf</b> bir fonksiyonudur (kaydı yeniden yükleyerek teklif
-/// değiştirilemez), ve sefer kaçılsa da <b>bir gün</b> yer.
+/// The day's encounter offer (GDD §10). Three decisions are protected: <b>one</b> offer arrives a day,
+/// the offer is a <b>pure</b> function of the day and the seed (it cannot be changed by reloading the
+/// save), and an expedition eats <b>a day</b> even if you flee.
 /// </summary>
 public class EncounterTests
 {
@@ -47,7 +47,7 @@ public class EncounterTests
         Assert.NotEqual(one, other);
     }
 
-    /// <summary>Zorluk tek eğri üzerinde artar (GDD §10) — boss takvimi yok.</summary>
+    /// <summary>Difficulty rises along a single curve (GDD §10) — there is no boss calendar.</summary>
     [Fact]
     public void LaterDaysBringHeavierEncounters()
     {
@@ -56,10 +56,10 @@ public class EncounterTests
         double early = Enumerable.Range(1, 40).Average(d => generator.Offer(d, 5).EnemyHealth);
         double late = Enumerable.Range(80, 40).Average(d => generator.Offer(d, 5).EnemyHealth);
 
-        Assert.True(late > early * 1.5, $"eğri düz kalmış: {early:F0} → {late:F0}");
+        Assert.True(late > early * 1.5, $"the curve stayed flat: {early:F0} → {late:F0}");
     }
 
-    /// <summary>Dalgalanma olmasaydı "bırak" diye bir karar kalmazdı.</summary>
+    /// <summary>Without fluctuation there would be no decision called "leave it".</summary>
     [Fact]
     public void TheSameDayNumberIsNotTheSameEveryCampaign()
     {
@@ -84,7 +84,7 @@ public class EncounterTests
         Assert.False(open.Accepts(0));
     }
 
-    /// <summary>Kuvvetli yokai'ler eğrinin başında sahaya çıkmaz.</summary>
+    /// <summary>Strong yokai do not take the field at the start of the curve.</summary>
     [Fact]
     public void HeavyKindsWaitForTheirPlaceOnTheCurve()
     {
@@ -93,7 +93,7 @@ public class EncounterTests
         Assert.Contains(Bestiary.Oni, Bestiary.AvailableAt(2.0));
     }
 
-    /// <summary>Güç canı ve hasarı doğrudan, isabet/kaçınmayı yumuşak büyütür.</summary>
+    /// <summary>Power grows health and damage directly, accuracy/evasion softly.</summary>
     [Fact]
     public void PowerScalesTheBodyHarderThanTheSkill()
     {
@@ -104,7 +104,7 @@ public class EncounterTests
         Assert.Equal(weak.BaseStats.Strength * 2.25, strong.BaseStats.Strength, 3);
         Assert.Equal(weak.BaseStats.Accuracy * 1.5, strong.BaseStats.Accuracy, 3);
 
-        // Statlar 0-100 ölçeğinde; eğri büyüdükçe taşmamalı.
+        // The stats are on a 0-100 scale; they must not overflow as the curve grows.
         Warrior extreme = Bestiary.Kappa.Spawn(new WarriorId(3), 100);
         Assert.InRange(extreme.BaseStats.Accuracy, 0, 95);
         Assert.InRange(extreme.BaseStats.Evasion, 0, 95);
@@ -125,7 +125,7 @@ public class EncounterTests
         Assert.Equal(2, state.Offer.Day);
     }
 
-    /// <summary>Teklif kayıtta durmaz; gün ve tohumdan yeniden hesaplanır.</summary>
+    /// <summary>The offer is not stored in the save; it is recomputed from the day and the seed.</summary>
     [Fact]
     public void TheOfferSurvivesASaveRoundTrip()
     {
@@ -165,7 +165,7 @@ public class EncounterTests
             Assert.Equal(0, result.Reward);
         }
 
-        // Ödül kasaya girer; günün stok alışverişi ve varsa o günün aksiliği kasadan çıkar.
+        // The reward enters the treasury; the day's stock shopping and that day's mishap, if any, leave it.
         int mishap = result.Day.Event?.Gold ?? 0;
         Assert.Equal(gold + result.Reward - result.Day.Upkeep.GoldSpent - mishap, state.Resources.Gold);
     }
@@ -184,7 +184,7 @@ public class EncounterTests
         Assert.Equal(ExpeditionRefusal.EmptyParty, Expedition.Refuse(state, offer, []));
         Assert.Null(Expedition.Refuse(state, offer, [fit]));
 
-        // Dünün teklifine bugün girilemez.
+        // Yesterday's offer cannot be entered today.
         Assert.Equal(
             ExpeditionRefusal.StaleOffer,
             Expedition.Refuse(state, offer with { Day = state.Day - 1 }, [fit]));
@@ -207,12 +207,12 @@ public class EncounterTests
     }
 
     /// <summary>
-    /// Eğri bir yerde durur: tavan, tam büyümüş bir dojo'nun hâlâ kâr edebildiği yerdedir.
+    /// The curve stops somewhere: the ceiling is where a fully grown dojo can still make a profit.
     /// </summary>
     /// <remarks>
-    /// Tavansız bir eğride dojo'nun büyümesi (stat tavanı, dört kişilik kadro, kuşam
-    /// kademeleri) er ya da geç geride kalır ve her teklif geri çevrilir — ölçüldü:
-    /// 180 günde dövüş başına net sıfırın altına iniyordu (GDD §11).
+    /// On a curve with no ceiling the dojo's growth (the stat ceiling, a roster of four, the armour
+    /// tiers) sooner or later falls behind and every offer is declined — measured: over 180 days it fell
+    /// below zero net per fight (GDD §11).
     /// </remarks>
     [Fact]
     public void TheCurveStopsAtItsCeiling()

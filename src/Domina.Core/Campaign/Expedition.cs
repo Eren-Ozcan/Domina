@@ -4,24 +4,24 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Campaign;
 
-/// <summary>Teklifi kabul edip dövüşü kuran katman.</summary>
+/// <summary>The layer that accepts the offer and sets up the fight.</summary>
 /// <remarks>
 /// <para>
-/// Dojo ile dövüş çözümleyicisi arasındaki tek köprü burası. <see cref="DojoState"/>
-/// dövüşü kurmuyor, <see cref="Battle"/> de günü kapatmıyor — ikisini tek sınıfta
-/// birleştirmek, çekirdeği motorsuz koşturulabilir tutan ayrımı bozardı.
+/// This is the only bridge between the dojo and the combat resolver. <see cref="DojoState"/> does not
+/// set up the fight and <see cref="Battle"/> does not close the day — merging the two into one class
+/// would break the separation that keeps the core runnable without the engine.
 /// </para>
 /// <para>
-/// Sefer <b>bir gün yer</b> (GDD §10) ve bu gün kaçılsa da yenir. Günü kapatmak
-/// çağıranın işi değil: <see cref="Send"/> dövüşü koşturur, sonucu kadroya yazar ve
-/// günü kendi kapatır, çünkü "gir-bak-kaç" döngüsünü kapatan kalem tam olarak budur.
+/// An expedition <b>eats a day</b> (GDD §10) and the day is eaten even if you flee. Closing the day is
+/// not the caller's job: <see cref="Send"/> runs the fight, writes the result to the roster and closes
+/// the day itself, because that is exactly the item that closes the "enter, look, run" loop.
 /// </para>
 /// </remarks>
 public sealed class Expedition(BattleAftermath? aftermath = null)
 {
     private readonly BattleAftermath _aftermath = aftermath ?? new BattleAftermath();
 
-    /// <summary>Ekip sefere gönderilebilir mi — ve gönderilemiyorsa neden?</summary>
+    /// <summary>Can the party be sent on the expedition — and if not, why?</summary>
     public static ExpeditionRefusal? Refuse(DojoState state, EncounterOffer offer, IReadOnlyList<RosterEntry> party)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -60,16 +60,16 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     }
 
     /// <summary>
-    /// Ekibi teklifin üstüne gönderir: dövüşü koşturur, sonucu kadroya yazar, ödülü öder
-    /// ve günü kapatır.
+    /// Sends the party against the offer: runs the fight, writes the result to the roster, pays the
+    /// reward and closes the day.
     /// </summary>
     /// <remarks>
-    /// Dövüşü <b>izlenmeden</b> çözen yol budur (toplu simülasyon, testler). Arena
-    /// dövüşü kendi adımlıyor; o zaman <see cref="Prepare"/> ile kurulup
-    /// <see cref="Settle"/> ile kapatılır. İkisi de aynı üç adımı yapar — kurulum,
-    /// dövüş, muhasebe — ve muhasebe tek bir yerde durur.
+    /// This is the route that resolves a fight <b>unwatched</b> (batch simulation, tests). The arena
+    /// steps the fight itself; in that case it is set up with <see cref="Prepare"/> and closed with
+    /// <see cref="Settle"/>. Both do the same three steps — setup, fight, accounting — and the
+    /// accounting lives in a single place.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">Ekip sefere uygun değilse.</exception>
+    /// <exception cref="InvalidOperationException">If the party is not fit for the expedition.</exception>
     public ExpeditionResult Send(
         DojoState state,
         EncounterOffer offer,
@@ -86,15 +86,15 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     }
 
     /// <summary>
-    /// Seferin dövüşünü kurar ama <b>koşturmaz</b>.
+    /// Sets up the expedition's fight but <b>does not run it</b>.
     /// </summary>
     /// <remarks>
-    /// Arena için gerekli: oyuncu dövüşü izlerken müdahale edebildiği (çekilme komutu)
-    /// için dövüş gerçek zamanla adımlanmalı, önceden koşturulup kaydı oynatılmamalı.
-    /// Kurulumun burada durması, izlenen dövüş ile arka planda çözülen dövüşün
-    /// <b>aynı</b> girdilerden çıkmasını garanti eder.
+    /// Needed for the arena: because the player can intervene while watching the fight (the retreat
+    /// command), the fight has to be stepped in real time rather than run in advance and replayed.
+    /// Keeping the setup here guarantees that a watched fight and one resolved in the background come
+    /// out of the <b>same</b> inputs.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">Ekip sefere uygun değilse.</exception>
+    /// <exception cref="InvalidOperationException">If the party is not fit for the expedition.</exception>
     public static BattleSetup Prepare(
         DojoState state,
         EncounterOffer offer,
@@ -108,7 +108,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         if (Refuse(state, offer, party) is ExpeditionRefusal refusal)
         {
-            throw new InvalidOperationException($"Ekip sefere gönderilemez: {refusal}.");
+            throw new InvalidOperationException($"The party cannot be sent on the expedition: {refusal}.");
         }
 
         return new BattleSetup([.. party.Select(e => e.Warrior)], offer.Enemies)
@@ -120,13 +120,13 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     }
 
     /// <summary>
-    /// Bitmiş bir dövüşün hesabını kapatır: kadroya yazar, ödülü öder, günü kapatır.
+    /// Closes the books of a finished fight: writes to the roster, pays the reward, closes the day.
     /// </summary>
     /// <remarks>
-    /// Dövüşün <b>nerede</b> koştuğu burayı ilgilendirmez — arenada izlenmiş de olabilir,
-    /// <see cref="Send"/> içinde çözülmüş de. Muhasebenin tek yerde durması şart: arena
-    /// kendi muhasebesini yazsaydı izlenen dövüş ile simüle edilen dövüş farklı sonuçlar
-    /// bırakır ve denge ölçümü ekrandakini ölçmemiş olurdu.
+    /// <b>Where</b> the fight ran is of no concern here — it may have been watched in the arena or
+    /// resolved inside <see cref="Send"/>. The accounting must live in one place: if the arena wrote its
+    /// own books, a watched fight and a simulated one would leave different results and balance
+    /// measurement would not be measuring what is on screen.
     /// </remarks>
     public ExpeditionResult Settle(DojoState state, BattleSetup setup, BattleResult battle)
     {
@@ -144,23 +144,23 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     }
 
     /// <summary>
-    /// Ekibi kelle avı sözleşmesinin üstüne gönderir.
+    /// Sends the party against a bounty contract.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Sıradan seferden ayrılan üç kalem burada: ödül sözleşmenin <b>söz verdiği</b>
-    /// rakamdır (dövüşün canından değil), sözleşme tamamlanınca ekip onur kazanır, ve
-    /// dönülemezse söz kırılır. Dövüşün kendisi aynı yoldan geçer — hedef tek bir düşman
-    /// olarak sefer katmanına verilir, çünkü dövüşe giden ikinci bir kapı açmak
-    /// çözümleyiciyi ikiye bölerdi.
+    /// Three items differ from an ordinary expedition: the reward is the figure the contract
+    /// <b>promised</b> (not one derived from the fight's health), the party earns honour when the
+    /// contract is completed, and the promise is broken if they do not come back. The fight itself goes
+    /// the same route — the target is handed to the expedition layer as a single enemy, because opening
+    /// a second door into a fight would split the resolver in two.
     /// </para>
     /// <para>
-    /// Kabul edilmemiş sözleşmeye de girilebilir: tahtadan işi görüp aynı gün gitmek
-    /// meşru. Kabul, gün kazandırmaz — <b>süre</b> satın alır.
+    /// An unaccepted contract can be entered too: seeing the job on the board and going the same day is
+    /// legitimate. Accepting does not buy a day — it buys <b>time</b>.
     /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">
-    /// Sözleşme bugün açık değilse ya da ekip sefere uygun değilse.
+    /// If the contract is not open today, or the party is not fit for the expedition.
     /// </exception>
     public BountyResult SendToBounty(
         DojoState state,
@@ -177,9 +177,9 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         return SettleBounty(state, contract, party, setup, new Battle(setup, random).Run());
     }
 
-    /// <summary>Sözleşmenin dövüşünü kurar ama koşturmaz — bkz. <see cref="Prepare"/>.</summary>
+    /// <summary>Sets up the contract's fight but does not run it — see <see cref="Prepare"/>.</summary>
     /// <exception cref="InvalidOperationException">
-    /// Sözleşme bugün açık değilse ya da ekip sefere uygun değilse.
+    /// If the contract is not open today, or the party is not fit for the expedition.
     /// </exception>
     public static BattleSetup PrepareBounty(
         DojoState state,
@@ -194,13 +194,13 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         if (!contract.IsOpenOn(state.Day))
         {
-            throw new InvalidOperationException("Sözleşme bugün açık değil.");
+            throw new InvalidOperationException("The contract is not open today.");
         }
 
         return Prepare(state, contract.AsOffer(state.Day), party, tuning, retreat, collectEvents);
     }
 
-    /// <summary>Bitmiş bir kelle avının hesabını kapatır — bkz. <see cref="Settle"/>.</summary>
+    /// <summary>Closes the books of a finished bounty hunt — see <see cref="Settle"/>.</summary>
     public BountyResult SettleBounty(
         DojoState state,
         BountyContract contract,
@@ -222,9 +222,9 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         if (claimed)
         {
-            // Onur sefere <b>giden</b> ekibe yazılır, kadronun tamamına değil: kelleyi
-            // getiren onlar. Kırılan sözün cezası ise tüm kadroya yazılıyor, çünkü sözü
-            // dojo veriyor — kazanç kişisel, borç ortak.
+            // The honour is written to the party that <b>went</b> on the expedition, not to the whole
+            // roster: they are the ones who brought the head. The penalty for a broken promise is written
+            // to the whole roster, because the dojo gave the promise — the gain is personal, the debt shared.
             foreach (RosterEntry entry in party)
             {
                 if (state.Roster.Find(entry.Id) is RosterEntry alive && alive.Warrior.IsAlive)
@@ -242,13 +242,13 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     }
 }
 
-/// <summary>Bir kelle avının dojo'ya dönmüş hâli.</summary>
-/// <param name="Contract">Girilen sözleşme.</param>
-/// <param name="Battle">Dövüşün ham sonucu.</param>
-/// <param name="Aftermath">Kadroya yazılanlar.</param>
-/// <param name="Reward">Kasaya giren altın.</param>
-/// <param name="Claimed">Kelle alındı mı — sözleşme tamamlandı mı.</param>
-/// <param name="Day">Seferin yediği günün özeti.</param>
+/// <summary>A bounty hunt as it comes back to the dojo.</summary>
+/// <param name="Contract">The contract entered.</param>
+/// <param name="Battle">The fight's raw result.</param>
+/// <param name="Aftermath">What was written to the roster.</param>
+/// <param name="Reward">The gold that entered the treasury.</param>
+/// <param name="Claimed">Was the head taken — was the contract completed.</param>
+/// <param name="Day">The summary of the day the expedition ate.</param>
 public sealed record BountyResult(
     BountyContract Contract,
     BattleResult Battle,
@@ -257,11 +257,11 @@ public sealed record BountyResult(
     bool Claimed,
     DayReport Day);
 
-/// <summary>Bir seferin dojo'ya dönmüş hâli.</summary>
-/// <param name="Battle">Dövüşün ham sonucu.</param>
-/// <param name="Aftermath">Kadroya yazılanlar.</param>
-/// <param name="Reward">Kasaya giren altın (çekilme ve bozgunda 0).</param>
-/// <param name="Day">Seferin yediği günün özeti.</param>
+/// <summary>An expedition as it comes back to the dojo.</summary>
+/// <param name="Battle">The fight's raw result.</param>
+/// <param name="Aftermath">What was written to the roster.</param>
+/// <param name="Reward">The gold that entered the treasury (0 on a withdrawal or a rout).</param>
+/// <param name="Day">The summary of the day the expedition ate.</param>
 public sealed record ExpeditionResult(
     BattleResult Battle,
     AftermathReport Aftermath,
@@ -271,18 +271,18 @@ public sealed record ExpeditionResult(
 /// <summary>Seferin reddedilme sebebi.</summary>
 public enum ExpeditionRefusal
 {
-    /// <summary>Kimse seçilmedi.</summary>
+    /// <summary>Nobody was selected.</summary>
     EmptyParty,
 
-    /// <summary>Teklif bugünün teklifi değil — dün kabul edilmiş bir teklife girilemez.</summary>
+    /// <summary>The offer is not today's offer — an offer accepted yesterday cannot be entered.</summary>
     StaleOffer,
 
-    /// <summary>Encounter başka bir sayı dayatıyor (düello gibi) ya da üst sınır aşıldı.</summary>
+    /// <summary>The encounter imposes another number (a duel, say) or the upper limit was exceeded.</summary>
     WrongPartySize,
 
-    /// <summary>Savaşçı bu kadroda değil.</summary>
+    /// <summary>The warrior is not on this roster.</summary>
     NotInRoster,
 
-    /// <summary>Savaşçı revirde ya da ölü.</summary>
+    /// <summary>The warrior is in the infirmary or dead.</summary>
     Unfit,
 }

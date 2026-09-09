@@ -3,13 +3,13 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Uzuvlar tek tek durur: kılıç kolu, boştaki kol, iki bacak. Bu testler ayrımın iki
-/// vaadini bağlar — zırh her uzva ayrı kuşanılır, ve hangi kolu kaybettiğin bir şey
+/// The limbs stand one by one: the sword arm, the off arm, the two legs. These tests tie down the
+/// distinction's two promises — armour is equipped per limb, and which arm you lose matters
 /// ifade eder.
 /// </summary>
 public class PerLimbTests
 {
-    /// <summary>Kılıç kolunun kaybı boştaki kolun kaybından ağırdır.</summary>
+    /// <summary>Losing the sword arm is heavier than losing the off arm.</summary>
     [Fact]
     public void LosingTheSwordArmCostsMoreThanLosingTheOther()
     {
@@ -35,7 +35,7 @@ public class PerLimbTests
         Assert.Equal(Weapon.Fists(), warrior.UsableWeapon);
     }
 
-    /// <summary>İki bacağın kaybı tek bacağınkinden ağırdır — çarpanlar birleşir.</summary>
+    /// <summary>Losing both legs is heavier than losing one — the multipliers combine.</summary>
     [Fact]
     public void LosingBothLegsCompounds()
     {
@@ -50,14 +50,14 @@ public class PerLimbTests
     }
 
     /// <summary>
-    /// Zırh her uzva ayrı kuşanılır: bir kolu kollukla örtmek diğerini örtmez.
-    /// "Ağır göğüslük, çıplak kollar" kararının yarısı da böyle mümkün olur (§7).
+    /// Armour is equipped per limb: covering one arm with a kote does not cover the other.
+    /// Half of the "heavy cuirass, bare arms" decision becomes possible this way too (§7).
     /// </summary>
     [Fact]
     public void EachLimbCarriesItsOwnPiece()
     {
         var mixed = new Armor(
-            "Yarım kuşam",
+            "Half kit",
             Head: ArmorPiece.Bare,
             Torso: ArmorPiece.OYoroiCuirass,
             SwordArm: ArmorPiece.HeavyKote,
@@ -72,7 +72,7 @@ public class PerLimbTests
         Assert.True(mixed.Weight < Armor.Heavy().Weight);
     }
 
-    /// <summary>Uzuv kümesi her uzvu ayrı taşır; aynı uzuv iki kez kaybedilmez.</summary>
+    /// <summary>The limb set carries every limb separately; the same limb is not lost twice.</summary>
     [Fact]
     public void TheSetKeepsEveryLimbApart()
     {

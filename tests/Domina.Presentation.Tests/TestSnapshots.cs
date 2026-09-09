@@ -1,15 +1,15 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Anlık görüntü kurucusu.
+/// The snapshot builder.
 /// </summary>
 /// <remarks>
-/// Sunum katmanı dövüşü değil <b>anlık görüntüyü</b> tüketiyor; testler de dövüş
-/// kurmadan doğrudan anlık görüntü verebiliyor. Bir durumu (ölmek üzere olan savaşçı,
-/// vuruşa kilitli savaşçı) gerçek dövüşle üretmek seed aramak demekti.
+/// The presentation layer consumes not the fight but <b>the snapshot</b>; the tests can therefore give a
+/// snapshot directly without building a fight. Producing a state (a warrior about to die, a warrior
+/// locked into a strike) with a real fight meant hunting for a seed.
 /// </remarks>
 internal static class TestSnapshots
 {

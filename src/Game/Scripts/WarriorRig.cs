@@ -6,30 +6,29 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Bir savaşçının sahnedeki görsel karşılığı — şimdilik renkli çubuklardan bir stickman.
+/// A warrior's visual counterpart in the scene — for now a stickman of coloured bars.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Görsel geçici, iskelet değil.</b> Buradaki parça listesi ve eklem noktaları
-/// Faz 2'nin kilitlenmiş rig'idir: animasyonlar bu yapıya bağlanır. Sanat sonradan
-/// değiştiğinde her kemiğe asılı çizim değişir, hiyerarşi aynı kalır. Parça listesi
-/// değişirse animasyonların tamamı yeniden yapılır — bu yüzden yeni kemik eklemek
-/// ucuz bir iş değildir.
+/// <b>The visuals are temporary, the skeleton is not.</b> The part list and joint points here are
+/// phase 2's locked rig: the animations hang on this structure. When the art changes later, the drawing
+/// hung on each bone changes and the hierarchy stays the same. If the part list changes, all the
+/// animations are redone — which is why adding a new bone is not a cheap job.
 /// </para>
 /// <para>
-/// Kopma noktaları <b>omuz</b> ve <b>kalça</b>: bir kol geldiğinde üst kol düğümü,
-/// bir bacak geldiğinde uyluk düğümü ayrılır ve
-/// altındaki her şey onunla birlikte gider. GDD §2'nin "uzuv kopması = çalışma anında
-/// bir node'u ayırmak" cümlesinin karşılığı budur; yeni sanat varlığı gerekmez.
+/// The severing points are the <b>shoulder</b> and the <b>hip</b>: when an arm comes off the upper-arm
+/// node is detached, when a leg comes off the thigh node is, and
+/// everything below it goes with it. This is the equivalent of GDD §2's sentence "limb loss =
+/// detaching a node at runtime"; no new art asset is needed.
 /// </para>
 /// <para>
-/// <b>Bu sınıf duruş hesaplamaz.</b> Açıları <see cref="RigAnimator"/> üretir (motorsuz,
-/// testli); burada kalan iş düğümleri kurmak ve gelen açıları uygulamaktır.
+/// <b>This class does not compute poses.</b> The angles are produced by <see cref="RigAnimator"/> (engine-free,
+/// tested); the job left here is building the nodes and applying the angles that arrive.
 /// </para>
 /// </remarks>
 public sealed partial class WarriorRig : Node2D
 {
-    // ---- Kilitlenmiş oranlar (toplam yükseklik 256 px, kök ayak hizasında) ----
+    // ---- Locked proportions (total height 256 px, the root at foot level) ----
     private const float HipHeight = 124f;
     private const float TorsoLength = 84f;
     private const float HeadRadius = 24f;
@@ -54,9 +53,9 @@ public sealed partial class WarriorRig : Node2D
     private Node2D _legFar = null!;
     private Polygon2D _headShape = null!;
 
-    // Kopabilen zincirler: uzuv ayrıldıktan sonra bu düğümler artık rig'in değildir.
-    // Referansın boşaltılması şart — aksi hâlde duruş her karede yerdeki uzva da
-    // uygulanır ve kopan kol, sahnenin dibinde yatarken savaşmaya devam eder.
+    // The severable chains: after a limb is detached these nodes no longer belong to the rig.
+    // Clearing the reference is required — otherwise the pose is applied every frame to the limb on the
+    // ground too, and the severed arm keeps fighting while lying at the bottom of the scene.
     private Node2D? _armNear;
     private Node2D? _legNear;
     private Node2D? _weapon;
@@ -67,7 +66,7 @@ public sealed partial class WarriorRig : Node2D
 
     public string WarriorName { get; private set; } = string.Empty;
 
-    /// <summary>Rig'i kurar. Bir kez çağrılır.</summary>
+    /// <summary>Builds the rig. Called once.</summary>
     public void Build(Warrior warrior, Color tint, float facing)
     {
         ArgumentNullException.ThrowIfNull(warrior);
@@ -76,8 +75,8 @@ public sealed partial class WarriorRig : Node2D
         WarriorName = warrior.Name;
         _tint = tint;
 
-        // Yön: kökü aynalıyoruz. Duruş kodu daima "sağa bakıyor" varsayar; bu sayede
-        // her poz iki taraf için de tek yerde yazılır.
+        // The facing: we mirror the root. The pose code always assumes "facing right", which is how
+        // every pose is written in one place for both sides.
         Scale = new Vector2(facing, 1);
 
         _hip = Joint(this, new Vector2(0, -HipHeight));
@@ -88,7 +87,7 @@ public sealed partial class WarriorRig : Node2D
         _head = Joint(_torso, new Vector2(0, -TorsoLength));
         _headShape = Circle(_head, new Vector2(0, -HeadRadius), HeadRadius, Shade(0.12f));
 
-        // Uzak taraf önce çizilir; yakın taraf üstte kalsın diye z sırası ayrı.
+        // The far side is drawn first; the z order is separate so the near side stays on top.
         _armFar = BuildArm(_torso, Shade(-0.22f), z: -1);
         _legFar = BuildLeg(_hip, Shade(-0.22f), z: -1);
         _legNear = BuildLeg(_hip, Shade(0.06f), z: 1);
@@ -101,7 +100,7 @@ public sealed partial class WarriorRig : Node2D
         Apply(_animator.Advance(CombatState.Idle, 0, 0));
     }
 
-    /// <summary>Tek seferlik görsel tepkiyi işler (vuruş, kaçınma, uzuv kaybı, ölüm).</summary>
+    /// <summary>Processes a one-off visual reaction (a hit, an evasion, limb loss, death).</summary>
     public void React(in RigReaction reaction)
     {
         if (_animator.React(reaction) is BodyPart severed)
@@ -110,10 +109,10 @@ public sealed partial class WarriorRig : Node2D
         }
     }
 
-    /// <summary>Dövüşün o anki halini duruşa çevirip düğümlere uygular.</summary>
-    /// <param name="state">Çekirdeğin bildirdiği durum.</param>
-    /// <param name="phase">Durumun tamamlanma oranı (0-1).</param>
-    /// <param name="delta">Geçen süre.</param>
+    /// <summary>Turns the fight's current state into a pose and applies it to the nodes.</summary>
+    /// <param name="state">The state reported by the core.</param>
+    /// <param name="phase">How far the state has progressed (0-1).</param>
+    /// <param name="delta">The time elapsed.</param>
     public void Advance(CombatState state, double phase, double delta) =>
         Apply(_animator.Advance(state, phase, delta));
 
@@ -141,19 +140,19 @@ public sealed partial class WarriorRig : Node2D
             _weapon.Rotation = pose.Weapon;
         }
 
-        // Renk zaten her uzva tek tek verilmiş durumda; buradaki modulate yalnızca acı
-        // parlamasıdır. Takım rengiyle çarpmak uzuvları ikinci kez karartırdı.
+        // The colour is already given to each limb individually; the modulate here is only the pain
+        // flash. Multiplying by the team colour would darken the limbs a second time.
         Modulate = pose.HurtBlend > 0 ? Colors.White.Lerp(HurtColor, pose.HurtBlend) : Colors.White;
     }
 
     /// <summary>
-    /// Uzvu kalıcı olarak ayırır ve düşen parçayı sahneye bırakır.
+    /// Detaches the limb permanently and drops the fallen piece into the scene.
     /// </summary>
     /// <remarks>
-    /// Kopan uzuv gizlenmiyor, <b>ayrılıyor</b>: altındaki tüm zincir (ön kol, el,
-    /// silah) onunla birlikte gidiyor. Kolunu kaybeden savaşçının silahını da
-    /// kaybetmesi böylece görselde bedava geliyor — çekirdekteki
-    /// <see cref="Warrior.UsableWeapon"/> kuralıyla aynı sonuç.
+    /// A severed limb is not hidden, it is <b>detached</b>: the whole chain below it (forearm, hand,
+    /// weapon) goes with it. A warrior who loses an arm losing his weapon too therefore comes free in
+    /// the visuals — the same result as the
+    /// <see cref="Warrior.UsableWeapon"/> rule in the core.
     /// </remarks>
     private void Sever(BodyPart part)
     {
@@ -215,7 +214,7 @@ public sealed partial class WarriorRig : Node2D
         return joint;
     }
 
-    /// <summary>Kemiğe asılı çizim. Sanat geldiğinde değişecek tek yer burası.</summary>
+    /// <summary>The drawing hung on the bone. The only place that will change when art arrives.</summary>
     private static void Limb(Node2D bone, float length, float width, Color color, bool horizontal = false)
     {
         var line = new Line2D
@@ -244,8 +243,8 @@ public sealed partial class WarriorRig : Node2D
         return polygon;
     }
 
-    /// <summary>Üst ve alt eklemi birlikte kurar (omuz + dirsek, kalça + diz).</summary>
-    /// <remarks>Zincir koptuysa düğüm artık rig'in değildir; sessizce atlanır.</remarks>
+    /// <summary>Builds the upper and lower joint together (shoulder + elbow, hip + knee).</summary>
+    /// <remarks>If the chain is severed the node no longer belongs to the rig; it is silently skipped.</remarks>
     private static void Bend(Node2D? limb, float upper, float lower)
     {
         if (limb is null)
@@ -260,9 +259,9 @@ public sealed partial class WarriorRig : Node2D
     private Color Shade(float amount) =>
         amount >= 0 ? _tint.Lerp(Colors.White, amount) : _tint.Lerp(Colors.Black, -amount);
 
-    // ------------------------------------------------------------- uzuv kopması
+    // ------------------------------------------------------------- limb severing
 
-    /// <summary>Kopan uzvu rig'den ayırıp sahneye düşürür.</summary>
+    /// <summary>Detaches the severed limb from the rig and drops it into the scene.</summary>
     private void DropLimb(Node2D? limb)
     {
         if (limb is null)
@@ -280,7 +279,7 @@ public sealed partial class WarriorRig : Node2D
         limb.GlobalRotation = worldRotation;
         limb.Scale = Scale;
 
-        // Zemin, savaşçının kendi kökünün bulunduğu yükseklik: uzuv oraya düşer.
+        // The ground is the height of the warrior's own root: the limb falls there.
         limb.AddChild(new FallingLimb { GroundY = Position.Y });
     }
 
@@ -303,13 +302,13 @@ public sealed partial class WarriorRig : Node2D
     }
 }
 
-/// <summary>Kopan uzvun yere düşüşü. Tamamen kozmetik — çekirdek bunu bilmez.</summary>
+/// <summary>A severed limb falling to the ground. Purely cosmetic — the core knows nothing of it.</summary>
 public sealed partial class FallingLimb : Node
 {
     private float _velocity = -180f;
     private float _spin = 4.5f;
 
-    /// <summary>Uzvun duracağı yükseklik — sahnenin zemin çizgisi.</summary>
+    /// <summary>The height the limb comes to rest at — the scene's ground line.</summary>
     public float GroundY { get; init; }
 
     public override void _Process(double delta)

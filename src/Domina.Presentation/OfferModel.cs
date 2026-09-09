@@ -5,19 +5,19 @@ using Domina.Core.Model;
 
 namespace Domina.Presentation;
 
-/// <summary>Günün teklifi — ekranın okuduğu hâliyle.</summary>
+/// <summary>The day's offer — as the screen reads it.</summary>
 /// <remarks>
-/// Düşman kadrosu burada <b>yok</b>. Teklif nesnesi onu taşır (dövüş aynı kadroyla
-/// kurulsun diye) ama ekran görmemeli: GDD §10'a göre girmeden önce yalnızca bant ve
-/// kaba tanım okunur. Modelin kadroyu hiç taşımaması, ekranın onu yanlışlıkla
-/// basmasını da imkânsız kılar.
+/// The enemy roster is <b>not</b> here. The offer object carries it (so the fight is built with the
+/// same roster) but the screen must not see it: per GDD §10 only the band and a rough description are
+/// readable before going in. The model never carrying the roster also makes it impossible for the
+/// screen to print it by accident.
 /// </remarks>
-/// <param name="Day">Teklifin geçerli olduğu gün.</param>
-/// <param name="Threat">Okunabilen tehdit bandı.</param>
-/// <param name="Sighting">Kaba tanım ("üç kappa" gibi).</param>
-/// <param name="RequiredPartySize">Dayatılan ekip büyüklüğü; yoksa <c>null</c>.</param>
-/// <param name="MaxPartySize">Sefere çıkabilecek azami savaşçı.</param>
-/// <param name="PromisedReward">Kazanılırsa ödenecek altın — girmeden önce okunabilir.</param>
+/// <param name="Day">The day the offer is valid for.</param>
+/// <param name="Threat">The readable threat band.</param>
+/// <param name="Sighting">The rough description ("three kappa", say).</param>
+/// <param name="RequiredPartySize">The party size imposed; <c>null</c> if there is none.</param>
+/// <param name="MaxPartySize">The maximum warriors who can go on the expedition.</param>
+/// <param name="PromisedReward">The gold paid if it is won — readable before going in.</param>
 public readonly record struct OfferCard(
     int Day,
     ThreatBand Threat,
@@ -26,15 +26,15 @@ public readonly record struct OfferCard(
     int MaxPartySize,
     int PromisedReward);
 
-/// <summary>Tahtadaki sözleşme — ekranın okuduğu hâliyle.</summary>
-/// <param name="TargetName">Hedefin adı; sözleşme isimli tek bir yaratığa yazılır.</param>
-/// <param name="Patron">Sözleşmeyi veren taraf.</param>
-/// <param name="Threat">Okunabilen tehdit bandı.</param>
-/// <param name="Reward">Söz verilen altın.</param>
-/// <param name="DaysLeft">Son gün dahil kalan gün.</param>
-/// <param name="HonorReward">Kelle getirilirse ekibin kazandığı onur.</param>
-/// <param name="BrokenHonorPenalty">Söz tutulmazsa <b>kadronun</b> kaybettiği onur.</param>
-/// <param name="Accepted">Söz verilmiş mi?</param>
+/// <summary>The contract on the board — as the screen reads it.</summary>
+/// <param name="TargetName">The target's name; a contract is written against a single named creature.</param>
+/// <param name="Patron">The party that issued the contract.</param>
+/// <param name="Threat">The readable threat band.</param>
+/// <param name="Reward">The gold promised.</param>
+/// <param name="DaysLeft">The days left, the last day included.</param>
+/// <param name="HonorReward">The honour the party earns if the head is brought in.</param>
+/// <param name="BrokenHonorPenalty">The honour <b>the roster</b> loses if the promise is not kept.</param>
+/// <param name="Accepted">Has the promise been given?</param>
 public readonly record struct BountyCard(
     string TargetName,
     string Patron,
@@ -45,12 +45,12 @@ public readonly record struct BountyCard(
     double BrokenHonorPenalty,
     bool Accepted);
 
-/// <summary>Sefere gönderilebilecek adayın satırı.</summary>
-/// <param name="Id">Savaşçının kimliği; ekran komutu bunu geri verir.</param>
-/// <param name="Name">Görünen ad.</param>
-/// <param name="Fit">Bugün gönderilebilir mi?</param>
-/// <param name="RecoveryDaysRemaining">Revirde kalan gün.</param>
-/// <param name="Score">Toplam stat skoru — <b>etkin</b> statlardan, sakatlık dahil.</param>
+/// <summary>The row of a candidate who can be sent on the expedition.</summary>
+/// <param name="Id">The warrior's identity; the screen's command returns it.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="Fit">Can he be sent today?</param>
+/// <param name="RecoveryDaysRemaining">The days left in the infirmary.</param>
+/// <param name="Score">The total stat score — from the <b>effective</b> stats, disabilities included.</param>
 public readonly record struct PartyCandidate(
     WarriorId Id,
     string Name,
@@ -58,28 +58,28 @@ public readonly record struct PartyCandidate(
     int RecoveryDaysRemaining,
     double Score);
 
-/// <summary>Seçili ekiple sefere çıkma hükmü.</summary>
-/// <param name="Refusal">Reddin sebebi; gönderilebiliyorsa <c>null</c>.</param>
-/// <param name="Size">Seçili savaşçı sayısı.</param>
+/// <summary>The verdict on going on an expedition with the selected party.</summary>
+/// <param name="Refusal">The reason for the refusal; <c>null</c> if it can be sent.</param>
+/// <param name="Size">The number of warriors selected.</param>
 public readonly record struct PartyVerdict(ExpeditionRefusal? Refusal, int Size)
 {
-    /// <summary>Ekip bugün gönderilebilir mi?</summary>
+    /// <summary>Can the party be sent today?</summary>
     public bool CanSend => Refusal is null;
 }
 
 /// <summary>
-/// Günün teklifi ekranının okuduğu model. Ne görüneceğine ve seferin
-/// <b>reddedileceğini önceden bilmeye</b> karar verir, çizim yapmaz.
+/// The model the day's offer screen reads. It decides what is shown and <b>knowing in advance that the
+/// expedition will be refused</b>; it does not draw.
 /// </summary>
 /// <remarks>
-/// <see cref="Expedition.Send"/> uygun olmayan ekipte fırlatır; oyuncu bunu istisnadan
-/// değil sönük tuştan öğrenmeli. Hüküm <see cref="Expedition.Refuse"/>'un kendisinden
-/// okunuyor — ekran ikinci bir kural kümesi yazsaydı iki taraf ayrışır ve tuş
-/// gönderilebilen bir seferi kapatmaya başlardı.
+/// <see cref="Expedition.Send"/> throws on an unfit party; the player should learn this from a dimmed
+/// button, not from an exception. The verdict is read from <see cref="Expedition.Refuse"/> itself — if
+/// the screen wrote a second set of rules the two sides would drift apart and the button would start
+/// blocking an expedition that could be sent.
 /// </remarks>
 public static class OfferModel
 {
-    /// <summary>Bugünün teklifi.</summary>
+    /// <summary>Today's offer.</summary>
     public static OfferCard Describe(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -95,7 +95,7 @@ public static class OfferModel
             PromisedReward: dojo.Quartermaster.PromisedReward(new BattleSetup([], offer.Enemies)));
     }
 
-    /// <summary>Bugün tahtada sözleşme varsa kartı, yoksa <c>null</c>.</summary>
+    /// <summary>The card if there is a contract on the board today, otherwise <c>null</c>.</summary>
     public static BountyCard? DescribeBounty(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -116,11 +116,11 @@ public static class OfferModel
             Accepted: dojo.AcceptedBountyDay == contract.PostedDay);
     }
 
-    /// <summary>Sefere gönderilebilecekler önce, sonra revirdekiler.</summary>
+    /// <summary>Those who can be sent on the expedition first, then those in the infirmary.</summary>
     /// <remarks>
-    /// Ölüler hiç listelenmez: kadro ekranında kayıt olarak dururlar, burada seçenek
-    /// değiller. Revirdekiler <b>görünür ama seçilemez</b> — "kimse yok" ile "herkes
-    /// yatakta" aynı ekran olmamalı.
+    /// The dead are never listed: they stay as records on the roster screen, they are not options here.
+    /// Those in the infirmary are <b>visible but not selectable</b> — "there is nobody" and "everyone is
+    /// in bed" must not be the same screen.
     /// </remarks>
     public static IReadOnlyList<PartyCandidate> Candidates(DojoState dojo)
     {
@@ -138,7 +138,7 @@ public static class OfferModel
             .ToList();
     }
 
-    /// <summary>Seçili ekip günün teklifine gönderilebilir mi?</summary>
+    /// <summary>Can the selected party be sent against the day's offer?</summary>
     public static PartyVerdict Judge(DojoState dojo, IReadOnlyList<WarriorId> party)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -146,11 +146,11 @@ public static class OfferModel
         return Judge(dojo, dojo.Offer, party);
     }
 
-    /// <summary>Seçili ekip sözleşmenin üstüne gönderilebilir mi?</summary>
+    /// <summary>Can the selected party be sent against the contract?</summary>
     /// <remarks>
-    /// Sözleşmeye <b>kabul etmeden de</b> girilebilir (bkz.
-    /// <see cref="Expedition.SendToBounty"/>), o yüzden hüküm söze değil güne bakar:
-    /// süresi geçmiş sözleşme gönderilemez.
+    /// A contract can be entered <b>without accepting it</b> (see
+    /// <see cref="Expedition.SendToBounty"/>), so the verdict looks at the day rather than the promise:
+    /// an expired contract cannot be sent against.
     /// </remarks>
     public static PartyVerdict JudgeBounty(
         DojoState dojo,
@@ -166,8 +166,8 @@ public static class OfferModel
             : new PartyVerdict(ExpeditionRefusal.StaleOffer, party.Count);
     }
 
-    /// <summary>Seçili kimlikleri kadro kayıtlarına çevirir — sefer katmanının istediği biçim.</summary>
-    /// <remarks>Kadroda bulunmayan kimlik sessizce düşmez, hüküm onu reddeder.</remarks>
+    /// <summary>Turns the selected ids into roster entries — the form the expedition layer wants.</summary>
+    /// <remarks>An id not on the roster is not silently dropped, the verdict refuses it.</remarks>
     public static IReadOnlyList<RosterEntry> Party(DojoState dojo, IReadOnlyList<WarriorId> party)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -183,8 +183,8 @@ public static class OfferModel
     {
         ArgumentNullException.ThrowIfNull(party);
 
-        // Kayıp kimlik listeden düşerse ekip küçülmüş görünür ve hüküm yanlış sebebi
-        // yazar; sayı seçilenden okunuyor, kadro kaydı ise bulunabildiği kadarıyla.
+        // If a missing id dropped off the list the party would look smaller and the verdict would write
+        // the wrong reason; the count is read from the selection, and the roster entry as far as it can be found.
         List<RosterEntry> entries = [.. Party(dojo, party)];
         if (entries.Count != party.Count)
         {

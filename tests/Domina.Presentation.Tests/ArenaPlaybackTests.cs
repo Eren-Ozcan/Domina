@@ -1,22 +1,22 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Faz 2'nin kabul kriteri: <b>bir seed verildiğinde dövüş baştan sona izlenebiliyor ve
-/// olaylar ile ekranda görünen birebir tutuyor</b> (uzuv kopan savaşçı ekranda da kopuk).
+/// Phase 2's acceptance criterion: <b>given a seed, the fight can be watched from start to finish and
+/// the events match exactly what is seen on screen</b> (a warrior who loses a limb is severed on screen too).
 /// </summary>
 /// <remarks>
-/// Buradaki oynatma, <c>BattleArena._Process</c>'in motorsuz ikizidir: aynı sırayla
-/// dövüşü adımlar, olayları tepkiye çevirir ve konumları hesaplar. Godot'suz koşabiliyor
-/// olması sunum mantığının motordan ayrılmış olmasının kanıtı — ayrım bozulursa bu dosya
+/// The playback here is the engine-free twin of <c>BattleArena._Process</c>: it steps the fight in the
+/// same order, turns events into reactions and computes the positions. That it can run without Godot is
+/// the proof that the presentation logic is separated from the engine — if the separation breaks, this file
 /// derlenmez.
 /// </remarks>
 public class ArenaPlaybackTests
 {
-    /// <summary>Oyuncunun tuşunun yerine geçen eşik: canı bu oranın altına düşen ekibi çeker.</summary>
+    /// <summary>The threshold standing in for the player's key: it pulls the party when health falls below this share.</summary>
     private const double _pullOutBelow = 0.45;
 
     private sealed record Playback(
@@ -26,7 +26,7 @@ public class ArenaPlaybackTests
         Dictionary<WarriorId, ScenePoint> FinalPositions,
         Dictionary<WarriorId, CombatState> FinalStates);
 
-    /// <summary>Bir dövüşü baştan sona "izler" ve ekranda olan biteni toplar.</summary>
+    /// <summary>"Watches" a fight from start to finish and collects what happens on screen.</summary>
     private static Playback Watch(long seed, bool pullOut = true)
     {
         BattleSetup setup = DemoRoster.Setup();
@@ -51,8 +51,8 @@ public class ArenaPlaybackTests
                 positions[snapshot.Id] = choreography.PositionFor(snapshot);
                 states[snapshot.Id] = snapshot.State;
 
-                // Oyuncunun tuşu: ekip yaralanınca çekiliyor. Uzuv kaybı yalnızca
-                // zamanında müdahale edilen dövüşlerde oluşur (GDD §7).
+                // The player's key: the party pulls out when it is wounded. Limb loss only happens in
+                // fights where you intervene in time (GDD §7).
                 if (pullOut
                     && !commanded
                     && snapshot.Team == Battle.PlayerTeam
@@ -71,12 +71,12 @@ public class ArenaPlaybackTests
     }
 
     /// <summary>
-    /// Aranan durumu (ölüm, kaçış, uzuv kaybı) üreten ilk seed'i bulur.
+    /// Finds the first seed that produces the state being looked for (death, escape, limb loss).
     /// </summary>
     /// <remarks>
-    /// Seed sabitlenmiyor: denge sayıları Faz 9'da ayarlanacak ve sabitlenmiş bir seed
-    /// o gün sessizce anlamını yitirirdi — test yeşil kalır ama artık bir şey sınamaz.
-    /// Aranarak bulunan seed her koşuda aynı, çünkü dövüş deterministik.
+    /// The seed is not pinned: the balance numbers will be tuned in phase 9 and a pinned seed would
+    /// quietly lose its meaning that day — the test would stay green while testing nothing.
+    /// A seed found by searching is the same on every run, because the fight is deterministic.
     /// </remarks>
     private static Playback WatchUntil(string looking, Func<Playback, bool> until)
     {
@@ -91,18 +91,18 @@ public class ArenaPlaybackTests
         }
 
         throw new InvalidOperationException(
-            $"400 seed içinde {looking} bulunamadı — denge sayıları mı değişti?");
+            $"{looking} was not found within 400 seeds — have the balance numbers changed?");
     }
 
     /// <summary>
-    /// Kabul kriterinin özü: bilançoda uzvunu kaybettiği yazan savaşçı ekranda da
-    /// kopmuş olmalı, üstelik <b>aynı uzuv</b>.
+    /// The heart of the acceptance criterion: a warrior whose books say he lost a limb must be severed on
+    /// screen too, and <b>the same limb</b>.
     /// </summary>
     [Fact]
     public void WhatTheSummaryReportsIsWhatTheScreenShows()
     {
         Playback playback = WatchUntil(
-            "uzuv kaybı",
+            "limb loss",
             p => p.Reactions.Exists(r => r.Kind == RigReactionKind.Dismember));
 
         foreach (WarriorBattleSummary summary in playback.Result.Summaries)
@@ -116,8 +116,8 @@ public class ArenaPlaybackTests
                 continue;
             }
 
-            // Bir savaşçı tek dövüşte birden fazla uzvunu kaybedebilir; tepkiler
-            // özetteki kümeyle birebir örtüşmeli.
+            // A warrior can lose more than one limb in a single fight; the reactions must match the set
+            // in the summary exactly.
             BodyPartSet reacted = severed.Aggregate(
                 BodyPartSet.None,
                 (set, r) => r.Part is BodyPart part ? set | part.AsFlag() : set);
@@ -127,7 +127,7 @@ public class ArenaPlaybackTests
         }
     }
 
-    /// <summary>Aynı seed aynı dövüşü verir — ekranda görünen de dahil.</summary>
+    /// <summary>The same seed gives the same fight — including what is seen on screen.</summary>
     [Fact]
     public void TheSameSeedIsWatchedTheSameWayTwice()
     {
@@ -140,12 +140,12 @@ public class ArenaPlaybackTests
         Assert.Equal(first.FinalPositions, second.FinalPositions);
     }
 
-    /// <summary>Ölen savaşçı düştüğü yerde kalır; hattına geri ışınlanmaz.</summary>
+    /// <summary>A dead warrior stays where he fell; he is not teleported back to his line.</summary>
     [Fact]
     public void TheDeadRestWhereTheyFellInsideTheFrame()
     {
         var layout = new ArenaLayout();
-        Playback playback = WatchUntil("ölü", p => p.FinalStates.ContainsValue(CombatState.Dead));
+        Playback playback = WatchUntil("dead", p => p.FinalStates.ContainsValue(CombatState.Dead));
 
         foreach ((WarriorId id, CombatState state) in playback.FinalStates)
         {
@@ -154,20 +154,20 @@ public class ArenaPlaybackTests
                 continue;
             }
 
-            // Ceset ne kaçış yoluna savrulur ne de kadrajın dışına düşer; derinliği de
-            // arenanın içinde kalır.
+            // The body is neither flung onto the escape route nor dropped out of frame; its depth also
+            // stays inside the arena.
             ScenePoint spot = playback.FinalPositions[id];
             Assert.InRange(spot.X, 0, layout.Width);
             Assert.InRange(spot.Y, layout.BackGroundY, layout.FrontGroundY);
         }
     }
 
-    /// <summary>Arenadan sağ çıkan savaşçı gizlenmeden önce kadrajı gerçekten terk eder.</summary>
+    /// <summary>A warrior who leaves the arena alive really leaves the frame before he is hidden.</summary>
     [Fact]
     public void TheEscapedLeaveTheFrame()
     {
         var layout = new ArenaLayout();
-        Playback playback = WatchUntil("kaçan", p => p.FinalStates.ContainsValue(CombatState.Escaped));
+        Playback playback = WatchUntil("fleer", p => p.FinalStates.ContainsValue(CombatState.Escaped));
 
         foreach ((WarriorId id, CombatState state) in playback.FinalStates)
         {
@@ -177,39 +177,39 @@ public class ArenaPlaybackTests
             }
 
             float x = playback.FinalPositions[id].X;
-            Assert.True(x < 0 || x > layout.Width, $"{id} kadrajın içinde kayboldu: {x}");
+            Assert.True(x < 0 || x > layout.Width, $"{id} disappeared inside the frame: {x}");
         }
     }
 
     /// <summary>
-    /// Fırsat saldırısı her kaçışın bedelidir; ekranda karşılığı olmayan bir bedel
-    /// oyuncuya "tuşa bastım, sonra canım gitti" olarak görünür.
+    /// An opportunity attack is the price of every escape; a price with no counterpart on screen looks to
+    /// the player like "I pressed the key and then my health went".
     /// </summary>
     [Fact]
     public void EveryOpportunityAttackReachesTheScreen()
     {
-        Playback playback = WatchUntil("kaçış", p => p.Reactions.Exists(
+        Playback playback = WatchUntil("escape", p => p.Reactions.Exists(
             r => r.Kind == RigReactionKind.OpportunitySwing));
 
         int swings = playback.Reactions.Count(r => r.Kind == RigReactionKind.OpportunitySwing);
         int events = playback.Events.OfType<OpportunityAttack>().Count();
 
-        // Sayı bir üst sınıra değil olay akışına bağlanır: bedava vuruş artık yalnızca
-        // kaçıştan değil hücumdan da geliyor (GDD §4), yani savaşçı başına bir tane
-        // varsayımı doğru değil. Bağlanan şey sayının kendisi değil, olay ile ekranın
-        // birebir tutması.
+        // The number is tied to the event stream rather than to an upper bound: a free hit now comes not
+        // only from an escape but from a charge too (GDD §4), so the assumption of one per warrior is not
+        // correct. What is tied down is not the number itself but the event and the screen matching
+        // exactly.
         Assert.True(events > 0);
         Assert.Equal(events, swings);
     }
 
     /// <summary>
-    /// Tuşa hiç basılmadan da uzuv kopar ve ekrana ulaşır (GDD §7 — öldürmeyen ağır
-    /// darbe tuş gerektirmez).
+    /// A limb comes off and reaches the screen without the key ever being pressed (GDD §7 — a heavy blow
+    /// that does not kill needs no key).
     /// </summary>
     /// <remarks>
-    /// Eski kuralda bu tepki müdahalesiz dövüşte <b>hiç</b> görünmezdi; test o zaman
-    /// tersini bekliyordu. Kural değişince kopmanın görselleştirmeye ulaştığını
-    /// doğrulayan bir şey kalmasın diye buraya bağlandı.
+    /// Under the old rule this reaction <b>never</b> appeared in a fight without intervention; the test
+    /// expected the opposite then. When the rule changed, this was tied here so that nothing was left
+    /// verifying that severing reaches the visualisation.
     /// </remarks>
     [Fact]
     public void MaimingReachesTheScreenWithoutAnyButtonPress()
@@ -230,7 +230,7 @@ public class ArenaPlaybackTests
 
             seedsWithMaiming++;
 
-            // Her sakatlanma tepkisi özetteki kayıpla örtüşmeli — kimse "hayalet uzuv"
+            // Every maiming reaction must match a loss in the summary — nobody gets a "phantom limb"
             // kaybetmemeli.
             foreach (RigReaction reaction in severed)
             {

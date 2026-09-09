@@ -2,106 +2,106 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Bir antrenman gününün konusu.</summary>
+/// <summary>The subject of a training day.</summary>
 /// <remarks>
 /// <para>
-/// Dört talim sekiz statı <b>tam olarak</b> kaplar: hiçbir stat antrenmanın dışında
-/// kalmaz, hiçbiri iki talimden birden beslenmez. Gün tek iş yediği için (GDD §10) talim
-/// seçmek gerçek bir karardır — kadroyu neye göre şekillendirdiğin buradan çıkar.
+/// The four drills cover the eight stats <b>exactly</b>: no stat falls outside training, and none is
+/// fed by two drills. Because a day eats a single job (GDD §10), choosing a drill is a real decision —
+/// what you shape the roster around comes out of it.
 /// </para>
 /// <para>
-/// Her talimin bir <b>birincil</b> bir de <b>ikincil</b> statı vardır; ikincil yarım pay
-/// alır (<see cref="TrainingTuning.SecondaryShare"/>). Tek stat çalıştırılsaydı savaşçı
-/// sekiz gün sekiz ayrı talimle düz bir profile doğru itilirdi; ikincil pay talimlere
-/// şekil verir — vuruş talimi gören savaşçı hem isabetli hem atak olur.
+/// Every drill has a <b>primary</b> and a <b>secondary</b> stat; the secondary takes half the share
+/// (<see cref="TrainingTuning.SecondaryShare"/>). Training a single stat would push a warrior toward a
+/// flat profile over eight days of eight separate drills; the secondary share gives the drills shape —
+/// a warrior drilled on striking becomes both accurate and aggressive.
 /// </para>
 /// </remarks>
 public enum Drill
 {
-    /// <summary>Vuruş talimi — İsabet, ikincil Saldırganlık.</summary>
+    /// <summary>Strike drill — Accuracy, secondary Aggression.</summary>
     Strikes,
 
-    /// <summary>Siper talimi — Savunma, ikincil Güç.</summary>
+    /// <summary>Guard drill — Defence, secondary Strength.</summary>
     Guard,
 
-    /// <summary>Ayak talimi — Kaçınma, ikincil Hız.</summary>
+    /// <summary>Footwork drill — Evasion, secondary Speed.</summary>
     Footwork,
 
     /// <summary>Kondisyon — Can, ikincil Stamina.</summary>
     Conditioning,
 }
 
-/// <summary>Antrenmanın ayarlanabilir sayıları.</summary>
+/// <summary>Training's tunable numbers.</summary>
 /// <remarks>
 /// <para>
-/// Kazanç <b>mutlak</b> değil, kalan boşluğun payıdır: bir gün savaşçıyı tavana kalan
-/// mesafenin <see cref="GapClosedPerDay"/> kadarını kapatacak şekilde ilerletir. Mutlak
-/// artış sabit kalsaydı ya erken oyun anlamsız yavaş olurdu ya da geç oyunda her savaşçı
-/// tavana yapışırdı; oran, azalan getiriyi kuralın içine koyar ve tavanı <b>aşılamaz</b>
-/// değil <b>yaklaşılabilir</b> yapar.
+/// The gain is not <b>absolute</b> but a share of the gap left: a day advances the warrior by
+/// <see cref="GapClosedPerDay"/> of the distance remaining to the ceiling. With a fixed absolute
+/// increase, either the early game would be pointlessly slow or every warrior would stick to the
+/// ceiling in the late game; a share puts diminishing returns inside the rule and makes the ceiling
+/// something to be <b>approached</b>, not <b>passed</b>.
 /// </para>
 /// <para>
-/// Sayılar <b>kilitli değil</b>. Ölçümün sorusu belli (GDD §11): pazar tavanı yerine
-/// koymayı acemi bandına kilitledi, ilerleme yolu artık yalnızca antrenman — "ucuz ham
-/// adayı al, eğit" ile "parası yeten en iyisini al" bu sayıların altında <b>rakip</b>
+/// The numbers are <b>not locked</b>. The measurement's question is clear (GDD §11): the market ceiling
+/// locked replacement into the recruit band, so the road to progress is now training alone — "buy the
+/// cheap raw candidate and train him" and "buy the best you can afford" have to be <b>rivals</b>
 /// olmak zorunda.
 /// </para>
 /// </remarks>
 public sealed record TrainingTuning
 {
-    /// <summary>Bir antrenman gününün tavana kalan mesafeden kapattığı pay.</summary>
+    /// <summary>The share of the remaining distance to the ceiling a training day closes.</summary>
     /// <remarks>
-    /// <b>0.04'te kilitlendi</b> (400 dojo × 60 gün, `patrol`): bu oranda iyi işleyen bir
-    /// dojo'nun en iyi savaşçısı 60 günde ~465 skora çıkar, yani pazar tavanının ısırmaya
-    /// başladığı ~473 sınırına dayanır. Aranan ilişki tam olarak budur — pazar bir yere
-    /// kadar yerine koyar, ötesi yalnızca antrenmanla gelir. 0.02'de tavan hiç konuşmaz
-    /// (antrenman süs kalır), 0.08'de dojo antrenmanla kurtulur (kasa 147'den 941'e çıkar,
-    /// kapanan dojo %18.8'den %3.0'a düşer). Ayrıntı: docs/GDD.md §11.
+    /// <b>Locked at 0.04</b> (400 dojos × 60 days, `patrol`): at this rate a well-running dojo's best
+    /// warrior reaches a score of ~465 in 60 days, that is, right up against the ~473 limit where the
+    /// market ceiling starts to bite. That is exactly the relationship wanted — the market replaces up to
+    /// a point, and beyond it only training. At 0.02 the ceiling never speaks (training stays decorative),
+    /// at 0.08 the dojo rescues itself with training (the treasury rises from 147 to 941, and closed
+    /// dojos fall from 18.8% to 3.0%). Details: docs/GDD.md §11.
     /// </remarks>
     public double GapClosedPerDay { get; init; } = 0.04;
 
-    /// <summary>İkincil statın birincile göre aldığı pay.</summary>
+    /// <summary>The share the secondary stat takes relative to the primary.</summary>
     public double SecondaryShare { get; init; } = 0.5;
 
-    /// <summary>Yüzdelik statların (İsabet, Savunma, ...) yaklaşabildiği tavan.</summary>
+    /// <summary>The ceiling the percentage stats (Accuracy, Defence, ...) can approach.</summary>
     /// <remarks>
-    /// 100 değil: statın kendi ölçeğinin ucuna dayanan bir savaşçı dövüşün bütün
-    /// zarlarını tek yönde çevirir. Tavan ölçeğin altında durur ki antrenman kadroyu
-    /// güçlendirsin, dövüşü çözmesin.
+    /// Not 100: a warrior pressed against the very end of a stat's own scale turns all of the fight's
+    /// dice one way. The ceiling stays below the scale so that training strengthens the roster without
+    /// resolving the fight.
     /// </remarks>
     public double SkillCeiling { get; init; } = 90;
 
-    /// <summary>Savaşçının yolunu seçebilmesi için gereken antrenman günü.</summary>
+    /// <summary>The training days needed before a warrior can choose his path.</summary>
     /// <remarks>
-    /// Seçim <b>ücretsiz</b> ama bedava değil: bedeli, o güne kadar harcanan antrenman
-    /// günleri. Gün şartı olmasaydı yol alım anında seçilirdi ve pazardan alınan savaşçı
-    /// hazır uzmanlaşmış gelirdi — okulun yerine pazar yetiştirmiş olurdu.
+    /// The choice is <b>free of charge</b> but not free: its price is the training days spent up to that
+    /// point. Without the day requirement the path would be chosen at the moment of purchase and a
+    /// warrior bought from the market would arrive ready-specialised — the market would have trained him instead of the school.
     /// </remarks>
     public int PathTrainingDays { get; init; } = 20;
 
-    /// <summary>Can ve staminanın yaklaşabildiği tavan.</summary>
+    /// <summary>The ceiling health and stamina can approach.</summary>
     /// <remarks>
-    /// Ayrı tutulur çünkü ölçeği ayrı: acemi 100 canla gelir, yüzdelik statları 35-55
-    /// bandındadır. Aynı tavana bağlansalardı kondisyon talimi ilk günden ısırırdı.
+    /// It is kept separate because its scale is separate: a recruit arrives with 100 health while his
+    /// percentage stats sit in the 35-55 band. Tied to the same ceiling, the conditioning drill would bite from the first day.
     /// </remarks>
     public double PoolCeiling { get; init; } = 180;
 }
 
-/// <summary>Antrenman alanı — bir günün stat karşılığını hesaplar.</summary>
+/// <summary>The training ground — it computes a day's stat return.</summary>
 /// <remarks>
-/// Saf ve durumsuzdur: aynı statlar, aynı talim ve aynı yetenek daima aynı sonucu verir.
-/// Rastgelelik <b>kasten yok</b> — antrenman oyuncunun yatırımıdır, kumarı değil; zar
-/// atsaydı "bugün eğitsem mi" kararı zarın arkasına saklanırdı.
+/// Pure and stateless: the same stats, the same drill and the same talent always give the same result.
+/// Randomness is <b>deliberately absent</b> — training is the player's investment, not his gamble; with
+/// a die, the decision "should I train today" would hide behind the die.
 /// </remarks>
 public static class TrainingGround
 {
-    /// <summary>Bir günlük talimden sonraki statlar.</summary>
-    /// <param name="stats">Sakatlık uygulanmamış ham statlar — antrenman bunları yazar.</param>
-    /// <param name="drill">Günün talimi.</param>
+    /// <summary>The stats after one day of drill.</summary>
+    /// <param name="stats">The raw stats with no disability applied — training writes these.</param>
+    /// <param name="drill">The day's drill.</param>
     /// <param name="talent">
-    /// Savaşçının <see cref="Warrior.Talent"/> payı; kazancı doğrudan çarpar.
+    /// The warrior's <see cref="Warrior.Talent"/> share; it multiplies the gain directly.
     /// </param>
-    /// <param name="tuning">Antrenman sayıları.</param>
+    /// <param name="tuning">The training numbers.</param>
     public static WarriorStats After(
         WarriorStats stats,
         Drill drill,
@@ -139,12 +139,12 @@ public static class TrainingGround
     }
 
     /// <summary>
-    /// Kadronun <b>en geri</b> statını çalıştıran talim.
+    /// The drill that trains the roster's <b>weakest</b> stat.
     /// </summary>
     /// <remarks>
-    /// Arayüz bunu bir öneri olarak kullanabilir, ölçüm ise politika olarak: seçim
-    /// tavana kalan <b>oransal</b> mesafeye bakar, ham puana değil — yoksa ölçekleri
-    /// farklı olduğu için kondisyon her gün kazanırdı.
+    /// The interface can use this as a suggestion and measurement as a policy: the choice looks at the
+    /// <b>proportional</b> distance left to the ceiling, not at raw points — otherwise conditioning would
+    /// win every day because its scale is different.
     /// </remarks>
     public static Drill Weakest(WarriorStats stats, TrainingTuning? tuning = null)
     {
@@ -173,11 +173,11 @@ public static class TrainingGround
         return pick;
     }
 
-    /// <summary>Statı tavana kalan mesafenin bir payı kadar yaklaştırır.</summary>
+    /// <summary>Moves a stat a share of the remaining distance closer to the ceiling.</summary>
     /// <remarks>
-    /// Pay 1'i geçemez: yetenek çarpanı yüksek oranlarda payı 1'in üstüne çıkarabilir ve
-    /// stat tek günde tavanı <b>aşardı</b> — tavanın yaklaşılan bir sınır olması kuralın
-    /// kendisinde durmalı, ayarın küçük seçilmesine bırakılmamalı.
+    /// The share cannot exceed 1: at high rates the talent multiplier could push it above 1 and a stat
+    /// would <b>pass</b> the ceiling in a single day — the ceiling being a limit that is approached must
+    /// live in the rule itself, not be left to the setting being chosen small.
     /// </remarks>
     private static double Grow(double value, double ceiling, double share) =>
         value >= ceiling ? value : value + ((ceiling - value) * Math.Clamp(share, 0, 1));

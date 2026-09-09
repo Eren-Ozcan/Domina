@@ -3,8 +3,8 @@ using Domina.Core.Combat;
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Koreografi artık konum <b>üretmiyor</b>, çekirdekteki arena düzlemini ekrana
-/// yansıtıyor. Bu testler o yansıtmayı ve üstüne eklenen saf görsel süslemeyi sınar.
+/// The choreography no longer <b>produces</b> position, it projects the core's arena plane onto the
+/// screen. These tests exercise that projection and the purely visual decoration added on top.
 /// </summary>
 public class ArenaChoreographyTests
 {
@@ -23,9 +23,9 @@ public class ArenaChoreographyTests
     }
 
     /// <summary>
-    /// Derinlik yandan bakan kamerada dikey kaymaya çevrilir: arkadaki savaşçı ekranda
-    /// yukarıda durur. Bu olmadan iki savaşçı üst üste çizilir ve kim önde belli olmaz.
-    /// </summary>
+    /// With a camera looking from the side, depth is turned into a vertical offset: a warrior further
+    /// back stands higher on screen. Without it two warriors are drawn on top of each other and who is in
+    /// front is unclear.
     [Fact]
     public void DepthLiftsTheWarriorUpTheScreen()
     {
@@ -35,11 +35,11 @@ public class ArenaChoreographyTests
         ScenePoint back = arena.PositionFor(TestSnapshots.Of(2, position: new ArenaPoint(640, _layout.Depth)));
 
         Assert.Equal(front.X, back.X, 3);
-        Assert.True(back.Y < front.Y, "Derinlikteki savaşçı ekranda yukarıda durmalı.");
+        Assert.True(back.Y < front.Y, "The warrior in depth must stand higher on screen.");
         Assert.Equal(_layout.BackGroundY, back.Y, 3);
     }
 
-    /// <summary>Uzaktaki savaşçı küçülür; öndeki tam boydadır.</summary>
+    /// <summary>A distant warrior shrinks; the front one is at full size.</summary>
     [Fact]
     public void DepthShrinksTheWarrior()
     {
@@ -52,7 +52,7 @@ public class ArenaChoreographyTests
             3);
     }
 
-    /// <summary>Derindeki savaşçı öndekinin arkasına çizilir.</summary>
+    /// <summary>A warrior in depth is drawn behind the one in front.</summary>
     [Fact]
     public void TheNearerWarriorDrawsInFront()
     {
@@ -63,8 +63,8 @@ public class ArenaChoreographyTests
     }
 
     /// <summary>
-    /// Kılıcı toplarken hafif geri yaslanma — çekirdekte karşılığı olmayan tek konum
-    /// süslemesi. Yön savaşçının baktığı yöne bağlı.
+    /// A slight lean back while gathering the sword — the only position decoration with no counterpart in
+    /// the core. The direction depends on the way the warrior faces.
     /// </summary>
     [Fact]
     public void TheWindupLeansBackFromTheFacing()
@@ -80,7 +80,7 @@ public class ArenaChoreographyTests
             position: spot,
             facing: 1));
 
-        Assert.True(winding.X < idle.X, "Sağa bakan savaşçı geri (sola) yaslanmalı.");
+        Assert.True(winding.X < idle.X, "A warrior facing right must lean back (left).");
 
         ScenePoint mirrored = arena.PositionFor(TestSnapshots.Of(
             1,
@@ -89,12 +89,12 @@ public class ArenaChoreographyTests
             position: spot,
             facing: -1));
 
-        Assert.True(mirrored.X > idle.X, "Sola bakan savaşçı ters yöne yaslanmalı.");
+        Assert.True(mirrored.X > idle.X, "A warrior facing left must lean the opposite way.");
     }
 
     /// <summary>
-    /// Ölen savaşçı düştüğü yerde kalır. Eskiden bunun için koreografinin hafızası
-    /// gerekiyordu; artık çekirdek ölüyü hareket ettirmediği için bedava geliyor.
+    /// A dead warrior stays where he fell. This used to require memory in the choreography; now that the
+    /// core does not move the dead, it comes free.
     /// </summary>
     [Fact]
     public void TheDeadStayWhereTheyFell()

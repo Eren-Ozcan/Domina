@@ -1,21 +1,21 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Hücum (GDD §4). Kuralın tamamı tek bir takasa dayanır: mesafeyi hızla kapatırsın,
-/// karşılığında hamleni açıkta bırakırsın — birikirken kıpırdayamazsın ve yediğin tek
-/// isabet hücumu götürür. Buradaki testler takasın iki ucunu da bağlar; ödül olmadan
-/// hücum bir intihar, bedel olmadan bedava bir hız bonusudur.
+/// The charge (GDD §4). The whole rule rests on one trade: you close the distance with speed and in
+/// exchange leave your move exposed — you cannot move while winding up and a single hit takes the
+/// charge away. The tests here tie down both ends of the trade; without the reward a charge is
+/// suicide, without the price it is a free speed bonus.
 /// </summary>
 public class ChargeTests
 {
     private static readonly WarriorId _fighter = new(1);
     private static readonly WarriorId _enemy = new(101);
 
-    /// <summary>Taraflar uzakta başlar; zar her zaman hücumu seçer.</summary>
+    /// <summary>The sides start far apart; the die always chooses to charge.</summary>
     private static CombatTuning AlwaysCharges { get; } = CombatTuning.Default with
     {
         ChargeChanceAtZeroAggression = 1.0,
@@ -53,7 +53,7 @@ public class ChargeTests
         return false;
     }
 
-    /// <summary>Mesafe uygunsa hücum başlar ve savaşçı gerçekten hızlanır.</summary>
+    /// <summary>If the distance is right the charge starts and the warrior really speeds up.</summary>
     [Fact]
     public void ChargingClosesTheGapFasterThanWalking()
     {
@@ -62,7 +62,7 @@ public class ChargeTests
 
         Assert.True(StepUntil(charging, b => b.Events.OfType<ChargeStarted>().Any()));
 
-        // Aynı sayıda tick sonra hücum eden daha çok yol almış olmalı.
+        // After the same number of ticks the charging one must have covered more ground.
         for (int i = 0; i < 20; i++)
         {
             charging.Step();
@@ -74,17 +74,17 @@ public class ChargeTests
 
         Assert.True(
             chargedGap < walkedGap,
-            $"Hücum yürüyüşten hızlı değil: {chargedGap:F1} >= {walkedGap:F1}");
+            $"The charge is not faster than walking: {chargedGap:F1} >= {walkedGap:F1}");
     }
 
     /// <summary>
-    /// <b>Hücum savunmayı kapatmaz.</b> Koşan savaşçı normal oranıyla kaçınmayı sürdürür;
-    /// savunmasızlık kaçışa özgüdür (docs/GDD.md §4-§5).
+    /// <b>A charge does not close defence.</b> A running warrior keeps evading at his normal rate;
+    /// defencelessness belongs to fleeing (docs/GDD.md §4-§5).
     /// </summary>
     [Fact]
     public void TheChargingWarriorStillDefends()
     {
-        // Kaçınması yüksek bir savaşçı hücum ederken de kaçınabilmeli.
+        // A warrior with high evasion must be able to evade while charging too.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 400, evasion: 100)],
             [TestBuilders.Warrior(101, health: 400, thrown: ThrownWeapon.Shuriken())])
@@ -99,8 +99,8 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// Varıştaki ilk vuruş momentum taşır: aynı seed'de yalnızca çarpanı büyütmek
-    /// hasarı büyütür.
+    /// The first strike on arrival carries momentum: with the same seed, raising only the multiplier
+    /// raises the damage.
     /// </summary>
     [Fact]
     public void ArrivingWithMomentumHitsHarder()
@@ -108,17 +108,17 @@ public class ChargeTests
         double plain = FirstBlowAfterCharge(bonusAtFullSpeed: 0.0);
         double heavy = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0);
 
-        Assert.True(heavy > plain, $"Hücum bonusu hasara yansımıyor: {heavy:F2} <= {plain:F2}");
+        Assert.True(heavy > plain, $"The charge bonus does not reach the damage: {heavy:F2} <= {plain:F2}");
     }
 
     /// <summary>
-    /// <b>Momentum hızdır:</b> aynı bonus ayarıyla hızlı savaşçının varış vuruşu, yavaş
-    /// olanınkinden serttir. Ağır Oni'nin hücumu Tengu'nunki kadar sert olamaz.
+    /// <b>Momentum is speed:</b> with the same bonus setting, a fast warrior's arrival blow is harder
+    /// than a slow one's. A heavy Oni's charge cannot be as hard as a Tengu's.
     /// </summary>
     /// <remarks>
-    /// Çarpan varış anındaki gerçek hızdan çıkar; bu yüzden hem <c>Speed</c> stat'ı hem de
-    /// <see cref="CombatTuning.ChargeSpeedMultiplier"/> hasara işler. İkincisi, ölçümde atıl
-    /// çıkmış olan hız eksenini canlı tutan şeydir.
+    /// The multiplier comes out of the real speed at the moment of arrival; that is why both the
+    /// <c>Speed</c> stat and <see cref="CombatTuning.ChargeSpeedMultiplier"/> feed into damage. The
+    /// latter is what keeps alive the speed axis that measured as inert.
     /// </remarks>
     [Fact]
     public void AFasterWarriorChargesHarder()
@@ -126,17 +126,17 @@ public class ChargeTests
         double slow = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, speed: 0);
         double fast = FirstBlowAfterCharge(bonusAtFullSpeed: 1.0, speed: 100);
 
-        Assert.True(fast > slow, $"Hız varış vuruşuna yansımıyor: {fast:F2} <= {slow:F2}");
+        Assert.True(fast > slow, $"Speed does not reach the arrival blow: {fast:F2} <= {slow:F2}");
     }
 
     /// <summary>
-    /// <b>Cepheden karşılamak hücumu söndürür.</b> Hedefin karşı vuruşu tuttuğunda varış
-    /// vuruşu yapılır ama momentum çarpanını kazanmaz (docs/GDD.md §4).
+    /// <b>Meeting it head-on kills the charge.</b> When the target's counter-hit holds, the arrival
+    /// blow is still made but does not earn the momentum multiplier (docs/GDD.md §4).
     /// </summary>
     /// <remarks>
-    /// Karşı vuruşun değeri sıklığında değil sonucunda: hedef dörtte üç ihtimalle
-    /// karşılık veremez, verdiğinde ise hamleyi bitirir. Bu, yeni bir ayar sayısı
-    /// doğurmadan nadir karşılığa ağırlık kazandıran şey.
+    /// The counter-hit's value is not in its frequency but in its consequence: three times out of four
+    /// the target cannot answer, and when he does he ends the move. This is what gives a rare answer
+    /// weight without spawning a new tuning number.
     /// </remarks>
     [Fact]
     public void AParriedChargeArrivesWithoutMomentum()
@@ -146,12 +146,12 @@ public class ChargeTests
 
         Assert.True(
             parried < untouched,
-            $"Karşı vuruş momentumu söndürmüyor: {parried:F2} >= {untouched:F2}");
+            $"The counter-hit does not kill the momentum: {parried:F2} >= {untouched:F2}");
     }
 
     /// <summary>
-    /// Hücumun hedefi, yoldan geçilen düşmandan farklıdır: bedava vuruşu <b>kesin
-    /// değil</b>, zara bağlıdır.
+    /// The charge's target is different from an enemy passed on the way: his free hit is <b>not
+    /// certain</b>, it depends on a die.
     /// </summary>
     [Fact]
     public void TheChargedTargetOnlySometimesCountersBack()
@@ -176,8 +176,8 @@ public class ChargeTests
             [TestBuilders.Warrior(1, health: 400, speed: speed)],
             [TestBuilders.Warrior(101, health: 400)])
         {
-            // Ölçülen şey çarpan, karşı vuruş zarı değil: hedefin karşılığı tutarsa
-            // momentum söner ve varış vuruşu bonusunu hiç kazanmaz (docs/GDD.md §4).
+            // What is measured is the multiplier, not the counter-hit die: if the target's answer holds,
+            // the momentum dies and the arrival blow never earns its bonus (docs/GDD.md §4).
             Tuning = AlwaysCharges with
             {
                 ChargeDamageAtFullSpeed = bonusAtFullSpeed,
@@ -191,8 +191,8 @@ public class ChargeTests
 
         ChargeConnected arrival = battle.Events.OfType<ChargeConnected>().First();
 
-        // Aranan şey varıştan sonraki ilk vuruş değil, varanın vurduğu ilk vuruş:
-        // aradaki farkı karşı tarafın darbeleri doldurabilir.
+        // What is wanted is not the first strike after arrival but the first strike by the arriving
+        // warrior: the gap between them can be filled by the other side's blows.
         Assert.True(StepUntil(
             battle,
             b => b.Events.OfType<AttackLanded>()
@@ -203,7 +203,7 @@ public class ChargeTests
             .Damage;
     }
 
-    /// <summary>Hedefe varılamazsa hamle boşa gider — süre sınırı hücumu bitirir.</summary>
+    /// <summary>If the target cannot be reached the move is wasted — the time limit ends the charge.</summary>
     [Fact]
     public void AChargeThatNeverArrivesIsWasted()
     {
@@ -216,16 +216,15 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// "Çek" komutu hücumu keser. Hücum kendi kararlarına karşı taahhütlüdür ama
-    /// oyuncunun komutu ayrı bir eksendir — kesilemez olsaydı komut anında koşan
-    /// savaşçı düşman hattına varmak zorunda kalır ve GDD §5'in merdiveni ters dönerdi.
+    /// The "pull out" command interrupts the charge. The charge is committed against its own decisions,
+    /// but the player's command is a separate axis — were it not interruptible, a warrior running at the
+    /// moment of the command would have to reach the enemy line and GDD §5's ladder would invert.
     /// </summary>
     [Fact]
     public void TheRetreatCommandCutsTheChargeShort()
     {
-        // Tuş ilk temasa kadar kapalı olduğu için (GDD §5) hâlâ koşmakta olan bir
-        // savaşçıya ihtiyaç var: hızlı savaşçı teması açar, ağır olan arkadan hücumda
-        // yakalanır.
+        // Because the key is closed until first contact (GDD §5) a warrior who is still running is
+        // needed: the fast warrior opens contact, and the heavy one is caught charging from behind.
         var laggard = new WarriorId(2);
         var setup = new BattleSetup(
             [
@@ -251,8 +250,8 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// Kaçan hedefe hücum edilmez. Ölçüldü: edilirse 1.6 kat hız kaçışın tek ayar
-    /// düğmesini devre dışı bırakıyor ve kovalamaca dengesi (GDD §5) çöküyor.
+    /// A fleeing target is not charged. Measured: if it is, the 1.6x speed disables escape's only tuning
+    /// knob and the chase balance (GDD §5) collapses.
     /// </summary>
     [Fact]
     public void NobodyChargesAFleeingTarget()
@@ -274,8 +273,8 @@ public class ChargeTests
     // ---- Birikme (GDD §4) ----
 
     /// <summary>
-    /// Hücum önce yerinde birikir, sonra koşar. Birikirken savaşçı <b>yerinden
-    /// kıpırdamaz</b> — bedelin ödendiği pencere burasıdır.
+    /// A charge first gathers in place, then runs. While gathering the warrior <b>does not move</b> —
+    /// this is the window where the price is paid.
     /// </summary>
     [Fact]
     public void TheChargeGathersBeforeItRuns()
@@ -289,7 +288,7 @@ public class ChargeTests
 
         Assert.True(StepUntil(battle, b => b.Events.OfType<ChargeLaunched>().Any()));
 
-        // Birikme boyunca hiç yol alınmadı; koşu ancak şimdi başlıyor.
+        // No ground was covered during the windup; the run only starts now.
         Assert.Equal(gathering.X, PositionAtLaunch(battle).X, precision: 6);
         Assert.Equal(CombatState.Charging, battle.SnapshotOf(_fighter).State);
     }
@@ -297,27 +296,27 @@ public class ChargeTests
     private static ArenaPoint PositionAtLaunch(Battle battle) => battle.SnapshotOf(_fighter).Position;
 
     /// <summary>
-    /// Birikirken yenen bir isabet hücumu dağıtır: koşu hiç başlamaz, hasar çarpanı
-    /// kazanılmaz.
+    /// A hit taken during the windup scatters the charge: the run never starts and the damage multiplier
+    /// is not earned.
     /// </summary>
     /// <remarks>
-    /// Ölçüm bu kuralı iki kez değiştirdi. Önce "ağır darbe dağıtır" denendi — 3v3'te
-    /// birikmenin <b>%0.0</b>'ı dağılıyordu, çünkü taze savaşçıya inen darbeler ağır
-    /// darbe eşiğine hemen hiç ulaşmıyor. İsabet ölçütüyle %23.6'sı dağılıyor.
+    /// Measurement changed this rule twice. First "a heavy blow scatters it" was tried — in 3v3
+    /// <b>0.0%</b> of windups scattered, because blows landing on a fresh warrior almost never reach the
+    /// heavy-blow threshold. With the hit criterion, 23.6% scatter.
     /// </remarks>
     [Fact]
     public void AHitWhileGatheringBreaksTheCharge()
     {
-        // Menzil içindeyken bile hücuma kalkılsın ve birikme yeterince uzun sürsün ki
-        // yanı başındaki düşman vurmaya fırsat bulsun.
-        // Mermili düşman hücuma kalkmaz, atar (GDD §4) — biriken savaşçıyı vurabilecek
-        // tek düşman odur, ve hücumun doğal karşıtı da tam olarak budur.
+        // Charging should happen even while in reach, and the windup should last long enough for the
+        // enemy right beside him to find a chance to strike.
+        // An enemy with a projectile does not charge, he throws (GDD §4) — he is the only enemy who can
+        // hit a gathering warrior, and that is exactly the charge's natural counter.
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 400)],
             [TestBuilders.Warrior(101, health: 400, thrown: ThrownWeapon.Shuriken())])
         {
-            // Birikme, ilk karar anındaki boşluğa sığacak kadar uzun tutuldu: düşman
-            // menzile giremiyor, ama mermisi yetişiyor — kasıtlı kör nokta budur.
+            // The windup is kept long enough to fit the gap at the first decision moment: the enemy
+            // cannot get into reach, but his projectile can — that is the deliberate blind spot.
             Tuning = AlwaysCharges with { ChargeWindupSeconds = 1.5 },
         };
 
@@ -327,7 +326,7 @@ public class ChargeTests
 
         ChargeBroken broken = battle.Events.OfType<ChargeBroken>().First(e => e.Warrior == _fighter);
 
-        // Dağılan birikme koşuya dönüşmedi ve varış bonusu kazanılmadı.
+        // The scattered windup did not turn into a run and the arrival bonus was not earned.
         Assert.DoesNotContain(
             battle.Events.OfType<ChargeLaunched>(),
             e => e.Warrior == _fighter && e.AtSeconds <= broken.AtSeconds);
@@ -336,7 +335,7 @@ public class ChargeTests
             e => e.Warrior == _fighter && e.AtSeconds <= broken.AtSeconds);
     }
 
-    /// <summary>"Çek" komutu birikmeyi de keser, tıpkı koşuyu kestiği gibi.</summary>
+    /// <summary>The "pull out" command interrupts the windup too, just as it interrupts the run.</summary>
     [Fact]
     public void TheRetreatCommandCutsTheWindupToo()
     {
@@ -366,19 +365,19 @@ public class ChargeTests
     // ---- Karar: statlar + zar (GDD §4) ----
 
     /// <summary>
-    /// Hücum kararı savaşçının kimliğinden çıkar: atılgan olan daha sık hücuma kalkar.
+    /// The charge decision comes out of the warrior's identity: the bold one charges more often.
     /// </summary>
     [Fact]
     public void AggressionDecidesHowOftenAWarriorCharges()
     {
         Assert.True(
             ChargeCount(aggression: 90) > ChargeCount(aggression: 10),
-            "Saldırganlık hücum sıklığını değiştirmiyor.");
+            "Aggression does not change charge frequency.");
     }
 
     /// <summary>
-    /// Bir savaşçının otuz dövüşte kaç kez hücuma kalktığı. Tek dövüş zarın insafındadır;
-    /// eğilimi görmek için koşum tekrarlanır.
+    /// How many times a warrior launches a charge over thirty fights. A single fight is at the mercy of
+    /// the die; to see the tendency the run is repeated.
     /// </summary>
     private static int ChargeCount(double aggression)
     {
@@ -386,8 +385,8 @@ public class ChargeTests
 
         for (ulong seed = 1; seed <= 30; seed++)
         {
-            // Devrilen her hedef bir karar anı açar — böylece tek dövüşte birden çok
-            // hücum zarı atılır ve eğilim ölçülebilir hale gelir.
+            // Every target felled opens a decision moment — so more than one charge die is rolled in a
+            // single fight and the tendency becomes measurable.
             BattleSetup setup = FlankedPair(aggression);
 
             var battle = new Battle(setup, new SeededRandom(seed));
@@ -400,19 +399,19 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// Menzilinde düşman varken hücuma kalkılmaz: birikmeyi tamamlayacak boşluk yoktur.
+    /// No charge is launched while an enemy is in reach: there is no gap to finish the windup in.
     /// </summary>
     /// <remarks>
-    /// Hücumun tetiği sabit bir mesafe eşiği değil, bir <b>fırsat değerlendirmesi</b>dir:
-    /// "şu an kimse bana vuramıyor ve birikmemi tamamlayacak vaktim var." Zar her zaman
-    /// tutsa bile bu koşul sağlanmadan hücum başlamaz.
+    /// The charge's trigger is not a fixed distance threshold but an <b>assessment of the opportunity</b>:
+    /// "nobody can hit me right now and I have time to finish my windup." Even if the die always holds,
+    /// no charge starts until that condition is met.
     /// </remarks>
     [Fact]
     public void NobodyChargesWithAnEnemyAlreadyInReach()
     {
         var battle = new Battle(Duel(AlwaysCharges), new SeededRandom(21));
 
-        // Temas kurulana kadar koştur: artık iki taraf da birbirinin menzilinde.
+        // Run until contact is made: now both sides are within each other's reach.
         Assert.True(StepUntil(battle, b => b.ContactMade));
 
         int before = battle.Events.OfType<ChargeStarted>().Count();
@@ -426,19 +425,19 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// Boşluğun ölçüsü <b>düşmanın hızıdır</b>: yavaş düşman birikmeye vakit bırakır,
-    /// hızlı düşman aynı mesafeden bırakmaz.
+    /// The measure of the gap is <b>the enemy's speed</b>: a slow enemy leaves time for the windup, a
+    /// fast one does not from the same distance.
     /// </summary>
     /// <remarks>
-    /// Gereken mesafe elle seçilmiş bir sayı değil, <c>menzil + hız × birikme</c>
-    /// formülünden türer — bu yüzden aynı mesafe bir düşman için yeterli, öbürü için
-    /// yetersizdir. Uzun birikme farkı açılış mesafesinde görünür kılıyor.
+    /// The distance needed is not a hand-picked number, it derives from <c>reach + speed × windup</c> —
+    /// which is why the same distance is enough for one enemy and not for another. A long windup makes
+    /// the difference visible at the opening distance.
     /// </remarks>
     [Fact]
     public void TheRoomNeededDependsOnHowFastTheEnemyIs()
     {
-        Assert.True(ChargesAgainst(enemySpeed: 0), "Yavaş düşmana karşı hücum hiç kalkmadı.");
-        Assert.False(ChargesAgainst(enemySpeed: 100), "Hızlı düşman birikmeye vakit bırakmamalıydı.");
+        Assert.True(ChargesAgainst(enemySpeed: 0), "No charge was launched against the slow enemy.");
+        Assert.False(ChargesAgainst(enemySpeed: 100), "The fast enemy should not have left time for the windup.");
     }
 
     private static bool ChargesAgainst(double enemySpeed)
@@ -447,7 +446,7 @@ public class ChargeTests
             [TestBuilders.Warrior(1, health: 400)],
             [TestBuilders.Warrior(101, health: 400, speed: enemySpeed)])
         {
-            // Uzun birikme: açılış mesafesi yavaş düşman için yeterli, hızlı için değil.
+            // A long windup: the opening distance is enough for the slow enemy, not for the fast one.
             Tuning = AlwaysCharges with { ChargeWindupSeconds = 3.0 },
         };
 
@@ -458,13 +457,13 @@ public class ChargeTests
     }
 
     /// <summary>
-    /// İki cepheli 2v2: her savaşçı kendi karşısındakine tutuşur, biri hedefini devirince
-    /// sıradaki düşman <b>öbür cephede ve menzilin çok dışında</b> kalır.
+    /// A two-front 2v2: each warrior engages the one opposite him, and when one fells his target the next
+    /// enemy is <b>on the other front and well out of reach</b>.
     /// </summary>
     /// <remarks>
-    /// Yeniden tutuşmayı ancak bu biçim ölçebilir. Tek savaşçıya karşı kalabalık
-    /// kurulduğunda düşmanların hepsi aynı noktada toplanıyor ve hedef devrildiğinde
-    /// sıradaki zaten menzilin içinde oluyor — karar anı hiç gelmiyor.
+    /// Only this shape can measure re-engagement. Set up as a crowd against a single warrior, all the
+    /// enemies gather at the same point and when the target is felled the next one is already in reach —
+    /// the decision moment never comes.
     /// </remarks>
     private static BattleSetup FlankedPair(double aggression) => new(
         [
@@ -480,19 +479,19 @@ public class ChargeTests
     };
 
     /// <summary>
-    /// Hedefini deviren savaşçının önünde boşluk açılır ve sıradakine hücum edebilir.
-    /// Ölçüm bu kuralı gerektirdi: sabit eşikle 30.000 dövüşün hiçbirinde 1.75 sn'den
-    /// sonra hücuma kalkılmıyordu, çünkü hatlar buluştuktan sonra mesafe bir daha hiç
-    /// doğmuyor. Fırsat değerlendirmesi bunu kendiliğinden çözer.
+    /// A gap opens in front of a warrior who fells his target and he can charge the next one.
+    /// Measurement required this rule: with a fixed threshold, in none of 30,000 fights was a charge
+    /// launched after 1.75 s, because once the lines meet the distance never appears again. Assessing the
+    /// opportunity solves this by itself.
     /// </summary>
     [Fact]
     public void KillingYourTargetOpensAChargeOnTheNextOne()
     {
-        // Normal eşik ulaşılamaz; kalkan her hücum ancak yeniden tutuşma penceresinden
-        // gelmiş olabilir.
+        // The normal threshold is unreachable; any charge launched can only have come through the
+        // re-engagement window.
         BattleSetup setup = FlankedPair(aggression: 100);
 
-        // Ölçülen şey zarın tutup tutmadığı değil, fırsatın doğup doğmadığı.
+        // What is measured is not whether the die held but whether the opportunity appeared.
         setup = setup with
         {
             Tuning = setup.Tuning with
@@ -508,30 +507,29 @@ public class ChargeTests
 
         double death = battle.Events.OfType<WarriorDied>().First().AtSeconds;
 
-        // Hedefi devrildikten SONRA da hücuma kalkabilmeli: hücum açılış hamlesi değil.
+        // He must be able to charge AFTER his target is felled too: the charge is not an opening move.
         Assert.True(
             StepUntil(
                 battle,
                 b => b.Events.OfType<ChargeStarted>()
                     .Any(e => e.Warrior == _fighter && e.AtSeconds > death),
                 maxSteps: 4000),
-            "Hedefi devrilen savaşçı sıradakine hiç hücum etmedi.");
+            "The warrior whose target was felled never charged the next one.");
     }
 
     /// <summary>
-    /// Hücum zarı <b>açıklık başına bir kez</b> atılır, açıklık sürdükçe her karar
-    /// adımında yeniden değil.
+    /// The charge die is rolled <b>once per opening</b>, not again at every decision step for as long as
+    /// the opening lasts.
     /// </summary>
     /// <remarks>
-    /// Kuralın denge sebebi budur (docs/GDD.md §4): adım başına atılan zarda hücum
-    /// sıklığı, savaşçının açıklıkta ne kadar oyalandığına — yani kendi hızına ters
-    /// orantılı olarak — bağlıydı. Hızlanan savaşçı daha sert ama daha seyrek hücum
-    /// ettiği için <c>Speed</c> ekseni ölçümde atıl çıkıyordu.
+    /// This is the rule's balance reason (docs/GDD.md §4): with a die rolled per step, charge frequency
+    /// depended on how long the warrior loitered in the opening — that is, inversely on his own speed.
+    /// Because a faster warrior charged harder but less often, the <c>Speed</c> axis measured as inert.
     /// </remarks>
     [Fact]
     public void TheChargeIsJudgedOncePerOpening()
     {
-        // Başka hiçbir olasılıkla karışmayan bir değer: zar sayacı yalnızca bunu sayar.
+        // A value that collides with no other probability: the die counter counts only this.
         const double chargeChance = 0.371;
 
         BattleSetup setup = Duel(CombatTuning.Default with
@@ -544,17 +542,17 @@ public class ChargeTests
         var rng = new ChargeRollCounter(chargeChance);
         var battle = new Battle(setup, rng);
 
-        // Açıklık kapanana kadar koştur: taraflar yaklaştıkça bir noktada boşluk biter.
-        // Aradaki 900 birim, adım başına zar atılsaydı onlarca atışa yeterdi.
+        // Run until the opening closes: as the sides approach, at some point the gap ends.
+        // The 900 units in between would have been enough for dozens of rolls if a die were rolled per step.
         StepUntil(battle, _ => false, maxSteps: 200);
 
-        // Sahada iki savaşçı var ve ikisi de aynı açıklığı görüyor: adam başına tek zar.
+        // There are two warriors on the field and both see the same opening: one die per man.
         Assert.Equal(2, rng.ChargeRolls);
     }
 
     /// <summary>
-    /// Verilen olasılığa yapılan zar atışlarını sayan, o zarı hep reddeden kaynak.
-    /// Diğer olasılıklar gerçek seed'li kaynağa gider ki dövüş normal işlesin.
+    /// A source that counts the rolls made against a given probability and always refuses that die.
+    /// The other probabilities go to the real seeded source so the fight runs normally.
     /// </summary>
     private sealed class ChargeRollCounter(double counted) : IRandomSource
     {

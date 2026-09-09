@@ -1,25 +1,25 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation;
 
 /// <summary>
-/// Bir savaşçının animasyon hali: durum + tepkiler → duruş.
+/// A warrior's animation state: state + reactions → pose.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Duruşlar <b>yordamsal</b> üretilir (durum + faz → kemik açısı). Gerçek sanat
-/// geldiğinde bunun yerini AnimationPlayer alabilir; çağıran taraf değişmez, çünkü
-/// tek arayüz <see cref="Advance"/>.
+/// Poses are generated <b>procedurally</b> (state + phase → bone angle). When real art arrives an
+/// AnimationPlayer can take its place; the caller does not change, because the only interface is
+/// <see cref="Advance"/>.
 /// </para>
 /// <para>
-/// Sınıfın hafızası yalnızca <b>görsel</b> hafızadır: sayaçlar ve kaybedilen uzuvlar.
-/// Dövüşün gidişatını etkileyemez — ok tek yönlüdür (bkz. CLAUDE.md → "Mimari kuralı").
+/// The class's memory is only <b>visual</b> memory: timers and lost limbs. It cannot affect the course
+/// of the fight — the arrow points one way (see CLAUDE.md → "Architecture rule").
 /// </para>
 /// </remarks>
 public sealed class RigAnimator
 {
-    // Tepki sayaçları 1'den 0'a iner; sayı büyüdükçe tepki kısalır.
+    // Reaction timers fall from 1 to 0; the larger the number, the shorter the reaction.
     private const double _flinchDecayPerSecond = 4.0;
     private const double _dodgeDecayPerSecond = 3.4;
     private const double _overswingDecayPerSecond = 2.6;
@@ -39,16 +39,16 @@ public sealed class RigAnimator
     private double _catch;
     private double _deathLean;
 
-    /// <summary>Kaybedilen uzuvlar kalıcıdır — geri takılmaz.</summary>
+    /// <summary>Lost limbs are permanent — they are not put back.</summary>
     public bool HasLost(BodyPart part) => _lost.Contains(part);
 
     /// <summary>
-    /// Tek seferlik tepkiyi işler.
+    /// Processes a one-off reaction.
     /// </summary>
     /// <returns>
-    /// Bu tepki bir uzvu <b>ilk kez</b> kopardıysa o uzuv, aksi hâlde <c>null</c>.
-    /// Çağıran taraf düğümü rig'den ayırmak için bunu kullanır; ikinci kez aynı uzuv
-    /// gelirse <c>null</c> döner, çünkü zaten sahnede değildir.
+    /// The limb if this reaction took one off <b>for the first time</b>, otherwise <c>null</c>.
+    /// The caller uses this to detach the node from the rig; if the same limb comes again it returns
+    /// <c>null</c>, because it is no longer in the scene.
     /// </returns>
     public BodyPart? React(in RigReaction reaction)
     {
@@ -71,7 +71,7 @@ public sealed class RigAnimator
                 break;
 
             case RigReactionKind.Throw:
-                // Fırlatma da bir savurmadır; kolun geri gelişi aynı eğriyi kullanır.
+                // A throw is a swing too; the arm's return uses the same curve.
                 _overswing = 1;
                 break;
 
@@ -84,27 +84,27 @@ public sealed class RigAnimator
                 break;
 
             case RigReactionKind.PoisonThroe:
-                // Yordamsal duruşta sendelemenin eğrisini ödünç alır: ikisinde de vuran
-                // yok, savaşçı kendi ağırlığıyla bükülür. Gerçek sanat geldiğinde
-                // ayrışacak yer burası (bkz. docs/ROADMAP.md 2.2).
+                // In the procedural pose it borrows the stumble curve: in both cases nobody struck, the
+                // warrior bends under his own weight. This is the place that will split when real art
+                // arrives (see docs/ROADMAP.md 2.2).
                 _stumble = 1;
                 break;
 
             case RigReactionKind.WeaponLost:
-                // Sendelemenin eğrisini ödünç alır: iki durumda da savaşçı bir an
-                // dengesini kaybeder. Gerçek sanat geldiğinde ayrışacak (docs/ROADMAP.md 2.2).
+                // It borrows the stumble curve: in both cases the warrior loses his balance for a
+                // moment. It will split when real art arrives (docs/ROADMAP.md 2.2).
                 _stumble = 1;
                 break;
 
             case RigReactionKind.ArmorShattered:
-                // Sendelemenin eğrisini ödünç alır: plakası dağılan savaşçı bir an
-                // savrulur. Gerçek sanat geldiğinde ayrışacak (docs/ROADMAP.md 2.2).
+                // It borrows the stumble curve: a warrior whose plate breaks is thrown for a moment.
+                // It will split when real art arrives (docs/ROADMAP.md 2.2).
                 _stumble = 1;
                 break;
 
             case RigReactionKind.Block:
-                // Sarsıntı, geri savrulma değil: irkilmenin eğrisini ödünç alır ama
-                // duruşun kendisi Guard()'dan gelir, yani savaşçı yerinde kalır.
+                // A shake, not a knockback: it borrows the flinch curve, but the stance itself comes
+                // from Guard(), so the warrior stays in place.
                 _flinch = 1;
                 break;
 
@@ -123,10 +123,10 @@ public sealed class RigAnimator
         return null;
     }
 
-    /// <summary>Sayaçları ilerletir ve bu karenin duruşunu üretir.</summary>
-    /// <param name="state">Çekirdeğin bildirdiği durum.</param>
-    /// <param name="stateProgress">Durumun tamamlanma oranı (0-1).</param>
-    /// <param name="delta">Geçen süre.</param>
+    /// <summary>Advances the timers and produces this frame's pose.</summary>
+    /// <param name="state">The state reported by the core.</param>
+    /// <param name="stateProgress">How far the state has progressed (0-1).</param>
+    /// <param name="delta">The time elapsed.</param>
     public RigPose Advance(CombatState state, double stateProgress, double delta)
     {
         _clock += delta;
@@ -148,7 +148,7 @@ public sealed class RigAnimator
     private static double Decay(double value, double delta, double rate) =>
         Math.Max(0, value - (delta * rate));
 
-    // ------------------------------------------------------------------ derleme
+    // ---------------------------------------------------------------- composition
 
     private RigPose Compose(CombatState state, double phase)
     {
@@ -164,10 +164,10 @@ public sealed class RigAnimator
 
         RigPose pose = state switch
         {
-            // Fırlatma da bir toplanma ve savurmadır; yordamsal duruşta yakın dövüşle
-            // aynı eğrileri kullanır. Gerçek sanat geldiğinde ayrışacak yer burası.
-            // Hücumun birikmesi de bir toplanmadır — kendi duruşunu kazanana kadar
-            // (bkz. docs/ROADMAP.md 2.2) saldırı toplanmasının eğrilerini ödünç alır.
+            // A throw is a gathering and a swing too; in the procedural pose it uses the same curves as
+            // melee. This is the place that will split when real art arrives.
+            // A charge's windup is a gathering too — until it earns its own pose
+            // (see docs/ROADMAP.md 2.2) it borrows the attack windup's curves.
             CombatState.AttackWindup or CombatState.ThrowWindup or CombatState.ChargeWindup =>
                 Windup(phase),
             CombatState.AttackRecovery or CombatState.ThrowRecovery =>
@@ -180,9 +180,9 @@ public sealed class RigAnimator
             _ => Idle(),
         };
 
-        // Fırsat saldırısı çekirdekte bir duruma karşılık gelmez: kaçan avın arkasından
-        // anında çözülür. Boşta bekleyen savaşçının duruşunu geçici olarak devralması,
-        // bedava vuruşun kimden geldiğini gösteren tek işaret.
+        // An opportunity attack has no state in the core: it resolves instantly behind fleeing prey.
+        // Temporarily taking over the pose of a waiting warrior is the only sign that shows who the
+        // free hit came from.
         if (_opportunity > 0 && state == CombatState.Idle)
         {
             pose = Swing(Curves.Smooth(1 - _opportunity));
@@ -203,7 +203,7 @@ public sealed class RigAnimator
     {
         float bob = MathF.Sin((float)_clock * 3f) * 0.04f;
 
-        // Silah kolu hazır, boşta olan kol denge için hafif açık.
+        // The weapon arm is ready, the off arm slightly open for balance.
         return new RigPose
         {
             Visible = true,
@@ -221,15 +221,15 @@ public sealed class RigAnimator
         };
     }
 
-    /// <summary>Sersemleme: savaşçı ayakta ama savunmasız — silah düşük, gövde açık.</summary>
+    /// <summary>A stun: the warrior is on his feet but defenceless — weapon low, body open.</summary>
     /// <remarks>
-    /// Duruşun tek işi bu: <b>şu an vurulabilir</b> demek. Bekleyen savaşçıdan ilk
-    /// bakışta ayrılmazsa oyuncu künt silahın kazandırdığı pencereyi göremez, ve
-    /// sersemletme yalnızca sayı tablosunda yaşayan bir kural olur.
+    /// The pose has one job: to say <b>he can be hit right now</b>. If it is not distinguishable at a
+    /// glance from a waiting warrior, the player cannot see the window the blunt weapon bought, and the
+    /// stun becomes a rule that lives only in the numbers table.
     /// </remarks>
     private RigPose Stagger()
     {
-        // Yavaş, düzensiz salınım: bekleyenin ritmik bobbing'inden kasıtlı olarak ayrı.
+        // A slow, irregular sway: deliberately apart from a waiting warrior's rhythmic bobbing.
         float sway = MathF.Sin((float)_clock * 1.7f) * 0.10f;
 
         return new RigPose
@@ -250,18 +250,18 @@ public sealed class RigAnimator
     }
 
     /// <summary>
-    /// Silahı yakalandı: savaşçı öne kilitli, kolu havada tutulu.
+    /// His weapon was caught: the warrior is locked forward, his arm held up.
     /// </summary>
     /// <remarks>
-    /// Sersemlemeden (<see cref="Stagger"/>) ekranda ayrışması şart: sersemleyen savaşçı
-    /// çöker ve salınır, silahı yakalanan savaşçı <b>gergin</b> durur — kol yukarıda
-    /// sıkışmış, gövde öne kaçmış. İkisi aynı görünseydi oyuncu jitte'nin açtığı
-    /// pencereyi künt silahın açtığından ayıramazdı.
+    /// It has to be distinguishable on screen from a stun (<see cref="Stagger"/>): a stunned warrior
+    /// sinks and sways, a warrior whose weapon is caught stands <b>taut</b> — arm pinned up, body
+    /// pulled forward. If the two looked the same, the player could not tell the window the jitte opened
+    /// from the one the blunt weapon opened.
     /// </remarks>
     private RigPose Bound()
     {
-        // Titreşim: kurtulmaya çalışan ama kurtulamayan kol. Sersemlemenin yavaş
-        // salınımından kasıtlı olarak hızlı ve küçük.
+        // A tremor: an arm trying to break free and failing. Deliberately fast and small next to the
+        // stun's slow sway.
         float strain = MathF.Sin((float)_clock * 9f) * 0.035f;
 
         return new RigPose
@@ -282,12 +282,12 @@ public sealed class RigAnimator
     }
 
     /// <summary>
-    /// Blok duruşu: savaşçı çökmüş, silahı gövdesinin önünde yatay.
+    /// The block stance: the warrior is crouched, his weapon horizontal in front of his body.
     /// </summary>
     /// <remarks>
-    /// Bekleyenden (<see cref="Idle"/>) ayrışması şart — ikisinde de savaşçı vurmuyor,
-    /// ama biri fırsat kolluyor, diğeri kapanmış duruyor. Salınım yok: bloklayan savaşçı
-    /// yerinden kıpırdamaz, ekrandaki tek hareketi gelen darbeyle sarsılmasıdır.
+    /// It has to be distinguishable from waiting (<see cref="Idle"/>) — in both the warrior is not
+    /// striking, but one is watching for an opening and the other is closed up. No sway: a blocking
+    /// warrior does not move, his only movement on screen is being shaken by the incoming blow.
     /// </remarks>
     private static RigPose Guard() => new()
     {
@@ -307,8 +307,8 @@ public sealed class RigAnimator
 
     private static RigPose Windup(double phase)
     {
-        // Kesilemez pencere: kılıç geriye ve yukarı toplanır. Oyuncunun "artık çekemem"
-        // anını görsel olarak okuyabilmesi için duruş belirgin olmalı.
+        // The uninterruptible window: the sword gathers back and up. The pose has to be distinct so the
+        // player can visually read the moment of "I can no longer pull out".
         float t = Curves.Smooth(phase);
 
         return new RigPose
@@ -330,7 +330,7 @@ public sealed class RigAnimator
 
     private static RigPose Swing(float t)
     {
-        // Vuruş ilk anda iner, kalanı toparlanmadır (yeniden kesilebilir).
+        // The strike lands at the first moment, the rest is recovery (interruptible again).
         return new RigPose
         {
             Visible = true,
@@ -348,10 +348,10 @@ public sealed class RigAnimator
         };
     }
 
-    /// <summary>Boşa savurma: kılıç hedefi bulamadığı için savaşçı kendi hamlesini taşır.</summary>
+    /// <summary>An overswing: because the sword found no target, the warrior carries his own move.</summary>
     /// <remarks>
-    /// Iskanın ekranda karşılığı olmadığında isabet eden ve etmeyen vuruş aynı görünür;
-    /// oyuncu dövüşün gidişatını yalnızca can barından okumak zorunda kalır.
+    /// Without an on-screen counterpart for a miss, a landed and a missed strike look the same and the
+    /// player has to read the course of the fight from the health bar alone.
     /// </remarks>
     private RigPose Overswung(RigPose pose)
     {
@@ -367,12 +367,12 @@ public sealed class RigAnimator
     }
 
     /// <summary>
-    /// Hücum duruşu: öne yatmış, silah geride, koşu döngüsü kaçıştan daha uzun adımlı.
+    /// The charge pose: leaning forward, weapon back, a running cycle with longer strides than fleeing.
     /// </summary>
     /// <remarks>
-    /// Kaçışın aynası: ikisi de koşudur, ikisinde de savunma yoktur, ama biri hedefe
-    /// diğeri hedeften kaçar. Farkı taşıyan şey gövdenin yönü — kaçarken geriye,
-    /// hücumda öne yatar (docs/GDD.md §4).
+    /// The mirror of fleeing: both are running, in both there is no defence, but one runs toward the
+    /// target and the other away from it. What carries the difference is the direction of the body — back
+    /// while fleeing, forward while charging (docs/GDD.md §4).
     /// </remarks>
     private RigPose Charge()
     {
@@ -397,8 +397,8 @@ public sealed class RigAnimator
 
     private RigPose Retreat()
     {
-        // Savunmasızlık penceresi: sırtını dönmüş, koşuyor. Kaçınma/blok yok — duruşun
-        // bunu ele vermesi lazım ki bedeli görsel olarak da anlaşılsın.
+        // The defenceless window: back turned, running. No evasion or block — the pose has to give that
+        // away so the price is understood visually too.
         float run = MathF.Sin((float)_clock * 14f);
 
         return new RigPose
@@ -438,13 +438,13 @@ public sealed class RigAnimator
         };
     }
 
-    /// <summary>Kalıcı sakatlıkların duruşa etkisi.</summary>
+    /// <summary>The effect of permanent disabilities on the pose.</summary>
     private RigPose Injuries(RigPose pose, CombatState state)
     {
         if (_lost.Any(p => p.IsArm()))
         {
-            // Kolunu kaybeden savaşçı kalan koluyla tek elli dövüşür: gövde sağlam
-            // tarafa döner, kalan kol daha öne çıkar.
+            // A warrior who has lost an arm fights one-handed with the arm he has left: the body turns
+            // toward the sound side and the remaining arm comes further forward.
             pose = pose with
             {
                 Torso = pose.Torso + 0.12f,
@@ -457,17 +457,17 @@ public sealed class RigAnimator
     }
 
     /// <summary>
-    /// Tek bacak: sağlam bacağa yaslanmış, gövde o tarafa yatık.
+    /// One leg: leaning on the sound leg, the body tilted to that side.
     /// </summary>
     /// <remarks>
-    /// Kaçış duruşu da buradan geçer. Geçmediğinde bacağını kaybetmiş savaşçı
-    /// arenadan <b>iki bacakla</b> koşarak çıkıyordu: kopan bacağın düğümü sahnede
-    /// olmadığı için ekranda tek bacak görünüyor, ama kalça son topallama değerinde
-    /// asılı kalıyor ve sağlam bacak normal koşu döngüsünü oynatıyordu.
+    /// The flee pose goes through here too. When it did not, a warrior who had lost a leg was running
+    /// out of the arena on <b>two legs</b>: because the severed leg's node was not in the scene it
+    /// looked like one leg on screen, but the hip hung at the last limp value and the sound leg played
+    /// the normal running cycle.
     /// </remarks>
     private RigPose OneLegged(RigPose pose, CombatState state)
     {
-        // Koşan iki durum var; ikisi de aynı sekme döngüsünü kullanır.
+        // There are two running states; both use the same hopping cycle.
         bool running = state is CombatState.Retreating or CombatState.Charging;
         float speed = running ? 5.4f : 2.2f;
         float reach = running ? 0.24f : 0.10f;
@@ -485,12 +485,12 @@ public sealed class RigAnimator
         };
     }
 
-    /// <summary>Tek seferlik tepkilerin duruşun üstüne binmesi.</summary>
+    /// <summary>One-off reactions layered on top of the pose.</summary>
     private RigPose Reactions(RigPose pose)
     {
         if (_dodge > 0)
         {
-            // Kaçınma stamina harcar; harcamanın nereye gittiği ekranda görünmeli.
+            // Evasion costs stamina; where that cost goes has to be visible on screen.
             float t = Curves.Smooth(_dodge);
             pose = pose with
             {
@@ -514,8 +514,8 @@ public sealed class RigAnimator
 
         if (_catch > 0)
         {
-            // Yakalama kaçınmanın tersidir: savunan yana değil ÖNE gider ve boştaki
-            // kol gelen silahı karşılamak üzere yukarı çıkar.
+            // Catching is the opposite of evasion: the defender goes not sideways but FORWARD, and the
+            // off arm comes up to meet the incoming weapon.
             float t = Curves.Smooth(_catch);
             pose = pose with
             {
@@ -529,8 +529,8 @@ public sealed class RigAnimator
 
         if (_stumble > 0)
         {
-            // Sendeleme sarsılma değil: kimse vurmadı, savaşçı kendi ayağına takıldı.
-            // Bu yüzden gövde geriye değil YANA gider ve bacak ayrışır.
+            // A stumble is not a shake: nobody struck, the warrior tripped over his own foot. So the
+            // body goes not back but SIDEWAYS and the legs split.
             float t = Curves.Smooth(_stumble);
             pose = pose with
             {

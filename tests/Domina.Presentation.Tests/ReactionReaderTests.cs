@@ -1,15 +1,15 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Olay akışının görsel tepkilere çevrilmesi.
+/// Translating the event stream into visual reactions.
 /// </summary>
 /// <remarks>
-/// Buradaki asıl mesele <b>saldırının üç sonucunun birbirinden ayırt edilebilmesi</b>:
-/// isabet, ıska ve kaçınma. Yalnızca isabet bağlandığında üçü de ekranda aynı görünür,
-/// oyuncu dövüşü yalnızca can barından okumak zorunda kalır.
+/// The real issue here is <b>being able to tell an attack's three outcomes apart</b>: a hit, a miss and
+/// an evasion. When only hits are wired up, all three look the same on screen and the player has to
+/// read the fight from the health bar alone.
 /// </remarks>
 public class ReactionReaderTests
 {
@@ -43,12 +43,12 @@ public class ReactionReaderTests
     }
 
     /// <summary>
-    /// Zehrin hasarı ekranda görünür, zehirlenme anı ayrıca görünmez.
+    /// Poison's damage is visible on screen, the moment of poisoning is not shown separately.
     /// </summary>
     /// <remarks>
-    /// Zehirlenme anının karşılığı vuruşun kendisidir ve orada zaten bir irkilme var;
-    /// ikinci bir tepki aynı anı iki kez oynatırdı. Görülmesi gereken şey, <b>sonradan</b>
-    /// gelen ve vuranı olmayan hasar.
+    /// The moment of poisoning's counterpart is the strike itself, and there is already a flinch there; a
+    /// second reaction would play the same moment twice. What has to be seen is the damage that comes
+    /// <b>afterwards</b> with nobody striking.
     /// </remarks>
     [Fact]
     public void PoisonShowsWhenItWorksNotWhenItLands()
@@ -64,10 +64,10 @@ public class ReactionReaderTests
         Assert.Equal(RigReactionKind.PoisonThroe, reaction.Kind);
     }
 
-    /// <summary>Kırılan silahın tepkisini yalnızca silahı giden savaşçı üretir.</summary>
+    /// <summary>Only the warrior whose weapon is gone produces the broken-weapon reaction.</summary>
     /// <remarks>
-    /// Kıranın (varsa) karşılığı zaten ekranda: yakalama hamlesi bir an önce oynatıldı.
-    /// İkinci bir tepki aynı anı iki kez anlatırdı.
+    /// The breaker's counterpart (if there is one) is already on screen: the catch move played a moment
+    /// earlier. A second reaction would tell the same moment twice.
     /// </remarks>
     [Fact]
     public void ABrokenWeaponMovesOnlyItsOwner()
@@ -81,7 +81,7 @@ public class ReactionReaderTests
         Assert.Equal(RigReactionKind.WeaponLost, reaction.Kind);
     }
 
-    /// <summary>Kaçınma stamina harcar; harcamanın nereye gittiği ekranda görünmeli.</summary>
+    /// <summary>Evasion costs stamina; where that cost goes must be visible on screen.</summary>
     [Fact]
     public void ADodgeMovesBothSides()
     {
@@ -96,8 +96,8 @@ public class ReactionReaderTests
     }
 
     /// <summary>
-    /// Fırsat saldırısı kaçışın bedelidir. Ayrı bir işareti olmazsa "tuşa bastım,
-    /// sonra canım gitti" olarak okunur.
+    /// An opportunity attack is the price of fleeing. Without a mark of its own it reads as "I pressed
+    /// the key and then my health went".
     /// </summary>
     [Fact]
     public void TheOpportunityAttackIsShownOnTheHunter()
@@ -111,7 +111,7 @@ public class ReactionReaderTests
 
         Assert.Equal(2, reactions.Count);
 
-        // Sıra önemli: önce bedava vuruş savrulur, sonra kaçan sarsılır.
+        // The order matters: first the free hit is swung, then the fleer is shaken.
         Assert.Equal(RigReactionKind.OpportunitySwing, reactions[0].Kind);
         Assert.Equal(_attacker, reactions[0].Warrior);
         Assert.Equal(RigReactionKind.Flinch, reactions[1].Kind);
@@ -131,8 +131,8 @@ public class ReactionReaderTests
     }
 
     /// <summary>
-    /// Olaylar tek seferliktir: aynı olay ikinci kez okunursa sarsıntı her karede
-    /// yeniden başlar ve savaşçı bir daha durulmaz.
+    /// Events are one-off: if the same event is read a second time the shake restarts every frame and
+    /// the warrior never settles.
     /// </summary>
     [Fact]
     public void EachEventIsReadExactlyOnce()
@@ -151,8 +151,8 @@ public class ReactionReaderTests
     }
 
     /// <summary>
-    /// Ölüm ve arenadan çıkış tek seferlik tepki değil kalıcı haldir; ikisi de
-    /// duruma bakılarak sürülür (yığılma, ceset yeri, gizlenme).
+    /// Death and leaving the arena are not one-off reactions but persistent states; both are driven by
+    /// looking at the state (the collapse, the body's place, hiding).
     /// </summary>
     [Fact]
     public void EventsWithoutAOneShotReactionAreSkipped()

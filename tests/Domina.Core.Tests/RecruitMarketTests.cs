@@ -5,9 +5,9 @@ using Domina.Core.Rng;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Savaşçı pazarı. Korunan dört karar: adaylar farklı statlarla gelir ve statlar alım
-/// öncesi görünür, fiyat statın kendisinden çıkar, pazar kadronun seviyesini takip eder,
-/// ve liste gün içinde <b>donar</b> — yoksa oyuncu alım yaparak listeyi yeniden çevirir.
+/// The warrior market. Four decisions are protected: candidates come with different stats and the stats
+/// are visible before the purchase, the price comes out of the stats themselves, the market tracks the
+/// roster's level, and the list <b>freezes</b> within the day — or the player rerolls it by buying.
 /// </summary>
 public class RecruitMarketTests
 {
@@ -51,7 +51,7 @@ public class RecruitMarketTests
         Assert.Equal(first, again);
     }
 
-    /// <summary>Pazar birkaç günde bir yenilenir; her gün yenilenseydi seçim ertelenirdi.</summary>
+    /// <summary>The market refreshes every few days; refreshed every day, the choice would be postponed.</summary>
     [Fact]
     public void StockStandsForItsPeriodThenTurnsOver()
     {
@@ -69,7 +69,7 @@ public class RecruitMarketTests
         Assert.NotEqual(day2, day3);
     }
 
-    /// <summary>Tezgâh varsayılan ayarda her gün yenilenir.</summary>
+    /// <summary>With the default setting the stall refreshes every day.</summary>
     [Fact]
     public void TheStallTurnsOverEveryDay()
     {
@@ -85,8 +85,8 @@ public class RecruitMarketTests
     }
 
     /// <summary>
-    /// Alım günü yemez: pazar gün boyu açıktır, kasa el verdiği sürece birden fazla
-    /// savaşçı alınabilir. Aksi hâlde aynı gün iki ölünün yerine iki savaşçı konamazdı.
+    /// Buying does not eat the day: the market is open all day and, as long as the treasury allows, more
+    /// than one warrior can be bought. Otherwise two dead could not be replaced by two warriors the same day.
     /// </summary>
     [Fact]
     public void BuyingDoesNotSpendTheDayAndMoreThanOneCanBeHired()
@@ -102,8 +102,8 @@ public class RecruitMarketTests
     }
 
     /// <summary>
-    /// Tezgâh gün içinde donduğu için aynı aday iki kez satılabilirdi: tek bir kişi
-    /// kadronun tamamına dönüşürdü. Alınan aday kayda geçiyor.
+    /// Because the stall is frozen within the day, the same candidate could be sold twice: one person
+    /// would turn into the whole roster. A bought candidate goes on the record.
     /// </summary>
     [Fact]
     public void TheSameCandidateCannotBeBoughtTwiceInADay()
@@ -116,7 +116,7 @@ public class RecruitMarketTests
         Assert.Equal([0], state.HiredToday);
     }
 
-    /// <summary>Yarınki tezgâh başka adaylar taşır; dünün işareti yarını kapatmamalı.</summary>
+    /// <summary>Tomorrow's stall carries other candidates; yesterday's mark must not block tomorrow.</summary>
     [Fact]
     public void TheMarkOnBoughtCandidatesFallsWithTheDay()
     {
@@ -149,9 +149,9 @@ public class RecruitMarketTests
     }
 
     /// <summary>
-    /// Liste gün içinde donmalı: pazar kadronun ortalamasını takip ettiği için, donmasaydı
-    /// bir aday almak kalan adayları anında değiştirir ve liste istenildiği kadar
-    /// çevrilebilirdi.
+    /// The list must freeze within the day: because the market tracks the roster's average, without
+    /// freezing, buying one candidate would instantly change the rest and the list could be rerolled as
+    /// often as you liked.
     /// </summary>
     [Fact]
     public void BuyingDoesNotReshuffleTheRestOfTheStock()
@@ -166,8 +166,8 @@ public class RecruitMarketTests
     }
 
     /// <summary>
-    /// Fiyat statı takip eder. Tek tek karşılaştırma yetmez — yetenek de fiyata giriyor,
-    /// yani statı iyi ama yeteneği düşük bir aday ucuz olabilir. Bakılması gereken eğilim.
+    /// The price tracks the stats. A one-by-one comparison is not enough — talent enters the price too,
+    /// so a candidate with good stats but low talent can be cheap. What matters is the tendency.
     /// </summary>
     [Fact]
     public void BetterCandidatesCostMoreOnAverage()
@@ -185,10 +185,10 @@ public class RecruitMarketTests
         double cheapHalf = ranked.Take(ranked.Count / 2).Average(o => o.Price);
         double dearHalf = ranked.Skip(ranked.Count / 2).Average(o => o.Price);
 
-        Assert.True(dearHalf > cheapHalf, $"fiyat statı takip etmiyor: {cheapHalf:F0} / {dearHalf:F0}");
+        Assert.True(dearHalf > cheapHalf, $"the price does not track the stats: {cheapHalf:F0} / {dearHalf:F0}");
     }
 
-    /// <summary>Erken oyunda pazarda usta bulunmaz; kadro geliştikçe pazar da gelişir.</summary>
+    /// <summary>In the early game there is no master in the market; as the roster develops so does the market.</summary>
     [Fact]
     public void TheMarketFollowsTheRoster()
     {
@@ -208,14 +208,14 @@ public class RecruitMarketTests
         Assert.True(veteranAnchor.Stats.MaxHealth > greenAnchor.Stats.MaxHealth);
         Assert.True(veteranAnchor.Stats.Strength > greenAnchor.Stats.Strength);
 
-        // Kadro tamamen ölse bile pazar acemi seviyesine düşer, sıfıra değil.
+        // Even if the whole roster dies the market falls to recruit level, not to zero.
         DojoState empty = Funded();
         Assert.Equal(WarriorStats.Recruit(), market.AnchorFor(empty.Roster).Stats);
     }
 
     /// <summary>
-    /// Pazar kadronun ortalamasını takip eder ama en iyisini <b>geçemez</b>: yetiştirilen
-    /// savaşçı oyuncunun eseri kalsın, satın alınabilir olmasın.
+    /// The market tracks the roster's average but <b>cannot pass</b> its best: a trained warrior should
+    /// stay the player's work, not something buyable.
     /// </summary>
     [Fact]
     public void NoCandidateOutgrowsTheBestWarriorInTheRoster()
@@ -240,11 +240,11 @@ public class RecruitMarketTests
         {
             Assert.True(
                 Score(offer.Stats) <= best * new MarketTuning().BestFollowCeiling + 1e-6,
-                $"aday tavanı aştı: {Score(offer.Stats):F1} / {best:F1}");
+                $"the candidate passed the ceiling: {Score(offer.Stats):F1} / {best:F1}");
         }
     }
 
-    /// <summary>Tavan kırpmaz, oranlar — tavana dayanan adaylar birbirinin kopyası olmaz.</summary>
+    /// <summary>The ceiling scales rather than clips — candidates at the ceiling are not copies of each other.</summary>
     [Fact]
     public void TheCeilingScalesTheCandidateInsteadOfFlatteningIt()
     {
@@ -256,7 +256,7 @@ public class RecruitMarketTests
         MarketAnchor anchor = market.AnchorFor(dojo.Roster);
         IReadOnlyList<RecruitOffer> stock = market.Stock(new SeededRandom(3), anchor, basePrice: 150);
 
-        // Hepsi tavana dayandı ama profilleri hâlâ farklı.
+        // They all hit the ceiling but their profiles are still different.
         Assert.True(stock.Select(o => Math.Round(o.Stats.Strength, 3)).Distinct().Count() > 1);
     }
 
@@ -284,7 +284,7 @@ public class RecruitMarketTests
         Assert.Empty(state.Roster.Entries);
     }
 
-    /// <summary>Ad çakışması iyi bir adayı satın alınamaz yapmamalı (GDD §6).</summary>
+    /// <summary>A name clash must not make a good candidate unbuyable (GDD §6).</summary>
     [Fact]
     public void ATakenNameDoesNotBlockThePurchase()
     {
@@ -299,7 +299,7 @@ public class RecruitMarketTests
         Assert.StartsWith(pick.Name, entry.Name, StringComparison.Ordinal);
     }
 
-    /// <summary>Yetenek kayda girer: oyuncunun satın aldığı şeyin bir parçası.</summary>
+    /// <summary>Talent goes into the save: it is part of what the player bought.</summary>
     [Fact]
     public void TalentSurvivesASaveRoundTrip()
     {

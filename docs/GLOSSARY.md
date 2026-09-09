@@ -1,243 +1,248 @@
-# Terimler
+# Terms
 
-Projede geçen Japonca terimler ve çekirdeğin mekanik sözcükleri. Amaç, GDD ya da kod
-okurken terimin ne olduğunu ve **oyunda ne iş yaptığını** tek yerden görebilmek.
-Sayılar burada özet olarak durur; bağlayıcı olan `docs/GDD.md`'dir.
-
----
-
-## Silahlar
-
-### Tek el
-
-| Terim | Nedir | Oyundaki işi |
-|---|---|---|
-| **katana** | Klasik samuray kılıcı, kesici | Dengeli seçenek. Ölçümde "en iyi olduğu yer" **zırhlı düşman** |
-| **wakizashi** | Kısa kılıç, katananın yardımcısı | Daha hızlı, daha az hasar |
-| **tantō** | Hançer | Zehirli hâli var: 7 hasar / 0.85 sn |
-| **kama** | Orak; kısa saplı, kesici | Tarım aleti kökenli kısa kesici |
-| **ono** | Balta | Ağır tek el kesici |
-| **tekagi** | Parmaklara takılan pençe/kanca | Kısa menzilli tırmalayıcı |
-| **jitte** | **Çatallı demir çubuk, keskin değil.** Edo dönemi kolluk silahı: çatalıyla kılıcı kırmadan tutar | Kılıç yakalamanın ana aleti (kavrayış 1.0). 14 hasar / 1.00 sn, künt sınıfı |
-| **sai** | Üç çatallı demir sopa, jitte'nin akrabası (iki yanda da çatal) | Daha çok yakalar (kavrayış 1.25; dövüş başına 3.71 yakalama, jitte 2.75). 14 hasar / 1.05 sn, künt |
-
-### Çift el
-
-| Terim | Nedir | Oyundaki işi |
-|---|---|---|
-| **nodachi** | Devasa uzun kılıç | Ağır, yavaş, yüksek hasar. Yakalanması zor (kaldıraç ×0.75) |
-| **naginata** | Ucunda kavisli bıçak olan mızrak | Menzilli yakın dövüş |
-| **kanabō** | Dikenli/topuzlu demir sopa | Künt |
-| **tetsubo** | Kanabō'nun ağır versiyonu, demir topuz | Künt sınıfının ağır ucu; sersemletmeyi taşıyan silah |
-| **bō / jō** | Uzun sopa (~180 cm) / kısa sopa (~125 cm) | Öldürücü olmayan künt |
-| **yari** | Düz uçlu mızrak | Delici (zırh delme 0.5 / 0.15) |
-
-### Fırlatma
-
-| Terim | Nedir | Oyundaki işi |
-|---|---|---|
-| **shuriken** | Atma yıldızı/bıçağı | 12 hasar, 4 cephane; zehirli hâli 12 hasar / 2 cephane |
-| **kunai** | Atma bıçağı (kazma aleti kökenli) | Kısa menzilli mermi |
-| **yumi** | Japon uzun yayı (asimetrik; alt kısmı kısa) | Karar turunda **iki elli menzilli sınıf** olarak girdi |
-| **fukiya** | Üfleme borusu, zehirli iğne atar | Zehir taşıyıcı mermi |
+The Japanese terms used in the project and the core's mechanical vocabulary. The aim is to
+see, in one place, what a term is and **what job it does in the game** while reading the GDD
+or the code. The numbers here are a summary; `docs/GDD.md` is what binds.
 
 ---
 
-## Zırh
+## Weapons
 
-| Terim | Nedir | Oyundaki işi |
+### One-handed
+
+| Term | What it is | Its job in the game |
 |---|---|---|
-| **keikogi** | Antrenman kıyafeti, kumaş — zırh sayılmaz | En hafif kuşam. Dayanıklılık 1, ~7 dövüş, 40 altın |
-| **dō** | Gövdelik (göğüs zırhı) | Zırhın çekirdek parçası, gövde yuvası |
-| **dō-maru** | Hafif, vücuda sarılan gövde zırhı (yaya asker zırhı) | Orta kademe: dayanıklılık 7 |
-| **ō-yoroi** | "Büyük zırh" — atlı samurayın ağır kutu zırhı | En pahalı, en koruyucu: dayanıklılık 16, ~15 dövüş, 570 altın |
-| **kabuto** | Miğfer | Baş yuvası (ō-yoroi kuşamıyla gelir) |
-| **kote** | Zırhlı kolluk | Kol yuvası; ağır kote ō-yoroi kuşamında |
-| **suneate** | Baldır zırhı, incik koruyucu | Bacak yuvası; ağır suneate ō-yoroi kuşamında |
-| **ō-sode** | ō-yoroi'nin geniş omuz plakası | Karar turunda **kalkanın yerini alan parça** oldu: elde kalkan reddedildiği için blokun ekipman tarafını omuz yuvası taşır |
-| **tate** | **Elde taşınan kalkan değil** — yere dayanan sabit tahta siper | Bu yüzden ekipman değil: karar turunda **saha özelliği** yapıldı |
+| **katana** | The classic samurai sword, cutting | The balanced option. In measurement its "best place" is against an **armoured enemy** |
+| **wakizashi** | A short sword, the katana's companion | Faster, less damage |
+| **tantō** | A dagger | It has a poisoned form: 7 damage / 0.85 s |
+| **kama** | A sickle; short-hafted, cutting | A short cutting weapon of farming-tool origin |
+| **ono** | An axe | A heavy one-handed cutting weapon |
+| **tekagi** | A claw/hook worn on the fingers | A short-reach clawing weapon |
+| **jitte** | **A forked iron rod, not sharp.** An Edo-period law-enforcement weapon: it holds the sword with its fork without breaking it | The main implement of sword catching (grip 1.0). 14 damage / 1.00 s, blunt class |
+| **sai** | A three-pronged iron baton, the jitte's relative (a prong on both sides) | It catches more (grip 1.25; 3.71 catches per fight against the jitte's 2.75). 14 damage / 1.05 s, blunt |
+
+### Two-handed
+
+| Term | What it is | Its job in the game |
+|---|---|---|
+| **nodachi** | A huge long sword | Heavy, slow, high damage. Hard to catch (leverage ×0.75) |
+| **naginata** | A polearm with a curved blade at the end | Melee with reach |
+| **kanabō** | A studded/knobbed iron club | Blunt |
+| **tetsubo** | The heavy version of the kanabō, an iron mace | The heavy end of the blunt class; the weapon that carries stunning |
+| **bō / jō** | A long staff (~180 cm) / a short staff (~125 cm) | Non-lethal blunt |
+| **yari** | A straight-tipped spear | Piercing (armour piercing 0.5 / 0.15) |
+
+### Thrown
+
+| Term | What it is | Its job in the game |
+|---|---|---|
+| **shuriken** | A throwing star/blade | 12 damage, 4 ammo; the poisoned form is 12 damage / 2 ammo |
+| **kunai** | A throwing knife (of digging-tool origin) | A short-range projectile |
+| **yumi** | The Japanese longbow (asymmetric; the lower part is short) | It entered in the decision pass as a **two-handed ranged class** |
+| **fukiya** | A blowgun, it fires poisoned needles | A poison-carrying projectile |
 
 ---
 
-## Mekanik terimleri
+## Armour
 
-### Yakalama — "şans" ve "kilit"
+| Term | What it is | Its job in the game |
+|---|---|---|
+| **keikogi** | Training clothing, cloth — not counted as armour | The lightest kit. Durability 1, ~7 fights, 40 gold |
+| **dō** | A cuirass (chest armour) | Armour's core piece, the torso slot |
+| **dō-maru** | Light body armour that wraps the body (foot soldier's armour) | The middle tier: durability 7 |
+| **ō-yoroi** | "Great armour" — the mounted samurai's heavy box armour | The most expensive and most protective: durability 16, ~15 fights, 570 gold |
+| **kabuto** | A helmet | The head slot (it comes with the ō-yoroi kit) |
+| **kote** | An armoured sleeve | The arm slot; heavy kote come in the ō-yoroi kit |
+| **suneate** | Shin armour, a greave | The leg slot; heavy suneate come in the ō-yoroi kit |
+| **ō-sode** | The ō-yoroi's wide shoulder plate | In the decision pass it became **the piece that takes the shield's place**: because a hand shield was rejected, the shoulder slot carries the block's equipment side |
+| **tate** | **Not a hand-carried shield** — a fixed wooden screen planted on the ground | That is why it is not equipment: in the decision pass it was made a **field feature** |
 
-Yakalama, kaçınmadan önce denenen **ikinci savunma eksenidir**. Düşman yakın dövüşte her
-vurmaya kalktığında bir zar atılır.
+---
 
-**Şans** = ne sıklıkla tuttuğun.
+## Mechanical terms
+
+### Catching — "chance" and "bind"
+
+Catching is the **second defensive axis**, tried before evasion. A die is rolled every time an
+enemy attempts a strike in melee.
+
+**Chance** = how often it holds.
 
 ```
-şans = 0.24 × kavrayış × yakalanabilirlik × kaldıraç   (+ İsabet payı)
+chance = 0.24 × grip × catchability × leverage   (+ the Accuracy share)
 ```
 
-- **kavrayış** — savunanın aleti: jitte 1.0, sai 1.25, **diğer her şey 0**
-- **yakalanabilirlik** — saldıranın silahı: kesici 1.0, delici 0.7, künt 0.25, yumruk 0
-- **kaldıraç** — saldıranın silahı çift else ×0.75
-- **İsabet payı** — İsabet 100'ken +0.5 (Kaçınma'ya değil, İsabet'e bağlanır)
+- **grip** — the defender's implement: jitte 1.0, sai 1.25, **everything else 0**
+- **catchability** — the attacker's weapon: cutting 1.0, piercing 0.7, blunt 0.25, fists 0
+- **leverage** — ×0.75 if the attacker's weapon is two-handed
+- **the Accuracy share** — +0.5 at Accuracy 100 (tied to Accuracy, not to Evasion)
 
-Örnek: sai'li savaşçı, katanalı düşman → 0.24 × 1.25 × 1.0 = **%30**.
-Aynı savaşçı, çift el nodachi'li düşman → ×0.75 ile **%22.5**.
+Example: a warrior with a sai against an enemy with a katana → 0.24 × 1.25 × 1.0 = **30%**.
+The same warrior against an enemy with a two-handed nodachi → ×0.75, so **22.5%**.
 
-**Kilit** = tuttuğunda ne kazandığın. İki şey birden olur:
+**Bind** = what you gain when it holds. Two things happen at once:
 
-1. Darbe **silinir** (hasar yok)
-2. Saldıran **0.6 saniye** açıkta kalır — kilitli savaşçı **yürümez, vurmaz, kaçınamaz**
+1. The blow is **erased** (no damage)
+2. The attacker is exposed for **0.6 seconds** — a bound warrior **does not walk, strike or evade**
 
-0.6 sn kısa görünür ama tipik vuruş süresi 0.85-1.05 sn: kilit, düşmanın sıradaki
-vuruşunu fiilen yer. Kaçınma darbeyi ıskalatıp orada biter; yakalama darbeyi siler
-**ve bedava zaman verir**. Bedeli **16 stamina** — sürekli yakalayan savaşçı yorulur.
+0.6 s looks short, but a typical strike takes 0.85-1.05 s: the bind effectively eats the
+enemy's next strike. Evasion makes the blow miss and ends there; catching erases the blow **and
+gives free time**. Its price is **16 stamina** — a warrior who catches constantly tires.
 
-Ölçümün okunuşu: jitte/sai zaferi katanadan fazla kazandırmaz; kazandırdığı şey
-**eve sakat dönmemek** (düşman daha az vurduğu için uzuv kaybı düşer).
+How the measurement reads: the jitte/sai does not win more than the katana; what it wins is
+**not coming home maimed** (because the enemy strikes less, limb loss falls).
 
-### Sersemletme
+### Stunning
 
-Ağır darbe **iki ayrı zar** attırır: uzuv kopma ve sersemletme. Hangisinin tuttuğunu
-silahın sınıfı belirler — takas budur:
+A heavy blow rolls **two separate dice**: dismemberment and stun. Which one holds is set by the
+weapon's class — that is the trade:
 
-| Sınıf | Uzuv kopma çarpanı | Sersemletme çarpanı |
+| Class | Dismemberment multiplier | Stun multiplier |
 |---|---|---|
-| Kesici (katana, nodachi) | 1.0 | 0.25 |
-| Delici (yari) | 0.5 | 0.15 |
-| Künt (tetsubo, kanabō) | 0.15 | **1.0** |
+| Cutting (katana, nodachi) | 1.0 | 0.25 |
+| Piercing (yari) | 0.5 | 0.15 |
+| Blunt (tetsubo, kanabō) | 0.15 | **1.0** |
 
-Sersemleyen savaşçı **0.9 saniye donar**: yürümez, vurmaz ve **kaçınamaz**. Asıl dişi
-olan kaçınmanın kapanmasıdır. Zar yalnızca darbe azami canın **%20**'sini geçince atılır;
-taban şans 0.35, kafaya inen darbede ×2.0. Çekilen savaşçı sersemlemez, sersemleyen
-tekrar sersemlemez (süre yenilenmez).
+A stunned warrior **freezes for 0.9 seconds**: he does not walk, does not strike and **cannot
+evade**. The real teeth are the evasion closing. The die is only rolled when the blow passes
+**20%** of maximum health; the base chance is 0.35, ×2.0 for a blow to the head. A warrior
+pulling out is not stunned, and a stunned one is not stunned again (the duration is not
+refreshed).
 
-Bu kural künt sınıfın **karşılığıdır**: künt silah uzuv koparmada kesiciye kaybeder
-(0.15'e karşı 1.0), kazandığı şey dondurmaktır.
+This rule is the blunt class's **return**: a blunt weapon loses to a cutting one on
+dismemberment (0.15 against 1.0), and what it gains is freezing.
 
-### Silah düşürme
+### Weapon drops
 
-Silah **kırılmaz, düşer** — arenada bir noktada durur, dövüş bitince sahibine döner.
-Zar **saldıranın** silahına atılır: plakaya saplanan ağız burkulur, silah vuranın
-elinden çıkar.
+A weapon **does not break, it falls** — it lies at a point in the arena and returns to its owner
+when the fight ends. The die is rolled on **the attacker's** weapon: an edge that bites into
+plate twists and the weapon leaves the striker's hand.
 
-| Tetikleyici | Taban şans |
+| Trigger | Base chance |
 |---|---|
-| Zırha inen vuruş | 0.05 |
-| Yakalanan silahın çengelde sökülmesi | 0.05 |
+| A strike landing on armour | 0.05 |
+| A caught weapon levered out of the hook | 0.05 |
 
-| Sınıf | Elden çıkma eğilimi | Gerekçe |
+| Class | Tendency to leave the hand | Rationale |
 |---|---|---|
-| Kesici | 1.0 | Plakaya saplanan ağız burkulur |
-| Delici | 0.6 | Uç kayar, sap avuçta kalır |
-| Künt | 0.2 | Geri tepen sopa avuçtan çıkmaz |
-| Yumruk | 0 | Düşecek bir şey yok |
+| Cutting | 1.0 | An edge that bites into plate twists |
+| Piercing | 0.6 | The tip slides, the haft stays in the palm |
+| Blunt | 0.2 | A rebounding club does not leave the palm |
+| Fists | 0 | There is nothing to drop |
 
-Silah **karşıdakinin arkasına 250 birim** savrulur — ölçümde bedeli taşıyan şey mesafe
-değil **yön** oldu: kendi arkasına ya da yana düşerse kural bedava, hatta faydalı çıkıyor.
-Eli boş olan **herkes** alabilir (düşüren, takım arkadaşı, düşman); elinde silah olan
-ne alır ne arar, kullanamayacağı silahı da almaz. Silahsız savaşçı yumrukla dövüşür
-(8 hasar, menzil 100). Mermi kimsenin silahını düşürmez.
+The weapon is flung **250 units behind the other man** — in measurement what carried the price
+was not the distance but the **direction**: if it falls behind him or to the side, the rule is
+free and even helpful. **Anyone** empty-handed can pick it up (the one who dropped it, a
+teammate, an enemy); a warrior with a weapon in hand neither picks up nor searches, and does not
+pick up a weapon he cannot use. An unarmed warrior fights with his fists (8 damage, reach 100).
+A projectile knocks nobody's weapon out.
 
-Kuralın bedeli dövüşün şekline göre değişir: düşen silahların 1v1'de %7.3'ü,
-3v3'te %40.4'ü yerden alınıyor.
+The rule's price varies with the shape of the fight: 7.3% of dropped weapons are picked up in
+1v1, 40.4% in 3v3.
 
-> **Üçüncü tetikleyici (karar 2026-09-07, henüz ölçülmedi):** sersemletme de silah
-> düşürür. Sersemleme tuttuğunda ayrı bir zar atılır ve silahı düşen ilk kez **savunan**
-> taraf olur; şansı sersemleyenin kendi silah sınıfı belirler (yukarıdaki eğilim tablosu
-> ikinci yönde de çalışır — künt tutan zor düşürür). Taban şans künt sınıfı baskın
-> yapmayacak yerde aranacak.
+> **The third trigger (decided 2026-09-07, not yet measured):** a stun also drops the weapon.
+> When a stun holds, a separate die is rolled and for the first time it is **the defender** who
+> drops his weapon; the chance is set by the stunned warrior's own weapon class (the tendency
+> table above works in the second direction too — a blunt weapon is hard to drop). The base
+> chance will be looked for where it does not make the blunt class dominant.
 
-### Statlar
+### The stats
 
-Sekiz sayı (`WarriorStats`), artı ayrı duran Onur. Acemi taban değerleri parantezde.
+Eight numbers (`WarriorStats`), plus Honour which stands apart. The recruit base values are in
+brackets.
 
-| Stat | Kod adı | Ne belirler |
+| Stat | Code name | What it sets |
 |---|---|---|
-| **Can** | `MaxHealth` (100) | Azami can. Uzuv kopma ve sersemletme eşiği de buradan okunur: zar, darbe azami canın %20'sini geçince atılır — canı yüksek savaşçı sakatlanmaya da dirençlidir |
-| **Saldırganlık** | `Aggression` (40) | Gördüğü hücum fırsatlarının kaçını kullandığı. 0'da 0.35, 100'de 1.00 olasılık |
-| **Savunma** | `Defense` (35) | Alınan hasarı azaltır **ve blok şansını verir** (`Savunma ÷ 100 × 0.45`; Savunma 0 olan hiç bloklamaz) |
-| **Kaçınma** | `Evasion` (35) | Darbeyi ıskalatma denemesi; stamina harcar |
-| **Güç** | `Strength` (40) | Vuruşun hasarı |
-| **İsabet** | `Accuracy` (55) | Vurma şansı **ve yakalama** (yakalama İsabet'e bağlanır, Kaçınma'ya değil — iki savunma ekseni aynı stattan beslenmesin diye) |
-| **Stamina** | `MaxStamina` (100) | Koşma, kaçınma, saldırı ve yakalama (16) tüketir; azaldıkça hasar ve isabet düşer |
-| **Hız** | `Speed` (50) | Yürüme/koşma hızı. Geç eklendi: hız sabitken kovalayan ile kaçan aynı hızda gidiyor, **kaçış her zaman başarılı** oluyordu |
+| **Health** | `MaxHealth` (100) | Maximum health. The dismemberment and stun thresholds are read from it too: the die is rolled when the blow passes 20% of maximum health — a warrior with high health is also resistant to being maimed |
+| **Aggression** | `Aggression` (40) | How many of the charge opportunities he sees he uses. A probability of 0.35 at 0, 1.00 at 100 |
+| **Defence** | `Defense` (35) | Reduces the damage taken **and gives the block chance** (`Defence ÷ 100 × 0.45`; a warrior with Defence 0 never blocks) |
+| **Evasion** | `Evasion` (35) | The attempt to make a blow miss; it spends stamina |
+| **Strength** | `Strength` (40) | The strike's damage |
+| **Accuracy** | `Accuracy` (55) | The chance to hit **and catching** (catching is tied to Accuracy, not to Evasion — so that two defensive axes do not feed off the same stat) |
+| **Stamina** | `MaxStamina` (100) | Running, evading, attacking and catching (16) spend it; as it falls, damage and accuracy drop |
+| **Speed** | `Speed` (50) | Walking/running speed. Added late: while speed was fixed, chaser and fleer moved at the same rate and **escape always succeeded** |
 
-**Onur** (`Honor`, 0-100, başlangıç 50) bir dövüş statı değildir: ödül çarpanına,
-seppuku eşiğine ve chat oylamasına bağlanır (bkz. `docs/GDD.md` §6).
+**Honour** (`Honor`, 0-100, starting at 50) is not a combat stat: it is tied to the reward
+multiplier, the seppuku threshold and the chat vote (see `docs/GDD.md` §6).
 
-Antrenman bu sekiz statı **dört talimle** kaplar: Vuruş (İsabet + Saldırganlık),
-Siper (Savunma + Güç), Ayak (Kaçınma + Hız), Kondisyon (Can + Stamina) — ikinci stat
-yarım pay alır.
+Training covers these eight stats with **four drills**: Strike (Accuracy + Aggression), Guard
+(Defence + Strength), Footwork (Evasion + Speed), Conditioning (Health + Stamina) — the second
+stat takes half the share.
 
-### Uzuv kaybı
+### Limb loss
 
-Uzuv kaybı riski, tek darbenin **azami cana oranı** eşiği (%20) geçince doğar; düşük can
-ön koşul **değildir**, ilk darbede de olabilir. Kesici silah koparır (çarpan 1.0),
-künt sersemletir (0.15). Bloklanan darbe uzuv **koparmaz**.
+The risk of limb loss arises when a single blow passes the threshold of its **ratio to maximum
+health** (20%); low health is **not** a precondition, it can happen on the first blow. A cutting
+weapon severs (multiplier 1.0), a blunt one stuns (0.15). A blocked blow does **not** sever.
 
-Savaşçı **ölmez, sakat kalır** — kalıcı cezalarla dövüşmeye devam eder:
+The warrior **does not die, he is maimed** — he keeps fighting with permanent penalties:
 
-| Kayıp | Etki |
+| Loss | Effect |
 |---|---|
-| **Kılıç kolu** | Saldırı gücü ×0.65, iki elli silah kullanamaz, tek elli animasyona geçer |
-| **Boştaki kol** | Saldırı gücü ×0.85, iki elli silah yine kullanamaz |
-| **Bacak** (her biri) | Kaçınma ×0.55, yürüme hızı ×0.60 |
-| **Göz** | İsabet ×0.75 |
+| **The sword arm** | Attack strength ×0.65, cannot use a two-handed weapon, switches to the one-handed animation |
+| **The off arm** | Attack strength ×0.85, still cannot use a two-handed weapon |
+| **A leg** (each) | Evasion ×0.55, walking speed ×0.60 |
+| **An eye** | Accuracy ×0.75 |
 
-Kayıplar birleşir (iki bacak → hız ×0.36). İki kolun ayrılmasının sebebi: kılıç kolu
-vuruşun kendisi, boştaki kol dengedir — ikisi de çift el silahı bitirir ama tek elli
-dövüşen için boştaki kolun kaybı taşınabilir. Sonuç, oyuncuya bırakılan bir karardır:
-**emekliye ayır mı, kullanmaya devam mı.** Kazanılan dövüşlerin %16.5'i eve sakat bir
-savaşçı getiriyor.
+The losses combine (two legs → speed ×0.36). The reason the two arms are separated: the sword
+arm is the strike itself, the off arm is balance — both end two-handed weapons, but for someone
+fighting one-handed the loss of the off arm is bearable. The result is a decision left to the
+player: **retire him or keep using him.** 16.5% of the fights won bring home a maimed warrior.
 
-### Zehir — "doz" ne demek
+### Poison — what "dose" means
 
-Zehirli silahın indirdiği **her isabet** savunana bir **doz** bırakır; zar atılmaz,
-namlu deriyi çizdiyse zehir girmiştir. Doz saniyede bir can yer ve bu hasar **ne zırhtan
-ne Savunma statından geçer** — zehrin bütün değeri budur: plakayı delmez, etrafından dolanır.
+**Every hit** landed by a poisoned weapon leaves a **dose** on the defender; no die is rolled, if
+the blade scratched skin the poison is in. The dose eats health once a second and that damage
+goes through **neither armour nor the Defence stat** — that is poison's whole value: it does not
+pierce the plate, it goes around it.
 
-| Sayı | Değer | Ne demek |
+| Number | Value | What it means |
 |---|---|---|
-| Tik başına hasar | 2.5 | Doz 1 iken saniyede yenen can |
-| Tik aralığı | 1.0 sn | Ne sıklıkla can yediği |
-| Dozun ömrü | 6.0 sn | Vurulmazsa zehrin geçme süresi (her yeni vuruşta baştan kurulur) |
-| Azami doz | 3.0 | Üst üste zehirlemenin tavanı — **asıl düğme budur**, ömrü değil |
+| Damage per tick | 2.5 | The health eaten per second at dose 1 |
+| Tick interval | 1.0 s | How often it eats health |
+| The dose's lifetime | 6.0 s | How long the poison takes to pass if he is not struck (restarted on every new strike) |
+| Maximum dose | 3.0 | The cap on stacked poisoning — **this is the real knob**, not the lifetime |
 
-Zehir uzuv koparmaz ve sersemletmez (ikisi de *darbenin* sonucudur; zehirde vuran kimse
-yoktur — takasın yarısı budur). Zehrin öldürmesi ayrı bir sebeptir (`DeathCause.Poison`).
-Çekilen savaşçının zehri **durmaz**: tuş bir panzehir değildir.
+Poison neither severs limbs nor stuns (both are the outcome of a *blow*; with poison there is
+nobody striking — that is half the trade). Death by poison is a separate cause
+(`DeathCause.Poison`). The poison of a warrior pulling out **does not stop**: the key is not an
+antidote.
 
-### Blok
+### The block
 
-Blok çekirdekte ayrı bir durumdur (`CombatState.Blocking`) — Savunma statının içinde
-erimiş bir sayı değil.
+The block is a separate state in the core (`CombatState.Blocking`) — not a number melted into
+the Defence stat.
 
-| Kalem | Kural |
+| Item | Rule |
 |---|---|
-| **Şans** | `Savunma ÷ 100 × 0.45`. Taban yok: Savunma 0 olan hiç bloklamaz |
-| **Şart** | Yakınlık değil **okunan hamle** — menzildeki düşmanın kılıcı toplanmış olmalı. (İlk hâlinde şart yalnızca "menzilde düşman var mı"ydı ve kural zaferi *düşürüyordu*) |
-| **Süre** | 0.8 sn, bu sürede savaşçı **vurmaz**. Kaçınma bir darbeyi siler, blok bir **süre** satın alır — pahalı olan budur |
-| **Tuttuğu** | Hasarın %70'i × silahın blok kalitesi |
-| **Ritim** | Blok arkasına blok gelmez |
-| **Uzuv** | Bloklanan darbe uzuv koparmaz |
-| **Sarsıntı** | Künt silahın payı duruşa rağmen %75 işler — künt sınıfın dördüncü kazancı |
-| **Yan/arka** | Kuşatılan bloklayamaz |
+| **Chance** | `Defence ÷ 100 × 0.45`. No base: a warrior with Defence 0 never blocks |
+| **Condition** | Not proximity but **a move that is read** — the enemy in reach must have his sword gathered. (In its first form the condition was only "is there an enemy in reach" and the rule *lowered* victory) |
+| **Duration** | 0.8 s, during which the warrior **does not strike**. Evasion erases one blow, a block buys a **span of time** — that is what is expensive |
+| **What it holds** | 70% of the damage × the weapon's block quality |
+| **Rhythm** | No block comes right after a block |
+| **Limbs** | A blocked blow does not sever a limb |
+| **Concussion** | A blunt weapon's share works at 75% despite the stance — the blunt class's fourth gain |
+| **Flank/rear** | A surrounded warrior cannot block |
 
-**Blok kalitesi** (elde ne varsa): çift el 1.0, künt 0.85, kesici 0.80, delici 0.70,
-**yumruk 0.30** — silahını düşüren savaşçı bloğunu da kaybeder. Jitte/sai'ye çift el
-kalitesi verilmesi denendi ve kilitli bir freni kırdı (ağır silahlı düşmanın önünde
-jitte yanlış seçim olmaktan çıkıyordu); ikisi de tek elli künt kalitesini taşır.
+**Block quality** (whatever is in hand): two-handed 1.0, blunt 0.85, cutting 0.80, piercing 0.70,
+**fists 0.30** — a warrior who drops his weapon loses his block too. Giving the jitte/sai
+two-handed quality was tried and it broke a locked brake (the jitte stopped being the wrong
+choice in front of an enemy with a heavy weapon); both carry the one-handed blunt quality.
 
-Karar turunda blok **ikiye ayrıldı**: ne sıklıkla bloklandığı stattan, ne kadar kestiği
-ekipmandan (omuz parçası **ō-sode**) okunur. El kalkanı yoktur.
+In the decision pass the block was **split in two**: how often blocking happens is read from the
+stat, how much it cuts from the equipment (the shoulder piece, the **ō-sode**). There is no hand
+shield.
 
-### Diğer
+### Other
 
-| Terim | Nedir | Oyundaki işi |
+| Term | What it is | Its job in the game |
 |---|---|---|
-| **omamori** | Tapınaktan alınan bez muska/tılsım | Referans oyunun "Jupiter kartları"nın karşılığı: savaşçıya **veya personele** takılır, sökülüp devredilir, satılır; arzını tapınak ilişkisi belirler |
-| **seppuku** | Onurlu intihar | Onuru eşiğin (30) altına düşen savaşçı chat oylamasına gider; ronin çoğunluk → kalıcı ölüm, bushi çoğunluk → af (onur 45) |
-| **bushi** | Savaşçı/samuray | Chat komutu: onur (+) |
-| **rōnin** | Efendisiz samuray | Chat komutu: onur (−) |
-| **dojo** | Talim yeri | Oyuncunun üssü; tesis ağacı ve personel burada |
-| **sensei** | Öğretmen, eğitmen | Antrenman tarafının personeli |
-| **yōkai** | Japon folklorunun doğaüstü yaratıkları | Düşman havuzu (bestiary kararı hâlâ açık) |
-| **oni** | İblis, boynuzlu dev | Ağır düşman arketipi (tetsubo taşır) |
-| **tengu** | Kanatlı dağ iblisi | Hızlı/menzilli düşman arketipi (zehirli shuriken atar) |
+| **omamori** | A cloth amulet/talisman bought at a temple | The counterpart of the reference game's "Jupiter cards": it is fitted to a warrior **or to staff**, can be removed and passed on, and sold; its supply is set by the temple relationship |
+| **seppuku** | Honourable suicide | A warrior whose honour falls below the threshold (30) goes to a chat vote; a ronin majority → permanent death, a bushi majority → a pardon (honour 45) |
+| **bushi** | A warrior/samurai | A chat command: honour (+) |
+| **rōnin** | A masterless samurai | A chat command: honour (−) |
+| **dojo** | A training place | The player's base; the facility tree and the staff live here |
+| **sensei** | A teacher, an instructor | The staff on the training side |
+| **yōkai** | The supernatural creatures of Japanese folklore | The enemy pool (the bestiary decision is still open) |
+| **oni** | A demon, a horned giant | The heavy enemy archetype (it carries a tetsubo) |
+| **tengu** | A winged mountain demon | The fast/ranged enemy archetype (it throws poisoned shuriken) |

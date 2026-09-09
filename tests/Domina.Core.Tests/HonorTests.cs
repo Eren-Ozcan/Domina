@@ -5,10 +5,10 @@ using Domina.Core.Model;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Onur motoru (GDD §6). İki tasarım kararı burada korunuyor: chat'in etkisi
-/// <b>ham sayı değil oran</b> üzerinden hesaplanır (küçük ve büyük yayın aynı
-/// ağırlıkta olsun diye), ve onur zamanla nötre döner (anlık bir troll dalgası
-/// kalıcı ölüm cezasına dönüşmesin diye).
+/// The honour engine (GDD §6). Two design decisions are protected here: chat's effect is computed on a
+/// <b>ratio rather than a raw count</b> (so a small and a large stream weigh the same), and honour
+/// returns to neutral over time (so a momentary troll wave does not turn into a permanent death
+/// sentence).
 /// </summary>
 public class HonorTests
 {
@@ -55,7 +55,7 @@ public class HonorTests
     [Fact]
     public void ABattleWithoutASingleSwingIsPunished()
     {
-        // Hiç saldırmadan biten dövüş seyirlik değildir.
+        // A fight that ends without a single attack is not worth watching.
         Assert.True(_engine.PerformanceDelta(Summary(0, 0)) < 0);
     }
 
@@ -65,7 +65,7 @@ public class HonorTests
         double stoodGround = _engine.PerformanceDelta(Summary(10, 10));
         double ranAway = _engine.PerformanceDelta(Summary(10, 10, CombatState.Escaped));
 
-        // Kaçmak akıllıcadır ama onur getirmez — "çekeyim mi" ikilemi buradan doğar.
+        // Fleeing is sensible but earns no honour — the "shall I pull out" dilemma is born here.
         Assert.True(ranAway < stoodGround);
     }
 
@@ -94,7 +94,7 @@ public class HonorTests
     [Fact]
     public void TargetedVotesStayTinyComparedToLiveOnes()
     {
-        // Aksi hâlde bir grup, hiç dövüşmemiş bir savaşçıyı spam'leyerek öldürebilirdi.
+        // Otherwise a group could kill a warrior who never fought by spamming him.
         double targeted = Math.Abs(_engine.TargetedVoteDelta(isBushi: false));
         double live = Math.Abs(_engine.LiveVoteDelta(new CrowdVerdict(0, 20)));
 
@@ -102,7 +102,7 @@ public class HonorTests
         Assert.True(_engine.TargetedVoteDelta(isBushi: true) > 0);
     }
 
-    // ------------------------------------------------------------ ödül oranı
+    // ------------------------------------------------------------ reward ratio
 
     [Fact]
     public void RewardMultiplierSpansTheConfiguredRange()
@@ -120,7 +120,7 @@ public class HonorTests
     {
         HonorTuning tuning = HonorTuning.Default;
 
-        // 5 kişilik chat'te 3 ronin ile 5000 kişilik chat'te 3000 ronin aynı yargıdır.
+        // 3 ronin in a chat of 5 and 3000 ronin in a chat of 5000 are the same verdict.
         double small = new CrowdVerdict(2, 3).RewardMultiplier(tuning);
         double large = new CrowdVerdict(2000, 3000).RewardMultiplier(tuning);
 
@@ -153,7 +153,7 @@ public class HonorTests
     [Fact]
     public void ASingleTrollWaveDoesNotSurviveARestPeriod()
     {
-        // Yalnızca SÜREKLİ onursuzluk seppuku'ya götürmeli.
+        // Only SUSTAINED dishonour should lead to seppuku.
         double honor = HonorEngine.Apply(HonorScale.Starting, _engine.LiveVoteDelta(new CrowdVerdict(0, 500)));
         Assert.True(honor < HonorScale.Starting);
 
@@ -161,7 +161,7 @@ public class HonorTests
         Assert.Equal(50, recovered, precision: 9);
     }
 
-    // ------------------------------------------------------------------ ölçek
+    // ------------------------------------------------------------------- scale
 
     [Fact]
     public void HonorStaysInsideTheScale()

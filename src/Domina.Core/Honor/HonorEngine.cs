@@ -4,11 +4,11 @@ using Domina.Core.Model;
 namespace Domina.Core.Honor;
 
 /// <summary>
-/// Onur puanının nasıl değiştiğini hesaplar.
+/// Computes how the honour score changes.
 /// </summary>
 /// <remarks>
-/// Durumsuzdur — savaşçının onurunu kendisi saklamaz, yalnızca yeni değeri döner.
-/// Kalıcı hali meta katman tutar.
+/// It is stateless — it does not store the warrior's honour itself, it only returns the new value.
+/// The persistent state is held by the meta layer.
 /// </remarks>
 public sealed class HonorEngine(HonorTuning? tuning = null)
 {
@@ -17,12 +17,12 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
     public HonorTuning Tuning => _tuning;
 
     /// <summary>
-    /// Dövüş performansının onura etkisi.
+    /// The effect of fight performance on honour.
     /// </summary>
     /// <remarks>
-    /// "Onurlu dövüş" burada şu demek: saldırdı, isabet ettirdi, kaçmadı.
-    /// Kaçarak hayatta kalmak akıllıcadır ama onur kazandırmaz — oyuncunun
-    /// "çekeyim mi" kararını gerçek bir ikilem yapan da budur.
+    /// "An honourable fight" here means: he attacked, he landed hits, he did not flee.
+    /// Surviving by fleeing is sensible but earns no honour — and that is what makes the player's
+    /// decision "shall I pull out" a real dilemma.
     /// </remarks>
     public double PerformanceDelta(WarriorBattleSummary summary)
     {
@@ -30,14 +30,14 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
 
         if (summary.AttacksMade == 0)
         {
-            // Hiç saldırmadan biten dövüş seyirlik değildir.
+            // A fight that ends without a single attack is not worth watching.
             return -_tuning.PerformanceHonorSwing * 0.5;
         }
 
-        // İsabet oranı (0-1) nötr noktası 0.5 kabul edilerek -1..+1 aralığına taşınır.
+        // The hit rate (0-1) is moved to the -1..+1 range with 0.5 taken as the neutral point.
         double aggressionScore = (summary.Accuracy - 0.5) * 2;
 
-        // Kaçarak biten dövüş onur getirmez.
+        // A fight that ends in flight brings no honour.
         double escapePenalty = summary.Escaped ? _tuning.EscapePerformancePenalty : 0;
 
         double score = Math.Clamp(aggressionScore + escapePenalty, -1, 1);
@@ -45,12 +45,12 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
     }
 
     /// <summary>
-    /// Çekilmenin düz onur bedeli.
+    /// The flat honour price of pulling out.
     /// </summary>
     /// <remarks>
-    /// <see cref="PerformanceDelta"/> ile toplanır, onun yerine geçmez: biri "nasıl
-    /// dövüştü", bu "çekildi mi". Savaş başlamadan çekilmek artık mümkün olmadığı için
-    /// (bkz. docs/GDD.md §5) bu ceza her zaman <b>başlamış</b> bir dövüşü terk etmenin
+    /// It is added to <see cref="PerformanceDelta"/>, it does not replace it: one is "how did he fight",
+    /// this is "did he pull out". Because pulling out before the fight begins is no longer possible
+    /// (see docs/GDD.md §5), this penalty is always the price of leaving a fight that has <b>begun</b>
     /// bedelidir.
     /// </remarks>
     public double RetreatDelta(WarriorBattleSummary summary)
@@ -60,7 +60,7 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
         return summary.Escaped ? -_tuning.RetreatHonorPenalty : 0;
     }
 
-    /// <summary>Aktif dövüşe verilen chat tepkisinin onura etkisi.</summary>
+    /// <summary>The effect on honour of a chat reaction to a live fight.</summary>
     public double LiveVoteDelta(CrowdVerdict verdict)
     {
         if (!verdict.HasVotes)
@@ -68,17 +68,17 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
             return 0;
         }
 
-        // Oran 0.5 nötr; -1..+1 aralığına taşınır.
+        // The ratio 0.5 is neutral; it is moved to the -1..+1 range.
         return (verdict.BushiRatio - 0.5) * 2 * _tuning.LiveVoteHonorSwing;
     }
 
     /// <summary>
-    /// Dövüş dışındaki bir savaşçıya hedefli komutun etkisi. Kasıtlı olarak küçüktür.
+    /// The effect of a command targeting a warrior outside a fight. Deliberately small.
     /// </summary>
     public double TargetedVoteDelta(bool isBushi) =>
         (isBushi ? 1 : -1) * _tuning.TargetedVoteHonorSwing;
 
-    /// <summary>Zamanla nötre doğru toparlanma.</summary>
+    /// <summary>Recovery toward neutral over time.</summary>
     public double ApplyDecay(double honor, TimeSpan elapsed)
     {
         const double neutral = (HonorScale.Min + HonorScale.Max) / 2;

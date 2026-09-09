@@ -3,14 +3,14 @@ using System.Collections.ObjectModel;
 namespace Domina.Core.Model;
 
 /// <summary>
-/// Dojo'daki bir savaşçının kalıcı hali.
+/// The persistent state of a warrior in the dojo.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Id"/> kalıcı ve benzersizdir; <see cref="Name"/> değildir.
-/// Bir isim aynı anda yalnızca <b>bir canlı</b> savaşçıya ait olabilir, ama X ölünce
-/// havuza döner ve ileride yeni bir X gelebilir (bkz. docs/GDD.md §6). Bu yüzden
-/// eşleştirme her yerde Id üzerinden yapılır, isim üzerinden değil.
+/// <see cref="Id"/> is permanent and unique; <see cref="Name"/> is not.
+/// A name can belong to only <b>one living</b> warrior at a time, but when X dies it returns to the
+/// pool and a new X can arrive later (see docs/GDD.md §6). That is why matching everywhere is done by
+/// Id, not by name.
 /// </para>
 /// </remarks>
 public sealed class Warrior
@@ -38,67 +38,67 @@ public sealed class Warrior
 
     public WarriorId Id { get; }
 
-    /// <summary>Chat'ten çekilmiş veya üretilmiş ad. Oyuncu her zaman değiştirebilir.</summary>
+    /// <summary>A name drawn from chat or generated. The player can always change it.</summary>
     public string Name { get; set; }
 
-    /// <summary>Sakatlık uygulanmamış ham statlar.</summary>
+    /// <summary>The raw stats with no disability applied.</summary>
     public WarriorStats BaseStats { get; set; }
 
     public Weapon Weapon { get; set; }
 
     public Armor Armor { get; set; }
 
-    /// <summary>Fırlatma yuvası. <c>null</c> ise savaşçı menzilli saldıramaz.</summary>
+    /// <summary>The throwing slot. <c>null</c> means the warrior cannot attack at range.</summary>
     public ThrownWeapon? Thrown { get; set; }
 
     /// <summary>
-    /// Fırlatma, kol kaybından sonra da mümkündür — tek elle atılır.
+    /// Throwing is possible after losing an arm too — it is thrown one-handed.
     /// </summary>
     /// <remarks>
-    /// İki elli yakın dövüş silahını kullanamayan savaşçının elinde kalan tek gerçek
-    /// tehdit budur (bkz. <see cref="UsableWeapon"/>).
+    /// This is the only real threat left in the hand of a warrior who cannot use a two-handed melee
+    /// weapon (see <see cref="UsableWeapon"/>).
     /// </remarks>
     public ThrownWeapon? UsableThrown => Thrown;
 
-    /// <summary>0-100. Ekonomiyi ve seppuku eşiğini besler (bkz. docs/GDD.md §6).</summary>
+    /// <summary>0-100. It feeds the economy and the seppuku threshold (see docs/GDD.md §6).</summary>
     public double Honor { get; set; }
 
     /// <summary>
-    /// Antrenmandan ne kadar hızlı faydalandığı (1.0 = ortalama).
+    /// How quickly he benefits from training (1.0 = average).
     /// </summary>
     /// <remarks>
-    /// Savaşçının doğuştan getirdiği, değişmeyen payı. Alım kararının ikinci ekseni budur:
-    /// aynı statlarla gelen iki aday aynı hızda gelişmez, yani ucuz ve ham bir aday uzun
-    /// vadede pahalı ve hazır olandan iyi çıkabilir. <b>Dövüş bunu okumaz</b> — yalnızca
-    /// antrenman okur (<see cref="Dojo.TrainingGround"/>): bir günün kazancını çarpar.
+    /// The unchanging share a warrior is born with. This is the second axis of the buying decision: two
+    /// candidates arriving with the same stats do not develop at the same speed, so a cheap raw
+    /// candidate can turn out better in the long run than an expensive ready-made one. <b>The fight does
+    /// not read this</b> — only training does (<see cref="Dojo.TrainingGround"/>): it multiplies a day's gain.
     /// </remarks>
     public double Talent { get; set; } = 1.0;
 
     /// <summary>
-    /// Savaşçının seçtiği yol — bir kez seçilir, geri alınmaz.
+    /// The path the warrior chose — chosen once, never taken back.
     /// </summary>
     /// <remarks>
-    /// Savaşçı tarafındaki ilerleme kasten <b>sığ</b>: tek bir seçim, üç seçenek (GDD §10
-    /// "Skill tree derinliği"). Asıl uzun vadeli yatırım okuldadır; savaşçıya derin bir
-    /// ağaç bağlansaydı permadeath koca bir yatırım kaybına dönerdi ve oyuncu savaşçısını
-    /// sahaya sürmekten kaçınırdı. Seçimin kilidi dojo'da açılır (antrenman günü);
-    /// <b>dövüş yalnızca sonucunu okur</b> — çarpanlar <see cref="EffectiveStats"/>'a girer.
+    /// Progression on the warrior side is deliberately <b>shallow</b>: a single choice, three options
+    /// (GDD §10 "Skill tree depth"). The real long-term investment is in the school; with a deep tree
+    /// tied to the warrior, permadeath would turn into the loss of a large investment and the player
+    /// would avoid sending his warrior into the field. The choice is unlocked in the dojo (training
+    /// days); <b>the fight only reads the result</b> — the multipliers enter <see cref="EffectiveStats"/>.
     /// </remarks>
     public WarriorPath Path { get; set; } = WarriorPath.None;
 
     public bool IsAlive { get; private set; } = true;
 
-    /// <summary>Kalıcı sakatlıklar. Geri alınamaz.</summary>
+    /// <summary>Permanent disabilities. They cannot be undone.</summary>
     public IReadOnlyList<Disability> Disabilities => new ReadOnlyCollection<Disability>(_disabilities);
 
-    /// <summary>Sakatlıkların uygulanmış hali — dövüşün kullandığı statlar.</summary>
+    /// <summary>The stats with disabilities applied — the ones the fight uses.</summary>
     public WarriorStats EffectiveStats
     {
         get
         {
-            // Yol seçilmemişken hesaba hiç girilmez: burası dövüşün sıcak yolu (on binlerce
-            // dövüşte savaşçı başına milyonlarca okuma) ve boş bir çarpan turu ölçülebilir
-            // şekilde yavaşlatıyordu.
+            // With no path chosen the calculation is skipped entirely: this is the fight's hot path
+            // (millions of reads per warrior over tens of thousands of fights) and an empty multiplier
+            // pass slowed it down measurably.
             WarriorStats s = Path == WarriorPath.None
                 ? BaseStats
                 : PathScale.Apply(BaseStats, Path);
@@ -118,8 +118,8 @@ public sealed class Warrior
     }
 
     /// <summary>
-    /// Kolunu kaybeden savaşçı iki elli silahını kullanamaz; eline ne verirsen ver
-    /// pratikte yumrukla dövüşür. Ekipman ekranının bunu göstermesi gerekir.
+    /// A warrior who has lost an arm cannot use his two-handed weapon; whatever you put in his hand he
+    /// fights with his fists in practice. The equipment screen has to show this.
     /// </summary>
     public Weapon UsableWeapon =>
         Weapon.TwoHanded && _disabilities.Exists(d => d.BlocksTwoHandedWeapons)
@@ -128,7 +128,7 @@ public sealed class Warrior
 
     public bool HasDisability(BodyPart part) => _disabilities.Exists(d => d.Part == part);
 
-    /// <summary>Kalıcı sakatlık ekler. Aynı uzuv iki kez kaybedilemez.</summary>
+    /// <summary>Adds a permanent disability. The same limb cannot be lost twice.</summary>
     public bool AddDisability(BodyPart part)
     {
         if (HasDisability(part))
@@ -141,45 +141,45 @@ public sealed class Warrior
     }
 
     /// <summary>
-    /// Kuşamın <b>bugüne kadar</b> emdiği hasar — yuva yuva.
+    /// The damage the kit has absorbed <b>to date</b> — slot by slot.
     /// </summary>
     /// <remarks>
-    /// Dayanıklılık dövüşe değil <b>savaşçıya</b> aittir: bir parça tek bir dövüşte
-    /// tükenmez, seferler boyunca yıpranır ve bir gün ortada dağılır. Dövüş bu sayacı
-    /// okur ama yazmaz (toplu simülasyon aynı kadroyu on binlerce kez koşturur);
-    /// dövüşün ürettiği yıpranmayı savaşçıya işlemek dojo katmanının işi.
+    /// Durability belongs to <b>the warrior</b>, not to the fight: a piece is not used up in a single
+    /// fight, it wears across expeditions and one day breaks in the middle of one. The fight reads this
+    /// counter but does not write it (batch simulation runs the same roster tens of thousands of times);
+    /// writing the wear a fight produced onto the warrior is the dojo layer's job.
     /// </remarks>
     public ArmorWearSet ArmorWear { get; set; }
 
-    /// <summary>Kalıcı ölüm. Geri dönüşü yoktur.</summary>
+    /// <summary>Permanent death. There is no way back.</summary>
     public void Kill() => IsAlive = false;
 }
 
-/// <summary>Savaşçının seçebileceği yollar.</summary>
+/// <summary>The paths a warrior can choose.</summary>
 /// <remarks>
-/// Üçü de aynı büyüklükte değil ama aynı <b>ağırlıkta</b>: her yol iki statı büyütür,
-/// biri belirgin biri hafif. Tek statlı bir yol "hangisi daha iyi" sorusunu tek sayıya
-/// indirirdi; iki stat, yolu savaşçının şekline bağlar.
+/// The three are not the same size but carry the same <b>weight</b>: every path raises two stats, one
+/// clearly and one slightly. A single-stat path would reduce "which is better" to a single number; two
+/// stats tie the path to the warrior's shape.
 /// </remarks>
 public enum WarriorPath
 {
-    /// <summary>Henüz seçilmedi.</summary>
+    /// <summary>Not chosen yet.</summary>
     None,
 
-    /// <summary>Kılıç yolu — İsabet ve Güç.</summary>
+    /// <summary>The blade path — Accuracy and Strength.</summary>
     Blade,
 
     /// <summary>Kaya yolu — Savunma ve Can.</summary>
     Stone,
 
-    /// <summary>Gölge yolu — Kaçınma ve Hız.</summary>
+    /// <summary>The shadow path — Evasion and Speed.</summary>
     Shadow,
 }
 
-/// <summary>Yolun statlara uyguladığı çarpanlar.</summary>
+/// <summary>The multipliers a path applies to the stats.</summary>
 /// <remarks>
-/// Sakatlık çarpanlarının <b>altında</b> uygulanır: yol ham statı büyütür, sakatlık onu
-/// keser. Sıra tersine çevrilseydi yol, kaybedilen uzvun cezasını da büyütürdü.
+/// They are applied <b>underneath</b> the disability multipliers: the path raises the raw stat, the
+/// disability cuts it. Reversed, the path would also magnify the penalty of a lost limb.
 /// </remarks>
 public static class PathScale
 {
@@ -204,28 +204,28 @@ public static class PathScale
     };
 }
 
-/// <summary>Savaşçının kalıcı, benzersiz kimliği.</summary>
+/// <summary>The warrior's permanent, unique identity.</summary>
 public readonly record struct WarriorId(int Value)
 {
     public override string ToString() => $"W{Value}";
 }
 
-/// <summary>Dövüşü besleyen statlar.</summary>
+/// <summary>The stats that feed the fight.</summary>
 /// <param name="MaxHealth">Azami can.</param>
-/// <param name="Aggression">Saldırı sıklığı/agresiflik (0-100).</param>
-/// <param name="Defense">Alınan hasarı azaltır (0-100).</param>
-/// <param name="Evasion">Kaçınma denemesi şansı, stamina harcar (0-100).</param>
-/// <param name="Strength">Hasar çarpanını besler (0-100).</param>
-/// <param name="Accuracy">İsabet şansı (0-100).</param>
+/// <param name="Aggression">Attack frequency/aggressiveness (0-100).</param>
+/// <param name="Defense">Reduces the damage taken (0-100).</param>
+/// <param name="Evasion">The chance of an evasion attempt, spends stamina (0-100).</param>
+/// <param name="Strength">Feeds the damage multiplier (0-100).</param>
+/// <param name="Accuracy">Hit chance (0-100).</param>
 /// <param name="MaxStamina">Azami stamina.</param>
 /// <param name="Speed">
-/// Yürüme hızı (0-100). Yaklaşmayı, kuşatmayı ve <b>kaçabilmeyi</b> belirler.
+/// Walking speed (0-100). It sets closing, encircling and <b>being able to flee</b>.
 /// </param>
 /// <remarks>
-/// <see cref="Speed"/> geç eklendi ve varsayılanı 50'dir: hız tek bir sabitken kovalayan
-/// ile kaçan aynı hızda gidiyordu, yani <b>kaçış her zaman başarılıydı</b>. Sırtını
-/// dönüp koşan savaşçıya kimse yetişemiyordu ve temastan önce basılan "Kaç" tuşu
-/// %100 bedelsiz çıkış veriyordu (ölçüldü, 20.000 dövüş).
+/// <see cref="Speed"/> was added late and its default is 50: while speed was a single constant, chaser
+/// and fleer moved at the same rate, so <b>escape always succeeded</b>. Nobody could catch a warrior
+/// running with his back turned and the "Flee" key pressed before contact gave a 100% free exit
+/// (measured, 20,000 fights).
 /// </remarks>
 public readonly record struct WarriorStats(
     double MaxHealth,
@@ -237,7 +237,7 @@ public readonly record struct WarriorStats(
     double MaxStamina,
     double Speed = 50)
 {
-    /// <summary>Yeni bir acemi için taban.</summary>
+    /// <summary>The base for a new recruit.</summary>
     public static WarriorStats Recruit() => new(
         MaxHealth: 100,
         Aggression: 40,
@@ -249,13 +249,13 @@ public readonly record struct WarriorStats(
         Speed: 50);
 }
 
-/// <summary>Onur ölçeğinin sabitleri.</summary>
+/// <summary>The honour scale's constants.</summary>
 public static class HonorScale
 {
     public const double Min = 0;
     public const double Max = 100;
 
-    /// <summary>Yeni savaşçı nötr başlar.</summary>
+    /// <summary>A new warrior starts neutral.</summary>
     public const double Starting = 50;
 
     public static double Clamp(double value) => Math.Clamp(value, Min, Max);

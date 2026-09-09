@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <!--
-    Godot katmanı çekirdeği TÜKETİR, çekirdek Godot'u bilmez.
-    Bu ok tek yönlüdür — Domina.Core veya Domina.Chat içine Godot referansı
-    eklenmemeli (bkz. CLAUDE.md → "Mimari kuralı").
+    The Godot layer CONSUMES the core; the core knows nothing of Godot.
+    This arrow points one way — no Godot reference goes into Domina.Core or
+    Domina.Chat (see CLAUDE.md → "Architecture rule").
   -->
   <ItemGroup>
     <ProjectReference Include="..\Domina.Core\Domina.Core.csproj" />

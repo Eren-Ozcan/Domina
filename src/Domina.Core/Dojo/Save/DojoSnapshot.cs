@@ -2,37 +2,36 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo.Save;
 
-/// <summary>Kayıt dosyasının kök nesnesi.</summary>
+/// <summary>The save file's root object.</summary>
 /// <remarks>
 /// <para>
-/// Kayıt <b>ayrı bir tip ailesi</b>dir, canlı model değil. Sebep GDD §2'nin kuralı:
-/// kayıt versiyonlu ve ileri sürümde yüklenebilir olmalı. Canlı model doğrudan
-/// serileştirilseydi her denge alanı (menzil, uzuv kopma çarpanı, blok kalitesi)
-/// dosyaya yazılır ve <b>eski dosya yeni dengeyi ezerdi</b> — oyuncu bir sonraki
-/// yamada düzeltilen sayıyı kaydından geri getirirdi.
+/// The save is <b>a separate type family</b>, not the live model. The reason is GDD §2's rule: the save
+/// must be versioned and loadable by a later build. Serialising the live model directly would write
+/// every balance field (reach, dismemberment multiplier, block quality) into the file and <b>an old
+/// file would override the new balance</b> — the player would bring back a number fixed in the next
+/// patch out of his save.
 /// </para>
 /// <para>
-/// Bu yüzden dosyaya yalnızca <b>oyuncunun ürettiği</b> şey yazılır: kim, hangi adla,
-/// hangi statlarla, ne kuşanmış, ne kaybetmiş. Türetilen her şey yüklerken yeniden
-/// hesaplanır.
+/// So only what <b>the player produced</b> is written to the file: who, under what name, with what
+/// stats, wearing what, having lost what. Everything derived is recomputed on load.
 /// </para>
 /// </remarks>
-/// <param name="Version">Dosya biçiminin sürümü. Bkz. <see cref="DojoSnapshot.CurrentVersion"/>.</param>
-/// <param name="Day">Kaçıncı gün.</param>
+/// <param name="Version">The file format's version. See <see cref="DojoSnapshot.CurrentVersion"/>.</param>
+/// <param name="Day">Which day it is.</param>
 /// <param name="Resources">Kasa ve ambar.</param>
-/// <param name="Warriors">Kadro — ölüler dahil.</param>
+/// <param name="Warriors">The roster — the dead included.</param>
 /// <param name="Seed">
-/// Seferin tohumu. Teklifler bundan ve günden yeniden hesaplandığı için tekliflerin
-/// kendisi dosyaya yazılmaz — eski kayıt yeni bestiary'yi geri getirmesin diye.
+/// The expedition's seed. Because offers are recomputed from it and the day, the offers themselves are
+/// not written to the file — so that an old save does not bring back the old bestiary.
 /// </param>
 /// <param name="School">
-/// Alınmış okul tesisleri. Yalnızca <b>hangi düğümler</b> yazılır; bonusların büyüklüğü
-/// denge sayısıdır ve dosyaya girmez.
+/// The school facilities bought. Only <b>which nodes</b> are written; the size of the bonuses is a
+/// balance number and does not go into the file.
 /// </param>
 /// <param name="HiredRecruits">
-/// Bugün tezgâhtan alınmış adayların sıraları. Adayların kendisi yazılmaz (günden ve
-/// tohumdan yeniden üretilir); bu işaret olmadan kayıt yeniden yüklenerek aynı aday
-/// tekrar satın alınırdı.
+/// The indices of the candidates bought from the stall today. The candidates themselves are not written
+/// (they are regenerated from the day and the seed); without this mark the same candidate could be
+/// bought again by reloading the save.
 /// </param>
 public sealed record DojoSnapshot(
     int Version,
@@ -46,27 +45,27 @@ public sealed record DojoSnapshot(
     IReadOnlyList<int>? HiredRecruits = null)
 {
     /// <summary>
-    /// Yazılan dosyaların sürümü. Biçim <b>bozucu</b> şekilde değiştiğinde artar;
-    /// alan eklemek bozucu değildir — eksik alan varsayılanıyla yüklenir.
+    /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;
+    /// adding a field is not breaking — a missing field loads with its default.
     /// </summary>
     public const int CurrentVersion = 1;
 
-    /// <summary>Yeni oyunun boş dojo'su.</summary>
+    /// <summary>A new game's empty dojo.</summary>
     public static DojoSnapshot Empty { get; } = new(CurrentVersion, 1, Resources.Empty, []);
 }
 
-/// <param name="Id">Kalıcı kimlik. Eşleştirme her yerde bunun üzerinden yapılır.</param>
-/// <param name="Name">Görünen ad — canlılar arasında eşsizdir.</param>
-/// <param name="Stats">Sakatlık uygulanmamış ham statlar.</param>
+/// <param name="Id">The permanent identity. Matching everywhere is done through it.</param>
+/// <param name="Name">Display name — unique among the living.</param>
+/// <param name="Stats">The raw stats with no disability applied.</param>
 /// <param name="Honor">0-100.</param>
-/// <param name="IsAlive">Permadeath: <c>false</c> ise savaşçı bir daha dövüşmez.</param>
-/// <param name="Disabilities">Kalıcı uzuv kayıpları.</param>
-/// <param name="ArmorWear">Kuşamın bugüne kadar emdiği hasar — yuva yuva.</param>
-/// <param name="RecoveryDaysRemaining">Kalan revir günü.</param>
-/// <param name="TrainingDays">Tamamlanmış antrenman günü.</param>
-/// <param name="Talent">Antrenmandan faydalanma payı; oyuncunun ürettiği bir değer olduğu için kayda girer.</param>
-/// <param name="Drill">Seçili talim — oyuncunun kararı olduğu için kayda girer.</param>
-/// <param name="Path">Seçilmiş yol; geri alınamaz bir karar olduğu için kayda girer.</param>
+/// <param name="IsAlive">Permadeath: if <c>false</c> the warrior never fights again.</param>
+/// <param name="Disabilities">Permanent limb losses.</param>
+/// <param name="ArmorWear">The damage the kit has absorbed to date — slot by slot.</param>
+/// <param name="RecoveryDaysRemaining">The infirmary days left.</param>
+/// <param name="TrainingDays">The training days completed.</param>
+/// <param name="Talent">His share of benefit from training; it goes into the save because it is a value the player produced.</param>
+/// <param name="Drill">The drill selected — it goes into the save because it is the player's decision.</param>
+/// <param name="Path">The path chosen; it goes into the save because it is a decision that cannot be undone.</param>
 public sealed record WarriorSnapshot(
     int Id,
     string Name,
@@ -84,7 +83,7 @@ public sealed record WarriorSnapshot(
     Drill Drill = Drill.Strikes,
     WarriorPath Path = WarriorPath.None);
 
-/// <summary>Silahın <b>tanımlayıcı</b> alanları. Türetilen sayılar yüklerken hesaplanır.</summary>
+/// <summary>The weapon's <b>identifying</b> fields. The derived numbers are computed on load.</summary>
 public sealed record WeaponSnapshot(
     string Name,
     WeaponClass Class,
@@ -144,7 +143,7 @@ public sealed record ThrownWeaponSnapshot(
         new(Name, Class, Damage, Range, Speed, Ammo, ThrowSeconds) { Poison = Poison };
 }
 
-/// <summary>Kuşam — altı yuva ayrı ayrı yazılır (GDD §7 "Zırh yuva yuvadır").</summary>
+/// <summary>The kit — the six slots are written separately (GDD §7 "armour is slot by slot").</summary>
 public sealed record ArmorSnapshot(
     string Name,
     ArmorPieceSnapshot Head,

@@ -6,9 +6,9 @@ using Domina.Sim;
 namespace Domina.Sim.Tests;
 
 /// <summary>
-/// Sefer dizisi — ekonomi ölçümünün koşum aracı. Korunan iki kural: ölçüm
-/// <b>deterministik</b>tir (aynı seed aynı sonucu verir, yoksa iki fiyat ayarı
-/// karşılaştırılamaz) ve ekonomi sayıları komut satırından taranabilir.
+/// The expedition series — the economy measurement's run tool. Two rules are protected: the measurement
+/// is <b>deterministic</b> (the same seed gives the same result, or two price settings cannot be
+/// compared) and the economy numbers are sweepable from the command line.
 /// </summary>
 public class CampaignRunnerTests
 {
@@ -52,11 +52,11 @@ public class CampaignRunnerTests
     }
 
     /// <summary>
-    /// Antrenman ölçülebilir olmalı: aynı dojo, tek fark oran.
+    /// Training must be measurable: the same dojo, the only difference the rate.
     /// </summary>
     /// <remarks>
-    /// Ölçümün cevaplaması gereken soru "eğitmek işe yarıyor mu" — oranı sıfırlanmış
-    /// koşum bu sorunun kontrol grubudur, o yüzden ikisi de koşturulabilir kalmalı.
+    /// The question the measurement has to answer is "does training work" — a run with the rate zeroed is
+    /// that question's control group, so both must stay runnable.
     /// </remarks>
     [Fact]
     public void TrainingShowsUpAsStatGrowth()
@@ -78,10 +78,10 @@ public class CampaignRunnerTests
         Assert.True(with.AverageScoreGain > without.AverageScoreGain);
     }
 
-    /// <summary>Okul kolu tek başına koşturulabilmeli — ölçümün asıl sorusu bu.</summary>
+    /// <summary>A school branch must be runnable on its own — that is the measurement's real question.</summary>
     /// <remarks>
-    /// Bir kolun kendi bedelini ödeyip ödemediği ancak yalnız koşturulunca görünür; hepsi
-    /// birden alındığında kasadan çıkan para hangi kolun işine yaradığını gizler.
+    /// Whether a branch pays for itself can only be seen when it is run alone; with all of them bought,
+    /// the money leaving the treasury hides which branch it helped.
     /// </remarks>
     [Fact]
     public void ASingleSchoolBranchCanBeMeasuredOnItsOwn()
@@ -109,7 +109,7 @@ public class CampaignRunnerTests
         Assert.Equal(0, report.AveragePaths);
     }
 
-    /// <summary>Zafer ne kadar öderse kasa o kadar dolar — ölçümün tuttuğu tek eksen.</summary>
+    /// <summary>The more victory pays the fuller the treasury — the only axis the measurement holds.</summary>
     [Fact]
     public void ARicherRewardLeavesARicherDojo()
     {
@@ -162,7 +162,7 @@ public class CampaignRunnerTests
         Assert.Equal(90, campaign.Economy.RecruitPrice);
     }
 
-    /// <summary>Bayrak verilmezse dövüş kipi — ekonomi koşumu kazara açılmaz.</summary>
+    /// <summary>With no flag it is battle mode — the economy run does not open by accident.</summary>
     [Fact]
     public void BattleModeStaysTheDefault()
     {
@@ -173,7 +173,7 @@ public class CampaignRunnerTests
     }
 
     /// <summary>
-    /// Teklif kipi: düşman kadrosu senaryodan değil, günün teklifinden gelir.
+    /// Offer mode: the enemy roster comes from the day's offer, not from the scenario.
     /// </summary>
     [Fact]
     public void OfferModeStillFightsAndStaysDeterministic()
@@ -190,8 +190,8 @@ public class CampaignRunnerTests
     }
 
     /// <summary>
-    /// GDD §10'un "al ya da bırak" kararının ölçülebilir karşılığı: ağır teklifi geri
-    /// çeviren dojo kadrosunu koruyor, karşılığında gününü harcıyor.
+    /// The measurable counterpart of GDD §10's "take it or leave it" decision: a dojo that declines a
+    /// heavy offer protects its roster and spends its day in exchange.
     /// </summary>
     [Fact]
     public void DecliningTradesDaysForWarriors()

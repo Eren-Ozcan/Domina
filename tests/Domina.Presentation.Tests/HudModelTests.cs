@@ -1,10 +1,10 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Arayüz metinleri. Tek tuş, ekibin tamamını çekiyor (GDD §5); tuşun tek işi
-/// <b>komutun kaç savaşçıda anında işleyeceğini</b> önceden söylemek.
+/// The interface texts. A single key pulls the whole party (GDD §5); the key's only job is to say in
+/// advance <b>how many warriors the command will take effect on immediately</b>.
 /// </summary>
 public class HudModelTests
 {
@@ -20,12 +20,12 @@ public class HudModelTests
 
         Assert.True(prompt.Enabled);
         Assert.False(prompt.Locked);
-        Assert.Equal("EKİBİ ÇEK (2)", prompt.Text);
+        Assert.Equal("PULL THE PARTY (2)", prompt.Text);
     }
 
     /// <summary>
-    /// Kilitli savaşçının kaçışı vuruş bitince başlar. Oyuncu bunu basmadan önce
-    /// görebilmeli, yoksa gecikme hata gibi hissedilir.
+    /// A locked warrior's escape starts when his strike finishes. The player must see this before
+    /// pressing, or the delay feels like a bug.
     /// </summary>
     [Fact]
     public void TheButtonWarnsBeforeTheDelayHappens()
@@ -38,7 +38,7 @@ public class HudModelTests
         ], contactMade: true);
 
         Assert.True(prompt.Locked);
-        Assert.Equal("EKİBİ ÇEK (3) · 2 kilitli", prompt.Text);
+        Assert.Equal("PULL THE PARTY (3) · 2 locked", prompt.Text);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class HudModelTests
             TestSnapshots.Of(3, state: CombatState.Escaped),
         ], contactMade: true);
 
-        Assert.Equal("EKİBİ ÇEK (1)", prompt.Text);
+        Assert.Equal("PULL THE PARTY (1)", prompt.Text);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class HudModelTests
         ], contactMade: true);
 
         Assert.False(prompt.Enabled);
-        Assert.Equal("EKİP ÇEKİLİYOR", prompt.Text);
+        Assert.Equal("PARTY PULLING OUT", prompt.Text);
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public class HudModelTests
     }
 
     /// <summary>
-    /// Buffer'lanan komut panelde görünmeli: gecikme boyunca panel "saldırıyor" derse
-    /// tuş yutulmuş gibi okunur.
+    /// A buffered command must be visible on the panel: if the panel says "attacking" during the delay,
+    /// the key reads as swallowed.
     /// </summary>
     [Fact]
     public void TheBufferedCommandIsVisibleOnThePanel()
@@ -90,65 +90,65 @@ public class HudModelTests
         string label = HudModel.DescribeState(
             TestSnapshots.Of(1, state: CombatState.AttackWindup, retreatRequested: true, canCancel: false));
 
-        Assert.Equal("çekilecek · vuruş bitince", label);
+        Assert.Equal("pulling out · when the strike ends", label);
     }
 
     [Fact]
     public void TheRunningWarriorIsNotReportedAsWaiting()
     {
         Assert.Equal(
-            "çekiliyor",
+            "pulling out",
             HudModel.DescribeState(TestSnapshots.Of(1, state: CombatState.Retreating, retreatRequested: true)));
     }
 
     [Theory]
-    [InlineData(CombatState.Idle, "bekliyor")]
-    [InlineData(CombatState.AttackWindup, "saldırıyor")]
-    [InlineData(CombatState.AttackRecovery, "toparlanıyor")]
-    [InlineData(CombatState.Escaped, "kurtuldu")]
-    [InlineData(CombatState.Dead, "öldü")]
+    [InlineData(CombatState.Idle, "waiting")]
+    [InlineData(CombatState.AttackWindup, "attacking")]
+    [InlineData(CombatState.AttackRecovery, "recovering")]
+    [InlineData(CombatState.Escaped, "escaped")]
+    [InlineData(CombatState.Dead, "dead")]
     public void EveryStateHasALabel(CombatState state, string expected) =>
         Assert.Equal(expected, HudModel.DescribeState(TestSnapshots.Of(1, state: state)));
 
     /// <summary>
-    /// Silahsızlık da durumun üstüne yazılır ve zehirle birlikte okunabilir.
+    /// Being unarmed is written on top of the state too, and reads together with poison.
     /// </summary>
     /// <remarks>
-    /// İkisi bir aradayken oyuncunun kararı belirir: zehirlenmiş <b>ve</b> silahsız
-    /// savaşçı, tuşa basılmadığında ölen savaşçıdır.
+    /// With the two together the player's decision takes shape: a warrior who is poisoned <b>and</b>
+    /// unarmed is the warrior who dies if the key is not pressed.
     /// </remarks>
     [Fact]
     public void ABrokenWeaponIsWrittenOnTopOfTheState()
     {
         Assert.Equal(
-            "saldırıyor · silahsız",
+            "attacking · unarmed",
             HudModel.DescribeState(
                 TestSnapshots.Of(1, state: CombatState.AttackWindup, disarmed: true)));
 
         Assert.Equal(
-            "bekliyor · zehirli · silahsız",
+            "waiting · poisoned · unarmed",
             HudModel.DescribeState(
                 TestSnapshots.Of(1, state: CombatState.Idle, poisoned: true, disarmed: true)));
     }
 
     /// <summary>
-    /// Zehir durumun yerine geçmez, üstüne yazılır.
+    /// Poison does not replace the state, it is written on top of it.
     /// </summary>
     /// <remarks>
-    /// Zehirlenmiş savaşçı yürür, vurur ve çekilir; paneli "zehirlendi" deyip sussaydı
-    /// oyuncu savaşçının ne yaptığını göremezdi. Görmesi gereken şey ikisi birden:
-    /// hâlâ dövüşüyor <b>ve</b> canı gidiyor.
+    /// A poisoned warrior walks, strikes and pulls out; if his panel said "poisoned" and fell silent, the
+    /// player could not see what the warrior was doing. What he needs to see is both at once:
+    /// still fighting <b>and</b> losing health.
     /// </remarks>
     [Fact]
     public void PoisonIsWrittenOnTopOfTheState()
     {
         Assert.Equal(
-            "saldırıyor · zehirli",
+            "attacking · poisoned",
             HudModel.DescribeState(
                 TestSnapshots.Of(1, state: CombatState.AttackWindup, poisoned: true)));
 
         Assert.Equal(
-            "çekilecek · vuruş bitince · zehirli",
+            "pulling out · when the strike ends · poisoned",
             HudModel.DescribeState(
                 TestSnapshots.Of(
                     1,
@@ -159,24 +159,24 @@ public class HudModelTests
     }
 
     /// <summary>
-    /// Seed sürekli görünür durmalı: bir dövüşü tekrar açmanın ve toplu simülasyondaki
-    /// karşılığını bulmanın tek yolu o.
+    /// The seed must stay permanently visible: it is the only way to reopen a fight and find its
+    /// counterpart in batch simulation.
     /// </summary>
     [Fact]
     public void TheStatusLineCarriesTheSeed()
     {
-        Assert.Equal("seed 52  ·  15.2 sn", HudModel.DescribeStatus(52, 15.24, outcome: null));
+        Assert.Equal("seed 52  ·  15.2 s", HudModel.DescribeStatus(52, 15.24, outcome: null));
         Assert.Equal(
-            "seed 52  ·  15.2 sn  ·  ZAFER",
+            "seed 52  ·  15.2 s  ·  VICTORY",
             HudModel.DescribeStatus(52, 15.24, BattleOutcome.PlayerVictory));
     }
 
     /// <summary>
-    /// Savaş başlamadan çekilmek yok (GDD §5): tuş ilk isabete kadar pasif.
+    /// No pulling out before the fight starts (GDD §5): the key is inactive until the first hit.
     /// </summary>
     /// <remarks>
-    /// Tuş gizlenmiyor, pasif duruyor. Gizlenseydi kuralın varlığı hiç öğrenilmezdi;
-    /// oyuncu tuşun neden yokluğunu değil, ne zaman geleceğini merak etmeli.
+    /// The key is not hidden, it stands inactive. Hidden, the rule's existence would never be learnt;
+    /// the player should wonder when the key arrives, not why it is absent.
     /// </remarks>
     [Fact]
     public void TheButtonStaysShutUntilTheFirstBloodIsDrawn()
@@ -188,12 +188,12 @@ public class HudModelTests
             TestSnapshots.Of(101, Battle.EnemyTeam),
         ], contactMade: false);
 
-        // Basılabilir kalır ama komutu reddedilir: basış kuralı öğreten metni doğurur.
+        // It stays pressable but its command is refused: the press produces the text that teaches the rule.
         Assert.True(prompt.Shut);
-        Assert.Equal("SAVAŞ BAŞLAMADI", prompt.Text);
+        Assert.Equal("FIGHT NOT STARTED", prompt.Text);
     }
 
-    /// <summary>Kural oyun başında öğretilir.</summary>
+    /// <summary>The rule is taught at the start of the game.</summary>
     [Fact]
     public void TheRuleIsTaughtOnTheFirstPresses()
     {
@@ -207,7 +207,7 @@ public class HudModelTests
     }
 
     /// <summary>
-    /// Öğrettikten sonra susar. Bildiğini tekrarlamak bilgi değil gürültüdür.
+    /// After teaching it, it falls silent. Repeating what he knows is noise, not information.
     /// </summary>
     [Fact]
     public void TheRuleStopsBeingRepeatedOnceItIsKnown()
@@ -221,7 +221,7 @@ public class HudModelTests
     }
 
     /// <summary>
-    /// Israrla basana cevap verilir — kaç kez öğretildiğinden bağımsız olarak.
+    /// Someone who keeps pressing gets an answer — regardless of how many times it has been taught.
     /// </summary>
     [Fact]
     public void ThePersistentPresserGetsAnswered()

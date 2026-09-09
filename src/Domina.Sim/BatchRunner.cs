@@ -1,14 +1,14 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
 namespace Domina.Sim;
 
-/// <summary>Tek bir dövüşün toplu simülasyona giren özeti.</summary>
+/// <summary>The summary of a single fight as it enters batch simulation.</summary>
 /// <remarks>
-/// Uzuv kayıpları <b>parça parça</b> sayılır. Toplam oran, yuva yuva zırhın işe
-/// yarayıp yaramadığını gizler: kolları açık bir kuşam ile tam takım aynı toplamı
-/// verebilir, ama kaybedilen uzuvların dağılımı bambaşkadır.
+/// Limb losses are counted <b>piece by piece</b>. A total rate hides whether slot-by-slot armour is
+/// working: a kit with bare arms and a full set can give the same total, while the distribution of the
+/// limbs lost is entirely different.
 /// </remarks>
 internal sealed record BattleRow(
     ulong Seed,
@@ -50,18 +50,18 @@ internal sealed record BattleRow(
     double PlayerLastChargeStartSeconds);
 
 /// <summary>
-/// Bir seed aralığındaki dövüşleri koşturur.
+/// Runs the fights in a seed range.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Denge çalışmasının tamamı buna dayanır: motor açmadan on binlerce dövüş koşup
-/// ölüm/sakatlık/kazanma oranlarına bakmak. Bu ancak çözümleyici motordan bağımsız
-/// olduğu için mümkün (bkz. CLAUDE.md → "Mimari kuralı").
+/// All balance work rests on this: running tens of thousands of fights without opening the engine and
+/// looking at the death/maiming/victory rates. It is only possible because the resolver is independent
+/// of the engine (see CLAUDE.md → "Architecture rule").
 /// </para>
 /// <para>
-/// Kadro <b>bir kez</b> kurulur ve tüm dövüşlerde tekrar kullanılır; <see cref="Battle"/>
-/// savaşçıların kalıcı halini değiştirmediği için bu güvenlidir ve 10.000 dövüşte
-/// gereksiz nesne ayırmayı önler.
+/// The roster is built <b>once</b> and reused across all fights; this is safe because
+/// <see cref="Battle"/> does not change the warriors' persistent state, and it avoids needless object
+/// allocation over 10,000 fights.
 /// </para>
 /// </remarks>
 internal sealed class BatchRunner
@@ -69,14 +69,14 @@ internal sealed class BatchRunner
     private readonly BattleSetup _setup;
 
     /// <param name="playerArmor">
-    /// Verilirse oyuncu tarafındaki herkesin kuşamını bununla değiştirir. Zırh eksenini
-    /// <b>tek başına</b> ölçmek için: senaryonun geri kalanı sabit kalır, yalnızca kuşam
-    /// değişir, böylece uzuv kaybı farkı zırhtan mı yoksa statlardan mı geliyor ayrışır.
+    /// If given, replaces the kit of everyone on the player side with it. For measuring the armour axis
+    /// <b>on its own</b>: the rest of the scenario stays fixed and only the kit changes, so it becomes
+    /// clear whether a difference in limb loss comes from armour or from stats.
     /// </param>
     /// <param name="playerSpeed">
-    /// Verilirse oyuncu tarafındaki herkesin <c>Speed</c>'ini bununla değiştirir. Zırhla
-    /// aynı gerekçe: hız artık varış vuruşunun sertliğine de işlediği için (docs/GDD.md §4)
-    /// "hızlı savaşçı daha iyi hücum eder" iddiası ancak diğer her şey sabitken ölçülebilir.
+    /// If given, replaces the <c>Speed</c> of everyone on the player side with it. Same rationale as with
+    /// armour: because speed now also feeds the force of the arrival blow (docs/GDD.md §4), the claim
+    /// "a fast warrior charges better" can only be measured while everything else is fixed.
     /// </param>
     public BatchRunner(
         Scenario scenario,
@@ -110,8 +110,8 @@ internal sealed class BatchRunner
             RetreatPolicy = retreatPolicy,
             Tuning = tuning ?? built.Tuning,
 
-            // Olay akışı yalnızca görselleştirme içindir; burada biriktirmek
-            // dövüş başına yüzlerce gereksiz ayırma demek olurdu.
+            // The event stream is only for visualisation; collecting it here would mean hundreds of
+            // needless allocations per fight.
             CollectEvents = false,
         };
 
@@ -124,9 +124,9 @@ internal sealed class BatchRunner
     public int EnemySideSize { get; }
 
     /// <summary>
-    /// <paramref name="firstSeed"/>'den başlayarak <paramref name="battles"/> dövüş koşturur.
+    /// Runs <paramref name="battles"/> fights starting from <paramref name="firstSeed"/>.
     /// </summary>
-    /// <param name="onRow">Her dövüş bitince çağrılır (CSV'ye akıtmak için).</param>
+    /// <param name="onRow">Called when each fight ends (to stream into CSV).</param>
     public BatchReport Run(ulong firstSeed, int battles, Action<BattleRow>? onRow = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(battles);
@@ -217,8 +217,8 @@ internal sealed class BatchRunner
             {
                 playerLimbLosses++;
 
-                // Parçalar tek tek sayılır: bir savaşçı aynı dövüşte birden fazla
-                // uzvunu kaybedebilir, "sakat döndü" oranı bunu gizler.
+                // The pieces are counted one by one: a warrior can lose more than one limb in the same
+                // fight, and a "came back maimed" rate hides that.
                 foreach (BodyPart part in s.LostParts.Parts())
                 {
                     if (part.IsArm())
@@ -311,17 +311,17 @@ internal sealed class BatchRunner
     }
 }
 
-/// <summary>Bir partinin toplam sayıları ve türetilmiş oranları.</summary>
+/// <summary>A batch's totals and the rates derived from them.</summary>
 internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 {
     public int Battles { get; private set; }
 
     public int Victories { get; private set; }
 
-    /// <summary>Ekip sağ çekildi — sefer harcandı, savaşçılar duruyor.</summary>
+    /// <summary>The party pulled out alive — the expedition was spent, the warriors are still standing.</summary>
     public int Withdrawals { get; private set; }
 
-    /// <summary>Ekip kırıldı — kimse kaçamadı.</summary>
+    /// <summary>The party was wiped out — nobody escaped.</summary>
     public int Wipes { get; private set; }
 
     public int TimeLimits { get; private set; }
@@ -340,11 +340,11 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public int EnemyDeaths { get; private set; }
 
-    /// <summary>Düşmanların silahını düşürme sayısı (olay olarak).</summary>
+    /// <summary>The number of times enemies dropped their weapon (as events).</summary>
     /// <remarks>
-    /// Zırhın hiç sayılmamış kazancı budur ve <b>hiçbir savaşçının sayacında</b>
-    /// görünmez: plakaya vurup silahını elinden kaçıran düşmanı kimse düşürmemiştir.
-    /// Ayrı tutulmasaydı "zırh düşmanın silahını elinden alır" iddiası ölçülemezdi.
+    /// This is armour's never-counted gain and it shows up in <b>no warrior's counter</b>: nobody
+    /// disarmed the enemy who struck plate and lost his weapon. Kept together with the rest, the claim
+    /// "armour takes the enemy's weapon out of his hand" could not be measured.
     /// </remarks>
     public int EnemyWeaponsDropped { get; private set; }
 
@@ -358,87 +358,87 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double PlayerDamageTaken { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının yediği sersemletme sayısı.</summary>
+    /// <summary>The number of stuns the player's warriors took.</summary>
     /// <remarks>
-    /// Künt silahın karşılığı yalnızca burada görünür: kesici uzuv kaybı üretir, künt
-    /// bu sayıyı üretir. İkisi aynı ölçümde yan yana durmazsa takasın döndüğü yer
-    /// bulunamaz (docs/GDD.md Açık Karar #4-B).
+    /// The blunt weapon's return only shows here: a cutting weapon produces limb loss, a blunt one
+    /// produces this number. If the two do not stand side by side in the same measurement, the point
+    /// where the trade turns cannot be found (docs/GDD.md Open Decision #4-B).
     /// </remarks>
     public int PlayerStunsTaken { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının düşmana geçirdiği sersemletme sayısı.</summary>
+    /// <summary>The number of stuns the player's warriors inflicted on the enemy.</summary>
     public int PlayerStunsInflicted { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının yakaladığı düşman vuruşu sayısı.</summary>
+    /// <summary>The number of enemy strikes the player's warriors caught.</summary>
     /// <remarks>
-    /// Jitte/sai'nin karşılığı yalnızca burada görünür: yakalama aleti hasarda kaybeder,
-    /// kazandığını bu sayıda ve kilitlenen düşmanın açık kaldığı pencerede geri alır
-    /// (docs/GDD.md Açık Karar #4-B).
+    /// The jitte/sai's return only shows here: the catching implement loses on damage and takes its gain
+    /// back in this number and in the window the bound enemy stays exposed
+    /// (docs/GDD.md Open Decision #4-B).
     /// </remarks>
     public int PlayerCatchesMade { get; private set; }
 
     public int PlayerBlocksMade { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının silahının yakalandığı sayı.</summary>
+    /// <summary>The number of times the player's warriors had their weapon caught.</summary>
     public int PlayerTimesCaught { get; private set; }
 
-    /// <summary>Oyuncu kuşamlarının emdiği toplam hasar.</summary>
+    /// <summary>The total damage the player's kits absorbed.</summary>
     /// <remarks>
-    /// Kuşamın <b>kaç dövüş dayandığı</b> yalnızca buradan çıkar: dövüş başına emilen
-    /// hasar, parçanın dayanıklılığına bölününce parçanın ömrü okunur.
+    /// <b>How many fights a kit lasts</b> comes only from here: the damage absorbed per fight, divided by
+    /// the piece's durability, gives the piece's lifetime.
     /// </remarks>
     public double PlayerArmorWear { get; private set; }
 
-    /// <summary>Dağılan oyuncu zırh parçası sayısı — <b>kalıcı</b> kayıp.</summary>
+    /// <summary>The number of player armour pieces broken — a <b>permanent</b> loss.</summary>
     /// <remarks>
-    /// Zırhın gerçek fiyatı yalnızca burada görünür: kazanılan dövüş bile kuşamdan bir
-    /// parça götürebilir (docs/GDD.md §7).
+    /// Armour's real price only shows here: even a won fight can take a piece off the kit
+    /// (docs/GDD.md §7).
     /// </remarks>
     public int PlayerArmorDestroyed { get; private set; }
 
-    /// <summary>En az bir zırh parçası kaybeden oyuncu savaşçısı sayısı.</summary>
+    /// <summary>The number of player warriors who lost at least one armour piece.</summary>
     public int PlayerWarriorsLosingArmor { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının silahını düşürme sayısı (olay olarak).</summary>
+    /// <summary>The number of times the player's warriors dropped their weapon (as events).</summary>
     /// <remarks>
-    /// Kuralın bedeli yalnızca burada görünür: düşme ne hasar ne uzuv kaybı sayacına
-    /// düşer, ama savaşçı silahına yürüyene kadar yumrukla kalır
+    /// The rule's price only shows here: a drop lands in neither the damage nor the limb-loss counter,
+    /// but the warrior is left with his fists until he walks to his weapon
     /// (docs/GDD.md §7).
     /// </remarks>
     public int PlayerWeaponsDropped { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının düşürdüğü düşman silahı sayısı.</summary>
+    /// <summary>The number of enemy weapons the player's warriors knocked out.</summary>
     public int PlayerDisarmsInflicted { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının yerden aldığı silah sayısı.</summary>
+    /// <summary>The number of weapons the player's warriors picked up from the ground.</summary>
     /// <remarks>
-    /// Bedelin kapanıp kapanmadığını söyleyen sayı budur — düşme kalıcı bir kayıp değil,
-    /// bir <b>yürüyüş</b>. İkisi yan yana durmazsa kuralın gerçekte ne kadar ısırdığı
-    /// bilinemez.
+    /// This is the number that says whether the price is settled — a drop is not a permanent loss but a
+    /// <b>walk</b>. If the two do not stand side by side, how much the rule really bites cannot be
+    /// known.
     /// </remarks>
     public int PlayerWeaponsPickedUp { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının yediği zehirli vuruş sayısı.</summary>
+    /// <summary>The number of poisoned strikes the player's warriors took.</summary>
     public int PlayerTimesPoisoned { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının düşmana geçirdiği zehirli vuruş sayısı.</summary>
+    /// <summary>The number of poisoned strikes the player's warriors inflicted on the enemy.</summary>
     public int PlayerPoisonsInflicted { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının zehirden yediği toplam hasar.</summary>
+    /// <summary>The total damage the player's warriors took from poison.</summary>
     /// <remarks>
-    /// Zehrin karşılığı yalnızca burada görünür: zehirli silah açık dövüşte hasar
-    /// kaybeder, kazandığını zırhın azaltamadığı bu hasarda geri alır
-    /// (docs/GDD.md Açık Karar #4-B).
+    /// Poison's return only shows here: a poisoned weapon loses damage in an open fight and takes its
+    /// gain back in this damage, which armour cannot reduce
+    /// (docs/GDD.md Open Decision #4-B).
     /// </remarks>
     public double PlayerPoisonDamageTaken { get; private set; }
 
-    /// <summary>Oyuncu savaşçılarının zehirle verdiği toplam hasar.</summary>
+    /// <summary>The total damage the player's warriors dealt with poison.</summary>
     public double PlayerPoisonDamageDealt { get; private set; }
 
-    /// <summary>Zehirden ölen oyuncu savaşçısı sayısı.</summary>
+    /// <summary>The number of player warriors who died of poison.</summary>
     /// <remarks>
-    /// Ölümün <b>sahada</b> mı yoksa sonrasında mı geldiğini söyleyen tek sayı budur;
-    /// zehrin "başka türlü öldürüyor" iddiası ancak buradan doğrulanır.
+    /// This is the only number that says whether death came <b>on the field</b> or after it; poison's
+    /// claim that it "kills differently" can only be confirmed from here.
     /// </remarks>
     public int PlayerPoisonDeaths { get; private set; }
 
@@ -452,10 +452,10 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double PlayerChargeStartSecondsSum { get; private set; }
 
-    /// <summary>Bütün koşumdaki en geç hücum kalkışı.</summary>
+    /// <summary>The latest charge launch in the whole run.</summary>
     public double LatestChargeStart { get; private set; }
 
-    /// <summary>Partide sahaya çıkan toplam oyuncu savaşçısı — oranların paydası.</summary>
+    /// <summary>The total player warriors who took the field in the batch — the denominator of the rates.</summary>
     public int PlayerAppearances => Battles * playerSideSize;
 
     public int EnemyAppearances => Battles * enemySideSize;
@@ -468,12 +468,12 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double TimeLimitRate => Rate(TimeLimits, Battles);
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının ölme oranı.</summary>
+    /// <summary>The rate at which a player warrior who takes the field dies.</summary>
     public double PlayerDeathRate => Rate(PlayerDeaths, PlayerAppearances);
 
     public double PlayerEscapeRate => Rate(PlayerEscapes, PlayerAppearances);
 
-    /// <summary>Denge çalışmasının en kritik sayısı: kalıcı sakatlık üretme hızı.</summary>
+    /// <summary>Balance work's most critical number: the rate at which permanent maiming is produced.</summary>
     public double PlayerLimbLossRate => Rate(PlayerLimbLosses, PlayerAppearances);
 
     public double LostArmRate => Rate(LostArms, PlayerAppearances);
@@ -484,89 +484,89 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double EnemyDeathRate => Rate(EnemyDeaths, EnemyAppearances);
 
-    /// <summary>Sahaya çıkan bir düşmanın silahını düşürme oranı.</summary>
+    /// <summary>The rate at which an enemy who takes the field drops his weapon.</summary>
     public double EnemyWeaponDropRate => Rate(EnemyWeaponsDropped, EnemyAppearances);
 
     public double PlayerAccuracy => Rate(PlayerHits, PlayerAttacks);
 
-    /// <summary>Dövüş başına düşen hücum sayısı — eşik ve olasılığın birlikte çıktısı.</summary>
+    /// <summary>Charges per fight — the joint output of the threshold and the probability.</summary>
     public double ChargesPerBattle => Battles == 0 ? 0 : (double)PlayerChargesStarted / Battles;
 
-    /// <summary>Başlayan hücumların hedefe varma oranı.</summary>
+    /// <summary>The rate at which started charges reach their target.</summary>
     public double ChargeConnectRate => Rate(PlayerChargesConnected, PlayerChargesStarted);
 
-    /// <summary>Hücumun ortalama kalkış anı — dövüşün neresinde hücum ediliyor.</summary>
+    /// <summary>The average moment a charge launches — where in the fight charging happens.</summary>
     public double AverageChargeStart => PlayerChargesStarted == 0
         ? 0
         : PlayerChargeStartSecondsSum / PlayerChargesStarted;
 
-    /// <summary>Birikme aşamasında dağılan hücumların oranı.</summary>
+    /// <summary>The share of charges scattered during the windup.</summary>
     public double ChargeBreakRate => Rate(PlayerChargesBroken, PlayerChargesStarted);
 
-    /// <summary>Hücum başına yenen bedava vuruş — §4'ün vaat ettiği bedelin ölçüsü.</summary>
+    /// <summary>Free hits taken per charge — the measure of the price §4 promised.</summary>
     public double OpportunitiesPerCharge => PlayerChargesStarted == 0
         ? 0
         : (double)PlayerChargeOpportunitiesTaken / PlayerChargesStarted;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yediği sersemletme.</summary>
+    /// <summary>The stuns a player warrior who takes the field suffers per fight.</summary>
     public double StunsTakenPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerStunsTaken / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına geçirdiği sersemletme.</summary>
+    /// <summary>The stuns a player warrior who takes the field inflicts per fight.</summary>
     public double StunsInflictedPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerStunsInflicted / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yaptığı yakalama.</summary>
+    /// <summary>The catches a player warrior who takes the field makes per fight.</summary>
     public double CatchesPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerCatchesMade / PlayerAppearances;
 
-    /// <summary>Yakaladığı vuruşun, kendisine yöneltilen tüm vuruşlara oranı değil —
-    /// dövüş başına yakalanma sayısıdır; yakalamanın iki yönlü olup olmadığını gösterir.</summary>
+    /// <summary>Not the ratio of strikes caught to all strikes aimed at him — it is the number of times
+    /// he is caught per fight; it shows whether catching runs both ways.</summary>
     public double TimesCaughtPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerTimesCaught / PlayerAppearances;
 
-    /// <summary>Bir oyuncu savaşçısının dövüş başına blokla karşıladığı darbe sayısı.</summary>
+    /// <summary>The number of blows a player warrior meets with a block per fight.</summary>
     /// <remarks>
-    /// Bloğun bedeli vurulmayan vuruştur; bu sayaç tek başına "işe yarıyor mu" demez.
-    /// Yanına <see cref="ArmorWearPerWarrior"/> ve uzuv kaybı oranıyla bakılır: blok
-    /// hasarı ve kopmayı düşürürken zaferi düşürmüyorsa duruş bedelini ödüyor demektir.
+    /// A block's price is the strike not made; this counter does not say "is it working" on its own. It
+    /// is read next to <see cref="ArmorWearPerWarrior"/> and the limb-loss rate: if blocking lowers
+    /// damage and dismemberment without lowering victory, the stance pays its price.
     /// </remarks>
     public double BlocksPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerBlocksMade / PlayerAppearances;
 
-    /// <summary>Bir oyuncu savaşçısının dövüş başına kuşamına emdirdiği hasar.</summary>
+    /// <summary>The damage a player warrior lets his kit absorb per fight.</summary>
     public double ArmorWearPerWarrior =>
         PlayerAppearances == 0 ? 0 : PlayerArmorWear / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının kuşamından parça kaybetme oranı.</summary>
+    /// <summary>The rate at which a player warrior who takes the field loses a piece from his kit.</summary>
     public double ArmorLossRate => Rate(PlayerWarriorsLosingArmor, PlayerAppearances);
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına kaybettiği parça sayısı.</summary>
+    /// <summary>The number of pieces a player warrior who takes the field loses per fight.</summary>
     public double ArmorPiecesLostPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerArmorDestroyed / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına silahını düşürme oranı.</summary>
+    /// <summary>The rate at which a player warrior who takes the field drops his weapon per fight.</summary>
     public double WeaponDropRate => Rate(PlayerWeaponsDropped, PlayerAppearances);
 
-    /// <summary>Düşen silahların yerden alınma oranı.</summary>
+    /// <summary>The rate at which dropped weapons are picked up.</summary>
     public double PickupRate => Rate(PlayerWeaponsPickedUp, PlayerWeaponsDropped);
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına düşürdüğü düşman silahı.</summary>
+    /// <summary>The enemy weapons a player warrior who takes the field knocks out per fight.</summary>
     public double DisarmsPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerDisarmsInflicted / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına yediği zehirli vuruş.</summary>
+    /// <summary>The poisoned strikes a player warrior who takes the field takes per fight.</summary>
     public double PoisoningsTakenPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerTimesPoisoned / PlayerAppearances;
 
-    /// <summary>Sahaya çıkan bir oyuncu savaşçısının dövüş başına geçirdiği zehirli vuruş.</summary>
+    /// <summary>The poisoned strikes a player warrior who takes the field inflicts per fight.</summary>
     public double PoisoningsInflictedPerWarrior =>
         PlayerAppearances == 0 ? 0 : (double)PlayerPoisonsInflicted / PlayerAppearances;
 
-    /// <summary>Ölümlerin zehirden gelen payı.</summary>
+    /// <summary>The share of deaths that come from poison.</summary>
     public double PoisonDeathShare => Rate(PlayerPoisonDeaths, PlayerDeaths);
 
-    /// <summary>Verilen hasarın zehirden gelen payı — dozun gerçekten ne kadar iş yaptığı.</summary>
+    /// <summary>The share of damage dealt that comes from poison — how much work the dose really does.</summary>
     public double PoisonShareOfDamageDealt =>
         PlayerDamageDealt <= 0 ? 0 : PlayerPoisonDamageDealt / PlayerDamageDealt;
 

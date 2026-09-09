@@ -2,15 +2,15 @@ using Godot;
 
 namespace Domina.Game;
 
-/// <summary>Oyunun ilk ekranı: yeni oyun mu, kaldığı yerden mi.</summary>
+/// <summary>The game's first screen: a new game, or carry on from where you left off.</summary>
 /// <remarks>
 /// <para>
-/// Ekran <b>dojo almaz</b>: dojo'nun nereden geleceğine burada karar verilir, o yüzden
-/// diğer ekranlarla aynı iskeleti paylaşmıyor.
+/// The screen <b>takes no dojo</b>: where the dojo comes from is decided here, which is why it does not
+/// share the same skeleton as the other screens.
 /// </para>
 /// <para>
-/// "Yeni oyun" kayıt varken <b>onay ister</b>: tek yuva var ve permadeath'li bir sefer
-/// yanlış tuşla silinmemeli.
+/// "New game" <b>asks for confirmation</b> when a save exists: there is a single slot and a permadeath run
+/// must not be erased by the wrong key.
 /// </para>
 /// </remarks>
 public sealed partial class TitleScreen : CanvasLayer
@@ -19,13 +19,13 @@ public sealed partial class TitleScreen : CanvasLayer
     private Button _newGame = null!;
     private bool _confirming;
 
-    /// <summary>Kaydı yükle.</summary>
+    /// <summary>Load the save.</summary>
     public Action? Continued { get; set; }
 
-    /// <summary>Yeni bir sefer başlat — varsa eski kaydın üstüne.</summary>
+    /// <summary>Start a new expedition — over the old save if there is one.</summary>
     public Action? Started { get; set; }
 
-    /// <summary>Ekranın altında duracak uyarı; yükleme eksik yaptıysa yazılır.</summary>
+    /// <summary>The warning shown at the bottom of the screen; written if the load was incomplete.</summary>
     public string? Warning { get; set; }
 
     public override void _Ready()
@@ -57,19 +57,19 @@ public sealed partial class TitleScreen : CanvasLayer
 
         Button resume = new()
         {
-            Text = "Kaldığın yerden devam et",
+            Text = "Continue where you left off",
             Disabled = !saved,
         };
         resume.Pressed += () => Continued?.Invoke();
         column.AddChild(resume);
 
-        _newGame = new Button { Text = saved ? "Yeni oyun (kaydın silinir)" : "Yeni oyun" };
+        _newGame = new Button { Text = saved ? "New game (your save is erased)" : "New game" };
         _newGame.Pressed += () => StartPressed(saved);
         column.AddChild(_newGame);
 
         _note = new Label
         {
-            Text = Warning ?? (saved ? string.Empty : "Kayıtlı sefer yok."),
+            Text = Warning ?? (saved ? string.Empty : "No saved expedition."),
             HorizontalAlignment = HorizontalAlignment.Center,
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(420, 0),
@@ -83,8 +83,8 @@ public sealed partial class TitleScreen : CanvasLayer
         if (saved && !_confirming)
         {
             _confirming = true;
-            _newGame.Text = "Eminsen bir daha bas";
-            _note.Text = "Yeni oyun kayıtlı seferi siler; permadeath'te geri dönüşü yok.";
+            _newGame.Text = "Press again if you are sure";
+            _note.Text = "A new game erases the saved expedition; with permadeath there is no way back.";
             return;
         }
 

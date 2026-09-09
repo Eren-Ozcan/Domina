@@ -1,464 +1,479 @@
-﻿# Geliştirme Yol Haritası
+# Development Roadmap
 
-> Tasarım kararları için `GDD.md`. Bu dosya **nasıl inşa edileceğini** anlatır.
-> Efor tahminleri **görecelidir** (S/M/L/XL), takvim değil.
+> For the design decisions see `GDD.md`. This file describes **how it gets built**.
+> The effort estimates are **relative** (S/M/L/XL), not a calendar.
 
-> ⚠️ **2026-09-07 — karar turu bu planı değiştirdi.** `COMPARISON-DOMINA.md` üzerindeki
-> karar turu ve meslek turu yeni sistemler getirdi, birkaç kilitli kuralı geçersiz kıldı.
-> Faz sınırları aşağıdaki "Karar turunun getirdiği yeni iş" bölümünde toplandı; fazların
-> içine dağıtılması, açık kalan **9.1 çekirdek kararı** verildikten sonra yapılacak
-> (o karar mimariyi doğrudan belirliyor).
+> ⚠️ **2026-09-07 — a decision pass changed this plan.** The decision pass and the
+> profession pass over `COMPARISON-DOMINA.md` brought in new systems and invalidated a few
+> locked rules. The phase boundaries are gathered in the "New work from the decision pass"
+> section below; distributing them into the phases will be done once the open
+> **9.1 core decision** is made (that decision sets the architecture directly).
 
-## Karar turunun getirdiği yeni iş (2026-09-07)
+## New work from the decision pass (2026-09-07)
 
-**Önce karara bağlanması gereken:** GDD "Açık Kararlar" #13 — çözümleme motorda mı,
-dışında mı? Bu karar Faz 1'in ve denge düzeninin şeklini belirliyor; altındaki her şey
-ona bağlı.
+**To be decided first:** GDD "Open Decisions" #13 — is resolution inside the engine or
+outside it? This decision sets the shape of phase 1 and of the balance setup; everything
+under it depends on it.
 
-**Mevcut fazları yeniden açan değişiklikler**
+**Changes that reopen existing phases**
 
-| Değişiklik | Etkilenen | Not |
+| Change | Affected | Note |
 |---|---|---|
-| **Ayrık gün → duraklatmalı gerçek zaman** | Faz 1, Faz 3 | Gün kapanışı, olay tetikleme, `AdvanceDay` ve chat oylaması ayrık günü varsayıyor. Çekirdek sabit tik'te kalır; değişen onu tüketen katman. **En büyük tek risk kalemi** |
-| **`BattleOutcome.TimeLimit` kalkıyor** | Faz 1 | Dövüş biri düşene kadar sürer |
-| **Dövüş stat kazandırıyor** | Faz 1, Faz 3 | Antrenman tek büyüme yolu olmaktan çıkıyor; "sefere çıkmak saf kayıp" sorunu kapanıyor |
-| **Sersemletme silah düşürüyor** | Faz 1 | Üçüncü tetikleyici; ilk kez savunan silahını kaybediyor |
-| **Blok stat/ekipman diye ayrılıyor** | Faz 1, Faz 2 | Sıklık Savunma'dan, etki ō-sode'den |
-| **Ödül bandı 0.75-1.25** | Faz 5, Faz 9 | Pes etme sağkalımı da aynı oranı kullanıyor |
-| **Bütün denge sayıları geçersiz** | Faz 9 → her faz | Ölçüm artık tek turda değil, **her sistem koda girdikçe** yapılacak |
+| **Discrete day → pausable real time** | Phase 1, Phase 3 | The day's close, event triggering, `AdvanceDay` and the chat vote all assume a discrete day. The core stays on a fixed tick; what changes is the layer that consumes it. **The single largest risk item** |
+| **`BattleOutcome.TimeLimit` goes away** | Phase 1 | A fight lasts until someone falls |
+| **Fights grant stats** | Phase 1, Phase 3 | Training stops being the only route of growth; the "going on an expedition is pure loss" problem closes |
+| **A stun drops the weapon** | Phase 1 | A third trigger; for the first time the defender loses his weapon |
+| **The block splits into stat/equipment** | Phase 1, Phase 2 | The frequency comes from Defence, the effect from the ō-sode |
+| **Reward band 0.75-1.25** | Phase 5, Phase 9 | Surrender survival uses the same ratio |
+| **All the balance numbers are invalid** | Phase 9 → every phase | Measurement will no longer be one pass but done **as each system enters the code** |
 
-**Yeni sistemler** (fazlara dağıtılacak)
+**New systems** (to be distributed into the phases)
 
-- **Sınıf sistemi** — sınıf listesi, tesisle açılma, uzuv-sınıf uygunluk matrisi, `sınıf × alet` çarpımı
-- **Moral + İrade** — 9. stat, moral kaynağı, iki yönlü bağ, seppuku ve panik kontrollerine girmesi
-- **Personel ve tesis** — 11 meslek, günlük maaş, dört yükseltme kolu, emekli savaşçı yerleştirme, boş tesis yarı verimi, inşa süresi
-- **NPC ilişkileri** — üç taraf, beş kademe, yükselten/düşüren eylem tablosu, kademe etkileri
-- **Omamori** — takı tanımları, savaşçı ve personel yuvası, taşınma/satış, tapınak arzı
-- **Sezon iskeleti** — 180 gün geri sayım, 7 günlük mecburi dövüş sayacı, 3 kelle kapısı, 5 turluk final, kapanış ekranı
-- **Hikâye kadrosu** — sabit adlı hedefler, yenilgide büyüyen sürü, gece baskını
-- **Saha özellikleri** — sis, çamur, dar köprü, gece, tate
-- **Chat botu ve havuz penceresi** — yazma yönü, 1 saatlik tazelik, `!no` oturum ömrü
-- **Kalabalık göstergesi** — tek oyuncuda sahte chat yerine toplu gösterge
-- **Ekranlar** — pazar, tesis/personel, teklif kuyruğu, final turnuvası (Faz 3 "bitti" sayılıyordu; dojo katmanı büyüdü)
+- **The class system** — the class list, unlocking with a facility, the limb-class fitness matrix, the `class × implement` product
+- **Morale + Will** — the 9th stat, the source of morale, the two-way bond, its entry into the seppuku and panic checks
+- **Staff and facilities** — 11 professions, a daily wage, four upgrade branches, placing retired warriors, half efficiency for an empty facility, build time
+- **NPC relationships** — three parties, five tiers, the table of actions that raise and lower them, the effects of a tier
+- **Omamori** — the charm definitions, warrior and staff slots, carrying/selling, temple supply
+- **The season skeleton** — the 180-day countdown, the 7-day compulsory fight counter, the 3-head gate, the 5-round final, the closing screen
+- **The story cast** — fixed-name targets, a horde that grows on defeat, the night raid
+- **Field features** — fog, mud, a narrow bridge, night, tate
+- **The chat bot and the pool window** — the write direction, 1-hour freshness, `!no` session lifetime
+- **The crowd indicator** — a collective indicator instead of fake chat in single player
+- **Screens** — the market, facilities/staff, the offer queue, the final tournament (phase 3 counted as "done"; the dojo layer grew)
 
-## Temel İlke: Çekirdek Önce, Motor Sonra
+## Core Principle: The Core First, The Engine Second
 
-En kritik mimari karar: **simülasyon çekirdeği Godot'a hiç bağımlı olmayacak.**
+The most critical architectural decision: **the simulation core must not depend on Godot
+at all.**
 
 ```
 src/
-  Core/          → saf C# sınıf kütüphanesi (Godot referansı YOK)
-                   statlar, dövüş çözümleyici, onur, ekonomi, yaralanma, RNG, save modeli
-  Chat/          → saf C# (Godot referansı YOK)
-                   Twitch/Kick adapter'ları, komut ayrıştırma, oylama motoru
-  Game/          → Godot 4 projesi — Core ve Chat'i ProjectReference ile kullanır
-                   sahneler, animasyon, UI, ses, Steam
+  Core/          → a pure C# class library (NO Godot reference)
+                   stats, the combat resolver, honour, economy, injury, RNG, the save model
+  Chat/          → pure C# (NO Godot reference)
+                   Twitch/Kick adapters, command parsing, the vote engine
+  Game/          → the Godot 4 project — it uses Core and Chat via ProjectReference
+                   scenes, animation, UI, sound, Steam
 tests/
-  Core.Tests/    → xUnit — Godot açmadan çalışır
-  Chat.Tests/    → xUnit — sahte (fake) chat akışıyla
+  Core.Tests/    → xUnit — runs without opening Godot
+  Chat.Tests/    → xUnit — with a fake chat stream
 ```
 
-**Neden:** Dövüş tam otomatik ve chat sonucu etkiliyor. Bu tür bir sistem ancak
-**motor açmadan, saniyeler içinde binlerce dövüş simüle edilerek** dengelenebilir.
-UI'a bağlı bir çekirdekle denge çalışması imkânsız hale gelir.
+**Why:** Combat is fully automatic and chat affects the outcome. A system like that can
+only be balanced by **simulating thousands of fights in seconds without opening the
+engine**. With a core tied to the UI, balance work becomes impossible.
 
-**Deterministik RNG (Faz 1'de kurulur, sonradan eklenemez):** Her dövüş bir `seed`
-ile başlar. Aynı seed + aynı girdiler = aynı sonuç. Bu üç şeyi sağlar:
-1. Bug tekrar üretilebilir ("şu seed'de savaşçı yanlış öldü")
-2. Denge testi otomatikleşir (10.000 dövüş toplu simülasyon)
-3. Dövüş tekrarı/replay özelliği ileride bedava gelir
+**Deterministic RNG (set up in phase 1, cannot be added later):** every fight starts with
+a `seed`. The same seed + the same inputs = the same result. That gives three things:
+1. Bugs can be reproduced ("the warrior died wrongly on this seed")
+2. Balance testing is automated (10,000 fights in batch simulation)
+3. A fight replay feature comes free later
 
 ---
 
-## Faz 0 — İskele · S
+## Phase 0 — Scaffolding · S
 
-**Hedef:** Boş ama sağlam bir temel.
+**Goal:** an empty but solid foundation.
 
 - [x] `git init`, `.gitignore` (Godot + .NET + `docs/store-assets-originals/`)
-- [x] Godot 4.x projesi + C# (.NET) kurulumu, çalıştığının doğrulanması
-- [x] Yukarıdaki `src/` + `tests/` klasör yapısı, `.csproj` referansları
-- [x] xUnit kurulumu, `dotnet test` çalışıyor
-- [x] `dotnet format` / analyzer kuralları
-- [x] README + `docs/` (GDD, ROADMAP zaten var)
-- [x] GitHub Actions: push'ta build + test
+- [x] The Godot 4.x project + C# (.NET) set up and verified to work
+- [x] The `src/` + `tests/` folder structure above, the `.csproj` references
+- [x] xUnit set up, `dotnet test` working
+- [x] `dotnet format` / analyzer rules
+- [x] README + `docs/` (the GDD and ROADMAP already exist)
+- [x] GitHub Actions: build + test on push
 
-**Kabul:** `dotnet test` yeşil, boş Godot sahnesi açılıyor, CI geçiyor.
-
----
-
-## Faz 1 — Simülasyon Çekirdeği (Görselsiz) · L
-
-**Hedef:** Godot açmadan, konsolda tam bir dövüş simüle edilebiliyor.
-
-### 1.1 Veri modeli
-- [x] `Warrior`: HP, Saldırganlık, Savunma, Kaçınma, Güç, Stamina, Onur
-- [x] `Injury` / `Disability`: kol, bacak, göz — kalıcı stat modifikatörleri
-- [x] `Weapon`: kesici/künt ayrımı, hasar, el sayısı (tek/çift)
-- [x] `Armor`: savunma değeri, uzuv kaybı riski azaltıcı
-- [x] Kimlik: her savaşçının **benzersiz ID**'si var; isim ayrı alan
-      (aynı isim farklı zamanlarda yeniden kullanılabilir — GDD §6)
-
-### 1.2 Deterministik RNG
-- [x] `IRandomSource` arayüzü + seed'li implementasyon
-- [x] **Kural:** Core içinde `System.Random` doğrudan kullanılmaz, hep bu arayüz
-- [x] Test için sahte (scripted) RNG implementasyonu
-
-### 1.3 Dövüş çözümleyici
-- [x] Vuruşma çözümü: Saldırganlık → Kaçınma zarı → Savunma → hasar (GDD §4)
-- [x] Stamina tüketimi ve düşük stamina cezaları
-- [x] Uzuv kaybı riski: darbe/maxHP oranı × silah tipi × zırh (GDD §7)
-- [x] Sonuç ağacı: hafif / ağır+pes / ağır+müdahalesiz (ölüm)
-- [x] **Hücum (charge):** tetik sabit bir mesafe eşiği değil bir **fırsat
-      değerlendirmesi** — "kimse bana vuramıyor ve birikmemi tamamlayacak vaktim var";
-      gereken mesafe düşmanın menzili ve hızından türer. Fırsat doğduğunda kullanılması
-      **Saldırganlıkla ölçeklenen** bir zara bağlı. **Yerinde birikir ve yediği ilk
-      isabetle dağılır**, koşarken savunma normal oranıyla sürer ve yol boyunca fırsat
-      saldırısı yenir,
-      varışta hasar çarpanı; kaçana hücum edilmez ve "çek" komutu keser (GDD §4).
-      Altı sayı, 2026-09-02'de ölçülüp kilitlendi
-- [x] 1v1, 2vX, 3vX çoklu savaşçı desteği
-- [x] Dövüş **olay akışı (event stream)** üretir — görselleştirme bunu tüketecek
-      (`Vurdu`, `Kaçındı`, `UzuvKopti`, `Öldü`, `KaçışBaşladı`...)
-
-> **Kritik:** Çözümleyici animasyon hakkında hiçbir şey bilmez. Sadece olay üretir.
-> Faz 2'deki görselleştirme bu olayları oynatır. Bu ayrım bozulursa denge testi ölür.
-
-### 1.4 Pes etme mantığı
-- [x] Kesilebilir/kesilemez durum makinesi (GDD §5)
-- [x] Komut buffer'lama (saldırıya kilitliyken bekletme)
-- [x] Kaçış penceresi: kaçınma/blok devre dışı, rakibe fırsat saldırısı
-
-### 1.5 Onur motoru
-- [x] 0-100 ölçek, decay, dövüş performansından hesaplama
-- [x] `bushiOrani` → `odulCarpani` clamp(0.5, 1.5)
-- [x] Seppuku eşiği tespiti + **kuyruk** (aktif dövüş varken bekletme)
-- [x] 15 dakikalık af cooldown'ı
-
-### 1.6 Toplu simülasyon aracı
-- [x] CLI: N dövüşü seed aralığında koştur, ölüm/sakatlık/kazanma oranlarını CSV'ye yaz
-- [x] Bu araç tüm denge çalışmasının temeli — **Faz 1'de yapılmazsa Faz 9'da acı çekilir**
-- [x] `--policy` ile oyuncunun "çek" tuşunun yerine geçen kaçış politikası
-      (uzuv kaybı yalnızca müdahale edilen dövüşlerde oluştuğu için şart)
-
-**Kabul:** ✅ *(2026-08-06)*
-- [x] `dotnet test` ile 3v3 dövüş baştan sona simüle ediliyor
-- [x] Aynı seed 100 kez aynı sonucu veriyor (determinizm testi)
-- [x] 10.000 dövüş < 10 saniyede koşuyor — ölçüldü: **~1 sn** (Release), ~2 sn (Debug)
-- [x] Uzuv kaybı, pes etme, onur, seppuku kuyruğu için birim testler yeşil (112 test)
-
-**Risk:** Denge sayıları bu fazda tutmayacak — normal. Amaç **çalışan ve ölçülebilir**
-bir sistem, dengeli bir sistem değil.
+**Acceptance:** `dotnet test` is green, an empty Godot scene opens, CI passes.
 
 ---
 
-## Faz 2 — Dövüş Görselleştirme · M
+## Phase 1 — The Simulation Core (No Visuals) · L
 
-**Hedef:** Faz 1'in olay akışı ekranda izlenebilir bir dövüşe dönüşüyor.
+**Goal:** a full fight can be simulated in the console without opening Godot.
 
-### 2.1 Stil-bağımsız omurga — ✅ *(2026-08-12)*
-- [x] Savaşçı sahne yapısı, **modüler uzuvlar** — 15 parçalı cutout rig, kopma
-      noktaları omuz ve kalça (GDD §2, §7)
-- [x] Animasyon durum makinesi: bekle → yaklaş → saldır → tepki → tekrar
-- [x] Faz 1 olaylarını animasyona bağlama (event → görsel tepki) — **saldırının üç
-      sonucu ayırt edilebiliyor**: isabet sarsar, ıska savurur, kaçınma yana kaçar;
-      fırsat saldırısının ayrı bir vuruşu var
-- [x] Kesme pencereleri (cancel window) animasyon zamanlamasıyla eşleştirme
-- [x] **Uzuv kopma:** uzvun rig'den ayrılması, kan VFX, kalıcı model değişimi
-- [ ] Hücum duruşu: öne yatık koşu — kaçışın aynası, HUD'da "hücumda". **Birikme ayrı bir
-      an**: yerinde toplanma duruşu, ve dağılınca sarsılıp bırakma (`ChargeStarted` /
-      `ChargeLaunched` / `ChargeBroken` olayları bunun için ayrı duruyor)
-- [x] Sakat animasyon setleri: topallama (kaçarken de), tek elli duruş
-- [x] Ölüm animasyonu (yığılma — gore geçici sanatla anlamsız, sanatla gelecek);
-      ceset düştüğü yerde kalıyor
-- [x] **Pes etme tuşu** UI'ı — **tek tuş, ekibin tamamını çeker** (GDD §5); tuş kaç
-      savaşçının etkileneceğini ve kaçının vuruşa kilitli olduğunu önceden gösterir,
-      basıldıktan sonra da hangisinin beklediği panelde okunuyor
-- [x] `-- --seed N` ile toplu simülasyonun bildirdiği dövüşü birebir izleme
-      (`--speed N` ile hızlandırılabiliyor)
-- [x] Sunum mantığı motordan ayrıldı (`Domina.Presentation`) ve **57 testle**
-      kapsandı — Faz 2 artık repodaki diğer fazlar gibi doğrulanıyor
+### 1.1 The data model
+- [x] `Warrior`: HP, Aggression, Defence, Evasion, Strength, Stamina, Honour
+- [x] `Injury` / `Disability`: arm, leg, eye — permanent stat modifiers
+- [x] `Weapon`: the cutting/blunt distinction, damage, the number of hands (one/two)
+- [x] `Armor`: a defence value, a reducer of limb-loss risk
+- [x] Identity: every warrior has a **unique ID**; the name is a separate field
+      (the same name can be reused at different times — GDD §6)
 
-> **Rig'de Skeleton2D + Bone2D kullanılmadı.** Bone2D iskeleti mesh *deformasyonu*
-> içindir; bizim ihtiyacımız uzvu deforme etmek değil **koparmak**. Düz `Node2D`
-> hiyerarşisinde kopma, düğümü zincirinden ayırmaktır — GDD §2'nin tarif ettiği şeyin
-> tam karşılığı, üstelik daha az parça. Skeleton2D ileride IK gerekirse eklenebilir.
+### 1.2 Deterministic RNG
+- [x] The `IRandomSource` interface + a seeded implementation
+- [x] **Rule:** `System.Random` is not used directly inside Core, always this interface
+- [x] A fake (scripted) RNG implementation for tests
 
-> **Sunum mantığı Godot'un içinde değil.** Kim nerede durur, hangi olay hangi tepkiyi
-> doğurur, kemikler hangi açıyı alır, tuşta ne yazar — hepsi `Domina.Presentation`
-> içinde, motora bağımsız. Gerekçe çekirdektekiyle aynı: motor açmadan test edilemeyen
-> karar hiç test edilmez. `src/Game` artık yalnızca düğüm kurup gelen açıyı uyguluyor.
+### 1.3 The combat resolver
+- [x] Strike resolution: Aggression → the evasion die → Defence → damage (GDD §4)
+- [x] Stamina consumption and the low-stamina penalties
+- [x] Limb-loss risk: the blow/maxHP ratio × the weapon type × armour (GDD §7)
+- [x] The outcome tree: light / heavy+surrender / heavy+no intervention (death)
+- [x] **The charge:** the trigger is not a fixed distance threshold but an **assessment of
+      the opportunity** — "nobody can hit me and I have time to finish my windup"; the
+      distance needed derives from the enemy's reach and speed. Using an opportunity when it
+      appears depends on a die **scaled by Aggression**. It **gathers in place and scatters
+      on the first hit taken**, defence continues at its normal rate while running and
+      opportunity attacks are taken along the way,
+      and there is a damage multiplier on arrival; a fleeing target is not charged and the
+      "pull out" command interrupts it (GDD §4). Six numbers, measured and locked on 2026-09-02
+- [x] 1v1, 2vX, 3vX multi-warrior support
+- [x] The fight produces an **event stream** — the visualisation will consume it
+      (`AttackLanded`, `AttackDodged`, `WarriorDismembered`, `WarriorDied`, `RetreatStarted`...)
 
-> **2026-08-13:** çekirdeğe **uzam** eklendi (arena bir düzlem, savaşçılar yürüyor,
-> silah menzili ve kuşatma var). Sunum katmanındaki sahte konum matematiği silindi;
-> derinlik ekranda brawler sahnelemesiyle gösteriliyor. Ayrıntı: `docs/PROGRESS.md`.
-> Sanat üretimi bundan **etkilenir**: gerçek yürüme döngüsü gerekiyor, scriptli hamle
-> gerekmiyor.
+> **Critical:** the resolver knows nothing about animation. It only produces events.
+> The visualisation in phase 2 plays those events back. If this separation breaks, balance
+> testing dies.
 
-### 2.2 Sanat ve cila — ⬜ başlanabilir
-- [x] Görsel stil kararı — **verildi (2026-08-13):** karanlık Edo ahşap baskı ×
-      katmanlı kâğıt tiyatrosu. Tam kural GDD §12'de
-- [ ] Tam ekran doku overlay'i (`CanvasLayer`: kâğıt greni + mürekkep yayılması) ve
-      gün döngüsü tinti (`CanvasModulate`, kan tint dışında)
-- [ ] Kemiklere gerçek sanat varlıklarının asılması
-- [ ] Kesik yüzey varlıkları: omuz kütüğü, kalça kütüğü, kopan uzvun kesik ucu
-- [ ] Kamera, arena sahnesi, vuruş efektleri, ses
-- [ ] Ölüm/bitiriş (gore) animasyonları
-- [ ] Zırh kademelerinin görsel karşılığı (4 kademe × 6 yuva: kafa, gövde, iki kol,
-      iki bacak — GDD §7)
+### 1.4 The surrender logic
+- [x] The interruptible/uninterruptible state machine (GDD §5)
+- [x] Command buffering (holding it while locked into an attack)
+- [x] The escape window: evasion/block disabled, an opportunity attack for the opponent
 
-> **Varlık üretim kuralı:** varlıklar düz ve temiz çizilir (gradyan yok, pişmiş ışık
-> yok, şeffaf zemin, aynı yan izdüşüm, uçlarda bindirme payı); ahşap baskı dokusu
-> ekran overlay'inden gelir. Işık parçaya pişerse uzuv döndüğünde yanlışlanır ve her
-> parça ayrı ışıklandırılmak zorunda kalır — tek kişilik üretimde karşılanamaz.
+### 1.5 The honour engine
+- [x] A 0-100 scale, decay, computed from fight performance
+- [x] `bushiRatio` → `rewardMultiplier` clamp(0.5, 1.5)
+- [x] Detecting the seppuku threshold + a **queue** (holding it while a fight is live)
+- [x] The 15-minute pardon cooldown
 
-**Kabul:** Bir seed verildiğinde dövüş baştan sona izlenebiliyor; olaylar ile ekranda
-görünen birebir tutuyor (uzuv kopan savaşçı ekranda da kopuk).
-✅ *Omurga için doğrulandı ve artık **testle bağlandı**: `ArenaPlaybackTests` dövüşü
-arenayla aynı sırayla oynatıp bilançodaki uzuv kaybının ekrandaki kopmayla — üstelik
-aynı uzuvla — eşleştiğini sınıyor. Motorla karşılaştırma da tutuyor: seed 20260806
-arenada da motorsuz oynatmada da PlayerVictory / 15,2 sn, seed 81 ikisinde de
-PlayerDefeat / 32,0 sn.*
+### 1.6 The batch simulation tool
+- [x] CLI: run N fights over a seed range, write the death/maiming/victory rates to CSV
+- [x] This tool is the foundation of all balance work — **if it is not built in phase 1, phase 9 hurts**
+- [x] `--policy` for the escape policy that stands in for the player's "pull out" key
+      (required, because limb loss only happens in fights with intervention)
 
-**Risk:** Hâlâ projenin en maliyetli görsel parçası, ama **2D cutout kararıyla
-XL'den M'e indi** — 3D modüler dismemberment riski ortadan kalktı. Omurga bittiğine
-göre kalan riskin tamamı 2.2'de: sanat üretimi ve stil kararı.
+**Acceptance:** ✅ *(2026-08-06)*
+- [x] A 3v3 fight is simulated from start to finish with `dotnet test`
+- [x] The same seed gives the same result 100 times (the determinism test)
+- [x] 10,000 fights run in < 10 seconds — measured: **~1 s** (Release), ~2 s (Debug)
+- [x] The unit tests for limb loss, surrender, honour and the seppuku queue are green (112 tests)
 
-**Ön koşul:** ~~Görsel stil kararı~~ — **karşılandı (2026-08-13, GDD §12).**
-Faz 2.2 artık başka hiçbir şeyi beklemiyor.
+**Risk:** the balance numbers will not hold in this phase — that is normal. The goal is a
+**working and measurable** system, not a balanced one.
 
 ---
 
-## Faz 3 — Dojo / Meta Katman · L
+## Phase 2 — Combat Visualisation · M
 
-**Hedef:** Dövüşler arası oyun.
+**Goal:** phase 1's event stream turns into a fight that can be watched on screen.
 
-- [x] **Roster ekranı**: savaşçılar, statlar, yaralar, onur, isim düzenleme
-      — karar `Domina.Presentation/RosterModel.cs`'te (motorsuz, testli): rozet, sıralama
-      ve ad çakışması hükmü orada; `Game/Scripts/RosterScreen.cs` yalnızca düğüm kurup
-      basıyor. Sıra "bugün kimi gönderebilirim" sorusuna göre: hazır, antrenmandaki,
-      revirdeki, ölü. Ölü savaşçı listeden düşmez. Ham stat ile dövüşün okuduğu stat
-      yan yana yazılıyor (`40 → 46`), çünkü antrenman hama yazar, yol ve sakatlık üstüne
-      biner. Ad değiştirme tuşu `RosterModel.JudgeRename` ile önceden kapanıyor —
-      `Roster.Rename` çakışmada fırlatır, oyuncu bunu istisnadan öğrenmemeli
-- [x] **İsim düzenleme** (chat'ten gelen veya üretilen ismi değiştirme — GDD §8)
-      — `Roster.Rename`; isim eşsizliği yalnızca canlılar arasında zorlanıyor
-- [x] **Antrenman alanları + antrenman süresi/etkisi** — `Dojo/Training.cs`: dört talim
-      sekiz statı kaplar, kazanç tavana kalan boşluğun payıdır (azalan getiri kuralın
-      içinde), `Warrior.Talent` kazancı çarpar, aç savaşçı ilerlemez ve yazılan şey **ham**
-      stattır (sakatlığın çarpanı üstünde kalır). Oran **0.04'te kilitlendi**: 400 dojo ×
-      60 gün ölçümüyle, iyi işleyen dojo 60 günde pazar tavanının ısırdığı bandın önüne
-      çıkıyor (GDD §11 "Antrenman")
-- [x] **Savaşçı skill tree'si (basit)** — `Model/WarriorPath`: üç yol (Kılıç / Kaya /
-      Gölge), tek seçim, geri alınamaz; kilidi 20 antrenman günü açar, çarpan
-      `EffectiveStats`'a girer (dövüş yalnızca sonucunu okur). Ölçüm: savaşçı-dövüş başına
-      ölüm %6.3 → %6.0 (GDD §11)
-- [x] **Okul + Eğitmen skill tree'si (derin)** — `Dojo/School.cs`: üç kol × üç kademe,
-      kol içinde sıra zorunlu, tesis peşin ve geri satılmaz; bonuslar `DojoState.Tuning` ve
-      `Economy` üzerinden **bütün** okumalara işliyor, kayda yalnızca alınan düğümler
-      giriyor. Ölçüm (400 dojo × 180 gün): talimhane hayatta kalma satıyor (ölüm 9.95 →
-      6.36), kâhya para satıyor (kasa 731 → 1718 ama ölüm 11.27), **revir bu hâliyle
-      tuzak** — açık madde, GDD §11
-- [x] **Revir/hekim: iyileşme süresi, ilaç kaynağıyla hızlandırma**
-      — ilaçsız gün bir revir günü eritir, ilaçlı gün iki (`DojoState.AdvanceDay`);
-      ambar yetmezse revirdekiler önce doyar, aç savaşçı o gün iyileşmez
-- [x] **Dövüş sonrası muhasebe** — `BattleAftermath`: ölüm, uzuv kaybı, zırh yıpranması
-      ve dağılması, revir günü ve onur kadroya buradan yazılır
-- [x] **Ekonomi: altın, yiyecek/su, ilaç; alım-satım** — `EconomyTuning` +
-      `Quartermaster` (fiyat, onarım, yenileme, stok, savaşçı alımı, sefer ödülü);
-      sayılar `Domina.Sim --mode campaign` ile 1000 dojo × 60 gün ölçülüp GDD §11'de
-      kilitlendi. **Uzun ufuk düzeltmesi (2026-09-04):** net hesabı yerine koymayı
-      saymıyormuş (31.3 değil 18.5); zorluk eğrisinin tavanı 3.0 → **2.2**, ödüle **risk
-      primi** (0.25, 100 candan sonra). 180 günde bitiş kasası 75 → 2288, kapanan dojo
-      %8.5 → %2.5, erken oyun kıpırdamıyor (GDD §11 "Uzun ufuk")
-- [x] **Ekonomi: rastgele olaylar** — `Dojo/RandomEvents.cs`: günde %15, beş tür (hırsızlık, erzak bozulması, kuyunun bulanması, ilacın küflenmesi, hastalık); hepsi eksiltir, etkisi kasaya ve takvime vurur, ölçüm GDD §11'de
-- [x] Gün döngüsü — `DojoState.AdvanceDay()`: deterministik, rastgelelik içermez;
-      revir günlerini eritir, onuru nötre çeker, kapanan günün özetini döndürür
-- [x] **Recruit akışı — savaşçı pazarı** (`Dojo/RecruitMarket.cs`): adaylar farklı
-      statlarla gelir, statlar alım öncesi görünür, fiyat stattan çıkar, pazar kadronun
-      seviyesini takip eder ve iki günde bir yenilenir; `Warrior.Talent` antrenmanın
-      okuyacağı ikinci eksen. İsim havuzu hâlâ yerel — chat bağlantısı Faz 5'te
-- [x] **Kayıt sistemi:** versiyonlu, merge-on-load, try/catch (GDD §2)
-      — `Domina.Core/Dojo/Save`; kayıt ayrı bir tip ailesidir, denge sayıları dosyaya
-      girmez (eski kayıt yeni dengeyi geri getirmesin diye)
+### 2.1 The style-independent backbone — ✅ *(2026-08-12)*
+- [x] The warrior scene structure, **modular limbs** — a 15-part cutout rig, with the
+      severing points at the shoulder and the hip (GDD §2, §7)
+- [x] The animation state machine: wait → close → attack → react → repeat
+- [x] Wiring phase 1's events to the animation (event → visual reaction) — **the attack's
+      three outcomes are distinguishable**: a hit shakes, a miss swings through, an evasion
+      pulls aside; an opportunity attack has its own strike
+- [x] Matching the cancel windows to the animation timing
+- [x] **Limb severing:** detaching the limb from the rig, blood VFX, a permanent model change
+- [ ] The charge pose: a forward-leaning run — the mirror of fleeing, "charging" in the HUD.
+      **The windup is a separate moment**: a gathering pose in place, and a shake-and-release
+      when it scatters (the `ChargeStarted` / `ChargeLaunched` / `ChargeBroken` events stand
+      apart for this)
+- [x] Maimed animation sets: a limp (while fleeing too), a one-handed stance
+- [x] The death animation (a collapse — gore is meaningless with temporary art, it comes with
+      the art); the body stays where it fell
+- [x] The **surrender key** UI — **a single key, it pulls the whole party** (GDD §5); the key
+      shows in advance how many warriors will be affected and how many are locked into a
+      strike, and after it is pressed which ones are still waiting is readable on the panel
+- [x] Watching the fight batch simulation reported exactly as it was with `-- --seed N`
+      (it can be sped up with `--speed N`)
+- [x] The presentation logic was separated from the engine (`Domina.Presentation`) and covered
+      by **57 tests** — phase 2 is now verified like the other phases in the repo
 
-**Kabul:** Bir savaşçı işe alınıp eğitilebiliyor, yaralanıp iyileşebiliyor, oyun
-kapatılıp açıldığında her şey yerinde.
+> **Skeleton2D + Bone2D were not used in the rig.** A Bone2D skeleton is for mesh
+> *deformation*; what we need is not to deform a limb but to **sever** it. In a plain
+> `Node2D` hierarchy, severing is detaching a node from its chain — exactly what GDD §2
+> describes, and with fewer parts. Skeleton2D can be added later if IK is needed.
 
-> **Faz 3 kapandı (2026-09-04).** Maddelerin hepsi işaretli.
+> **The presentation logic is not inside Godot.** Who stands where, which event produces
+> which reaction, what angle the bones take, what the key says — all of it lives in
+> `Domina.Presentation`, independent of the engine. The rationale is the same as for the
+> core: a decision that cannot be tested without opening the engine never gets tested.
+> `src/Game` now only builds the nodes and applies the angles it receives.
 
-> **Sahipsiz üç ekran yazıldı ve döngü kapandı (2026-09-04).** Pazar, okul ve günün
-> teklifi artık ekran olarak var; dördü (kadro dahil) `dojo.tscn` altında tek bir
-> `DojoState` üzerinde geziliyor. Kararlar `Domina.Presentation`'daki üç modelde
-> (`MarketModel`, `SchoolModel`, `OfferModel`), komutlar çekirdeğin kendi kapılarından
-> (`DojoState.HireRecruit`, `BuySchoolNode`, `AcceptBounty`, `Decline`, `Expedition`)
-> geçiyor. **Sefere çıkınca dövüş arenada izleniyor:** `Expedition.Prepare` dövüşü kurar,
-> arena adımlar, `Expedition.Settle` hesabı kapatır — muhasebe tek yerde, izlenen dövüş
-> ile toplu simülasyonda çözülen dövüş aynı sonucu bırakır (`ExpeditionSettleTests`).
-> Döngü elde oynanır: gün açılır, pazardan savaşçı alınır, teklif ya da sözleşme seçilir,
-> dövüş izlenir, kadro erir, okuldan tesis alınır, ertesi gün.
+> **2026-08-13:** **space** was added to the core (the arena is a plane, the warriors walk,
+> there is weapon reach and encirclement). The fake position maths in the presentation layer
+> was deleted; depth is shown on screen with brawler staging. Details: `docs/PROGRESS.md`.
+> Art production **is affected**: a real walk cycle is needed, scripted moves are not.
 
-> **Kayıt oyuna bağlandı (2026-09-05).** Oyun başlangıç ekranıyla açılıyor; dojo ya
-> `user://dojo.json` yuvasından yükleniyor ya da `NewGame.Create` ile kuruluyor, ve her
-> değişiklikte yazılıyor. Faz 3'ün kabul kriterinin son yarısı ("oyun kapatılıp
-> açıldığında her şey yerinde") artık ekranda da geçerli — o güne kadar yalnızca
-> çekirdekte doğruydu.
+### 2.2 Art and polish — ⬜ can start
+- [x] The visual style decision — **made (2026-08-13):** dark Edo woodblock × layered paper
+      theatre. The full rule is in GDD §12
+- [ ] A full-screen texture overlay (`CanvasLayer`: paper grain + ink bleed) and the day-cycle
+      tint (`CanvasModulate`, apart from the blood tint)
+- [ ] Hanging the real art assets on the bones
+- [ ] Cut-surface assets: the shoulder stump, the hip stump, the severed limb's cut end
+- [ ] The camera, the arena scene, hit effects, sound
+- [ ] Death/finisher (gore) animations
+- [ ] The visual counterpart of the armour tiers (4 tiers × 6 slots: head, torso, two arms,
+      two legs — GDD §7)
+
+> **The asset production rule:** assets are drawn flat and clean (no gradients, no baked
+> light, a transparent ground, the same side projection, an overlap margin at the ends); the
+> woodblock texture comes from the screen overlay. If light is baked into a part, it becomes
+> wrong when the limb rotates and every part has to be lit separately — not affordable in
+> one-person production.
+
+**Acceptance:** given a seed, the fight can be watched from start to finish; the events and
+what is seen on screen match exactly (a warrior who loses a limb is severed on screen too).
+✅ *Verified for the backbone and now **tied down by tests**: `ArenaPlaybackTests` plays the
+fight in the same order as the arena and checks that the limb loss in the books matches the
+severing on screen — and the same limb at that. The comparison with the engine matches too:
+seed 20260806 gives PlayerVictory / 15.2 s both in the arena and in the engine-free playback,
+and seed 81 gives PlayerDefeat / 32.0 s in both.*
+
+**Risk:** still the project's most expensive visual part, but **the 2D cutout decision brought
+it from XL down to M** — the risk of 3D modular dismemberment is gone. With the backbone
+finished, all the remaining risk is in 2.2: art production and the style decision.
+
+**Precondition:** ~~the visual style decision~~ — **met (2026-08-13, GDD §12).**
+Phase 2.2 is no longer waiting on anything.
 
 ---
 
-## Faz 4 — Sefer ve Bestiary · L
+## Phase 3 — The Dojo / Meta Layer · L
 
-**Hedef:** Faz-faz ilerleyen seferler ve yokai düşmanlar.
+**Goal:** the game between the fights.
 
-- [x] **Günlük karşılaşma teklifi** — `Domina.Core/Campaign`: teklif gün ile tohumun saf
-      bir fonksiyonu (kayıtta durmaz, yeniden yüklenerek değiştirilemez), tehdit bandı ve
-      kaba tanım girmeden okunur, tam kadro görünmez
-- [x] **Zorluk eğrisi** — tek eğri artı günlük dalgalanma (`EncounterTuning`); sayılar
-      kilitli değil, ölçüm GDD §10'da
-- [x] **Sefer bir gün yer** — `Expedition.Send` dövüşü koşturur, kadroya yazar, ödülü öder
-      ve günü kendi kapatır; `DojoState.Decline()` girilmeyen günü kapatır
-- [x] **Pes etme seferi bitirir** (GDD §5, §10) — çekilmenin ödülü 0 (`Quartermaster`),
-      Açık Karar #9 zaten düşmüştü (tek dövüşlük seferde önceki oda yok)
-- [x] **Parti seçimi: 1-4 savaşçı** — `EncounterOffer.Accepts`; düello teklifi tam bir
-      savaşçı dayatır, `Expedition.Refuse` uygun olmayan ekibi gerekçesiyle geri çevirir
-- [ ] ~~Harita/ilerleme ekranı~~ — **düştü** (Açık Karar #2 kapandı: harita ekranı yok)
-- [ ] Yokai davranış/AI profilleri — her yokai farklı dövüş kalıbı (Açık Karar #3'ün
-      açık kalan yarısı; sayı tarafı `Bestiary` ile yazıldı)
-- [ ] ~~Boss encounter'ları~~ — **kurulmuyor** (GDD §10: zorluk tek eğri üzerinde artar)
+- [x] **The roster screen**: warriors, stats, wounds, honour, name editing
+      — the decision lives in `Domina.Presentation/RosterModel.cs` (engine-free, tested): the
+      badge, the ordering and the name-clash verdict are there;
+      `Game/Scripts/RosterScreen.cs` only builds and prints the nodes. The order follows the
+      question "whom can I send today": ready, training, in the infirmary, dead. A dead
+      warrior does not drop off the list. The raw stat and the stat the fight reads are
+      printed side by side (`40 → 46`), because training writes the raw one and the path and
+      disabilities ride on top. The rename button is disabled in advance with
+      `RosterModel.JudgeRename` — `Roster.Rename` throws on a clash, and the player should not
+      learn that from an exception
+- [x] **Name editing** (changing a name that came from chat or was generated — GDD §8)
+      — `Roster.Rename`; name uniqueness is enforced only among the living
+- [x] **Training grounds + training duration/effect** — `Dojo/Training.cs`: four drills cover
+      the eight stats, the gain is a share of the gap left to the ceiling (diminishing returns
+      inside the rule), `Warrior.Talent` multiplies the gain, a hungry warrior does not advance
+      and what is written is the **raw** stat (the disability's multiplier stays on top). The
+      rate is **locked at 0.04**: measured over 400 dojos × 60 days, a well-running dojo gets
+      ahead of the band where the market ceiling bites within 60 days (GDD §11 "Training")
+- [x] **The warrior skill tree (simple)** — `Model/WarriorPath`: three paths (Blade / Stone /
+      Shadow), one choice, no going back; 20 training days unlock it and the multiplier enters
+      `EffectiveStats` (the fight only reads the result). Measurement: deaths per warrior-fight
+      6.3% → 6.0% (GDD §11)
+- [x] **The school + instructor skill tree (deep)** — `Dojo/School.cs`: three branches × three
+      tiers, the order within a branch compulsory, a facility paid up front and not sold back;
+      the bonuses apply to **all** reads through `DojoState.Tuning` and `Economy`, and only the
+      nodes bought go into the save. Measurement (400 dojos × 180 days): the training ground
+      sells survival (death 9.95 → 6.36), the steward sells money (treasury 731 → 1718 but
+      death 11.27), **the infirmary in this form is a trap** — an open item, GDD §11
+- [x] **The infirmary/physician: recovery time, speeding it up with the medicine resource**
+      — a day without medicine burns one infirmary day, a day with it two
+      (`DojoState.AdvanceDay`); if the store falls short those in the infirmary eat first, and
+      a hungry warrior does not heal that day
+- [x] **Post-fight accounting** — `BattleAftermath`: death, limb loss, armour wear and
+      breakage, infirmary days and honour are written to the roster here
+- [x] **The economy: gold, food/water, medicine; buying and selling** — `EconomyTuning` +
+      `Quartermaster` (price, repair, replacement, stock, hiring warriors, the expedition
+      reward); the numbers were measured over 1000 dojos × 60 days with
+      `Domina.Sim --mode campaign` and locked in GDD §11. **The long-horizon correction
+      (2026-09-04):** the net figure was not counting replacements (18.5, not 31.3); the
+      difficulty curve's ceiling went 3.0 → **2.2**, and a **risk premium** was added to the
+      reward (0.25, past 100 health). Over 180 days the ending treasury went 75 → 2288, closed
+      dojos 8.5% → 2.5%, and the early game does not move (GDD §11 "The long horizon")
+- [x] **The economy: random events** — `Dojo/RandomEvents.cs`: 15% a day, five kinds (theft, provisions spoiling, the well going muddy, medicine going mouldy, illness); they all subtract, the effect hits the treasury and the calendar, measurement in GDD §11
+- [x] The day loop — `DojoState.AdvanceDay()`: deterministic, containing no randomness;
+      it burns infirmary days, pulls honour toward neutral and returns the closing day's summary
+- [x] **The recruit flow — the warrior market** (`Dojo/RecruitMarket.cs`): candidates come with
+      different stats, the stats are visible before the purchase, the price comes out of the
+      stats, the market tracks the roster's level and refreshes every two days;
+      `Warrior.Talent` is the second axis training reads. The name pool is still local — the
+      chat connection is in phase 5
+- [x] **The save system:** versioned, merge-on-load, try/catch (GDD §2)
+      — `Domina.Core/Dojo/Save`; the save is a separate type family and the balance numbers do
+      not go into the file (so an old save does not bring back the old balance)
 
-### Bestiary adayları
-| Yokai | Rol / karakter |
+**Acceptance:** a warrior can be hired and trained, wounded and healed, and when the game is
+closed and reopened everything is in place.
+
+> **Phase 3 closed (2026-09-04).** All the items are ticked.
+
+> **Three orphan screens were written and the loop closed (2026-09-04).** The market, the
+> school and the day's offer now exist as screens; all four (the roster included) are
+> navigated over a single `DojoState` under `dojo.tscn`. The decisions live in the three
+> models in `Domina.Presentation` (`MarketModel`, `SchoolModel`, `OfferModel`), and the
+> commands go through the core's own doors (`DojoState.HireRecruit`, `BuySchoolNode`,
+> `AcceptBounty`, `Decline`, `Expedition`). **When an expedition goes out the fight is watched
+> in the arena:** `Expedition.Prepare` sets the fight up, the arena steps it, and
+> `Expedition.Settle` closes the books — the accounting is in one place, and a watched fight
+> leaves the same result as one resolved in batch simulation (`ExpeditionSettleTests`). The
+> loop can be played by hand: the day opens, a warrior is bought at the market, an offer or a
+> contract is chosen, the fight is watched, the roster melts, a facility is bought at the
+> school, next day.
+
+> **The save was wired into the game (2026-09-05).** The game opens with a title screen; the
+> dojo is either loaded from the `user://dojo.json` slot or built with `NewGame.Create`, and it
+> is written on every change. The second half of phase 3's acceptance criterion ("when the game
+> is closed and reopened everything is in place") now holds on screen too — until that day it
+> was only true in the core.
+
+---
+
+## Phase 4 — The Expedition and the Bestiary · L
+
+**Goal:** expeditions that advance phase by phase, and yokai enemies.
+
+- [x] **The daily encounter offer** — `Domina.Core/Campaign`: the offer is a pure function of
+      the day and the seed (it is not stored in the save and cannot be changed by reloading),
+      the threat band and the rough description are readable before going in, and the full
+      roster is invisible
+- [x] **The difficulty curve** — a single curve plus a daily fluctuation (`EncounterTuning`);
+      the numbers are not locked, the measurement is in GDD §10
+- [x] **An expedition eats a day** — `Expedition.Send` runs the fight, writes it to the roster,
+      pays the reward and closes the day itself; `DojoState.Decline()` closes a day not entered
+- [x] **Surrendering ends the expedition** (GDD §5, §10) — the reward for withdrawing is 0
+      (`Quartermaster`), and Open Decision #9 had already fallen (in a one-fight expedition
+      there is no previous room)
+- [x] **Party selection: 1-4 warriors** — `EncounterOffer.Accepts`; a duel offer imposes exactly
+      one warrior, and `Expedition.Refuse` declines an unfit party with its reason
+- [ ] ~~The map/progress screen~~ — **dropped** (Open Decision #2 closed: there is no map screen)
+- [ ] Yokai behaviour/AI profiles — a different combat pattern for each yokai (the open half of
+      Open Decision #3; the number side was written with `Bestiary`)
+- [ ] ~~Boss encounters~~ — **not being built** (GDD §10: difficulty rises along a single curve)
+
+### Bestiary candidates
+| Yokai | Role / character |
 |---|---|
-| **Oni** | Ağır, yüksek hasar, yavaş — tank/bruiser |
-| **Kappa** | Küçük, çevik, sürü halinde |
-| **Tengu** | Hızlı, yüksek kaçınma, hit-and-run |
-| **Kitsune** | Aldatma/illüzyon — sahte hedefler |
-| **Yuki-onna** | Yavaşlatma/dondurma, stamina baskısı |
-| **Jorōgumo** | Örümcek — hareket kısıtlama |
-| **Nue** | Karma yaratık — mini boss |
-| **Gashadokuro** | Dev iskelet — **boss** |
-| **Shuten-dōji** | Oni kralı — **boss** |
-| **Yamata-no-Orochi** | Sekiz başlı yılan — **final boss** |
+| **Oni** | Heavy, high damage, slow — tank/bruiser |
+| **Kappa** | Small, agile, in packs |
+| **Tengu** | Fast, high evasion, hit-and-run |
+| **Kitsune** | Deception/illusion — false targets |
+| **Yuki-onna** | Slowing/freezing, stamina pressure |
+| **Jorōgumo** | A spider — movement restriction |
+| **Nue** | A chimera — a mini boss |
+| **Gashadokuro** | A giant skeleton — a **boss** |
+| **Shuten-dōji** | The oni king — a **boss** |
+| **Yamata-no-Orochi** | The eight-headed serpent — the **final boss** |
 
-**Kabul:** Baştan sona bir sefer oynanabiliyor, ölüm/kayıp/ödül dojo'ya doğru yansıyor.
+**Acceptance:** an expedition can be played from start to finish, and death/loss/reward are
+reflected correctly in the dojo.
 
 ---
 
-## Faz 5 — Chat Entegrasyonu · L
+## Phase 5 — Chat Integration · L
 
-**Hedef:** Twitch ve Kick bağlanıyor, tüm chat mekanikleri çalışıyor.
+**Goal:** Twitch and Kick connect and all the chat mechanics work.
 
-### 5.1 Adapter katmanı (önce bu)
-- [ ] `IChatSource` arayüzü — platform-bağımsız
-- [ ] Ortak iç olaylar: `MesajGeldi(kullanıcı, metin)`, `BağışGeldi(kullanıcı, miktar)`
-- [ ] **`FakeChatSource`** — test ve geliştirme için sahte chat (gerçek bağlantı olmadan
-      tüm mekanikler test edilebilir; bu olmadan chat özellikleri geliştirilemez)
-- [ ] Thread-safety: chat asenkron gelir, oyun döngüsüne **kuyrukla** aktarılır
+### 5.1 The adapter layer (this first)
+- [ ] The `IChatSource` interface — platform-independent
+- [ ] Common internal events: `MessageReceived(user, text)`, `DonationReceived(user, amount)`
+- [ ] **`FakeChatSource`** — a fake chat for tests and development (all the mechanics can be
+      tested without a real connection; without it the chat features cannot be developed)
+- [ ] Thread safety: chat arrives asynchronously and is passed to the game loop **through a queue**
 
-### 5.2 Komut motoru
-- [ ] İsim havuzu: **varsayılan herkes dahil**, `!no` → çıkış, `!join` → öncelik
-- [ ] Kullanıcı adı filtresi (küfür/uygunsuz)
-- [ ] `!bushi` / `!ronin` → aktif dövüş
-- [ ] `!bushi-<isim>` / `!ronin-<isim>` → hedefli, küçük etki, bulunamazsa **sessiz**
-- [ ] Seppuku oylaması: 60 sn pencere, kullanıcı başına tek oy, kuyruk
-- [ ] "Kahraman Çağır": bağış → garantili roster girişi, miktar→seviye, **üst sınırlı**
+### 5.2 The command engine
+- [ ] The name pool: **everyone included by default**, `!no` → out, `!join` → priority
+- [ ] A username filter (profanity/inappropriate)
+- [ ] `!bushi` / `!ronin` → the live fight
+- [ ] `!bushi-<name>` / `!ronin-<name>` → targeted, a small effect, **silent** if not found
+- [ ] The seppuku vote: a 60 s window, one vote per user, a queue
+- [ ] "Summon a Hero": a donation → a guaranteed roster entry, amount→level, **capped**
 
 ### 5.3 Twitch
 - [ ] Chat: IRC-over-WebSocket (`wss://irc-ws.chat.twitch.tv`)
-- [ ] **Spike:** Cheer/Bits'in PRIVMSG `bits` tag'inden okunabildiğini **doğrula**.
-      Doğruysa Bits için ayrı OAuth/EventSub gerekmez — büyük sadeleşme.
-      Doğru değilse EventSub WebSocket + OAuth akışı gerekir.
-- [ ] Bağlantı kopma/yeniden bağlanma, rate limit
+- [ ] **Spike:** **verify** that Cheers/Bits can be read from the PRIVMSG `bits` tag.
+      If so, no separate OAuth/EventSub is needed for Bits — a large simplification.
+      If not, the EventSub WebSocket + OAuth flow is required.
+- [ ] Disconnection/reconnection, rate limits
 
 ### 5.4 Kick
-- [ ] **Spike (öncelikli):** Kick'in güncel resmî API'sinde chat okuma ve **Kicks**
-      (bağış) olaylarının nasıl alındığını doğrula — OAuth kapsamları, webhook mu
-      websocket mi, rate limit.
-      → Kick API'si Twitch'e göre çok daha yeni; **burada belirsizlik var, erken doğrula.**
-- [ ] Adapter implementasyonu
-- [ ] Kicks → aynı `BağışGeldi` olayına normalize etme
+- [ ] **Spike (priority):** verify how chat reading and **Kicks** (donation) events are received
+      in Kick's current official API — the OAuth scopes, webhook or websocket, rate limits.
+      → Kick's API is much newer than Twitch's; **there is uncertainty here, verify it early.**
+- [ ] The adapter implementation
+- [ ] Normalising Kicks into the same `DonationReceived` event
 
-**Kabul:** `FakeChatSource` ile tüm mekanikler test ediliyor; gerçek bir Twitch
-kanalına bağlanıp `!join`, `!bushi`, seppuku oylaması ve Bits akışı uçtan uca çalışıyor.
+**Acceptance:** all the mechanics are tested with `FakeChatSource`; connected to a real Twitch
+channel, `!join`, `!bushi`, the seppuku vote and the Bits flow work end to end.
 
-**Risk:** Kick API'si en büyük bilinmeyen. Adapter katmanı sayesinde Kick gecikse bile
-oyun Twitch ile çıkabilir — **Kick'i sürüm engeli yapma.**
-
----
-
-## Faz 6 — AI Seyirci · M
-
-**Hedef:** Tek oyunculu mod, yayın moduyla mekanik olarak eşdeğer.
-
-- [ ] Dövüş performans sinyallerinden bushi/ronin oranı üretimi (GDD §9)
-- [ ] Seppuku oylamasında onur-ağırlıklı olasılıksal karar
-- [ ] **Sıfır oy fallback'i:** gerçek chat var ama hiç oy gelmediyse de AI karar verir
-- [ ] Japon isim havuzu (`!join` havuzu boşken devreye girer)
-
-**Kabul:** Chat olmadan tam bir kampanya oynanabiliyor; hiçbir sistem "kapalı" değil.
+**Risk:** Kick's API is the biggest unknown. Thanks to the adapter layer the game can ship with
+Twitch even if Kick is late — **do not make Kick a release blocker.**
 
 ---
 
-## Faz 7 — Steam Entegrasyonu · M
+## Phase 6 — The AI Crowd · M
 
-- [ ] **Spike:** Godot 4 + C# için Steamworks yolu seç
+**Goal:** single-player mode, mechanically equivalent to streaming mode.
+
+- [ ] Producing a bushi/ronin ratio from the fight's performance signals (GDD §9)
+- [ ] A probabilistic, honour-weighted decision in the seppuku vote
+- [ ] **The zero-vote fallback:** the AI decides even when there is real chat but no votes came in
+- [ ] A Japanese name pool (it steps in when the `!join` pool is empty)
+
+**Acceptance:** a full campaign can be played without chat; no system is "switched off".
+
+---
+
+## Phase 7 — Steam Integration · M
+
+- [ ] **Spike:** choose the Steamworks route for Godot 4 + C#
       (GodotSteam GDExtension vs Steamworks.NET vs Facepunch.Steamworks) —
-      C# uyumunu **kod yazmadan önce** doğrula
-- [ ] Steamworks başlatma, Steam ID, overlay
-- [ ] Achievements (uzuv kaybı, seppuku, boss'lar, hayatta kalma serileri)
-- [ ] Cloud save
-- [ ] İçerik derecelendirme anketi (gore/dismemberment beyanı)
-- [ ] Mağaza sayfası, kapsül görselleri, fragman
-- [ ] Build pipeline (Steam depot upload)
+      verify the C# compatibility **before writing code**
+- [ ] Steamworks initialisation, the Steam ID, the overlay
+- [ ] Achievements (limb loss, seppuku, bosses, survival streaks)
+- [ ] Cloud saves
+- [ ] The content rating questionnaire (the gore/dismemberment declaration)
+- [ ] The store page, capsule art, a trailer
+- [ ] The build pipeline (Steam depot upload)
 
-> **Not (global CLAUDE.md kuralı):** Mağaza/pazarlama görselleri **public repoya
-> commit edilmez** — yerel `docs/store-assets-originals/` (gitignore'lu) +
-> private `Eren-Ozcan/pictures` reposunda `pictures/<proje>/` altına.
-
----
-
-## Faz 8 — Cila · M
-
-- [ ] Lokalizasyon altyapısı (TR/EN) — hardcoded metin bırakma
-- [ ] Ses tasarımı, müzik
-- [ ] Ayarlar, tuş atama, erişilebilirlik (gore filtresi dahil)
-- [ ] Onboarding/tutorial — otomatik dövüş oyunu olduğu için "neyi kontrol ettiğim"
-      net anlatılmalı
-- [ ] Yayıncı modu ayarları ekranı: kanal adı, komut açma/kapama, gore seviyesi
+> **Note (the global CLAUDE.md rule):** store/marketing assets are **not committed to the public
+> repo** — a local `docs/store-assets-originals/` (gitignored) + `pictures/<project>/` in the
+> private `Eren-Ozcan/pictures` repo.
 
 ---
 
-## Faz 9 — Denge ve Çıkış · L
+## Phase 8 — Polish · M
 
-- [ ] Faz 1'deki toplu simülasyon aracıyla denge geçişleri
-- [ ] Onur eşikleri, decay hızı, hedefli komut katsayısı (Açık Karar #8)
-- [ ] Griefing testi: kötü niyetli chat senaryolarını simüle et
-- [ ] Kapalı playtest → yayıncı playtest'i (chat mekanikleri **ancak gerçek yayında**
-      test edilebilir — bunu erken planla)
-- [ ] Steam Next Fest / demo
-- [ ] Early Access veya tam çıkış kararı
-- [ ] **Çıkış öncesi isim çakışması kontrolü tekrarı** (bkz. hafıza notu)
+- [ ] Localisation infrastructure (TR/EN) — leave no hardcoded text
+- [ ] Sound design, music
+- [ ] Settings, key binding, accessibility (a gore filter included)
+- [ ] Onboarding/tutorial — because it is an automatic combat game, "what am I controlling"
+      has to be explained clearly
+- [ ] The streamer mode settings screen: the channel name, switching commands on and off, the
+      gore level
 
 ---
 
-## Kritik Sıralama Kuralları
+## Phase 9 — Balance and Release · L
 
-1. **Faz 1 çekirdeği görselden önce** — tersi olursa denge çalışması imkânsızlaşır
-2. **Deterministik RNG Faz 1'de** — sonradan eklenemez, her yere sızmış olur
-3. **`FakeChatSource` gerçek API'lerden önce** — yoksa her test için canlı yayın gerekir
-4. **Kick spike'ı erken** — en büyük teknik bilinmeyen
-5. **Görsel stil kararı Faz 2'den önce** — teknik yol (2D cutout) belli, stil değil
-6. **Çekirdek kararı (#13) her şeyden önce (2026-09-07)** — motorsuz çekirdek kuralı
-   sürecek mi? Sürmezse "her sistem girdikçe ölç" düzeni uygulanamaz ve Faz 1'in tamamı
-   yeniden şekillenir
-7. **Gerçek zamana geçiş, yeni sistemlerden önce** — personel, sınıf ve moral ayrık gün
-   varsayımının üstüne yazılırsa iki kez yazılır
+- [ ] Balance passes with the batch simulation tool from phase 1
+- [ ] Honour thresholds, the decay rate, the targeted-command coefficient (Open Decision #8)
+- [ ] Griefing testing: simulate malicious chat scenarios
+- [ ] A closed playtest → a streamer playtest (the chat mechanics can **only be tested in a real
+      stream** — plan this early)
+- [ ] Steam Next Fest / a demo
+- [ ] The Early Access or full release decision
+- [ ] **Repeating the name-clash check before release** (see the memory note)
 
-## Bağımlılık Zinciri
+---
+
+## Critical Ordering Rules
+
+1. **The phase 1 core before the visuals** — the other way round makes balance work impossible
+2. **Deterministic RNG in phase 1** — it cannot be added later, it will have leaked everywhere
+3. **`FakeChatSource` before the real APIs** — otherwise every test needs a live stream
+4. **The Kick spike early** — the biggest technical unknown
+5. **The visual style decision before phase 2** — the technical route (2D cutout) is settled, the style is not
+6. **The core decision (#13) before everything (2026-09-07)** — will the engine-free core rule
+   continue? If not, the "measure as each system arrives" setup cannot be applied and all of
+   phase 1 is reshaped
+7. **The move to real time before the new systems** — if staff, classes and morale are written
+   on top of the discrete-day assumption, they get written twice
+
+## The Dependency Chain
 
 ```
-Faz 0 ─→ Faz 1 ─┬─→ Faz 2 (görsel)     ─┐
-                ├─→ Faz 3 (dojo)        ─┼─→ Faz 4 ─→ Faz 9
-                └─→ Faz 5 (chat) ─→ Faz 6┘
-                                    Faz 7 ─┘
+Phase 0 ─→ Phase 1 ─┬─→ Phase 2 (visuals)  ─┐
+                    ├─→ Phase 3 (dojo)      ─┼─→ Phase 4 ─→ Phase 9
+                    └─→ Phase 5 (chat) ─→ Phase 6┘
+                                         Phase 7 ─┘
 ```
-Faz 2, 3 ve 5 birbirinden bağımsız — Faz 1 bittikten sonra istenen sırayla ilerlenebilir.
+Phases 2, 3 and 5 are independent of each other — once phase 1 is done they can be worked in
+any order.

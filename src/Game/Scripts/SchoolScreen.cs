@@ -5,17 +5,17 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Okul ekranı: üç kol, dokuz tesis, peşin bedel (GDD §10).
+/// The school screen: three branches, nine facilities, paid up front (GDD §10).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Hangi düğümün neden kapalı olduğuna <see cref="SchoolModel"/> karar verir (motorsuz,
-/// testli); alım <see cref="DojoState.BuySchoolNode"/> üzerinden geçer — parayı kasadan
-/// düşen ve bonusu ayarlara işleyen taraf orası.
+/// Which node is closed and why is decided by <see cref="SchoolModel"/> (engine-free,
+/// tested); a purchase goes through <see cref="DojoState.BuySchoolNode"/> — that is the side that deducts
+/// the price and applies the bonus to the settings.
 /// </para>
 /// <para>
-/// Kilitli düğüm <b>gizlenmiyor</b>: okul uzun vadeli yatırım, oyuncu neye para
-/// biriktirdiğini görmeden biriktiremez.
+/// A locked node is <b>not hidden</b>: the school is a long-term investment, and the player cannot
+/// save toward something without seeing what he is saving for.
 /// </para>
 /// </remarks>
 public sealed partial class SchoolScreen : DojoScreen
@@ -28,7 +28,7 @@ public sealed partial class SchoolScreen : DojoScreen
     private Label _notice = null!;
     private SchoolNodeId? _selected;
 
-    /// <summary>Ekranı kurar ve ağacı basar.</summary>
+    /// <summary>Builds the screen and prints the tree.</summary>
     public override void Build(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -56,7 +56,7 @@ public sealed partial class SchoolScreen : DojoScreen
         _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         panel.AddChild(_detail);
 
-        _buyButton = new Button { Text = "Satın al" };
+        _buyButton = new Button { Text = "Buy" };
         _buyButton.Pressed += Buy;
         panel.AddChild(_buyButton);
 
@@ -67,7 +67,7 @@ public sealed partial class SchoolScreen : DojoScreen
         return panel;
     }
 
-    /// <summary>Ağacı ve seçili düğümün ayrıntısını yeniden basar.</summary>
+    /// <summary>Reprints the tree and the selected node's detail.</summary>
     public void Refresh()
     {
         Clear(_columns);
@@ -111,10 +111,10 @@ public sealed partial class SchoolScreen : DojoScreen
 
         SchoolSummary summary = SchoolModel.Summarize(_dojo);
         _summary.Text =
-            $"Gün {_dojo.Day}  ·  Kasa {summary.Gold} altın" +
-            $"  ·  Tesis {summary.Owned}/{summary.Total}" +
-            $"  ·  Bugün alınabilir {summary.Affordable}" +
-            (summary.NextCost is int next ? $"  ·  Sıradaki bedel {next} altın" : "  ·  Ağaç tamam");
+            $"Day {_dojo.Day}  ·  Purse {summary.Gold} gold" +
+            $"  ·  Facilities {summary.Owned}/{summary.Total}" +
+            $"  ·  Affordable today {summary.Affordable}" +
+            (summary.NextCost is int next ? $"  ·  Next cost {next} gold" : "  ·  The tree is complete");
 
         ShowDetail(columns.SelectMany(c => c.Nodes).Single(n => n.Id == _selected));
     }
@@ -123,16 +123,16 @@ public sealed partial class SchoolScreen : DojoScreen
     {
         _detail.Text = string.Join(
             '\n',
-            $"{node.Name}  —  {node.Cost} altın  ·  {BranchName(node.Branch)} kolu, {node.Tier}. kademe",
+            $"{node.Name}  —  {node.Cost} gold  ·  {BranchName(node.Branch)} branch, tier {node.Tier}",
             Effect(node.Id),
             StateText(node));
 
         _buyButton.Disabled = node.State != SchoolNodeState.Affordable;
         _buyButton.Text = node.State == SchoolNodeState.Owned
-            ? "Alındı"
-            : $"Satın al ({node.Cost} altın)";
+            ? "Bought"
+            : $"Buy ({node.Cost} gold)";
         _notice.Text = node.State == SchoolNodeState.TooExpensive
-            ? $"Kasa yetmiyor: {node.GoldShort} altın eksik."
+            ? $"The purse is short: {node.GoldShort} gold missing."
             : string.Empty;
     }
 
@@ -140,7 +140,7 @@ public sealed partial class SchoolScreen : DojoScreen
     {
         if (_selected is SchoolNodeId id && !_dojo.BuySchoolNode(id))
         {
-            _notice.Text = "Bu tesis şimdi alınamaz.";
+            _notice.Text = "This facility cannot be bought now.";
             return;
         }
 
@@ -150,46 +150,46 @@ public sealed partial class SchoolScreen : DojoScreen
 
     private static string NodeText(SchoolNodeRow node) => node.State switch
     {
-        SchoolNodeState.Owned => $"{node.Name}  —  alındı",
-        SchoolNodeState.Locked => $"{node.Name}  —  kilitli",
-        SchoolNodeState.TooExpensive => $"{node.Name}  —  {node.Cost} altın (yetmiyor)",
-        _ => $"{node.Name}  —  {node.Cost} altın",
+        SchoolNodeState.Owned => $"{node.Name}  —  bought",
+        SchoolNodeState.Locked => $"{node.Name}  —  locked",
+        SchoolNodeState.TooExpensive => $"{node.Name}  —  {node.Cost} gold (not enough)",
+        _ => $"{node.Name}  —  {node.Cost} gold",
     };
 
     private static string StateText(SchoolNodeRow node) => node.State switch
     {
-        SchoolNodeState.Owned => "Bu tesis alındı; bonusu her gün işliyor.",
-        SchoolNodeState.Locked => $"Önce {Required(node)} alınmalı.",
-        SchoolNodeState.TooExpensive => "Sırası geldi; kasa yetmiyor.",
-        _ => "Bugün alınabilir. Tesis peşindir ve geri satılmaz.",
+        SchoolNodeState.Owned => "This facility is bought; its bonus works every day.",
+        SchoolNodeState.Locked => $"{Required(node)} must be bought first.",
+        SchoolNodeState.TooExpensive => "Its turn has come; the purse is short.",
+        _ => "Affordable today. A facility is paid up front and cannot be sold back.",
     };
 
     private static string Required(SchoolNodeRow node) =>
-        node.Requires is SchoolNodeId id ? SchoolTree.Find(id).Name : "önceki kademe";
+        node.Requires is SchoolNodeId id ? SchoolTree.Find(id).Name : "the previous tier";
 
-    /// <summary>Düğümün ne sattığı — bir cümleyle.</summary>
+    /// <summary>What the node sells — in one sentence.</summary>
     /// <remarks>
-    /// Metin ekranda duruyor, sayı <see cref="SchoolTuning"/>'de: bonusların büyüklüğü
-    /// denge sayısıdır ve ölçümle değişir, cümle değişmez.
+    /// The text stands on screen and the number lives in <see cref="SchoolTuning"/>: the size of the bonuses
+    /// is a balance number and changes with measurement; the sentence does not.
     /// </remarks>
     private static string Effect(SchoolNodeId id) => id switch
     {
-        SchoolNodeId.TrainingGround => "Antrenman günü daha çok kazandırır.",
-        SchoolNodeId.FormsMaster => "Savaşçının yaklaşabildiği stat tavanı yükselir.",
-        SchoolNodeId.InnerDojo => "Antrenman ikinci kez hızlanır.",
-        SchoolNodeId.Infirmary => "Doğal iyileşme günde bir gün daha erir.",
-        SchoolNodeId.Herbalist => "İlaç bir gün daha eritir.",
-        SchoolNodeId.BoneSetter => "Sıyrık sayılan hasar payı büyür — daha az revir günü.",
-        SchoolNodeId.Steward => "Günlük yiyecek, su ve ilaç ucuzlar.",
-        SchoolNodeId.Patron => "Zafer daha çok öder.",
-        _ => "Savaşçı alımı ve zırh onarımı ucuzlar.",
+        SchoolNodeId.TrainingGround => "A training day gains more.",
+        SchoolNodeId.FormsMaster => "The stat ceiling a warrior can approach rises.",
+        SchoolNodeId.InnerDojo => "Training speeds up a second time.",
+        SchoolNodeId.Infirmary => "Natural healing takes off one more day.",
+        SchoolNodeId.Herbalist => "Medicine takes off one more day.",
+        SchoolNodeId.BoneSetter => "More damage counts as a scratch — fewer infirmary days.",
+        SchoolNodeId.Steward => "Daily food, water and medicine get cheaper.",
+        SchoolNodeId.Patron => "Victory pays more.",
+        _ => "Hiring warriors and repairing armour get cheaper.",
     };
 
     private static string BranchName(SchoolBranch branch) => branch switch
     {
-        SchoolBranch.Training => "Talimhane",
-        SchoolBranch.Infirmary => "Revir",
-        _ => "Kâhya",
+        SchoolBranch.Training => "Training ground",
+        SchoolBranch.Infirmary => "Infirmary",
+        _ => "Steward",
     };
 
     private static Color StateColor(SchoolNodeState state) => state switch

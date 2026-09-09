@@ -1,126 +1,125 @@
-﻿using Domina.Core.Combat;
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Presentation;
 
-/// <summary>Bir savaşçının tek seferlik görsel tepkisi.</summary>
+/// <summary>A warrior's one-off visual reaction.</summary>
 public enum RigReactionKind
 {
-    /// <summary>Vuruş yedi.</summary>
+    /// <summary>He took a hit.</summary>
     Flinch,
 
-    /// <summary>Kaçındı — bedeli stamina, o yüzden ekranda da görünmeli.</summary>
+    /// <summary>He evaded — the price is stamina, so it must be visible on screen too.</summary>
     Dodge,
 
-    /// <summary>Boşa savurdu; kılıç hedefi bulamadan geçti.</summary>
+    /// <summary>He swung into empty air; the sword passed without finding the target.</summary>
     Overswing,
 
-    /// <summary>Kaçanın arkasından bedava vuruş yaptı.</summary>
+    /// <summary>He landed a free hit behind a fleeing warrior.</summary>
     OpportunitySwing,
 
-    /// <summary>Gelen silahı yakaladı — jitte/sai'nin tek seferlik hamlesi.</summary>
+    /// <summary>He caught the incoming weapon — the jitte/sai's one-off move.</summary>
     /// <remarks>
-    /// <see cref="Dodge"/>'dan ayrı tutulur: kaçınmada savunan yana çekilir, yakalamada
-    /// <b>öne</b> gider. İkisi aynı tepkiye bağlansaydı ekranda jitte'nin yaptığı iş
-    /// kaçınmadan ayırt edilemezdi.
+    /// It is kept apart from <see cref="Dodge"/>: in an evasion the defender pulls sideways, in a catch
+    /// he goes <b>forward</b>. Tied to the same reaction, what the jitte does could not be told apart
+    /// from an evasion on screen.
     /// </remarks>
     Catch,
 
-    /// <summary>Uzvunu kaybetti — kalıcı.</summary>
+    /// <summary>He lost a limb — permanent.</summary>
     Dismember,
 
-    /// <summary>Mermi fırlattı.</summary>
+    /// <summary>He threw a projectile.</summary>
     Throw,
 
     /// <summary>
-    /// Kaçarken sendeledi — kimsenin vurmadığı yara.
+    /// He stumbled while fleeing — the wound nobody struck.
     /// </summary>
     /// <remarks>
-    /// <see cref="Flinch"/>'ten ayrı tutulur: ortada vuran biri yok, o yüzden ekranda
-    /// darbe yönü de yok. Sendeleme kendi başına okunmalı.
+    /// It is kept apart from <see cref="Flinch"/>: there is nobody striking, so there is no blow
+    /// direction on screen either. A stumble has to read on its own.
     /// </remarks>
     Stumble,
 
     /// <summary>
-    /// Zehir işledi — kimsenin vurmadığı ikinci yara.
+    /// Poison worked — the second wound nobody struck.
     /// </summary>
     /// <remarks>
-    /// <see cref="Flinch"/>'ten ayrı tutulur: ortada darbe de, darbenin yönü de yok.
-    /// <see cref="Stumble"/>'ın eğrilerini ödünç alır ama kendi türü olarak kalır —
-    /// sendeleme kaçarken olur, zehir dövüşün ortasında.
+    /// It is kept apart from <see cref="Flinch"/>: there is neither a blow nor a blow direction. It
+    /// borrows <see cref="Stumble"/>'s curves but stays its own kind — a stumble happens while fleeing,
+    /// poison in the middle of the fight.
     /// </remarks>
     PoisonThroe,
 
     /// <summary>
-    /// Silahı elinden düştü — savaşçı bir an boşalan eline bakar.
+    /// His weapon fell out of his hand — the warrior looks for a moment at his empty hand.
     /// </summary>
     /// <remarks>
-    /// Kendi türü olarak durur çünkü ekranda anlatacağı şey hasar değil <b>kayıp</b>:
-    /// silah yere düşer, savaşçı ona yürüyene kadar yumrukla kalır. Sürekli hali anlık
-    /// görüntüden okunur (<c>CombatantSnapshot.Disarmed</c>); buradaki tepki yalnızca
-    /// düştüğü an içindir.
+    /// It stands as its own kind because what it says on screen is not damage but <b>loss</b>: the weapon
+    /// falls to the ground and the warrior is left with his fists until he walks to it. The continuous
+    /// state is read from the snapshot (<c>CombatantSnapshot.Disarmed</c>); the reaction here is only for
+    /// the moment it drops.
     /// </remarks>
     WeaponLost,
 
     /// <summary>
-    /// Zırh parçası dağıldı — savaşçının üstünden bir plaka gitti.
+    /// An armour piece broke — a plate is gone from the warrior.
     /// </summary>
     /// <remarks>
-    /// Silah kaybından ayrı durur çünkü kalıcılığı ayrı: düşen silah geri alınabilir,
-    /// dağılan parça dövüşten sonra da yok. Sürekli hali anlık görüntüde
-    /// (<c>CombatantSnapshot.DestroyedArmor</c>); buradaki tepki dağıldığı an içindir.
+    /// It stands apart from a weapon loss because its permanence is different: a dropped weapon can be
+    /// picked up, a broken piece is gone after the fight too. The continuous state is in the snapshot
+    /// (<c>CombatantSnapshot.DestroyedArmor</c>); the reaction here is for the moment it breaks.
     /// </remarks>
     ArmorShattered,
 
     /// <summary>
-    /// Darbeyi duruşuyla karşıladı: yerinde sarsıldı, silahı önünde kaldı.
+    /// He met the blow with his stance: shaken in place, his weapon still in front of him.
     /// </summary>
     /// <remarks>
-    /// <see cref="Flinch"/>'ten ayrı: bloklayan savaşçı geri savrulmaz, <b>direnir</b>.
-    /// <see cref="Dodge"/>'dan da ayrı: kaçınan yana çekilir, bloklayan yerinden
-    /// kıpırdamaz. Üçü aynı tepkiye bağlansaydı ekranda Savunma statının yaptığı iş
-    /// görünmezdi.
+    /// Apart from <see cref="Flinch"/>: a blocking warrior is not thrown back, he <b>resists</b>. Apart
+    /// from <see cref="Dodge"/> too: an evading warrior pulls sideways, a blocking one does not move.
+    /// from <see cref="Dodge"/> too: an evading warrior pulls sideways, a blocking one does not
+    /// move. Tied to the same reaction, what the Defence stat does would not be visible on screen.
     /// </remarks>
     Block,
 }
 
-/// <param name="Part">Yalnızca <see cref="RigReactionKind.Dismember"/> için doludur.</param>
+/// <param name="Part">Filled only for <see cref="RigReactionKind.Dismember"/>.</param>
 public readonly record struct RigReaction(WarriorId Warrior, RigReactionKind Kind, BodyPart? Part = null);
 
 /// <summary>
-/// Olay akışını görsel tepkilere çevirir.
+/// Translates the event stream into visual reactions.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Görsel iki kanaldan sürülür: <b>sürekli</b> hal anlık görüntülerden (duruş, konum,
-/// can), <b>anlık</b> tepkiler buradan. Ayrım korunmalı — olaylar tek seferliktir,
-/// tekrar oynatılamaz; bu yüzden okunan yer sayaçla takip edilir ve liste yalnızca büyür.
+/// The visuals are driven by two channels: the <b>continuous</b> state from the snapshots (pose,
+/// position, health), the <b>instant</b> reactions from here. The separation must hold — events are
+/// one-off and cannot be replayed; that is why the read position is tracked with a counter and the list
+/// only grows.
 /// </para>
 /// <para>
-/// <b>Iskalayan ve kaçınılan vuruşların da karşılığı var.</b> Yalnızca isabetler
-/// bağlandığında üç saldırı sonucu (isabet, ıska, kaçınma) ekranda birbirinin aynısı
-/// görünüyordu: kılıç aynı şekilde iniyor, biri sarsılıyor ya da hiçbir şey olmuyordu.
-/// Kaçınma stamina harcayan bir çekirdek mekaniği; ekranda karşılığı yoksa oyuncu
-/// staminanın nereye gittiğini göremez.
+/// <b>Missed and evaded strikes have counterparts too.</b> When only hits were wired up, the three
+/// attack outcomes (hit, miss, evasion) looked identical on screen: the sword came down the same way,
+/// and either someone was shaken or nothing happened. Evasion is a core mechanic that spends
+/// stamina; without a counterpart on screen the player cannot see where the stamina went.
 /// </para>
 /// <para>
-/// Karşılığı olmayan olaylar sessizce atlanır — çekirdek yeni bir olay eklemek için
-/// görselleştirmeyi beklemek zorunda değil.
+/// Events with no counterpart are silently skipped — the core does not have to wait for the
+/// visualisation to add a new event.
 /// </para>
 /// </remarks>
 public sealed class ReactionReader
 {
     private readonly List<RigReaction> _buffer = [];
 
-    /// <summary>Şimdiye kadar okunan olay sayısı.</summary>
+    /// <summary>The number of events read so far.</summary>
     public int Consumed { get; private set; }
 
     /// <summary>
-    /// Son çağrıdan beri üretilen olayların tepkilerini döndürür.
+    /// Returns the reactions for the events produced since the last call.
     /// </summary>
     /// <remarks>
-    /// Dönen liste bir sonraki çağrıda yeniden kullanılır; çağıran tarafın onu
-    /// saklamaması gerekir.
+    /// The returned list is reused on the next call; the caller must not hold on to it.
     /// </remarks>
     public IReadOnlyList<RigReaction> Drain(IReadOnlyList<BattleEvent> events)
     {
@@ -149,29 +148,29 @@ public sealed class ReactionReader
                 break;
 
             case AttackCaught caught:
-                // Yalnızca yakalayan tepki üretir. Saldıranın karşılığı tek seferlik
-                // değil: silahı yakalanan savaşçı CombatState.WeaponBound durumuna
-                // geçer ve duruşu oradan sürülür — buraya ikinci bir tepki eklemek
-                // aynı işi bir kez daha, üstelik yalnızca bir an için yapmak olurdu.
+                // Only the catcher produces a reaction. The attacker's counterpart is not one-off: a
+                // warrior whose weapon is caught enters CombatState.WeaponBound and his pose is driven
+                // from there — adding a second reaction here would do the same job again, and only for a
+                // moment at that.
                 into.Add(new RigReaction(caught.Defender, RigReactionKind.Catch));
                 break;
 
             case AttackDodged dodged:
-                // İkisi birden: saldıran boşa savurur, savunan yana kaçar.
+                // Both at once: the attacker swings into empty air, the defender pulls aside.
                 into.Add(new RigReaction(dodged.Attacker, RigReactionKind.Overswing));
                 into.Add(new RigReaction(dodged.Defender, RigReactionKind.Dodge));
                 break;
 
             case AttackBlocked blocked:
-                // Duruş tuttu. Saldıran için ayrı bir tepki yok: darbe boşa gitmedi,
-                // karşılandı — savurma animasyonu yanlış şeyi anlatırdı.
+                // The stance held. There is no separate reaction for the attacker: the blow was not
+                // wasted, it was met — a swing animation would say the wrong thing.
                 into.Add(new RigReaction(blocked.Defender, RigReactionKind.Block));
                 break;
 
             case OpportunityAttack opportunity:
-                // Kaçışın bedeli. Kendi başına vuruş sonucu üretmez — hemen ardından
-                // gelen isabet/ıska olayı onu tamamlar; buradaki tek iş, bedava
-                // vuruşun kimden geldiğini göstermek.
+                // The price of fleeing. It does not produce a strike outcome on its own — the hit/miss
+                // event that follows completes it; the only job here is to show who the free hit came
+                // from.
                 into.Add(new RigReaction(opportunity.Attacker, RigReactionKind.OpportunitySwing));
                 break;
 
@@ -180,8 +179,8 @@ public sealed class ReactionReader
                 break;
 
             case WeaponDropped dropped:
-                // Yalnızca silahı giden tepki üretir. Düşürenin (varsa) karşılığı zaten
-                // ekranda: yakalama hamlesi bir an önce oynatıldı.
+                // Only the one who lost the weapon produces a reaction. The disarmer's counterpart (if
+                // there is one) is already on screen: the catch move played a moment earlier.
                 into.Add(new RigReaction(dropped.Warrior, RigReactionKind.WeaponLost));
                 break;
 
@@ -190,21 +189,21 @@ public sealed class ReactionReader
                 break;
 
             case WeaponPickedUp picked:
-                // Eğilip alma anı. Ayrı bir tepki değil, sendelemenin tersi bir eğilme —
-                // yordamsal duruşta ikisi de gövdeyi büker (bkz. docs/ROADMAP.md 2.2).
+                // The moment of bending down to pick up. Not a separate reaction but the reverse of a
+                // stumble — in the procedural pose both bend the body (see docs/ROADMAP.md 2.2).
                 into.Add(new RigReaction(picked.Warrior, RigReactionKind.WeaponLost));
                 break;
 
             case PoisonTicked poison:
-                // Doz bir kez daha işledi. Zehirlenme anının kendisi (WarriorPoisoned)
-                // tepki üretmez: onun ekrandaki karşılığı vuruşun kendisidir, ve orada
-                // zaten bir irkilme var.
+                // The dose worked once more. The moment of poisoning itself (WarriorPoisoned) produces no
+                // reaction: its counterpart on screen is the strike itself, and there is already a flinch
+                // there.
                 into.Add(new RigReaction(poison.Warrior, RigReactionKind.PoisonThroe));
                 break;
 
             case ProjectileLaunched launched:
-                // Merminin uçuşu bir tepki değil, ayrı bir sahne nesnesi (bkz.
-                // ProjectileView). Buradaki tek iş atan savaşçının hamlesini göstermek.
+                // The projectile's flight is not a reaction but a separate scene object (see
+                // ProjectileView). The only job here is to show the throwing warrior's move.
                 into.Add(new RigReaction(launched.Attacker, RigReactionKind.Throw));
                 break;
 
@@ -216,11 +215,11 @@ public sealed class ReactionReader
                 into.Add(new RigReaction(mishap.Warrior, RigReactionKind.Stumble));
                 break;
 
-            // Ölümün ve arenadan çıkışın burada karşılığı YOK, çünkü ikisi de tek
-            // seferlik değil kalıcı hal: durum <see cref="CombatState.Dead"/> olarak
-            // gelir ve yığılma oradan sürülür, cesedin nerede kalacağına ise
-            // <see cref="ArenaChoreography"/> karar verir. Buraya bir tepki eklemek
-            // aynı işi ikinci kez, üstelik yalnızca bir kez tetiklenerek yapmak olurdu.
+            // Death and leaving the arena have NO counterpart here, because neither is one-off but a
+            // persistent state: the state arrives as <see cref="CombatState.Dead"/> and the collapse is
+            // driven from there, while where the body ends up is decided by
+            // <see cref="ArenaChoreography"/>. Adding a reaction here would do the same job a second
+            // time, and triggered only once at that.
             default:
                 break;
         }

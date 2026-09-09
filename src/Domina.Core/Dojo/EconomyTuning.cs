@@ -1,36 +1,36 @@
 namespace Domina.Core.Dojo;
 
-/// <summary>Kasanın ayarlanabilir sayıları — fiyatlar, günlük tüketim, ödül.</summary>
+/// <summary>The treasury's tunable numbers — prices, daily consumption, reward.</summary>
 /// <remarks>
 /// <para>
-/// Buradaki sayılar Açık Karar #5'in konusudur. GDD §11 yalnızca <b>kalemleri</b>
-/// kilitler (gelir: dövüş ödülü; gider: ekipman, yiyecek/su, ilaç, savaşçı alımı);
-/// büyüklükleri ölçümle kapanır. Bu yüzden hepsi tek yerde durur ve
-/// <c>Domina.Sim</c> bunları dövüş dövüş oynatarak ölçebilir.
+/// The numbers here are the subject of Open Decision #5. GDD §11 only locks the <b>items</b> (income:
+/// the fight reward; spending: equipment, food/water, medicine, hiring warriors); their sizes are
+/// settled by measurement. That is why they all live in one place and <c>Domina.Sim</c> can measure
+/// them by playing them out fight by fight.
 /// </para>
 /// <para>
-/// Tek para birimi <b>altın</b>dır. Yiyecek, su ve ilaç ambarda sayılabilir stok
-/// olarak durur ama piyasadan altınla alınır: ekonominin tek kıt kaynağı bölünmesin,
-/// "bugün ne alayım" kararı tek bir sayıya baksın.
+/// The single currency is <b>gold</b>. Food, water and medicine stand in the store as countable stock
+/// but are bought from the market with gold: the economy's only scarce resource must not be split, and
+/// the decision "what shall I buy today" should look at a single number.
 /// </para>
 /// </remarks>
 public sealed record EconomyTuning
 {
-    /// <summary>Bir savaşçının günlük yiyeceği.</summary>
+    /// <summary>One warrior's daily food.</summary>
     public int FoodPerWarriorPerDay { get; init; } = 1;
 
-    /// <summary>Bir savaşçının günlük suyu.</summary>
+    /// <summary>One warrior's daily water.</summary>
     public int WaterPerWarriorPerDay { get; init; } = 1;
 
-    /// <summary>Revirdeki bir savaşçının günlük ilacı.</summary>
+    /// <summary>The daily medicine for a warrior in the infirmary.</summary>
     public int MedicinePerInfirmaryDay { get; init; } = 1;
 
     /// <summary>
-    /// İlacın o gün fazladan erittiği revir günü.
+    /// The extra infirmary day the medicine burns that day.
     /// </summary>
     /// <remarks>
-    /// İlaç doğal iyileşmenin <b>üstüne</b> gelir (GDD §7): ilaçsız gün de bir gün
-    /// eritir, ilaçlı gün iki. Yoksa ilaç zorunlu bir vergi olurdu, karar değil.
+    /// Medicine comes <b>on top of</b> natural recovery (GDD §7): a day without medicine burns a day
+    /// too, a day with it burns two. Otherwise medicine would be a compulsory tax, not a decision.
     /// </remarks>
     public int MedicineRecoveryDays { get; init; } = 1;
 
@@ -40,60 +40,60 @@ public sealed record EconomyTuning
 
     public int MedicinePrice { get; init; } = 12;
 
-    /// <summary>Yeni savaşçının alım bedeli.</summary>
+    /// <summary>The purchase price of a new warrior.</summary>
     public int RecruitPrice { get; init; } = 150;
 
     /// <summary>
-    /// Zırh parçasının fiyatı, dayanıklılık puanı başına.
+    /// The price of an armour piece, per durability point.
     /// </summary>
     /// <remarks>
-    /// Fiyat <see cref="Model.ArmorPiece.Durability"/> ile ölçeklenir: parça ne kadar
-    /// hasar durduruyorsa o kadar eder. Koruma oranı ayrıca çarpan değildir — iki sayı
-    /// zaten aynı yönde büyüyor, ikisini de çarpmak pahalı ucu iki kez cezalandırırdı.
+    /// The price scales with <see cref="Model.ArmorPiece.Durability"/>: a piece is worth as much damage
+    /// as it stops. The protection ratio is not a separate multiplier — the two numbers already grow in
+    /// the same direction, and multiplying both would punish the expensive end twice.
     /// </remarks>
     public double ArmorGoldPerDurability { get; init; } = 1.5;
 
     /// <summary>
-    /// Onarımın fiyatı, silinen yıpranma puanı başına.
+    /// The price of a repair, per wear point erased.
     /// </summary>
     /// <remarks>
-    /// <see cref="ArmorGoldPerDurability"/>'nin altında olmak <b>zorunda</b>: eşit ya da
-    /// üstünde olsaydı onarım hiçbir zaman mantıklı olmaz, herkes parçayı dağılana kadar
-    /// kullanıp yenisini alırdı. Aradaki fark onarımın kâr payıdır; farkın büyüklüğü
-    /// "erken onar mı, sonuna kadar kullan mı" kararının tamamıdır.
+    /// It <b>must</b> be below <see cref="ArmorGoldPerDurability"/>: equal or above, repairing would
+    /// never make sense and everyone would use a piece until it broke and buy a new one. The difference
+    /// is repairing's margin; the size of that difference is the whole of the decision "repair early or
+    /// use it to the end".
     /// </remarks>
     public double RepairGoldPerWear { get; init; } = 0.9;
 
-    /// <summary>Zaferin ödülü, düşmanın toplam canı başına altın.</summary>
+    /// <summary>The victory reward, in gold per point of the enemy's total health.</summary>
     /// <remarks>
-    /// Ödül karşılaşmanın <b>kendisinden</b> çıkar, dövüşün nasıl geçtiğinden değil:
-    /// aynı düşman aynı parayı öder. Zorluk eğrisi (GDD §10) böylece geliri de taşır —
-    /// ayrı bir ödül tablosu tutmaya gerek kalmaz.
+    /// The reward comes out of the encounter <b>itself</b>, not out of how the fight went: the same
+    /// enemy pays the same money. The difficulty curve (GDD §10) thus carries income too — there is no
+    /// need to keep a separate reward table.
     /// </remarks>
     public double VictoryGoldPerEnemyHealth { get; init; } = 0.45;
 
     /// <summary>
-    /// Riskin ödüle bindirdiği prim — 0 ise ödül düşman canıyla düz orantılıdır.
+    /// The premium risk adds to the reward — at 0 the reward is directly proportional to enemy health.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Düz orantı bir yerde bozuluyor: üç güçlü düşman, bir zayıf düşmanın üç katı kadar
-    /// <b>can</b> taşır ama üç katı kadar <b>risk</b> taşımaz — daha fazlasını taşır
-    /// (odaklanan üç düşman aynı anda vurur, kaçış zorlaşır, ölüm ihtimali doğrusal
-    /// büyümez). Ödül canla düz orantılı kaldığı sürece eğrinin üst ucu <b>hiçbir zaman</b>
-    /// alınmaya değmez ve oyuncu, dojo'su büyüse bile teklifleri geri çevirmeye devam eder.
+    /// Direct proportion breaks down in one place: three strong enemies carry three times the
+    /// <b>health</b> of one weak enemy but not three times the <b>risk</b> — they carry more (three
+    /// enemies focused on you strike at once, fleeing gets harder, and the chance of death does not grow
+    /// linearly). As long as the reward stays proportional to health, the curve's top end is
+    /// <b>never</b> worth taking and the player keeps declining offers even as his dojo grows.
     /// </para>
     /// <para>
-    /// Prim <see cref="RiskFreeEnemyHealth"/>'in üstünde başlar: sıradan bir karşılaşma
-    /// eskisi kadar öder, ağırlaşan karşılaşma orantısından fazlasını.
+    /// The premium starts above <see cref="RiskFreeEnemyHealth"/>: an ordinary encounter pays as much as
+    /// before, a heavier one more than its proportion.
     /// </para>
     /// </remarks>
     public double RiskPremium { get; init; } = 0.25;
 
-    /// <summary>Primin başladığı düşman canı — bunun altı sıradan iş sayılır.</summary>
+    /// <summary>The enemy health at which the premium starts — below this counts as ordinary work.</summary>
     public double RiskFreeEnemyHealth { get; init; } = 100;
 
-    /// <summary>Çekilen ya da bozguna uğrayan seferin ödülü.</summary>
-    /// <remarks>Sıfır — GDD §10: pes etmek o seferin ödülünü siler.</remarks>
+    /// <summary>The reward of an expedition withdrawn from or routed.</summary>
+    /// <remarks>Zero — GDD §10: surrendering erases that expedition's reward.</remarks>
     public int LostBattleGold { get; init; }
 }

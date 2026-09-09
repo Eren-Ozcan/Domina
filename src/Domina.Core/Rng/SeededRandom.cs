@@ -1,16 +1,16 @@
 namespace Domina.Core.Rng;
 
 /// <summary>
-/// Seed'li, deterministik rastgelelik kaynağı (xoshiro256** + splitmix64 tohumlama).
+/// A seeded, deterministic randomness source (xoshiro256** + splitmix64 seeding).
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="System.Random"/> KASITLI olarak kullanılmıyor: algoritması .NET
-/// sürümleri arasında değişebilir, dolayısıyla "aynı seed = aynı dövüş" garantisi
-/// motor/çalışma zamanı yükseltmelerinde bozulur. Buradaki algoritma sabittir, yani
-/// bir seed bugün ne üretiyorsa yıllar sonra da aynısını üretir.
+/// <see cref="System.Random"/> is DELIBERATELY not used: its algorithm can change between .NET
+/// versions, so the guarantee "the same seed = the same fight" would break on engine/runtime upgrades.
+/// The algorithm here is fixed, meaning whatever a seed produces today it will produce
+/// years from now.
 /// </para>
-/// <para>Thread-safe DEĞİLDİR. Her dövüş kendi örneğini kullanır.</para>
+/// <para>It is NOT thread-safe. Every fight uses its own instance.</para>
 /// </remarks>
 public sealed class SeededRandom : IRandomSource
 {
@@ -23,8 +23,8 @@ public sealed class SeededRandom : IRandomSource
     {
         Seed = seed;
 
-        // splitmix64 ile durumu doldur — kötü/az bitli seed'lerin (0, 1, 2...)
-        // ilk üretimleri bozmasını engeller.
+        // Fill the state with splitmix64 — it stops bad/low-bit seeds (0, 1, 2...) from spoiling the
+        // first outputs.
         ulong x = seed;
         _s0 = SplitMix64(ref x);
         _s1 = SplitMix64(ref x);
@@ -32,12 +32,12 @@ public sealed class SeededRandom : IRandomSource
         _s3 = SplitMix64(ref x);
     }
 
-    /// <summary>Bu akışı üreten seed. Log/replay için saklanır.</summary>
+    /// <summary>The seed that produced this stream. Kept for logging/replay.</summary>
     public ulong Seed { get; }
 
     public double NextDouble()
     {
-        // Üst 53 bit → [0,1) aralığında çift duyarlıklı değer.
+        // The top 53 bits → a double-precision value in the range [0,1).
         return (NextUInt64() >> 11) * (1.0 / (1UL << 53));
     }
 

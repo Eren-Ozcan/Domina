@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Sunum katmanının MOTORSUZ yarısı.
+    The ENGINE-FREE half of the presentation layer.
 
-    Dövüşün ekranda nasıl göründüğüne dair kararlar (kim nerede durur, hangi olay
-    hangi tepkiyi doğurur, kemikler hangi açıyı alır, tuşta ne yazar) burada
-    yaşar ve Godot'u BİLMEZ. Godot katmanı yalnızca sonucu düğümlere uygular.
+    The decisions about how a fight looks on screen (who stands where, which event
+    produces which reaction, what angle the bones take, what the key says) live here
+    and KNOW NOTHING of Godot. The Godot layer only applies the result to the nodes.
 
-    Neden: bu kararlar motor açmadan test edilemezse hiç test edilmez. Çekirdek
-    için geçerli olan kural (bkz. CLAUDE.md → "Mimari kuralı") sunum mantığının
-    saf kısmı için de geçerli — buraya Godot referansı eklenmemeli.
+    Why: if these decisions cannot be tested without opening the engine, they never get
+    tested. The rule that holds for the core (see CLAUDE.md → "Architecture rule") holds
+    for the pure part of the presentation logic too — no Godot reference goes in here.
   -->
 
   <ItemGroup>

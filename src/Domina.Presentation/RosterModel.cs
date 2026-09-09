@@ -3,26 +3,26 @@ using Domina.Core.Model;
 
 namespace Domina.Presentation;
 
-/// <summary>Roster ekranındaki tek satır — bir savaşçının o günkü hâli.</summary>
-/// <param name="Id">Savaşçının kimliği; ekran komutları bunu geri verir.</param>
-/// <param name="Name">Görünen ad.</param>
-/// <param name="IsAlive">Ölüler kadroda kalır (permadeath kalıcı, kayıt kalıcı).</param>
-/// <param name="Status">Satırın durum rozeti.</param>
-/// <param name="RecoveryDaysRemaining">Revirde kalan gün; sıfırsa sefere hazır.</param>
-/// <param name="Activity">Bugünkü uğraş.</param>
-/// <param name="Drill">Seçili talim — revirdeyken de saklanır.</param>
-/// <param name="Path">Seçilmiş yol; <see cref="WarriorPath.None"/> ise henüz yok.</param>
-/// <param name="PathUnlocked">Yol seçimi açılmış mı?</param>
-/// <param name="TrainingDaysToPath">Yol kilidine kalan antrenman günü; açıksa 0.</param>
-/// <param name="TrainingDays">Tamamlanmış antrenman günü.</param>
+/// <summary>A single row on the roster screen — a warrior's state that day.</summary>
+/// <param name="Id">The warrior's identity; the screen's commands return it.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="IsAlive">The dead stay on the roster (permadeath is permanent, the record is permanent).</param>
+/// <param name="Status">The row's status badge.</param>
+/// <param name="RecoveryDaysRemaining">The days left in the infirmary; zero means ready for an expedition.</param>
+/// <param name="Activity">Today's occupation.</param>
+/// <param name="Drill">The drill selected — kept while in the infirmary too.</param>
+/// <param name="Path">The path chosen; <see cref="WarriorPath.None"/> means none yet.</param>
+/// <param name="PathUnlocked">Has the path choice been unlocked?</param>
+/// <param name="TrainingDaysToPath">The training days left to unlock the path; 0 if it is open.</param>
+/// <param name="TrainingDays">The training days completed.</param>
 /// <param name="Honor">Onur (0-100).</param>
-/// <param name="BaseStats">Ham statlar — antrenmanın yazdığı sayı.</param>
-/// <param name="EffectiveStats">Yol ve sakatlıktan sonra dövüşün okuduğu sayı.</param>
-/// <param name="Lost">Kaybedilmiş uzuvlar.</param>
-/// <param name="WeaponName">Kullanabildiği silah — uzvunu kaybettiyse yumruk okunur.</param>
-/// <param name="ArmorName">Kuşamın adı.</param>
-/// <param name="ArmorWear">Kuşamdaki toplam yıpranma.</param>
-/// <param name="IsFitForCampaign">Bugün sefere gönderilebilir mi?</param>
+/// <param name="BaseStats">The raw stats — the number training writes.</param>
+/// <param name="EffectiveStats">The number the fight reads, after the path and disabilities.</param>
+/// <param name="Lost">The limbs lost.</param>
+/// <param name="WeaponName">The weapon he can use — fists if he has lost a limb.</param>
+/// <param name="ArmorName">The kit's name.</param>
+/// <param name="ArmorWear">The total wear on the kit.</param>
+/// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
 public readonly record struct RosterRow(
     WarriorId Id,
     string Name,
@@ -44,28 +44,28 @@ public readonly record struct RosterRow(
     double ArmorWear,
     bool IsFitForCampaign);
 
-/// <summary>Satırın rozeti — sıralamayı da bu belirler.</summary>
+/// <summary>The row's badge — it also sets the ordering.</summary>
 public enum RosterStatus
 {
-    /// <summary>Sefere hazır.</summary>
+    /// <summary>Ready for an expedition.</summary>
     Ready,
 
     /// <summary>Antrenmanda; sefere yine de gidebilir.</summary>
     Training,
 
-    /// <summary>Revirde; sefere çıkamaz.</summary>
+    /// <summary>In the infirmary; cannot go on an expedition.</summary>
     Recovering,
 
-    /// <summary>Ölü. Kayıt kadroda durur.</summary>
+    /// <summary>Dead. The record stays on the roster.</summary>
     Fallen,
 }
 
-/// <summary>Kadronun tepesinde duran sayılar.</summary>
-/// <param name="Living">Canlı savaşçı sayısı.</param>
-/// <param name="Fit">Bugün sefere gidebilecekler.</param>
+/// <summary>The numbers standing at the top of the roster.</summary>
+/// <param name="Living">The number of living warriors.</param>
+/// <param name="Fit">Those who can go on an expedition today.</param>
 /// <param name="Recovering">Revirdekiler.</param>
-/// <param name="Fallen">Ölüler.</param>
-/// <param name="PartyCapacity">Bir sefere çıkabilecek azami savaşçı (GDD §1).</param>
+/// <param name="Fallen">The dead.</param>
+/// <param name="PartyCapacity">The maximum warriors who can go on one expedition (GDD §1).</param>
 public readonly record struct RosterSummary(
     int Living,
     int Fit,
@@ -73,40 +73,40 @@ public readonly record struct RosterSummary(
     int Fallen,
     int PartyCapacity);
 
-/// <summary>Ad değiştirme denemesinin sonucu.</summary>
+/// <summary>The result of a rename attempt.</summary>
 public enum RenameVerdict
 {
     /// <summary>Kabul edilir.</summary>
     Ok,
 
-    /// <summary>Boş ad.</summary>
+    /// <summary>An empty name.</summary>
     Empty,
 
-    /// <summary>Ad başka bir <b>canlıda</b>; ölülerin adı havuza dönmüştür.</summary>
+    /// <summary>The name belongs to another <b>living</b> warrior; the dead have returned their names to the pool.</summary>
     Taken,
 
-    /// <summary>Ad zaten bu savaşçının; değişiklik yok.</summary>
+    /// <summary>The name is already this warrior's; no change.</summary>
     Unchanged,
 }
 
 /// <summary>
-/// Roster ekranının okuduğu model. Sayıyı ve rozeti hesaplar, çizim yapmaz.
+/// The model the roster screen reads. It computes the numbers and the badges; it does not draw.
 /// </summary>
 /// <remarks>
-/// Ekran <see cref="Roster"/>'ı doğrudan okusaydı iki iş sızardı: hangi savaşçının
-/// önce geleceği ve ad değiştirmenin <b>reddedileceğini önceden bilmek</b>. İkincisi
-/// önemli: <see cref="Roster.Rename"/> çakışan adda fırlatır, ekran ise tuşu daha
-/// basılmadan kapatabilmeli.
+/// If the screen read <see cref="Roster"/> directly, two jobs would leak: which warrior comes first,
+/// and <b>knowing in advance that a rename will be refused</b>. The second matters:
+/// <see cref="Roster.Rename"/> throws on a clashing name, and the screen must be able to disable the
+/// button before it is even pressed.
 /// </remarks>
 public static class RosterModel
 {
-    /// <summary>Bir sefere çıkabilecek azami savaşçı (GDD §1 — üst sınır 4).</summary>
+    /// <summary>The maximum warriors who can go on one expedition (GDD §1 — upper limit 4).</summary>
     public const int PartyCapacity = 4;
 
-    /// <summary>Kadroyu ekran sırasına dizer: önce hazır olan, en sonda ölüler.</summary>
+    /// <summary>Orders the roster for the screen: the ready first, the dead last.</summary>
     /// <remarks>
-    /// Sıra rozete göredir, isim ikincil anahtardır: oyuncu ekranı "bugün kimi
-    /// gönderebilirim" sorusuyla açar, cevabın listenin altında aranması gerekmesin.
+    /// The order is by badge, with the name as the secondary key: the player opens the screen with the
+    /// question "whom can I send today", and the answer should not have to be looked for at the bottom of the list.
     /// </remarks>
     public static IReadOnlyList<RosterRow> Describe(DojoState dojo)
     {
@@ -119,7 +119,7 @@ public static class RosterModel
             .ToList();
     }
 
-    /// <summary>Tek savaşçının satırı.</summary>
+    /// <summary>A single warrior's row.</summary>
     public static RosterRow Describe(RosterEntry entry, DojoTuning tuning)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -151,7 +151,7 @@ public static class RosterModel
             IsFitForCampaign: entry.IsFitForCampaign);
     }
 
-    /// <summary>Kadronun tepesindeki sayılar.</summary>
+    /// <summary>The numbers at the top of the roster.</summary>
     public static RosterSummary Summarize(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -185,8 +185,8 @@ public static class RosterModel
     }
 
     /// <summary>
-    /// Ad değişikliği kabul edilir mi? Ekran bunu <b>yazarken</b> sorar,
-    /// <see cref="Roster.Rename"/> fırlatmadan önce.
+    /// Is the rename accepted? The screen asks this <b>while typing</b>, before
+    /// <see cref="Roster.Rename"/> throws.
     /// </summary>
     public static RenameVerdict JudgeRename(Roster roster, WarriorId id, string? newName)
     {

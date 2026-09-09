@@ -4,26 +4,26 @@ using Domina.Core.Model;
 
 namespace Domina.Core.Dojo;
 
-/// <summary>Dövüşün sonucunu kadroya işler.</summary>
+/// <summary>Writes the fight's result onto the roster.</summary>
 /// <remarks>
 /// <para>
-/// Çekirdek kalıcı hale <b>dokunmaz</b>: ne olduğunu söyler, ne olacağını değil. Ölüm,
-/// uzuv kaybı, dağılan zırh ve biriken yıpranma dövüş özetinde birer <b>rapor</b>dur;
-/// onları geri dönüşsüz hale çevirmek bu sınıfın işi. Ayrımın sebebi mimari kural —
-/// toplu simülasyon aynı kadroyu on binlerce kez koşturur ve hiçbirinde savaşçının
-/// kalıcı hali bozulmamalıdır.
+/// The core <b>does not touch</b> the persistent state: it says what happened, not what will happen.
+/// Death, limb loss, broken armour and accumulated wear are <b>reports</b> in the fight summary;
+/// turning them into something irreversible is this class's job. The reason for the separation is the
+/// architecture rule — batch simulation runs the same roster tens of thousands of times and the
+/// warrior's persistent state must not be corrupted in any of them.
 /// </para>
 /// <para>
-/// Yalnızca <b>dojo tarafının</b> özetleri işlenir. Yokai'ler kendi kimliklerini taşır
-/// ve bu kimlikler kadrodakilerle çakışabilir; takım filtresi olmasaydı düşmanın
-/// kaybettiği kol dojo'daki bir savaşçıya yazılabilirdi.
+/// Only the <b>dojo side's</b> summaries are processed. The yokai carry their own identities and those
+/// identities can collide with the roster's; without the team filter, an arm lost by an enemy could be
+/// written onto a warrior in the dojo.
 /// </para>
 /// </remarks>
 public sealed class BattleAftermath(HonorEngine? honor = null)
 {
     private readonly HonorEngine _honor = honor ?? new HonorEngine();
 
-    /// <summary>Dövüş sonucunu kadroya uygular ve ne değiştiğini döndürür.</summary>
+    /// <summary>Applies the fight result to the roster and returns what changed.</summary>
     public AftermathReport Apply(DojoState state, BattleResult result)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -87,7 +87,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
     }
 
     /// <summary>
-    /// Dövüşte emilen hasarı savaşçının kalıcı yıpranma defterine ekler.
+    /// Adds the damage absorbed in the fight to the warrior's permanent wear ledger.
     /// </summary>
     private static void WearArmor(Warrior warrior, WarriorBattleSummary summary)
     {
@@ -105,12 +105,12 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
     }
 
     /// <summary>
-    /// Dağılan parçayı kuşamdan çıkarır ve o yuvanın yıpranmasını sıfırlar.
+    /// Removes a broken piece from the kit and resets that slot's wear.
     /// </summary>
     /// <remarks>
-    /// Sıfırlama şart: yıpranma <b>parçaya</b> aittir, yuvaya değil. Sayaç kalsaydı
-    /// yerine takılan yepyeni parça, dağılan parçanın defterini devralır ve ilk
-    /// darbede dağılırdı.
+    /// The reset is required: wear belongs to <b>the piece</b>, not to the slot. If the counter stayed,
+    /// the brand-new piece fitted in its place would inherit the broken piece's ledger and break on the
+    /// first blow.
     /// </remarks>
     private static void StripSlot(Warrior warrior, HitLocation slot)
     {
@@ -118,11 +118,11 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         warrior.ArmorWear = warrior.ArmorWear.With(slot, 0);
     }
 
-    /// <summary>Savaşçının kaç gün sefere çıkamayacağı.</summary>
+    /// <summary>How many days the warrior cannot go on an expedition.</summary>
     /// <remarks>
-    /// İki kalemden gelir: yenen hasarın payı ve kaybedilen uzuv sayısı. Sayılar
-    /// <b>kilitli değil</b> — GDD §7 yalnızca "yara ağırlığına göre" diyor, süre
-    /// ekonomi turunda ölçülecek (Açık Karar #5).
+    /// It comes from two items: the share of the damage taken and the number of limbs lost. The numbers
+    /// are <b>not locked</b> — GDD §7 only says "according to the severity of the wound", the duration
+    /// will be measured in the economy pass (Open Decision #5).
     /// </remarks>
     private static int RecoveryDays(
         DojoTuning tuning,
@@ -143,23 +143,23 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
     }
 }
 
-/// <summary>Bir dövüşün kadroya yazılmış hâli.</summary>
-/// <param name="Outcome">Dövüşün sonucu.</param>
-/// <param name="Warriors">Dojo tarafındaki her savaşçının bilançosu.</param>
+/// <summary>A fight as written onto the roster.</summary>
+/// <param name="Outcome">The fight's result.</param>
+/// <param name="Warriors">The books of every warrior on the dojo side.</param>
 public sealed record AftermathReport(BattleOutcome Outcome, IReadOnlyList<WarriorAftermath> Warriors)
 {
     public IEnumerable<WarriorAftermath> Dead => Warriors.Where(w => w.Died);
 
-    /// <summary>Revire yatan savaşçılar.</summary>
+    /// <summary>The warriors put in the infirmary.</summary>
     public IEnumerable<WarriorAftermath> Wounded => Warriors.Where(w => !w.Died && w.RecoveryDays > 0);
 }
 
-/// <param name="Id">Savaşçı.</param>
-/// <param name="Died">Dövüşten sağ çıkamadı mı — geri dönüşü yoktur.</param>
-/// <param name="LostParts">Bu dövüşte kalıcı olarak kaybedilen uzuvlar.</param>
-/// <param name="ShatteredArmor">Dağılan ve kuşamdan çıkarılan zırh yuvaları.</param>
-/// <param name="RecoveryDays">Kaç gün sefere çıkamayacağı.</param>
-/// <param name="HonorDelta">Dövüşün onura etkisi.</param>
+/// <param name="Id">The warrior.</param>
+/// <param name="Died">Did he fail to come out of the fight alive — there is no way back.</param>
+/// <param name="LostParts">The limbs permanently lost in this fight.</param>
+/// <param name="ShatteredArmor">The armour slots that broke and were removed from the kit.</param>
+/// <param name="RecoveryDays">How many days he cannot go on an expedition.</param>
+/// <param name="HonorDelta">The fight's effect on honour.</param>
 public sealed record WarriorAftermath(
     WarriorId Id,
     bool Died,

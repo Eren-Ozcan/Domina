@@ -4,9 +4,9 @@ using Domina.Core.Dojo.Save;
 namespace Domina.Core.Tests;
 
 /// <summary>
-/// Yeni oyunun başlangıç durumu. Korunan karar: başlangıç çekirdekte kurulur ve
-/// ölçülen kurulumla aynı sayıları taşır (GDD §11) — oynanan dojo ile dengesi ölçülen
-/// dojo ayrışmamalı.
+/// A new game's starting state. The decision protected: the start is built in the core and carries the
+/// same numbers as the measured setup (GDD §11) — the dojo being played and the dojo whose balance is
+/// measured must not drift apart.
 /// </summary>
 public class NewGameTests
 {
@@ -47,7 +47,7 @@ public class NewGameTests
     }
 
     /// <summary>
-    /// Başlangıç kadrosu, ilk günün tezgâhının kopyası olmamalı — ayrı akış bunun için.
+    /// The starting roster must not be a copy of the first day's stall — that is what the separate stream is for.
     /// </summary>
     [Fact]
     public void AStartingRosterIsNotTheFirstDayMarket()
@@ -60,7 +60,7 @@ public class NewGameTests
         Assert.NotEqual(roster.Take(NewGame.StartingWarriors), stock.Take(NewGame.StartingWarriors));
     }
 
-    /// <summary>Yeni oyun yazılıp geri okunabilmeli: ilk gün de kaydedilir.</summary>
+    /// <summary>A new game must be writable and readable back: the first day is saved too.</summary>
     [Fact]
     public void ANewGameSurvivesARoundTrip()
     {
@@ -77,7 +77,7 @@ public class NewGameTests
             before.Roster.Living.Select(e => e.Warrior.Name),
             after.Roster.Living.Select(e => e.Warrior.Name));
 
-        // Tohum kaydedildiği için aynı gün aynı teklifi ve aynı tezgâhı geri getirmeli.
+        // Because the seed is saved, the same day must bring back the same offer and the same stall.
         Assert.Equal(before.Offer.Sighting, after.Offer.Sighting);
         Assert.Equal(before.Recruits.Select(o => o.Name), after.Recruits.Select(o => o.Name));
     }

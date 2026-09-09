@@ -1,9 +1,9 @@
 namespace Domina.Presentation.Tests;
 
 /// <summary>
-/// Arenanın komut satırı argümanları. Determinizmin pratik karşılığı: toplu simülasyon
-/// ilginç bir dövüş bildirdiğinde ("52 numaralı seed'de savaşçı kolunu kaybediyor")
-/// o dövüş arenada birebir izlenebilmeli.
+/// The arena's command-line arguments. What determinism buys in practice: when batch simulation reports
+/// an interesting fight ("the warrior loses an arm on seed 52"), that fight must be watchable in the
+/// arena exactly as it was.
 /// </summary>
 public class ArenaArgumentsTests
 {
@@ -25,7 +25,7 @@ public class ArenaArgumentsTests
         Assert.Equal(4.5, arguments.SpeedMultiplier);
     }
 
-    /// <summary>Ondalık ayırıcı sistem diline göre değişmemeli.</summary>
+    /// <summary>The decimal separator must not change with the system language.</summary>
     [Fact]
     public void TheSpeedIsReadTheSameWayEverywhere()
     {
@@ -42,7 +42,7 @@ public class ArenaArgumentsTests
         Assert.Null(arguments.SpeedMultiplier);
     }
 
-    /// <summary>Godot kendi argümanlarını da aynı diziye koyabilir.</summary>
+    /// <summary>Godot can put its own arguments in the same array.</summary>
     [Fact]
     public void UnknownArgumentsAreSkipped()
     {

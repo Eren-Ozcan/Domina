@@ -1,16 +1,16 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Domina.Core.Combat;
 
 namespace Domina.Presentation;
 
-/// <summary>"Çek" tuşunun o andaki hali.</summary>
-/// <param name="Text">Tuşta yazan.</param>
-/// <param name="Enabled">Basılabilir mi?</param>
-/// <param name="Locked">Komutun en az bir savaşçıda gecikeceğini vurgulamalı mı?</param>
+/// <summary>The current state of the "pull out" key.</summary>
+/// <param name="Text">What the key says.</param>
+/// <param name="Enabled">Can it be pressed?</param>
+/// <param name="Locked">Should it stress that the command will be delayed for at least one warrior?</param>
 /// <param name="Shut">
-/// Savaş henüz başlamadığı için basış <b>reddedilecek</b> mi? Tuş bu hâlde de basılabilir
-/// kalır — reddedilen basış kuralı öğreten metni doğurur; basılamayan tuş hiçbir şey
-/// söylemezdi.
+/// Will the press be <b>refused</b> because the fight has not started yet? The key stays pressable in
+/// this state too — a refused press produces the text that teaches the rule; a key that cannot be
+/// pressed would say nothing.
 /// </param>
 public readonly record struct RetreatPrompt(
     string Text,
@@ -18,46 +18,46 @@ public readonly record struct RetreatPrompt(
     bool Locked,
     bool Shut = false);
 
-/// <summary>Temastan önceki basışa verilecek cevabın türü.</summary>
+/// <summary>The kind of answer given to a press before contact.</summary>
 public enum RetreatNoticeKind
 {
-    /// <summary>Söylenecek bir şey yok.</summary>
+    /// <summary>There is nothing to say.</summary>
     None,
 
-    /// <summary>Kuralı öğreten bilgi metni. Oyun başında sayılı kez gösterilir.</summary>
+    /// <summary>The text that teaches the rule. Shown a limited number of times at the start of the game.</summary>
     Teaching,
 
-    /// <summary>Israrla basana verilen cevap. Başarımı da bu açar.</summary>
+    /// <summary>The answer given to someone who keeps pressing. It also unlocks the achievement.</summary>
     Taunt,
 }
 
-/// <summary>Reddedilen basışa arayüzün vereceği cevap.</summary>
-/// <param name="Kind">Cevabın türü.</param>
-/// <param name="Text">Gösterilecek metin; <see cref="RetreatNoticeKind.None"/> ise boş.</param>
-/// <param name="AchievementId">Açılan başarım, yoksa null.</param>
+/// <summary>The interface's answer to a refused press.</summary>
+/// <param name="Kind">The kind of answer.</param>
+/// <param name="Text">The text to show; empty if <see cref="RetreatNoticeKind.None"/>.</param>
+/// <param name="AchievementId">The achievement unlocked, or null.</param>
 public readonly record struct RetreatRefusalNotice(
     RetreatNoticeKind Kind,
     string Text,
     string? AchievementId);
 
 /// <summary>
-/// Arayüzde ne yazacağını hesaplar. Metin üretir, çizim yapmaz.
+/// Works out what the interface should say. It produces text, it does not draw.
 /// </summary>
 public static class HudModel
 {
     /// <summary>
-    /// Tek tuşun hali.
+    /// The state of the single key.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Pes etme dövüşteki tek müdahale noktasıdır (GDD §5) ve <b>tek tuştur</b>: komut
-    /// ekibin tamamını çeker, savaşçı seçilmez. Savaşçı bazlı olsaydı doğru oynanış
-    /// "yara alanı çek, kalanla devam et" olurdu; tek tuş kararı nadir ve ağır yapar.
+    /// Surrender is the only intervention point in a fight (GDD §5) and it is <b>a single key</b>: the
+    /// command pulls the whole team, no warrior is selected. Were it per-warrior, the right play would be
+    /// "pull the wounded one, continue with the rest"; a single key makes the decision rare and heavy.
     /// </para>
     /// <para>
-    /// Tuş komutun <b>kaç savaşçıda anında işleyeceğini</b> gösterir: vuruşa kilitli
-    /// savaşçıların komutu buffer'lanır ve kaçış ancak vuruş bitince başlar. Oyuncu bunu
-    /// basmadan önce görebilmeli, yoksa gecikme hata gibi hissedilir.
+    /// The key shows <b>how many warriors the command will take effect on immediately</b>: the command is
+    /// buffered for warriors locked into a strike and the escape only starts when the strike finishes.
+    /// The player must see this before pressing, or the delay feels like a bug.
     /// </para>
     /// </remarks>
     public static RetreatPrompt DescribeRetreat(
@@ -93,65 +93,64 @@ public static class HudModel
 
         if (!contactMade)
         {
-            // Savaş başlamadan çekilmek yok (§5). Tuş görünür kalır ama basılamaz:
-            // gizlenseydi kuralın varlığı hiç öğrenilmezdi.
+            // No pulling out before the fight starts (§5). The key stays visible but cannot be pressed:
+            // hidden, the rule's existence would never be learnt.
             return new RetreatPrompt(
-                "SAVAŞ BAŞLAMADI", Enabled: true, Locked: false, Shut: true);
+                "FIGHT NOT STARTED", Enabled: true, Locked: false, Shut: true);
         }
 
         if (standing == 0)
         {
-            return new RetreatPrompt(leaving > 0 ? "EKİP ÇEKİLİYOR" : "—", Enabled: false, Locked: false);
+            return new RetreatPrompt(leaving > 0 ? "PARTY PULLING OUT" : "—", Enabled: false, Locked: false);
         }
 
         string text = locked == 0
-            ? $"EKİBİ ÇEK ({standing})"
-            : $"EKİBİ ÇEK ({standing}) · {locked} kilitli";
+            ? $"PULL THE PARTY ({standing})"
+            : $"PULL THE PARTY ({standing}) · {locked} locked";
 
         return new RetreatPrompt(text, Enabled: true, Locked: locked > 0);
     }
 
     /// <summary>
-    /// Savaşçının panelinde yazan durum.
+    /// The status shown on the warrior's panel.
     /// </summary>
     /// <remarks>
-    /// Komutu buffer'lanmış savaşçı ayrı yazılır. Tuş basılmadan önce kaçının kilitli
-    /// olduğunu söylüyor; basıldıktan sonra da hangisinin hâlâ beklediği okunabilmeli,
-    /// yoksa gecikme boyunca panel "saldırıyor" deyip komut yutulmuş gibi görünür.
+    /// A warrior whose command is buffered is written separately. Before the key is pressed it says how
+    /// many are locked; after it is pressed it must still be readable which ones are still waiting, or
+    /// during the delay the panel says "attacking" and the command looks swallowed.
     /// </remarks>
     public static string DescribeState(in CombatantSnapshot snapshot)
     {
-        // Zehir bir durum değil, durumun üstüne binen bir işaret: zehirlenmiş savaşçı
-        // yürümeye, vurmaya ve çekilmeye devam eder. Paneli ayrı bir satır yerine ek
-        // olarak yazmasının sebebi bu — ve oyuncunun görmesi gereken şey zaten "hâlâ
-        // dövüşüyor ama can gidiyor".
-        string mark = snapshot.Poisoned && snapshot.IsActive ? " · zehirli" : string.Empty;
+        // Poison is not a state but a mark laid on top of the state: a poisoned warrior keeps walking,
+        // striking and pulling out. That is why the panel writes it as an addition rather than a separate
+        // line — and what the player needs to see is exactly "still fighting but losing health".
+        string mark = snapshot.Poisoned && snapshot.IsActive ? " · poisoned" : string.Empty;
 
-        // Silahsızlık da aynı türden bir işaret: savaşçı dövüşmeye devam eder, yalnızca
-        // yumrukla — ve yerdeki silaha yürürken. İkisi birden okunabilmeli; zehirlenmiş ve
-        // silahsız savaşçı oyuncunun tuşa basma kararının ta kendisi.
+        // Being unarmed is a mark of the same kind: the warrior keeps fighting, only with his fists — and
+        // while walking to the weapon on the ground. Both must be readable at once; a poisoned and
+        // unarmed warrior is the player's decision to press the key itself.
         if (snapshot.Disarmed && snapshot.IsActive)
         {
-            mark += " · silahsız";
+            mark += " · unarmed";
         }
 
         if (snapshot.RetreatRequested && snapshot.IsActive && snapshot.State != CombatState.Retreating)
         {
-            return "çekilecek · vuruş bitince" + mark;
+            return "pulling out · when the strike ends" + mark;
         }
 
         string label = snapshot.State switch
         {
-            CombatState.Idle => "bekliyor",
-            CombatState.AttackWindup => "saldırıyor",
-            CombatState.AttackRecovery => "toparlanıyor",
-            CombatState.ChargeWindup => "güç topluyor",
-            CombatState.Charging => "hücumda",
-            CombatState.Stunned => "sersemledi",
-            CombatState.WeaponBound => "silahı tutuldu",
-            CombatState.Retreating => "çekiliyor",
-            CombatState.Escaped => "kurtuldu",
-            CombatState.Dead => "öldü",
+            CombatState.Idle => "waiting",
+            CombatState.AttackWindup => "attacking",
+            CombatState.AttackRecovery => "recovering",
+            CombatState.ChargeWindup => "gathering",
+            CombatState.Charging => "charging",
+            CombatState.Stunned => "stunned",
+            CombatState.WeaponBound => "weapon caught",
+            CombatState.Retreating => "pulling out",
+            CombatState.Escaped => "escaped",
+            CombatState.Dead => "dead",
             _ => string.Empty,
         };
 
@@ -159,61 +158,61 @@ public static class HudModel
     }
 
     /// <summary>
-    /// Üst satır: seed ve süre.
+    /// The top line: the seed and the time.
     /// </summary>
     /// <remarks>
-    /// Seed sürekli görünür durmalı — bir dövüşü tekrar açmanın ve toplu simülasyondaki
-    /// karşılığını bulmanın tek yolu o (bkz. <c>Domina.Sim</c>).
+    /// The seed must stay permanently visible — it is the only way to reopen a fight and find its
+    /// counterpart in batch simulation (see <c>Domina.Sim</c>).
     /// </remarks>
     public static string DescribeStatus(long seed, double elapsedSeconds, BattleOutcome? outcome)
     {
         string head = string.Create(
             CultureInfo.InvariantCulture,
-            $"seed {seed}  ·  {elapsedSeconds:F1} sn");
+            $"seed {seed}  ·  {elapsedSeconds:F1} s");
 
         return outcome is null ? head : $"{head}  ·  {DescribeOutcome(outcome.Value)}";
     }
 
     public static string DescribeOutcome(BattleOutcome outcome) => outcome switch
     {
-        BattleOutcome.PlayerVictory => "ZAFER",
-        BattleOutcome.PlayerWithdrawal => "ÇEKİLDİ",
-        BattleOutcome.PlayerWipe => "BOZGUN",
-        _ => "SÜRE DOLDU",
+        BattleOutcome.PlayerVictory => "VICTORY",
+        BattleOutcome.PlayerWithdrawal => "WITHDREW",
+        BattleOutcome.PlayerWipe => "ROUT",
+        _ => "TIME LIMIT",
     };
 
-    /// <summary>Temastan önce ilk isabeti bekleyen basışa gösterilenler.</summary>
+    /// <summary>What is shown for a press waiting for the first hit before contact.</summary>
     private const string TeachingText =
-        "Savaş başlamadan çekilinmez. İlk kan aktığında tuş açılır.";
+        "There is no pulling out before the fight starts. The key opens when first blood is drawn.";
 
     private const string TauntText =
-        "Kimse sana daha dokunmadı. Bu kadar korkak olma.";
+        "Nobody has touched you yet. Do not be such a coward.";
 
-    /// <summary>Israrlı basışa cevap veren başarım.</summary>
-    public const string CowardAchievementId = "dereyi-gormeden-pacalari-sivama";
+    /// <summary>The achievement that answers an insistent press.</summary>
+    public const string CowardAchievementId = "dont-roll-up-your-trousers-before-you-see-the-stream";
 
-    /// <summary>Öğretici metnin oyun boyunca gösterileceği azami kez.</summary>
+    /// <summary>The maximum number of times the teaching text is shown over the game.</summary>
     public const int TeachingNoticeLimit = 3;
 
-    /// <summary>Alaycı cevabı tetikleyen üst üste basış sayısı.</summary>
+    /// <summary>The number of consecutive presses that triggers the mocking answer.</summary>
     public const int TauntPressCount = 11;
 
     /// <summary>
-    /// Temastan önce basılan tuşa ne cevap verileceği.
+    /// What answer to give to a key pressed before contact.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Kural her dövüşte tekrar anlatılmaz: <see cref="TeachingNoticeLimit"/> kez
-    /// gösterilir, sonra susar. Bir daha söylemek oyuncuya bildiğini tekrarlamaktır.
+    /// The rule is not explained again in every fight: it is shown <see cref="TeachingNoticeLimit"/>
+    /// times, then falls silent. Saying it again is repeating to the player what he knows.
     /// </para>
     /// <para>
-    /// Kaçıncı kez gösterildiği <b>oyun kaydının</b> bilgisidir, dövüşün değil — bu yüzden
-    /// dışarıdan verilir. Üst üste basış sayısı ise dövüş içidir ve çekirdekten
-    /// <c>RetreatRefused</c> ile gelir.
+    /// How many times it has been shown is information belonging to <b>the save</b>, not to the fight —
+    /// which is why it is supplied from outside. The number of consecutive presses is in-fight and comes
+    /// from the core with <c>RetreatRefused</c>.
     /// </para>
     /// </remarks>
-    /// <param name="consecutivePresses">Bu dövüşteki üst üste reddedilen basış sayısı.</param>
-    /// <param name="teachingNoticesShown">Öğretici metnin bugüne dek gösterilme sayısı.</param>
+    /// <param name="consecutivePresses">The number of consecutive refused presses in this fight.</param>
+    /// <param name="teachingNoticesShown">How many times the teaching text has been shown so far.</param>
     public static RetreatRefusalNotice DescribeRefusal(
         int consecutivePresses,
         int teachingNoticesShown)
