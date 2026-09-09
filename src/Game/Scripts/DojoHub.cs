@@ -5,52 +5,52 @@ using Godot;
 
 namespace Domina.Game;
 
-/// <summary>Hub'ın açabildiği ekranlar.</summary>
+/// <summary>The screens the hub can open.</summary>
 public enum DojoTab
 {
-    /// <summary>Günün teklifi, sözleşme ve ekip.</summary>
+    /// <summary>The day's offer, the contract and the party.</summary>
     Day,
 
     /// <summary>Kadro.</summary>
     Roster,
 
-    /// <summary>Köle pazarı.</summary>
+    /// <summary>The slave market.</summary>
     Market,
 
-    /// <summary>Okul ağacı.</summary>
+    /// <summary>The school tree.</summary>
     School,
 }
 
 /// <summary>
-/// Dojo'nun dört ekranını tek bir <see cref="DojoState"/> üzerinde gezdiren kök.
+/// The root that navigates the dojo's four screens over a single <see cref="DojoState"/>.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Dojo <b>bir kez</b> kuruluyor ve dört ekran aynı nesneyi görüyor: pazardan alınan
-/// savaşçı kadro ekranında, okuldan alınan tesis günün hesabında anında görünmeli.
-/// Her ekran kendi kopyasını taşısaydı gün döngüsü dört ayrı yerde ayrışırdı.
+/// The dojo is built <b>once</b> and all four screens see the same object: a warrior bought at the
+/// market must appear on the roster screen, and a facility bought at the school in the day's books,
+/// immediately. If every screen carried its own copy, the day loop would drift apart in four places.
 /// </para>
 /// <para>
-/// Ekran değişince yenisi baştan kuruluyor, eskisi siliniyor: ekranların hepsi
-/// açılışta okuduğu için (gizlenip geri gösterilen ekran eski günü basardı) en ucuz
-/// doğru davranış bu.
+/// When the screen changes the new one is built from scratch and the old one deleted: because every
+/// screen reads on opening (a screen hidden and shown again would print the old day), this is the
+/// cheapest correct behaviour.
 /// </para>
 /// <para>
-/// Sefere çıkıldığında ekranların yerini <see cref="BattleArena"/> alıyor: dövüş
-/// izleniyor, bitince hesabı sefer katmanı kapatıyor ve gün ekranı bilançoyla geri
-/// geliyor. Arenanın dojo'dan haberi yok — kurulmuş bir dövüş alıyor, ham sonuç
+/// When an expedition goes out, <see cref="BattleArena"/> takes the screens' place: the fight is
+/// watched, when it ends the expedition layer closes the books and the day screen comes back with the
+/// report. The arena knows nothing of the dojo — it takes a prepared fight and gives a raw result.
 /// veriyor.
 /// </para>
 /// <para>
-/// Dojo <see cref="TitleScreen"/>'den geliyor: ya <see cref="SaveSlot"/>'tan yüklenir ya
-/// da <see cref="NewGame.Create"/> yeni bir sefer kurar. Ekranların hiçbiri bunu
-/// bilmiyor, hepsi hazır bir dojo alıyor.
+/// The dojo comes from <see cref="TitleScreen"/>: it is either loaded from <see cref="SaveSlot"/> or
+/// <see cref="NewGame.Create"/> builds a new expedition. None of the screens knows which; they all
+/// take a ready dojo.
 /// </para>
 /// <para>
-/// Kaydı <b>yalnızca hub yazıyor</b>: ekranlar dojo'yu değiştirdiklerini
-/// <see cref="DojoScreen.Changed"/> ile söyler, dosyayı bilen tek yer burasıdır. Yazma
-/// her değişiklikte olur — 60 günlük bir sefer tek oturumda oynanmıyor ve oyun bir
-/// gün ortasında da kapanabilir.
+/// <b>Only the hub writes the save</b>: the screens say they changed the dojo with
+/// <see cref="DojoScreen.Changed"/>, and the only place that knows the file is here. Writing happens
+/// on every change — a 60-day expedition is not played in one session and the game can be closed in
+/// the middle of a day.
 /// </para>
 /// </remarks>
 public sealed partial class DojoHub : Node
@@ -69,11 +69,11 @@ public sealed partial class DojoHub : Node
     }
 
     /// <summary>
-    /// Oyun kapanırken son hâli yazar.
+    /// Writes the final state as the game closes.
     /// </summary>
     /// <remarks>
-    /// Her değişiklikte zaten yazılıyor; bu, arada kalan bir şey varsa diye son turdur.
-    /// Kapanışa güvenilemez (çökme, güç kesintisi) — bu yüzden tek yazma noktası değil.
+    /// It is already written on every change; this is a last pass in case anything was left over.
+    /// The close cannot be relied on (a crash, a power cut) — which is why it is not the only write point.
     /// </remarks>
     public override void _Notification(int what)
     {
@@ -83,7 +83,7 @@ public sealed partial class DojoHub : Node
         }
     }
 
-    /// <summary>Başlangıç ekranını gösterir; sefer buradan başlar ya da yüklenir.</summary>
+    /// <summary>Shows the title screen; an expedition starts or is loaded from here.</summary>
     private void ShowTitle(string? warning)
     {
         CloseArena();
@@ -97,7 +97,7 @@ public sealed partial class DojoHub : Node
         AddChild(title);
     }
 
-    /// <summary>Kayıtlı seferi yükler; yüklenemezse başlangıç ekranında kalınır, sebebi yazılır.</summary>
+    /// <summary>Loads the saved expedition; if it cannot be loaded the title screen stays and the reason is written.</summary>
     private void Continue()
     {
         LoadResult result = SaveSlot.Load();
@@ -107,17 +107,17 @@ public sealed partial class DojoHub : Node
             return;
         }
 
-        // Merge-on-load sessiz kalmasın: eksik yüklenen bir kayıt gün ekranının
-        // bilançosunda yazar, oyuncu neyi kaybettiğini görür (GDD §2).
+        // Merge-on-load must not stay silent: a save that loaded incompletely says so in the day
+        // screen's report, and the player sees what he lost (GDD §2).
         _report = result.Warnings.Count == 0 ? null : string.Join('\n', result.Warnings);
         Play(dojo);
     }
 
-    /// <summary>Yeni sefer kurar ve ilk günü hemen yazar.</summary>
+    /// <summary>Sets up a new expedition and writes the first day immediately.</summary>
     /// <remarks>
-    /// Tohum rastgele: aynı tohum aynı teklifleri verir, o yüzden her sefer kendi
-    /// tohumunu alır. Tohumun kendisi kayda giriyor (GDD §2), yani sefer yeniden
-    /// yüklendiğinde aynı günler geri gelir.
+    /// The seed is random: the same seed gives the same offers, so every expedition takes its own seed.
+    /// The seed itself goes into the save (GDD §2), so when the expedition is loaded again the same days
+    /// come back.
     /// </remarks>
     private void Start()
     {
@@ -195,12 +195,12 @@ public sealed partial class DojoHub : Node
     }
 
     /// <summary>
-    /// Kurulmuş dövüşü arenada oynatır.
+    /// Plays the prepared fight in the arena.
     /// </summary>
     /// <remarks>
-    /// Ekranlar kapanıyor: arena tam ekran bir sahne, üstüne dojo arayüzü binmemeli.
-    /// Dövüş bitince hesabı <see cref="PendingBattle.Settle"/> kapatıyor (sefer katmanı),
-    /// arena yalnızca ham sonucu veriyor — muhasebe iki yere bölünmüyor.
+    /// The screens close: the arena is a full-screen scene and the dojo interface must not sit on top of
+    /// it. When the fight ends the books are closed by <see cref="PendingBattle.Settle"/> (the expedition
+    /// layer) and the arena only gives the raw result — the accounting is not split in two.
     /// </remarks>
     private bool Fight(PendingBattle bout)
     {
@@ -214,8 +214,8 @@ public sealed partial class DojoHub : Node
             Seed = unchecked((long)bout.Seed),
         };
 
-        // Sonuç geldiğinde hesap hemen kapanıyor ama ekran değişmiyor: oyuncu dövüşün
-        // son karesini görmeden dojo'ya fırlatılmamalı, dönüşü kendi tuşuyla yapıyor.
+        // When the result arrives the books close at once but the screen does not change: the player
+        // must not be thrown back into the dojo before seeing the fight's last frame, he returns with his own key.
         arena.Finished += result =>
         {
             _report = bout.Settle(result);
@@ -228,7 +228,7 @@ public sealed partial class DojoHub : Node
         return true;
     }
 
-    /// <summary>Dövüş bitince beliren tek tuş: dojo'ya dön.</summary>
+    /// <summary>The single button that appears when the fight ends: back to the dojo.</summary>
     private void ShowReturnButton()
     {
         CanvasLayer chrome = new();
@@ -238,7 +238,7 @@ public sealed partial class DojoHub : Node
 
         Button back = new()
         {
-            Text = "Dojo'ya dön",
+            Text = "Return to the dojo",
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
             SizeFlagsVertical = Control.SizeFlags.ShrinkEnd,
         };
@@ -291,9 +291,9 @@ public sealed partial class DojoHub : Node
 
     private static string TabName(DojoTab tab) => tab switch
     {
-        DojoTab.Roster => "Kadro",
-        DojoTab.Market => "Pazar",
-        DojoTab.School => "Okul",
-        _ => "Gün",
+        DojoTab.Roster => "Roster",
+        DojoTab.Market => "Market",
+        DojoTab.School => "School",
+        _ => "Day",
     };
 }

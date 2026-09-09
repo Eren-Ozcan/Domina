@@ -9,27 +9,27 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Günün ekranı: teklif, sözleşme, ekip seçimi ve günü kapatan tuşlar (GDD §10).
+/// The day's screen: the offer, the contract, party selection and the buttons that close the day (GDD §10).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Ne görüneceğine ve seferin reddedilip reddedilmeyeceğine <see cref="OfferModel"/>
-/// karar verir (motorsuz, testli). Dövüşü kurup günü kapatan taraf
-/// <see cref="Expedition"/> — bu ekran ikinci bir kapı açmıyor.
+/// What is shown, and whether the expedition is refused, is decided by <see cref="OfferModel"/>
+/// (engine-free, tested). The side that sets up the fight and closes the day is
+/// <see cref="Expedition"/> — this screen does not open a second door.
 /// </para>
 /// <para>
-/// Düşman kadrosu ekranda <b>yok</b>: girmeden önce yalnızca tehdit bandı ve kaba tanım
-/// okunur. Model kadroyu hiç taşımıyor, o yüzden buradan yanlışlıkla da basılamaz.
+/// The enemy roster is <b>not</b> on screen: before going in, only the threat band and a rough
+/// description are readable. The model never carries the roster, so it cannot be printed here by accident.
 /// </para>
 /// <para>
-/// Dövüş <b>arenada izleniyor</b>: ekran <c>Expedition.Prepare</c> ile dövüşü kurar ve
-/// <see cref="Watcher"/>'a verir; arena onu gerçek zamanla adımlar, biten dövüşün ham
-/// sonucu <c>Expedition.Settle</c> ile kadroya yazılır. Muhasebe tek yerde durur —
-/// izlenen dövüş ile toplu simülasyonda çözülen dövüş aynı hesabı bırakır.
+/// The fight is <b>watched in the arena</b>: the screen sets the fight up with <c>Expedition.Prepare</c>
+/// and hands it to <see cref="Watcher"/>; the arena steps it in real time, and the raw result of the
+/// finished fight is written to the roster with <c>Expedition.Settle</c>. The accounting lives in one
+/// place — a watched fight leaves the same books as one resolved in batch simulation.
 /// </para>
 /// <para>
-/// <see cref="Watcher"/> verilmezse (ekran tek başına açıldıysa) dövüş arka planda
-/// çözülür. Aynı iki çağrı, yalnızca arada arena yok.
+/// If no <see cref="Watcher"/> is given (the screen was opened on its own) the fight is resolved in the
+/// background. The same two calls, only with no arena in between.
 /// </para>
 /// </remarks>
 public sealed partial class DayScreen : DojoScreen
@@ -49,19 +49,19 @@ public sealed partial class DayScreen : DojoScreen
     private Label _log = null!;
 
     /// <summary>
-    /// Kurulan dövüşü izlettirecek taraf; <c>null</c> ise dövüş arka planda çözülür.
+    /// The side that will let the prepared fight be watched; <c>null</c> means the fight is resolved in the background.
     /// </summary>
     /// <remarks>
-    /// Dövüşü bu ekran oynatmıyor: arena ayrı bir sahne ve gün ekranı kapanıp yerine o
-    /// geliyor. Devralan taraf <c>true</c> döner; dönmezse ekran dövüşü kendi çözer, yani
-    /// ekran tek başına da çalışır.
+    /// This screen does not play the fight: the arena is a separate scene and the day screen closes and
+    /// gives way to it. The side taking over returns <c>true</c>; if it does not, the screen resolves the
+    /// fight itself, so the screen also works on its own.
     /// </remarks>
     public Func<PendingBattle, bool>? Watcher { get; set; }
 
-    /// <summary>Arenadan dönerken basılacak bilanço; ekran kurulunca bir kez yazılır.</summary>
+    /// <summary>The report to print when coming back from the arena; written once when the screen is built.</summary>
     public string? Report { get; set; }
 
-    /// <summary>Ekranı kurar ve günü basar.</summary>
+    /// <summary>Builds the screen and prints the day.</summary>
     public override void Build(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
@@ -75,11 +75,11 @@ public sealed partial class DayScreen : DojoScreen
         _bountyLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_bountyLabel);
 
-        _acceptButton = new Button { Text = "Sözleşmeyi kabul et" };
+        _acceptButton = new Button { Text = "Accept the contract" };
         _acceptButton.Pressed += AcceptBounty;
         page.AddChild(_acceptButton);
 
-        page.AddChild(new Label { Text = "Sefere kimler gidiyor?" });
+        page.AddChild(new Label { Text = "Who goes on the expedition?" });
 
         ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         page.AddChild(scroll);
@@ -94,15 +94,15 @@ public sealed partial class DayScreen : DojoScreen
         buttons.AddThemeConstantOverride("separation", 12);
         page.AddChild(buttons);
 
-        _sendButton = new Button { Text = "Teklife gir" };
+        _sendButton = new Button { Text = "Take the offer" };
         _sendButton.Pressed += SendToOffer;
         buttons.AddChild(_sendButton);
 
-        _bountyButton = new Button { Text = "Kelle avına çık" };
+        _bountyButton = new Button { Text = "Take the bounty" };
         _bountyButton.Pressed += SendToBounty;
         buttons.AddChild(_bountyButton);
 
-        _restButton = new Button { Text = "Günü dojoda geçir" };
+        _restButton = new Button { Text = "Spend the day in the dojo" };
         _restButton.Pressed += Rest;
         buttons.AddChild(_restButton);
 
@@ -113,7 +113,7 @@ public sealed partial class DayScreen : DojoScreen
         Refresh();
     }
 
-    /// <summary>Günü, ekibi ve tuşları yeniden basar.</summary>
+    /// <summary>Reprints the day, the party and the buttons.</summary>
     public void Refresh()
     {
         OfferCard offer = OfferModel.Describe(_dojo);
@@ -121,13 +121,13 @@ public sealed partial class DayScreen : DojoScreen
 
         _offerLabel.Text = string.Join(
             '\n',
-            $"Gün {_dojo.Day}  ·  Kasa {purse.Gold} altın  ·  Yiyecek {purse.Food}" +
-            $"  ·  Su {purse.Water}  ·  İlaç {purse.Medicine}",
-            $"Teklif: {offer.Sighting}",
-            $"Tehdit: {ThreatName(offer.Threat)}  ·  Söz verilen ödül {offer.PromisedReward} altın",
+            $"Day {_dojo.Day}  ·  Purse {purse.Gold} gold  ·  Food {purse.Food}" +
+            $"  ·  Water {purse.Water}  ·  Medicine {purse.Medicine}",
+            $"Offer: {offer.Sighting}",
+            $"Threat: {ThreatName(offer.Threat)}  ·  Promised reward {offer.PromisedReward} gold",
             offer.RequiredPartySize is int size
-                ? $"Bu iş tam {size} kişi istiyor."
-                : $"Ekip en çok {offer.MaxPartySize} kişi.");
+                ? $"This job wants exactly {size}."
+                : $"Party of at most {offer.MaxPartySize}.");
 
         BuildPartyList();
         ShowBounty(OfferModel.DescribeBounty(_dojo));
@@ -139,13 +139,13 @@ public sealed partial class DayScreen : DojoScreen
         Clear(_partyList);
         IReadOnlyList<PartyCandidate> candidates = OfferModel.Candidates(_dojo);
 
-        // Kadrodan düşenler seçili kalmasın: ölen ya da yaralanan savaşçı seçimde
-        // durursa hüküm "kadroda yok" der ve tuş sebepsiz kapanmış görünür.
+        // Those who dropped off the roster must not stay selected: if a dead or wounded warrior stays in
+        // the selection, the verdict says "not on the roster" and the button looks disabled for no reason.
         _party.IntersectWith(candidates.Where(c => c.Fit).Select(c => c.Id));
 
         if (candidates.Count == 0)
         {
-            _partyList.AddChild(new Label { Text = "Kadroda kimse kalmadı." });
+            _partyList.AddChild(new Label { Text = "Nobody left on the roster." });
             return;
         }
 
@@ -154,8 +154,8 @@ public sealed partial class DayScreen : DojoScreen
             CheckBox box = new()
             {
                 Text = candidate.Fit
-                    ? $"{candidate.Name}  —  güç {candidate.Score:0}"
-                    : $"{candidate.Name}  —  revirde {candidate.RecoveryDaysRemaining} gün",
+                    ? $"{candidate.Name}  —  power {candidate.Score:0}"
+                    : $"{candidate.Name}  —  infirmary {candidate.RecoveryDaysRemaining} days",
                 Disabled = !candidate.Fit,
                 ButtonPressed = _party.Contains(candidate.Id),
             };
@@ -184,19 +184,19 @@ public sealed partial class DayScreen : DojoScreen
     {
         if (card is not BountyCard bounty)
         {
-            _bountyLabel.Text = "Tahtada bugün sözleşme yok.";
+            _bountyLabel.Text = "No contract on the board today.";
             _bountyLabel.AddThemeColorOverride("font_color", MutedColor);
             return;
         }
 
         _bountyLabel.Text = string.Join(
             '\n',
-            $"Sözleşme: {bounty.TargetName}  ·  {bounty.Patron}",
-            $"Tehdit: {ThreatName(bounty.Threat)}  ·  Ödül {bounty.Reward} altın" +
-            $"  ·  Süre {bounty.DaysLeft} gün",
+            $"Contract: {bounty.TargetName}  ·  {bounty.Patron}",
+            $"Threat: {ThreatName(bounty.Threat)}  ·  Reward {bounty.Reward} gold" +
+            $"  ·  Time {bounty.DaysLeft} days",
             bounty.Accepted
-                ? $"Söz verildi. Dönülmezse kadro {bounty.BrokenHonorPenalty:0} onur kaybeder."
-                : $"Kabul gün yemez, süre satın alır. Kelleyi getiren ekip {bounty.HonorReward:0} onur kazanır.");
+                ? $"The promise is given. If it is not kept the roster loses {bounty.BrokenHonorPenalty:0} honour."
+                : $"Accepting costs no day, it buys time. The party that brings the head gains {bounty.HonorReward:0} honour.");
         _bountyLabel.AddThemeColorOverride(
             "font_color",
             bounty.Accepted ? PendingColor : InkColor);
@@ -220,7 +220,7 @@ public sealed partial class DayScreen : DojoScreen
 
         _verdictLabel.Text = offer.Refusal is ExpeditionRefusal refusal
             ? RefusalText(refusal)
-            : $"Ekip hazır: {party.Count} kişi.";
+            : $"Party ready: {party.Count}.";
         _verdictLabel.AddThemeColorOverride(
             "font_color",
             offer.CanSend ? GoodColor : WarningColor);
@@ -272,12 +272,12 @@ public sealed partial class DayScreen : DojoScreen
     }
 
     /// <summary>
-    /// Dövüşü izlettirir; izleyecek kimse yoksa burada çözer.
+    /// Lets the fight be watched; if there is nobody to watch it, resolves it here.
     /// </summary>
     /// <remarks>
-    /// İzlenen dövüşte bu ekran kapanır ve bilanço arenadan dönen ekranda basılır; o
-    /// yüzden hesabı kapatan geri çağrı <b>bu düğüme dokunmuyor</b>, yalnızca metin
-    /// üretiyor.
+    /// In a watched fight this screen closes and the report is printed on the screen returning from the
+    /// arena; that is why the callback that closes the books <b>does not touch this node</b>, it only
+    /// produces text.
     /// </remarks>
     private void Fight(PendingBattle bout)
     {
@@ -292,15 +292,15 @@ public sealed partial class DayScreen : DojoScreen
 
     private static string Log(ExpeditionResult result, DojoState dojo) => string.Join(
         '\n',
-        $"{OutcomeText(result.Aftermath.Outcome)}  ·  Kasaya {result.Reward} altın girdi.",
+        $"{OutcomeText(result.Aftermath.Outcome)}  ·  {result.Reward} gold went into the purse.",
         AftermathText(result.Aftermath, dojo),
         DayText(result.Day));
 
     private static string Log(BountyResult result, BountyContract contract, DojoState dojo) =>
         string.Join(
             '\n',
-            $"{OutcomeText(result.Aftermath.Outcome)}  ·  Kasaya {result.Reward} altın girdi." +
-            (result.Claimed ? $"  Kelle alındı: {contract.Target.Name}." : "  Kelle alınamadı."),
+            $"{OutcomeText(result.Aftermath.Outcome)}  ·  {result.Reward} gold went into the purse." +
+            (result.Claimed ? $"  The head was taken: {contract.Target.Name}." : "  The head was not taken."),
             AftermathText(result.Aftermath, dojo),
             DayText(result.Day));
 
@@ -308,7 +308,7 @@ public sealed partial class DayScreen : DojoScreen
     {
         if (_dojo.AcceptBounty() is BountyContract contract)
         {
-            _log.Text = $"Söz verildi: {contract.Target.Name}, son gün {contract.Deadline}.";
+            _log.Text = $"The promise is given: {contract.Target.Name}, last day {contract.Deadline}.";
             Persist();
         }
 
@@ -318,7 +318,7 @@ public sealed partial class DayScreen : DojoScreen
     private void Rest()
     {
         DayReport report = _dojo.Decline();
-        _log.Text = $"Gün dojoda geçti.\n{DayText(report)}";
+        _log.Text = $"The day passed in the dojo.\n{DayText(report)}";
         AfterDay();
     }
 
@@ -330,12 +330,12 @@ public sealed partial class DayScreen : DojoScreen
     }
 
     /// <summary>
-    /// Seferin akışı — gün ve tohumdan türetilir.
+    /// The expedition's stream — derived from the day and the seed.
     /// </summary>
     /// <remarks>
-    /// Aynı kayıt aynı günde aynı dövüşü versin diye saat değil <b>gün</b>
-    /// karıştırılıyor: rastgele bir tohum, "kaydı yükleyip dövüşü yeniden çevirme"
-    /// kapısını açardı.
+    /// So that the same save gives the same fight on the same day, it is the <b>day</b> that is mixed in
+    /// rather than the clock: a random seed would open the door to "load the save and reroll the
+    /// fight".
     /// </remarks>
     private ulong BattleSeed() => _dojo.Seed ^ ((ulong)_dojo.Day * 0x9E3779B97F4A7C15);
 
@@ -343,27 +343,27 @@ public sealed partial class DayScreen : DojoScreen
     {
         List<string> lines =
         [
-            $"Gün {report.Day} kapandı. Stok için {report.Upkeep.GoldSpent} altın ödendi.",
+            $"Day {report.Day} closed. {report.Upkeep.GoldSpent} gold paid for supplies.",
         ];
 
         if (report.Event is DayEvent happening)
         {
-            lines.Add($"Aksilik: {happening.Description}");
+            lines.Add($"Setback: {happening.Description}");
         }
 
         if (report.Upkeep.Hungry.Count > 0)
         {
-            lines.Add($"{report.Upkeep.Hungry.Count} savaşçı aç kaldı — o gün ilerlemediler.");
+            lines.Add($"{report.Upkeep.Hungry.Count} warriors went hungry — they did not advance that day.");
         }
 
         if (report.Recovered.Count > 0)
         {
-            lines.Add($"{report.Recovered.Count} savaşçı revirden çıktı.");
+            lines.Add($"{report.Recovered.Count} warriors left the infirmary.");
         }
 
         if (report.BountyBroken)
         {
-            lines.Add("Söz kırıldı: kadro onur kaybetti.");
+            lines.Add("The promise was broken: the roster lost honour.");
         }
 
         return string.Join('\n', lines);
@@ -375,61 +375,61 @@ public sealed partial class DayScreen : DojoScreen
 
         foreach (WarriorAftermath warrior in aftermath.Warriors)
         {
-            string name = dojo.Roster.Find(warrior.Id)?.Name ?? "Savaşçı";
+            string name = dojo.Roster.Find(warrior.Id)?.Name ?? "Warrior";
             if (warrior.Died)
             {
-                lines.Add($"{name} öldü.");
+                lines.Add($"{name} died.");
                 continue;
             }
 
             if (warrior.LostParts.Count > 0)
             {
-                lines.Add($"{name} kalıcı sakatlıkla döndü.");
+                lines.Add($"{name} came back permanently maimed.");
             }
 
             if (warrior.RecoveryDays > 0)
             {
-                lines.Add($"{name} revirde {warrior.RecoveryDays} gün kalacak.");
+                lines.Add($"{name} will spend {warrior.RecoveryDays} days in the infirmary.");
             }
         }
 
-        return lines.Count == 0 ? "Kadro çizilmeden döndü." : string.Join('\n', lines);
+        return lines.Count == 0 ? "The party came back without a scratch." : string.Join('\n', lines);
     }
 
     private static string OutcomeText(BattleOutcome outcome) => outcome switch
     {
-        BattleOutcome.PlayerVictory => "Zafer.",
-        BattleOutcome.PlayerWithdrawal => "Ekip sahayı terk etti.",
-        BattleOutcome.PlayerWipe => "Ekip kırıldı.",
-        _ => "Süre doldu; kimse bitiremedi.",
+        BattleOutcome.PlayerVictory => "Victory.",
+        BattleOutcome.PlayerWithdrawal => "The party left the field.",
+        BattleOutcome.PlayerWipe => "The party was wiped out.",
+        _ => "Time ran out; nobody finished it.",
     };
 
     private static string RefusalText(ExpeditionRefusal refusal) => refusal switch
     {
-        ExpeditionRefusal.EmptyParty => "Kimse seçilmedi.",
-        ExpeditionRefusal.StaleOffer => "Bu teklif bugünün teklifi değil.",
-        ExpeditionRefusal.WrongPartySize => "Ekip büyüklüğü bu işe uymuyor.",
-        ExpeditionRefusal.Unfit => "Seçilenlerden biri sefere çıkacak durumda değil.",
-        _ => "Seçilenlerden biri kadroda yok.",
+        ExpeditionRefusal.EmptyParty => "Nobody selected.",
+        ExpeditionRefusal.StaleOffer => "This is not today's offer.",
+        ExpeditionRefusal.WrongPartySize => "The party size does not fit this job.",
+        ExpeditionRefusal.Unfit => "One of those selected is not fit for an expedition.",
+        _ => "One of those selected is not on the roster.",
     };
 
     private static string ThreatName(ThreatBand threat) => threat switch
     {
-        ThreatBand.Faint => "devriye işi",
-        ThreatBand.Rising => "sıradan gün",
-        ThreatBand.Heavy => "kadro hazırlanmalı",
-        _ => "ölüm riski yüksek",
+        ThreatBand.Faint => "patrol work",
+        ThreatBand.Rising => "an ordinary day",
+        ThreatBand.Heavy => "the roster should prepare",
+        _ => "a high risk of death",
     };
 }
 
-/// <summary>Kurulmuş ama henüz koşturulmamış bir dövüş.</summary>
+/// <summary>A fight that has been set up but not yet run.</summary>
 /// <remarks>
-/// Üç parça birlikte taşınmalı: dövüşün girdileri, tohumu ve <b>hesabı kapatan</b>
-/// çağrı. Ayrı ayrı verilseydi arena bitmiş bir dövüşü yanlış sefere yazabilirdi.
+/// The three pieces have to travel together: the fight's inputs, its seed and the call that <b>closes
+/// the books</b>. Given separately, the arena could write a finished fight to the wrong expedition.
 /// </remarks>
-/// <param name="Setup">Dövüşün girdileri — <c>Expedition.Prepare</c> kurdu.</param>
-/// <param name="Seed">Dövüşün tohumu; aynı gün aynı dövüşü verir.</param>
+/// <param name="Setup">The fight's inputs — <c>Expedition.Prepare</c> built them.</param>
+/// <param name="Seed">The fight's seed; the same day gives the same fight.</param>
 /// <param name="Settle">
-/// Biten dövüşün hesabını kapatır ve ekranda basılacak bilançoyu döndürür.
+/// Closes the books of the finished fight and returns the report to print on screen.
 /// </param>
 public sealed record PendingBattle(BattleSetup Setup, ulong Seed, Func<BattleResult, string> Settle);

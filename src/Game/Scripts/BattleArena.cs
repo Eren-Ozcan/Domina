@@ -7,27 +7,27 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Faz 1'in olay akışını izlenebilir bir dövüşe çeviren sahne.
+/// The scene that turns phase 1's event stream into a watchable fight.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Ok tek yönlü:</b> bu sınıf çekirdeği tüketir, çekirdek bu sınıftan habersizdir.
-/// Görselleştirme dövüşün sonucunu değiştiremez — tek istisna oyuncunun "çek" komutu,
-/// o da <see cref="Battle.CommandRetreat"/> üzerinden geçer (bkz. CLAUDE.md → Mimari kuralı).
+/// <b>The arrow points one way:</b> this class consumes the core, the core knows nothing of this class.
+/// The visualisation cannot change the fight's outcome — the single exception is the player's "pull
+/// out" command, and that goes through <see cref="Battle.CommandRetreat"/> (see CLAUDE.md → Architecture rule).
 /// </para>
 /// <para>
-/// Dövüş <b>gerçek zamanla adımlanır</b>, önceden koşturulup kaydı oynatılmaz: oyuncu
-/// dövüş sürerken müdahale edebildiği için karar canlı simülasyona işlemek zorunda.
+/// The fight is <b>stepped in real time</b>, not run in advance and replayed: because the player can
+/// intervene while the fight runs, the decision has to land in the live simulation.
 /// </para>
 /// <para>
-/// Görsel iki kanaldan sürülür: <b>sürekli</b> hal anlık görüntülerden (duruş, konum,
-/// can), <b>anlık</b> tepkiler olay akışından (<see cref="ReactionReader"/>). Bu ayrım
-/// korunmalı — olaylar tek seferliktir, tekrar oynatılamaz.
+/// The visuals are driven by two channels: the <b>continuous</b> state from the snapshots (pose,
+/// position, health), the <b>instant</b> reactions from the event stream (<see cref="ReactionReader"/>).
+/// That separation must hold — events are one-off and cannot be replayed.
 /// </para>
 /// <para>
-/// Kararların kendisi burada değil <c>Domina.Presentation</c>'da: kim nerede durur,
-/// hangi olay hangi tepkiyi doğurur, tuşta ne yazar. Bu sınıfa kalan iş sahneyi kurmak
-/// ve sonucu düğümlere uygulamak — böylece sunum mantığı motor açmadan test edilebiliyor.
+/// The decisions themselves are not here but in <c>Domina.Presentation</c>: who stands where, which
+/// event produces which reaction, what the key says. What is left to this class is building the scene
+/// and applying the result to the nodes — so the presentation logic can be tested without opening the engine.
 /// </para>
 /// </remarks>
 public sealed partial class BattleArena : Node2D
@@ -45,40 +45,40 @@ public sealed partial class BattleArena : Node2D
     private double _accumulator;
     private bool _reported;
 
-    /// <summary>Dövüşün seed'i. Aynı seed aynı dövüşü verir — tekrar izlemek bedava.</summary>
+    /// <summary>The fight's seed. The same seed gives the same fight — watching it again is free.</summary>
     [Export]
     public long Seed { get; set; } = 20260806;
 
-    /// <summary>Oynatma hızı. 1 = gerçek zaman; denge bakarken hızlandırmak için.</summary>
+    /// <summary>Playback speed. 1 = real time; for speeding up while looking at balance.</summary>
     [Export]
     public double SpeedMultiplier { get; set; } = 1.0;
 
     /// <summary>
-    /// Oynatılacak dövüş. <c>null</c> ise demo kadrosu kurulur.
+    /// The fight to play. If <c>null</c>, the demo roster is built.
     /// </summary>
     /// <remarks>
-    /// Sefer katmanı dövüşü <c>Expedition.Prepare</c> ile kurar ve buraya verir; arena
-    /// kurulum yapmaz, yalnızca oynatır. Arena kendi kadrosunu kursaydı izlenen dövüş ile
-    /// dojo'nun hesabını kapattığı dövüş iki ayrı dövüş olurdu.
+    /// The expedition layer sets the fight up with <c>Expedition.Prepare</c> and hands it here; the
+    /// arena does no setup, it only plays. If the arena built its own roster, the fight watched and the
+    /// fight the dojo closed its books on would be two different fights.
     /// </remarks>
     public BattleSetup? Bout { get; set; }
 
     /// <summary>
-    /// Dövüş bittiğinde çağrılır — hesabı kapatacak taraf budur.
+    /// Called when the fight ends — this is the side that closes the books.
     /// </summary>
     /// <remarks>
-    /// Arena muhasebe yazmaz (ölüm, revir, ödül, gün): onu <c>Expedition.Settle</c> yapar.
-    /// Buradan çıkan tek şey <b>ham sonuç</b>.
+    /// The arena writes no accounting (death, infirmary, reward, day): <c>Expedition.Settle</c> does
+    /// that. The only thing that comes out of here is the <b>raw result</b>.
     /// </remarks>
     public Action<BattleResult>? Finished { get; set; }
 
     public override void _Ready()
     {
-        // Kadro bir kez kurulur: rig'ler ile dövüş aynı savaşçı nesnelerini görmeli.
+        // The roster is built once: the rigs and the fight must see the same warrior objects.
         _setup = Bout ?? DemoRoster.Setup();
 
-        // Komut satırı yalnızca demo dövüşü sürer: sefer katmanından gelen dövüşün seed'i
-        // günün seed'idir ve dışarıdan değiştirilemez — aynı kayıt aynı dövüşü versin.
+        // The command line only drives the demo fight: the seed of a fight coming from the expedition
+        // layer is the day's seed and cannot be changed from outside — the same save must give the same fight.
         if (Bout is null)
         {
             ArenaArguments arguments = ArenaArguments.Parse(OS.GetCmdlineUserArgs());
@@ -96,7 +96,7 @@ public sealed partial class BattleArena : Node2D
         AddChild(_hud);
         _hud.Build(_battle, _setup, Seed, CommandRetreat);
 
-        GD.Print($"Dövüş başladı: seed {Seed}, {_rigs.Count} savaşçı sahnede.");
+        GD.Print($"Fight started: seed {Seed}, {_rigs.Count} warriors on the field.");
     }
 
     public override void _Process(double delta)
@@ -107,15 +107,15 @@ public sealed partial class BattleArena : Node2D
         _hud.Refresh(_battle);
     }
 
-    // ------------------------------------------------------------- simülasyon
+    // ------------------------------------------------------------- simulation
 
     /// <summary>
-    /// Gerçek zamanı çekirdeğin sabit adımına çevirir.
+    /// Converts real time into the core's fixed step.
     /// </summary>
     /// <remarks>
-    /// Kare süresi değişken, çözümleyicinin adımı sabit (<c>TickSeconds</c>). Biriktirip
-    /// sabit adımlarla ilerletmek determinizmi korur: aynı seed, kare hızından bağımsız
-    /// olarak aynı dövüşü verir.
+    /// The frame duration varies, the resolver's step is fixed (<c>TickSeconds</c>). Accumulating and
+    /// advancing in fixed steps preserves determinism: the same seed gives the same fight independently
+    /// of the frame rate.
     /// </remarks>
     private void AdvanceBattle(double delta)
     {
@@ -127,8 +127,8 @@ public sealed partial class BattleArena : Node2D
         double tick = CombatTuning.Default.TickSeconds;
         _accumulator += delta * SpeedMultiplier;
 
-        // Uzun bir takılmadan sonra tek karede yüzlerce adım atıp dövüşü ışınlamamak
-        // için üst sınır: fazlası düşürülür.
+        // An upper bound so that after a long stall we do not take hundreds of steps in one frame and
+        // teleport the fight: the excess is dropped.
         int budget = 20;
 
         while (_accumulator >= tick && budget-- > 0)
@@ -147,12 +147,12 @@ public sealed partial class BattleArena : Node2D
         }
     }
 
-    /// <summary>"Çek" tuşu — komut ekibin tamamını kapsar (bkz. docs/GDD.md §5).</summary>
+    /// <summary>The "pull out" key — the command covers the whole party (see docs/GDD.md §5).</summary>
     private void CommandRetreat() => _battle.CommandRetreat();
 
-    // ------------------------------------------------------------ olay akışı
+    // ------------------------------------------------------------- event stream
 
-    /// <summary>Son kareden beri üretilen olayların görsel tepkilerini oynatır.</summary>
+    /// <summary>Plays the visual reactions of the events produced since the last frame.</summary>
     private void PlayReactions()
     {
         foreach (RigReaction reaction in _reactions.Drain(_battle.Events))
@@ -163,7 +163,7 @@ public sealed partial class BattleArena : Node2D
         if (_battle.IsFinished && !_reported)
         {
             _reported = true;
-            GD.Print($"Dövüş bitti: {_battle.Result!.Outcome} ({_battle.Result.ElapsedSeconds:F1} sn)");
+            GD.Print($"Fight ended: {_battle.Result!.Outcome} ({_battle.Result.ElapsedSeconds:F1} s)");
             Finished?.Invoke(_battle.Result);
         }
     }
@@ -181,15 +181,15 @@ public sealed partial class BattleArena : Node2D
 
             rig.Advance(snapshot.State, snapshot.StateProgress, delta);
 
-            // Konum, ölçek ve çizim sırası derinlikten gelir: savaşçı arena düzleminde
-            // gerçekten yürüyor, kamera hâlâ yandan bakıyor.
+            // Position, scale and draw order come from depth: the warrior really walks on the arena
+            // plane, the camera still looks from the side.
             ScenePoint spot = _choreography.PositionFor(snapshot);
             float scale = _choreography.ScaleFor(snapshot);
 
             rig.Position = new Vector2(spot.X, spot.Y);
 
-            // Yön kökün aynalanmasıyla veriliyor (duruş kodu daima sağa bakar sayar),
-            // derinlik ölçeği de aynı Scale'e biniyor.
+            // The facing is given by mirroring the root (the pose code always assumes facing right),
+            // and the depth scale rides on the same Scale.
             rig.Scale = new Vector2(ArenaChoreography.FacingOf(snapshot) * scale, scale);
             rig.ZIndex = ArenaChoreography.DrawOrderFor(snapshot);
         }
@@ -213,7 +213,7 @@ public sealed partial class BattleArena : Node2D
         {
             Warrior warrior = side[i];
 
-            // Başlangıç konumunu çekirdek verir; burada yalnızca düğüm kuruluyor.
+            // The starting position is given by the core; only the node is built here.
             var rig = new WarriorRig();
             AddChild(rig);
             rig.Build(warrior, isPlayer ? PlayerTint : EnemyTint, isPlayer ? 1f : -1f);

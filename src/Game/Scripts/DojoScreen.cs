@@ -4,59 +4,59 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Dojo ekranlarının ortak iskeleti: zemin, kenar boşluğu ve en üstte gezinme çubuğu.
+/// The common skeleton of the dojo screens: the ground, the margin and the navigation bar at the top.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Ekranların birbirine benzemesi bir tercih değil, gereklilik: oyuncu gün içinde
-/// dört ekran arasında gidip geliyor ve her ekranda özetin yeri, listenin yeri ve
-/// tuşların yeri aynı kalmalı.
+/// The screens resembling each other is not a preference but a necessity: the player moves between four
+/// screens during the day, and the place of the summary, the place of the list and the place of the
+/// buttons must stay the same on every screen.
 /// </para>
 /// <para>
-/// Gezinme çubuğu ekranın <b>içine</b> giriyor, üstüne binen ayrı bir katmana değil:
-/// ayrı katmanda dursaydı her ekranın en üst satırını örterdi.
+/// The navigation bar goes <b>inside</b> the screen, not on a separate layer laid over it: on a
+/// separate layer it would cover the top row of every screen.
 /// </para>
 /// </remarks>
 public abstract partial class DojoScreen : CanvasLayer
 {
-    /// <summary>Sıradan metin.</summary>
+    /// <summary>Ordinary text.</summary>
     protected static readonly Color InkColor = new(0.82f, 0.82f, 0.78f);
 
-    /// <summary>Sönük metin — kapalı seçenek, geçmiş kayıt.</summary>
+    /// <summary>Dimmed text — a disabled option, a past record.</summary>
     protected static readonly Color MutedColor = new(0.45f, 0.45f, 0.48f);
 
-    /// <summary>Olumlu: alınabilir, gönderilebilir, kazanılmış.</summary>
+    /// <summary>Positive: buyable, sendable, won.</summary>
     protected static readonly Color GoodColor = new(0.55f, 0.75f, 0.45f);
 
-    /// <summary>Bekleyen: sırası gelmiş ama parası yetmeyen, süresi daralan.</summary>
+    /// <summary>Pending: its turn has come but it cannot be afforded, its deadline is closing in.</summary>
     protected static readonly Color PendingColor = new(0.78f, 0.70f, 0.32f);
 
-    /// <summary>Uyarı: reddedilen komut, ölüm, kırılan söz.</summary>
+    /// <summary>Warning: a refused command, a death, a broken promise.</summary>
     protected static readonly Color WarningColor = new(0.80f, 0.35f, 0.35f);
 
     /// <summary>
-    /// Ekranın tepesine konacak gezinme çubuğu; tek başına açılan sahnede <c>null</c>.
+    /// The navigation bar to put at the top of the screen; <c>null</c> in a scene opened on its own.
     /// </summary>
     /// <remarks>
-    /// <see cref="Build"/> çağrılmadan <b>önce</b> verilmeli. Ekranlar tek başına da
-    /// açılabildiği için (her birinin kendi sahnesi var) çubuk zorunlu değil.
+    /// It must be given <b>before</b> <see cref="Build"/> is called. Because the screens can also be
+    /// can be opened on its own (each has its own scene), the bar is not compulsory.
     /// </remarks>
     public Control? Chrome { get; set; }
 
     /// <summary>
-    /// Ekran dojo'yu değiştirdiğinde çağrılır; kaydı yazan taraf bunu dinler.
+    /// Called when the screen changes the dojo; the side that writes the save listens to this.
     /// </summary>
     /// <remarks>
-    /// Ekran <b>kaydı kendi yazmıyor</b>: dosya yolunu ve yuvayı bilen tek yer hub.
-    /// Her ekran kendi yazsaydı, kaydın ne zaman yazıldığı dört dosyaya dağılırdı.
+    /// The screen <b>does not write the save itself</b>: the only place that knows the file path and the
+    /// slot is the hub. If every screen wrote its own, when the save is written would be spread over four files.
     /// </remarks>
     public Action? Changed { get; set; }
 
-    /// <summary>Ekranı kurar ve içeriği basar.</summary>
-    /// <param name="dojo">Gösterilecek dojo — ekran bunu okur ve komutları buna verir.</param>
+    /// <summary>Builds the screen and prints the content.</summary>
+    /// <param name="dojo">The dojo to show — the screen reads it and gives its commands to it.</param>
     public abstract void Build(DojoState dojo);
 
-    /// <summary>Zemini, kenar boşluğunu ve gezinme çubuğunu kurar; içerik sütununu döndürür.</summary>
+    /// <summary>Builds the ground, the margin and the navigation bar; returns the content column.</summary>
     protected VBoxContainer BuildPage()
     {
         ColorRect backdrop = new()
@@ -86,10 +86,10 @@ public abstract partial class DojoScreen : CanvasLayer
         return page;
     }
 
-    /// <summary>Dojo değişti; kaydı yazması için hub'a haber verir.</summary>
+    /// <summary>The dojo changed; it tells the hub to write the save.</summary>
     protected void Persist() => Changed?.Invoke();
 
-    /// <summary>Düğümün bütün çocuklarını siler — yeniden basmanın ilk adımı.</summary>
+    /// <summary>Deletes all the node's children — the first step of reprinting.</summary>
     protected static void Clear(Node node)
     {
         ArgumentNullException.ThrowIfNull(node);
