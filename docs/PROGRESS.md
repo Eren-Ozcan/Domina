@@ -1,127 +1,128 @@
-﻿# Durum Kaydı
+# Status Log
 
-Son güncelleme: 2026-09-04 (Faz 3 başladı — kadro, gün döngüsü, kayıt sistemi ve dövüş sonrası muhasebe)
+Last updated: 2026-09-04 (Phase 3 started — roster, day cycle, save system and post-fight accounting)
 
-Bu dosya "şu an nerede kaldık" sorusunun cevabıdır. Plan `ROADMAP.md`'de, tasarım
-kararları `GDD.md`'de; burada yalnızca **yapılanın ve sıradakinin** anlık fotoğrafı var.
+This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
+decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
 
 ---
 
-## Özet
+## Summary
 
-| Faz | Durum |
+| Phase | Status |
 | --- | --- |
-| Faz 0 — İskele | ✅ Tamam |
-| Faz 1 — Simülasyon çekirdeği | ✅ Tamam (kabul kriterleri ölçüldü) |
-| Faz 2.1 — Görselleştirme omurgası | ✅ Tamam (kabul kriteri testle bağlandı) |
-| Faz 2.2 — Sanat ve cila | ⬜ Görsel stil kararına bağlı |
-| Faz 3 — Dojo / meta katman | 🟨 Başladı (kadro + gün döngüsü + kayıt + dövüş sonrası muhasebe; ekonomi ve antrenman etkisi bekliyor) |
-| Faz 4+ | ⬜ Başlanmadı |
+| Phase 0 — Scaffolding | ✅ Done |
+| Phase 1 — Simulation core | ✅ Done (acceptance criteria measured) |
+| Phase 2.1 — Visualisation backbone | ✅ Done (acceptance criterion tied to a test) |
+| Phase 2.2 — Art and polish | ⬜ Blocked on the visual style decision |
+| Phase 3 — Dojo / meta layer | 🟨 Started (roster + day cycle + save + post-fight accounting; economy and training effect pending) |
+| Phase 4+ | ⬜ Not started |
 
-Doğrulama: `dotnet build` → 0 hata / 0 uyarı, `dotnet test` → 336/336 yeşil.
-Godot projesi ayrı derleniyor: `dotnet build src/Game/Domina.Game.csproj`.
+Verification: `dotnet build` → 0 errors / 0 warnings, `dotnet test` → 336/336 green.
+The Godot project builds separately: `dotnet build src/Game/Domina.Game.csproj`.
 
-> `dotnet format --verify-no-changes` **temiz değil**: 6 adet IDE1006 (`_` öneki)
-> uyarısı var — `HudModel.cs` ve `ArmorWeightTests.cs`. Eski bir borç, bu turda
-> oluşmadı; sayı 2026-09-03'te değişmedi.
+> `dotnet format --verify-no-changes` is **not clean**: there are 6 IDE1006 (`_` prefix)
+> warnings — `HudModel.cs` and `ArmorWeightTests.cs`. An old debt, not created in this
+> round; the count did not change on 2026-09-03.
 
 ---
 
-## Yapıldı
+## Done
 
-### Faz 0 — İskele
-- .NET 10 SDK, Godot 4.7 .NET sürümü (repoya girmez, `tools/` altında)
-- `Directory.Build.props`: `net8.0`, nullable açık, `TreatWarningsAsErrors`
-- Çözüm: `Domina.Core`, `Domina.Chat`, `Domina.Sim` + üç test projesi
-- Godot projesi (`src/Game`) hem derleniyor hem headless çalışıyor; kendi
-  `Directory.Build.props`'u ile kök ayarlarından yalıtıldı
-- GitHub Actions: push'ta build + test
+### Phase 0 — Scaffolding
+- .NET 10 SDK, Godot 4.7 .NET build (not committed to the repo, kept under `tools/`)
+- `Directory.Build.props`: `net8.0`, nullable on, `TreatWarningsAsErrors`
+- Solution: `Domina.Core`, `Domina.Chat`, `Domina.Sim` + three test projects
+- The Godot project (`src/Game`) both builds and runs headless; isolated from the root
+  settings by its own `Directory.Build.props`
+- GitHub Actions: build + test on push
 
-### Faz 1.2 — Deterministik RNG
+### Phase 1.2 — Deterministic RNG
 - `IRandomSource` + `SeededRandom` (xoshiro256\*\*)
-- **`System.Random` bilerek kullanılmadı:** algoritması .NET sürümleri arasında
-  değişebilir, bu da "aynı seed = aynı dövüş" garantisini bozardı
-- Testler için `FixedRandom` (scripted RNG)
+- **`System.Random` was deliberately not used:** its algorithm can change between .NET
+  versions, which would break the "same seed = same fight" guarantee
+- `FixedRandom` (scripted RNG) for tests
 
-### Faz 1.1 — Veri modeli
-`Warrior` (benzersiz ID + ayrı isim alanı), `WarriorStats`, `Injury`/`Disability`
-(`BodyPart` bazlı kalıcı stat modifikatörleri), `Weapon` (kesici/künt, el sayısı),
+### Phase 1.1 — Data model
+`Warrior` (unique ID + separate name field), `WarriorStats`, `Injury`/`Disability`
+(permanent stat modifiers keyed by `BodyPart`), `Weapon` (cutting/blunt, number of hands),
 `Armor`.
 
-### Faz 1.3–1.4 — Dövüş çözümleyici
-- Olay akışı (`BattleEvent` hiyerarşisi) — çözümleyici animasyondan tamamen habersiz
-- `CombatTuning`: tüm denge sayıları tek dosyada
-- Adım adım simülasyon, çok savaşçılı takım desteği
-- Kaçış: komut buffer'lama, savunmasızlık penceresi, rakibe fırsat saldırısı
-- Ağır darbe sonuç ağacı (hafif / ağır+pes / ağır+müdahalesiz)
-- `CombatantSnapshot`: salt okunur dışa bakış; dövüşe tek müdahale noktası
-  `Battle.CommandRetreat`
+### Phase 1.3–1.4 — Fight resolver
+- Event stream (`BattleEvent` hierarchy) — the resolver knows nothing at all about animation
+- `CombatTuning`: every balance number in a single file
+- Step-by-step simulation, multi-warrior team support
+- Withdrawal: command buffering, vulnerability window, opportunity attack for the opponent
+- Grievous blow outcome tree (light / grievous+yield / grievous+no intervention)
+- `CombatantSnapshot`: read-only outward view; the single point of intervention in a fight
+  is `Battle.CommandRetreat`
 
-### Faz 1.5 — Onur motoru
-`CrowdVerdict` (oran tabanlı ödül çarpanı), `HonorEngine`, `SeppukuArbiter`
-(kuyruk, 60 sn oylama penceresi, kullanıcı başına tek oy, af + 15 dk bağışıklık,
-sıfır oyda AI kararı).
+### Phase 1.5 — Honour engine
+`CrowdVerdict` (ratio-based reward multiplier), `HonorEngine`, `SeppukuArbiter`
+(queue, 60 s voting window, one vote per user, pardon + 15 min immunity,
+AI decision on zero votes).
 
-> Yazım sırasında bulunup düzeltilen hata: `SeppukuArbiter` oylamayı açarken
-> savaşçıyı kuyruktan çıkarıyor, sonra sıfır-oy durumunda AI'ın bakacağı onur
-> değerini bulamıyordu. Aktif kayıt ayrıca saklanacak şekilde düzeltildi.
-> `SeppukuTests.TheArtificialAudienceJudgesTheRightWarriorsHonor` bu hatanın
-> geri gelmemesi için var.
+> A bug found and fixed while writing this: when `SeppukuArbiter` opened the vote it
+> removed the warrior from the queue, and then in the zero-vote case could not find the
+> honour value the AI was supposed to look at. Fixed so that the active record is also
+> kept. `SeppukuTests.TheArtificialAudienceJudgesTheRightWarriorsHonor` exists so that
+> this bug does not come back.
 
-### Faz 1.6 — Toplu simülasyon aracı
-`Domina.Sim` artık çalışan bir CLI: seed aralığında N dövüş koşturur, dövüş başına
-CSV satırı yazar ve oranları özetler.
+### Phase 1.6 — Batch simulation tool
+`Domina.Sim` is now a working CLI: it runs N fights across a seed range, writes one CSV
+row per fight and summarises the rates.
 
 ```bash
-dotnet run --project src/Domina.Sim -c Release -- --scenario 3v3 --battles 10000 --policy below:0.3 --out sonuc.csv
+dotnet run --project src/Domina.Sim -c Release -- --scenario 3v3 --battles 10000 --policy below:0.3 --out result.csv
 ```
 
-- Senaryolar kodda sabit (`duel`, `3v3`, `veteran`, `ambush`) — iki ölçüm aynı
-  kadroyu karşılaştırsın diye
-- `--policy` oyuncunun "çek" tuşunun yerine geçer. **Uzuv kaybı yalnızca zamanında
-  müdahale edilen dövüşlerde oluştuğu için bu şart:** `never` ile koşulan bir parti
-  hiç sakat savaşçı üretmez, yalnızca ölü üretir
-- Oranların paydası dövüş sayısı değil sahaya çıkan savaşçı sayısı (3v3'te bir
-  dövüşte üç savaşçı ölebilir)
+- Scenarios are hard-coded (`duel`, `3v3`, `veteran`, `ambush`) — so that two measurements
+  compare the same roster
+- `--policy` stands in for the player's "pull out" button. **This is required because limb
+  loss only occurs in fights where intervention came in time:** a batch run with `never`
+  produces no crippled warriors at all, only dead ones
+- The denominator of the rates is not the number of fights but the number of warriors who
+  took the field (in a 3v3 three warriors can die in a single fight)
 
-### Faz 1 testleri
-6 testten **112**'ye çıktı:
+### Phase 1 tests
+Grew from 6 tests to **112**:
 
-| Dosya | Kapsam |
+| File | Coverage |
 | --- | --- |
-| `DeterminismTests` | aynı seed = aynı dövüş, aynı olay akışı |
-| `DismembermentTests` | ağır darbe sonuç ağacı, silah/zırh etkisi, kalıcı sakatlık |
-| `RetreatTests` | komut buffer'lama, savunmasızlık penceresi, fırsat saldırısı |
-| `HonorTests` | performans/chat/hedefli oy etkileri, ödül çarpanı, decay |
-| `SeppukuTests` | kuyruk, tek oy kuralı, beraberlik, af bağışıklığı, AI kararı |
-| `BattleFlowTests` | uçtan uca 3v3, olay akışı ↔ özet tutarlılığı, süre limiti |
-| `ThroughputTests` | 10.000 dövüş bütçesi, dövüş başına ayırma |
-| `BatchRunnerTests` / `SimCliTests` | toplama doğruluğu, argüman ayrıştırma, CSV |
+| `DeterminismTests` | same seed = same fight, same event stream |
+| `DismembermentTests` | grievous blow outcome tree, weapon/armour effect, permanent disability |
+| `RetreatTests` | command buffering, vulnerability window, opportunity attack |
+| `HonorTests` | performance/chat/targeted vote effects, reward multiplier, decay |
+| `SeppukuTests` | queue, one-vote rule, tie, pardon immunity, AI decision |
+| `BattleFlowTests` | end-to-end 3v3, event stream ↔ summary consistency, time limit |
+| `ThroughputTests` | 10,000-fight budget, per-fight allocation |
+| `BatchRunnerTests` / `SimCliTests` | aggregation accuracy, argument parsing, CSV |
 
-### Kabul kriteri ölçümü
-"10.000 dövüş < 10 saniye" **ölçüldü ve geçildi**: Release'te ~1 sn
-(≈10.000 dövüş/sn), Debug'da ~2 sn.
+### Acceptance criterion measurement
+"10,000 fights < 10 seconds" was **measured and passed**: ~1 s in Release
+(≈10,000 fights/s), ~2 s in Debug.
 
-> Yol boyunca bulunan sorun: `Battle.FindTarget` ve `CountActive` her tick'te her
-> savaşçı için LINQ lambda'sı kuruyordu — dövüş başına ~279 KB ayırma. Düz döngüye
-> çevrildi; sonuçlar birebir aynı kaldı, hız iki katına çıktı (4.200 → 10.000
-> dövüş/sn). `ThroughputTests.PerBattleAllocationStaysSmallWithoutEvents` bunun
-> geri gelmesini engelliyor.
+> Problem found along the way: `Battle.FindTarget` and `CountActive` were building a LINQ
+> lambda for every warrior on every tick — ~279 KB allocated per fight. Converted to plain
+> loops; the results stayed bit-for-bit identical and the speed doubled (4,200 → 10,000
+> fights/s). `ThroughputTests.PerBattleAllocationStaysSmallWithoutEvents` prevents this
+> from coming back.
 
 ---
 
-## Faz 2 — omurga (2026-08-06)
+## Phase 2 — backbone (2026-08-06)
 
-Dövüş artık ekranda izleniyor. Sanat **kasıtlı olarak geçici**: her uzuv düz renkli
-bir çubuk, yani stickman. Stil kararı verilmeden gerçek sanata girmemek için.
+The fight can now be watched on screen. The art is **deliberately temporary**: every limb
+is a flat-coloured bar, i.e. a stickman. So that we do not enter real art before the style
+decision is made.
 
 ```bash
 dotnet build src/Game/Domina.Game.csproj
 tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64.exe --path src/Game -- --seed 81
 ```
 
-### Kilitlenen rig (değiştirmesi pahalı)
-15 parça, kök ayak hizasında, karakter 256 px:
+### The locked rig (expensive to change)
+15 parts, root at foot level, character 256 px:
 
 ```
 Root → Hip → Torso → Head
@@ -129,1506 +130,1565 @@ Root → Hip → Torso → Head
             → Leg_Thigh → Leg_Shin → Leg_Foot                   (×2)
 ```
 
-Kopma noktaları **omuz** ve **kalça**. Sanat değiştiğinde her kemiğe asılı çizim
-değişir, hiyerarşi aynı kalır — ama parça listesi veya oranlar değişirse tüm
-animasyonlar yeniden yapılır.
+The break points are the **shoulder** and the **hip**. When the art changes, the drawing
+hung on each bone changes and the hierarchy stays the same — but if the part list or the
+proportions change, every animation is redone.
 
-> **Skeleton2D + Bone2D kullanılmadı** (ROADMAP'te öyle yazıyordu). Bone2D mesh
-> deformasyonu içindir; bizim ihtiyacımız uzvu deforme etmek değil koparmak. Düz
-> `Node2D` hiyerarşisinde kopma = düğümü zincirinden ayırmak, ki GDD §2'nin tarif
-> ettiği şey tam olarak bu. Kolunu kaybeden savaşçının silahı da zincirle birlikte
-> gidiyor — çekirdekteki `UsableWeapon` kuralı görselde bedava geliyor.
+> **Skeleton2D + Bone2D were not used** (the ROADMAP said so). Bone2D is for mesh
+> deformation; what we need is not to deform a limb but to sever it. In a plain `Node2D`
+> hierarchy severing = detaching a node from its chain, which is exactly what GDD §2
+> describes. The weapon of a warrior who loses an arm goes with the chain too — the
+> `UsableWeapon` rule in the core comes for free in the visuals.
 
-### Çalışan şeyler
-- Dövüş **gerçek zamanla adımlanıyor**, kayıt oynatılmıyor — oyuncu dövüş sürerken
-  müdahale edebildiği için karar canlı simülasyona işlemek zorunda
-- Görsel iki kanaldan sürülüyor: sürekli hal anlık görüntülerden, anlık tepkiler
-  (sarsıntı, uzuv kopması, ölüm) olay akışından
-- **Tek "ÇEK" tuşu, ekibin tamamını çeker.** Tuş kaç savaşçının etkileneceğini ve
-  kaçının vuruşa kilitli olduğunu gösteriyor: *"EKİBİ ÇEK (3) · 3 kilitli"*.
-  Kilitli olanların kaçışı vuruş bitince başlar, bu gecikme sürpriz olmamalı
-- Hamle sabit değil hedefe kadar: çekirdek herkesi aynı ön sıradaki düşmana
-  yönelttiği için sabit hamle arkadaki savaşçıları boşluğa kılıç sallatıyordu
+### What works
+- The fight is **stepped in real time**, it is not a replay — since the player can
+  intervene while the fight runs, the decision has to land on the live simulation
+- The visuals are driven from two channels: continuous state from snapshots, momentary
+  reactions (shake, limb severing, death) from the event stream
+- **A single "PULL" button withdraws the entire team.** The button shows how many
+  warriors will be affected and how many are locked into a blow: *"PULL THE PARTY (3)
+  · 3 locked"*. Withdrawal for the locked ones starts once the blow ends, and that delay
+  must not be a surprise
+- The lunge is not a fixed distance but reaches the target: because the core points
+  everyone at the same front-row enemy, a fixed lunge had the warriors at the back
+  swinging swords into empty space
 
-### Tasarım değişikliği: pes etme ekip bazlı oldu
+### Design change: yielding became team-wide
 
-GDD §5 önce "her savaşçı ayrı ayrı çekilebilir" diyordu; **değiştirildi**. Artık tek
-komut sahadaki 1-3 savaşçının hepsini çeker ve hepsi onur kaybeder.
+GDD §5 first said "each warrior can be pulled out individually"; that was **changed**. Now
+a single command pulls all 1-3 warriors on the field and all of them lose honour.
 
-Gerekçe: savaşçı bazlı olsaydı doğru oynanış "yara alanı hemen çek, kalanla devam et"
-olurdu — kayıpsız, sürekli tekrarlanan küçük bir optimizasyon. Ekip bazlı komut kararı
-nadir ve ağır yapıyor.
+Rationale: had it been per warrior, correct play would be "pull the one who takes a wound
+immediately, continue with the rest" — a small, lossless, endlessly repeated optimisation.
+A team-wide command makes the decision rare and heavy.
 
-Etkisi ölçüldü (3v3, 10.000 dövüş, `--policy below:0.3`):
+The effect was measured (3v3, 10,000 fights, `--policy below:0.3`):
 
-| | Savaşçı bazlı | Ekip bazlı |
+| | Per warrior | Team-wide |
 | --- | --- | --- |
-| Zafer | %61.7 | **%5.1** |
-| Ölüm | %56.7 | %32.0 |
-| Kaçış | %8.2 | %63.3 |
-| Uzuv kaybı | %1.15 | %2.50 |
+| Victory | 61.7% | **5.1%** |
+| Death | 56.7% | 32.0% |
+| Escape | 8.2% | 63.3% |
+| Limb loss | 1.15% | 2.50% |
 
-Yani "canı %30'a düşeni çek" politikası artık neredeyse her dövüşü terk etmek demek —
-tam olarak amaçlanan şey. Uzuv kaybının iki katına çıkması da beklenen: müdahale
-herkesi ölüm yerine sakatlıkla kurtarıyor.
+That is, the "pull whoever drops to 30% health" policy now means abandoning almost every
+fight — exactly what was intended. Limb loss doubling is expected too: intervention saves
+everyone with a crippling injury instead of death.
 
-> Bu, `Domina.Sim`'deki politika eşiklerinin **anlamını değiştirdi**. Faz 9'da denge
-> bakılırken `below:0.3` artık "temkinli oyuncu" değil "ilk zorlukta kaçan oyuncu"
-> demek; anlamlı karşılaştırma için çok daha düşük eşikler gerekecek.
+> This **changed the meaning** of the policy thresholds in `Domina.Sim`. When balance is
+> examined in Phase 9, `below:0.3` no longer means "cautious player" but "player who runs
+> at the first sign of trouble"; much lower thresholds will be needed for a meaningful
+> comparison.
 
-### Çekirdeğe eklenenler
-`CombatantSnapshot`'a `StateProgress` (0-1) ve `CanCancel` eklendi; `Combatant`
-durum geçişlerini artık `BeginState` üzerinden yapıyor. Animasyonu kesme
-penceresiyle eşleştirmek bunlarsız mümkün değildi. Davranış değişmedi —
-determinizm testleri dahil hepsi yeşil kaldı.
+### Added to the core
+`StateProgress` (0-1) and `CanCancel` were added to `CombatantSnapshot`; `Combatant` now
+makes state transitions through `BeginState`. Matching the animation to the cancel window
+was impossible without these. Behaviour did not change — everything stayed green,
+determinism tests included.
 
-### Doğrulama
-- Aynı seed (20260806) hem arenada hem `Domina.Sim`'de **15,2 sn / PlayerVictory**
-  → görselleştirme simülasyonu bozmuyor
-- Toplu simülasyonun "seed 52'de uzuv kaybı var" dediği dövüş arenada da uzuv
-  kaybıyla sonuçlanıyor; kopan kol silahıyla birlikte yere düşüyor
+### Verification
+- The same seed (20260806) gives **15.2 s / PlayerVictory** both in the arena and in
+  `Domina.Sim` → visualisation does not corrupt the simulation
+- The fight the batch simulation reports as "limb loss at seed 52" also ends in limb loss
+  in the arena; the severed arm falls to the ground together with its weapon
 
-> Doğrulama sırasında bulunup düzeltilen iki hata: kopan uzuv sahne
-> koordinatlarında zemini yanlış hesaplayıp havada asılı kalıyordu; ölmüş bir
-> savaşçının tuşu hâlâ "ÇEKİLİYOR" yazıyordu (komut işliyormuş gibi okunuyordu).
+> Two bugs found and fixed during verification: the severed limb miscalculated the ground
+> in scene coordinates and stayed hanging in the air; a dead warrior's button still read
+> "PARTY PULLING OUT" (it read as if the command were being processed).
 
 ---
 
-## Faz 2.1 — kapanış (2026-08-12)
+## Phase 2.1 — closing (2026-08-12)
 
-Omurga "çalışıyor"dan "bitti"ye çekildi. İki iş yapıldı: **sunum mantığı motordan
-ayrıldı ve testle bağlandı**, ardından ortaya çıkan boşluklar kapatıldı.
+The backbone was pulled from "works" to "done". Two jobs were done: **the presentation
+logic was separated from the engine and tied to tests**, and then the gaps that surfaced
+were closed.
 
-### Yeni katman: `Domina.Presentation`
+### New layer: `Domina.Presentation`
 
-Godot'a bağımlı olmayan bir kütüphane. İçinde dövüşün ekranda nasıl göründüğüne dair
-kararlar var; Godot'un `Vector2`'si yerine kendi `ScenePoint`'i kullanılıyor.
+A library with no dependency on Godot. It holds the decisions about how the fight looks on
+screen; instead of Godot's `Vector2` it uses its own `ScenePoint`.
 
-| Tip | İşi |
+| Type | Its job |
 | --- | --- |
-| `ArenaLayout` / `ArenaChoreography` | kim nerede durur, hamle nereye gider, ceset nerede kalır |
-| `ReactionReader` | olay akışı → tek seferlik görsel tepkiler |
-| `RigAnimator` / `RigPose` | durum + tepki → 14 kemik açısı |
-| `HudModel` | tuşta ve panelde ne yazar |
-| `DemoRoster` / `ArenaArguments` | geçici kadro, `--seed` / `--speed` |
+| `ArenaLayout` / `ArenaChoreography` | who stands where, where the lunge goes, where the corpse stays |
+| `ReactionReader` | event stream → one-shot visual reactions |
+| `RigAnimator` / `RigPose` | state + reaction → 14 bone angles |
+| `HudModel` | what the button and the panel say |
+| `DemoRoster` / `ArenaArguments` | temporary roster, `--seed` / `--speed` |
 
-`src/Game` artık ince: düğümleri kurar, gelen açıyı uygular, kopan zinciri ayırır.
+`src/Game` is now thin: it builds the nodes, applies the incoming angle, detaches the
+severed chain.
 
-> **Neden ayrı proje:** motor açmadan test edilemeyen karar hiç test edilmez. Faz 2
-> tek testsiz fazdı; şimdi `ArenaPlaybackTests` dövüşü `BattleArena._Process` ile aynı
-> sırayla oynatıp bilançodaki uzuv kaybının ekrandaki kopmayla **aynı uzuv** üzerinden
-> tuttuğunu sınıyor — yani Faz 2'nin kabul kriteri artık bir cümle değil bir test.
-> Motorsuz koşabiliyor olması ayrımın da canlı kanıtı: `src/Game`'e bir sızıntı olursa
-> bu testler derlenmez.
+> **Why a separate project:** a decision that cannot be tested without opening the engine
+> never gets tested. Phase 2 was the only untested phase; now `ArenaPlaybackTests` plays
+> the fight in the same order as `BattleArena._Process` and checks that the limb loss in
+> the tally holds over the **same limb** as the severing on screen — that is, Phase 2's
+> acceptance criterion is now a test rather than a sentence. Being able to run without the
+> engine is also live proof of the separation: if anything leaks into `src/Game`, these
+> tests will not compile.
 
-### Kapatılan boşluklar
+### Gaps that were closed
 
-Ayrım netleşince görülen eksikler:
+The shortcomings that became visible once the separation was clear:
 
-- **Saldırının üç sonucu ekranda aynı görünüyordu.** 13 olay türünden yalnızca 3'ü
-  görsele bağlıydı; ıska ve kaçınmanın karşılığı yoktu. Artık ıska savurma
-  (`Overswing`), kaçınma yana kaçış üretiyor. Kaçınma stamina harcayan bir çekirdek
-  mekaniği — ekranda karşılığı yoksa oyuncu staminanın nereye gittiğini göremez.
-- **Fırsat saldırısının işareti yoktu.** Kaçışın bedeli normal vuruştan ayırt
-  edilemiyordu ("tuşa bastım, sonra canım gitti"). Çekirdekte bir duruma karşılık
-  gelmediği için — kaçan avın arkasından anında çözülür — boşta bekleyen savaşçının
-  duruşunu geçici olarak devralan ayrı bir vuruş eklendi.
-- **Ölen savaşçı hattına ışınlanıyordu.** Konum yalnızca duruma bakılarak
-  hesaplanıyordu; hamlenin ortasında ölen geri sıçrıyordu. Koreografi artık ölüm
-  öncesi kareyi hatırlıyor.
-- **Kaçan savaşçı arenanın ortasında yok oluyordu.** Kaçış mesafesi sabit 460 px'ti,
-  kadraj 1920 px. Mesafe artık kadrajdan hesaplanıyor.
-- **Bacağını kaybeden savaşçı kaçarken topallamıyordu.** Kaçış duruşu sakatlık
-  katmanından geçmiyordu: kalça son topallama değerinde asılı kalıyor, sağlam bacak
-  normal koşu döngüsünü oynatıyordu.
-- **Buffer'lanmış komut panelde görünmüyordu.** Tuş basmadan önce "3 kilitli" diyordu
-  ama bastıktan sonra panel hâlâ "saldırıyor" yazıyordu — komut yutulmuş gibi.
-- **Kopan uzuv yerde yatarken hâlâ animasyon alıyordu.** Zincir ayrıldıktan sonra da
-  referans duruyordu, duruş her karede yerdeki kola da uygulanıyordu; düşme dönüşü
-  bu yüzden hiç görünmüyordu.
-- **Acı parlaması takım rengini ikinci kez çarpıyordu.** Uzuvlar zaten renkliydi;
-  `Modulate`'e takım rengi basmak savaşçıyı kızartmak yerine karartıyordu.
+- **The three outcomes of an attack all looked the same on screen.** Of 13 event types
+  only 3 were wired to visuals; there was nothing for a miss or a dodge. Now a miss
+  produces an overswing (`Overswing`) and a dodge produces a sidestep. Dodging is a core
+  mechanic that spends stamina — if it has no counterpart on screen the player cannot see
+  where the stamina is going.
+- **The opportunity attack had no sign.** The cost of withdrawal could not be told apart
+  from a normal blow ("I pressed the button, then my health went"). Since it corresponds
+  to no state in the core — it resolves instantly behind the fleeing prey — a separate
+  blow was added that temporarily takes over the pose of an idle warrior.
+- **A dying warrior teleported back to the line.** Position was computed from state alone;
+  someone who died mid-lunge snapped back. The choreography now remembers the frame before
+  death.
+- **A fleeing warrior vanished in the middle of the arena.** The escape distance was a
+  fixed 460 px against a 1920 px frame. The distance is now computed from the frame.
+- **A warrior who lost a leg did not limp while fleeing.** The escape pose did not pass
+  through the disability layer: the hip stayed stuck at the last limp value while the
+  intact leg played the normal running cycle.
+- **A buffered command was not visible in the panel.** Before the button was pressed it
+  said "3 locked", but after pressing it the panel still read "attacking" — as if the
+  command had been swallowed.
+- **A severed limb still received animation while lying on the ground.** The reference
+  survived after the chain was detached and the pose was applied to the arm on the ground
+  on every frame; that is why the falling rotation was never visible.
+- **The pain flash multiplied the team colour a second time.** The limbs were already
+  coloured; pushing the team colour into `Modulate` darkened the warrior instead of
+  reddening them.
 
-### Doğrulama
+### Verification
 
-- 57 yeni test (toplam 173), `dotnet format` temiz, Godot katmanı ayrı derleniyor
-- Motorlu/motorsuz karşılaştırma birebir: seed 20260806 → **PlayerVictory / 15,2 sn**,
-  seed 81 → **PlayerDefeat / 32,0 sn** — ikisi de hem arenada hem motorsuz oynatmada
-- Testler seed sabitlemiyor, aradıkları durumu (ölüm, kaçış, uzuv kaybı) üreten ilk
-  seed'i tarayarak buluyor. Faz 9'da denge sayıları değiştiğinde sabit bir seed sessizce
-  anlamını yitirirdi: test yeşil kalır ama artık bir şey sınamazdı.
+- 57 new tests (173 total), `dotnet format` clean, the Godot layer builds separately
+- Engine/engineless comparison matches exactly: seed 20260806 → **PlayerVictory / 15.2 s**,
+  seed 81 → **PlayerDefeat / 32.0 s** — both in the arena and in engineless playback
+- The tests do not pin a seed; they scan for the first seed that produces the situation
+  they are after (death, escape, limb loss). When the balance numbers change in Phase 9 a
+  fixed seed would silently lose its meaning: the test would stay green but would no
+  longer be testing anything.
 
 ---
 
-## Motor doğrulaması (2026-08-13)
+## Engine verification (2026-08-13)
 
-Uzam değişikliğinden sonra Godot katmanı çalıştırıldı:
+After the space change the Godot layer was run:
 
 ```bash
-dotnet build src/Game/Domina.Game.csproj                       # 0 hata / 0 uyarı
+dotnet build src/Game/Domina.Game.csproj                       # 0 errors / 0 warnings
 tools/Godot_v4.7-stable_mono_win64/..._console.exe --headless --path src/Game -- --seed 81
 ```
 
-Headless koşu sorunsuz tamamlandı ve **motorlu/motorsuz karşılaştırma tuttu**:
-seed 81 → hem arenada hem `Domina.Sim`'de **PlayerWipe / 18,8 sn**. Yani uzam
-çekirdeğe girerken mimari kural (görselleştirme simülasyonu etkilemez) korundu.
+The headless run completed without trouble and **the engine/engineless comparison held**:
+seed 81 → **PlayerWipe / 18.8 s** both in the arena and in `Domina.Sim`. That is, while
+space entered the core the architectural rule (visualisation does not affect the
+simulation) was preserved.
 
-> **Yapılmayan iş — gözle kontrol.** Pencere açıldı ama dövüş izlenmedi. İlk kez
-> ekranda olacak beş şey doğrulanmayı bekliyor: gerçek yürüme, derinliğin dikey
-> kayma + ölçek + çizim sırasıyla okunması, menzil dışından kılıç sallanmaması,
-> hedef değişince yön dönmesi, ve hedef uzaklaşınca ıska. Sonraki oturumda
-> `--seed 81 --speed 1` ile bakılacak.
+> **Work not done — checking by eye.** The window was opened but the fight was not watched.
+> Five things that will be on screen for the first time are waiting to be verified: real
+> walking, depth reading as vertical offset + scale + draw order, no sword swinging from
+> out of range, turning when the target changes, and a miss when the target moves away.
+> To be looked at in the next session with `--seed 81 --speed 1`.
 
 ---
 
-## Uzuv kaybı oranı — karara bağlandı (2026-08-14)
+## Limb loss rate — decided (2026-08-14)
 
-Bekleyen soru kapandı, ama beklenenden farklı bir yerden. Hedef "%5" olarak konmuştu;
-kullanıcı bu sayının keyfî olduğunu ve oranın **kuşamın fonksiyonu** olması gerektiğini
-söyledi — iyi zırhlı savaşçı eve sağlam dönmeli. Bu doğru çıktı ve mekanizma zaten
-kısmen kodda duruyordu, yanlış eksene bağlıydı.
+The pending question closed, but from an unexpected direction. The target had been set at
+"5%"; the user said that number was arbitrary and that the rate should be **a function of
+the kit** — a well-armoured warrior should come home intact. That turned out to be right,
+and the mechanism was already partly in the code, tied to the wrong axis.
 
-### Zırh yuva yuva oldu
+### Armour became slot by slot
 
-`Armor` artık tek skaler değil, **kafa/gövde/kol/bacak** için ayrı parçalar
-(`ArmorPiece`). Hasar azaltımı ve kopma direnci darbenin indiği bölgeden okunuyor.
-İsabet bölgeleri zaten bunun için vardı — `CombatTuning`'deki yorum sebebini yazıyordu
-ama karşılığı yoktu.
+`Armor` is no longer a single scalar but separate pieces (`ArmorPiece`) for
+**head/torso/arm/leg**. Damage reduction and severing resistance are read from the region
+the blow landed on. Hit locations already existed for exactly this — the comment in
+`CombatTuning` stated the reason but there was nothing behind it.
 
-Ölçüm için `--armor none|light|medium|heavy` eklendi (senaryonun geri kalanı sabitken
-zırh eksenini izole eder) ve rapor artık uzuvları **parça parça** sayıyor.
+For measurement `--armor none|light|medium|heavy` was added (it isolates the armour axis
+while the rest of the scenario stays fixed) and the report now counts limbs **piece by
+piece**.
 
-### İki mantık hatası bulundu
+### Two logic errors were found
 
-**1. Uzuv kaybederek kazanmak imkânsızdı.** Kopma `PlayerIntervened` istiyordu, o bayrağı
-yalnızca "Kaç" tuşu açıyordu, tuş da §5 gereği seferi bitiriyordu. 20.000 dövüş, en kötü
-zırh, **zafer + uzuv kaybı: 0 kez**. Sakat dönen her savaşçı terk edilmiş bir seferin
-anıtıydı; tek kollu bir şampiyon eve asla gelemiyordu.
+**1. Winning while losing a limb was impossible.** Severing required `PlayerIntervened`,
+that flag was only set by the "Flee" button, and per §5 the button ended the expedition.
+20,000 fights, worst armour, **victory + limb loss: 0 times**. Every warrior who came back
+crippled was a monument to an abandoned expedition; a one-armed champion could never come
+home.
 
-Sonuç ağacı ikiye ayrıldı (GDD §7 güncellendi): **öldürmeyen** ağır darbe tuşsuz da
-koparır ve dövüş sürer; **öldürücü** darbede eski kural geçerli — tuşa basılmışsa uzuvla
-yaşar, basılmamışsa ölür.
+The outcome tree was split in two (GDD §7 updated): a **non-lethal** grievous blow severs
+even without the button and the fight continues; on a **lethal** blow the old rule applies
+— if the button was pressed the warrior lives with a lost limb, if not they die.
 
-> **Yazarken düzeltilen tarif.** Bu ilk önce "tuş ölümü uzuv kaybına çevirir" diye
-> yazılmıştı; kullanıcı bunun ağacın tek dalı olduğunu söyledi. Tuş bir **takas değil** —
-> sonucu basıldığı anda bilinmeyen bir çekilme başlatıyor ve bedeli bir merdivene düşüyor:
-> herkes yarasız kaçtı → herkes yaralı kaçtı → uzuv kayıplı kaçtı → ekibin bir kısmı
-> kaçtı → kimse kaçamadı. Merdiven ölçüldü ve GDD §5'e işlendi.
+> **A description corrected while writing.** This was first written as "the button turns
+> death into limb loss"; the user pointed out that this is only one branch of the tree.
+> The button is **not a trade** — it starts a withdrawal whose outcome is unknown at the
+> moment of pressing, and the cost falls onto a ladder: everyone escaped unwounded →
+> everyone escaped wounded → escaped with limb loss → part of the team escaped → nobody
+> escaped. The ladder was measured and written into GDD §5.
 >
-> Ölçüm için `--policy at:<saniye>` eklendi: cana bakan politikalar merdivenin bedelsiz
-> ucunu **kurgu gereği** ölçemiyordu (can düşmüşse zaten yara alınmıştır). `at:0` ile
-> görüldü ki temastan önce basmak **%100 yarasız** çıkış veriyor.
+> For measurement `--policy at:<seconds>` was added: health-watching policies could not
+> measure the costless end of the ladder **by construction** (if health has dropped, a
+> wound has already been taken). With `at:0` it was seen that pressing before contact
+> gives a **100% unwounded** exit.
 
-### Kaçış bedelsiz olmaktan çıktı (2026-08-14)
+### Escaping stopped being free (2026-08-14)
 
-Kullanıcı "%100 olmamalı" dedi. Sebep tek değil üçtü ve üçü birden düzeltildi.
+The user said "it should not be 100%". The reason was not one but three, and all three
+were fixed at once.
 
-| Neden bedelsizdi | Ne eklendi |
+| Why it was free | What was added |
 |---|---|
-| `MoveSpeed` tek sabitti — kovalayan ile kaçan aynı hızda, net kapanma sıfır | `WarriorStats.Speed` (0-100). Oni 25, Kappa 55, Tengu 85. Kaçan ayrıca `RetreatSpeedMultiplier` kadar yavaşlar. Bacak kaybı hızı da düşürür (`Disability.SpeedMultiplier`) |
-| Yakın dövüş arenanın uzak yarısına ulaşmıyordu | `ThrownWeapon` + `Projectile`: mermi havada süre geçirir, varışta çözülür. Yeni olaylar `ProjectileLaunched/Hit/Missed`; sunum tarafında `ProjectileView`/`ProjectileTracker` |
-| Arenayı terk etmenin kendisi bedava | `EscapeMishapChance` (0.30): çıkışta kaza yarası. Canı **1'in altına indirmez** — amacı ölüm değil, bedelsizliği kaldırmak |
+| `MoveSpeed` was a single constant — pursuer and fleer at the same speed, net closing zero | `WarriorStats.Speed` (0-100). Oni 25, Kappa 55, Tengu 85. A fleeing warrior is additionally slowed by `RetreatSpeedMultiplier`. Losing a leg also lowers speed (`Disability.SpeedMultiplier`) |
+| Melee did not reach the far half of the arena | `ThrownWeapon` + `Projectile`: the projectile spends time in the air and resolves on arrival. New events `ProjectileLaunched/Hit/Missed`; on the presentation side `ProjectileView`/`ProjectileTracker` |
+| Leaving the arena itself was free | `EscapeMishapChance` (0.30): a mishap wound on the way out. It **never takes health below 1** — its purpose is not death, but removing the freeness |
 
-**Yazarken bulunan asıl sorun:** hız eklenince avcı yetişiyor ama **hiç vuramıyordu**.
-Kural "hamleye kilitlenen yürüyemez" idi; avcı yetişip savuruyor, hamle boyunca donuyor,
-kaçan menzilden çıkıyor, kılıç her seferinde boşluğa iniyordu. Kovalamaca için kural
-askıya alındı: kovalayan **hamle sırasında** koşmaya devam eder. Toparlanmada değil —
-ikisi de açıkken kovalayan hiç durmuyor ve kaçış tamamen çöküyordu (ekiplerin %76'sı
-kırılıyordu, %30 yerine). `RetreatSpeedMultiplier` 0.85/0.92/1.0 tarandı, **0.92** seçildi.
+**The real problem found while writing:** once speed was added the hunter caught up but
+**could never land a blow**. The rule was "whoever locks into a lunge cannot walk"; the
+hunter would catch up, swing, freeze for the duration of the lunge, the fleer would leave
+range, and the sword came down into empty space every time. The rule was suspended for the
+chase: a pursuer keeps running **during the lunge**. Not during recovery — with both open
+the pursuer never stops and escaping collapsed entirely (76% of teams broke, instead of
+30%). `RetreatSpeedMultiplier` was swept at 0.85/0.92/1.0, and **0.92** was chosen.
 
-Yeni merdiven (3v3, 20.000 dövüş, hafif kuşam):
+The new ladder (3v3, 20,000 fights, light kit):
 
-| Basamak | Temasta önce | 2. sn | Can %50 | Sayıca geri kalınca |
+| Rung | Before contact | 2nd s | Health 50% | When outnumbered |
 |---|---|---|---|---|
-| 1 · hepsi kaçtı, yarasız | %35.0 | — | — | — |
-| 2 · hepsi kaçtı, yaralı | %65.0 | %87.1 | %6.8 | — |
-| 3 · hepsi kaçtı, uzuv kayıplı | — | %7.4 | %2.3 | — |
-| 4 · kısmi kaçış, uzuvsuz | — | %4.9 | %71.8 | %29.6 |
-| 5 · kısmi kaçış, uzuv kayıplı | — | %0.6 | %17.6 | %9.3 |
-| 6 · kimse kaçamadı | — | — | %1.5 | %61.1 |
+| 1 · all escaped, unwounded | 35.0% | — | — | — |
+| 2 · all escaped, wounded | 65.0% | 87.1% | 6.8% | — |
+| 3 · all escaped, with limb loss | — | 7.4% | 2.3% | — |
+| 4 · partial escape, no limbs lost | — | 4.9% | 71.8% | 29.6% |
+| 5 · partial escape, with limb loss | — | 0.6% | 17.6% | 9.3% |
+| 6 · nobody escaped | — | — | 1.5% | 61.1% |
 
-> **Uzuv kaybı bandı bozulmadı** — zırhın belirlediği oranlar neredeyse aynı kaldı
-> (zırhsız %8.6, hafif %6.6, orta %2.9, ağır %0.4). Değişen ölüm ve kaçış: kaçmak artık
-> pahalı, o yüzden ölüm %41.6'dan %49.1'e çıktı, kaçış %8.7'den %4.1'e indi.
+> **The limb-loss band was not disturbed** — the rates set by armour stayed almost the same
+> (unarmoured 8.6%, light 6.6%, medium 2.9%, heavy 0.4%). What changed is death and escape:
+> escaping is now expensive, so death rose from 41.6% to 49.1% and escape fell from 8.7% to
+> 4.1%.
 
-Bu geçişte GDD Açık Karar **#4-C kapandı** (fırlatma hattı §4'te artık "Aktif") ve §5'e
-merdiven ile üç mekanik işlendi. Yeni test dosyası `RangedAndFlightTests`. Toplam 190 test.
+In this pass GDD Open Decision **#4-C closed** (the throwing line is now "Active" in §4) and
+the ladder plus three mechanics were written into §5. New test file `RangedAndFlightTests`.
+190 tests total.
 
-**2. Aynı uzuv birden çok kez kopabiliyordu.** `_lostParts` savaşçı başına tek `BodyPart`
-tutuyordu ve her yeni kayıp öncekini siliyordu; `AlreadyLost` yalnızca sonuncusuna baktığı
-için kolunu kaybeden savaşçı bacağını kaybedince "kolu duruyor" sayılıyordu. Ölçüldü:
-tek savaşçıda **22 kopma**, `[Kol, Bacak, Kol, Bacak, ...]`. Kayıt artık `BodyPartSet` —
-tekrarsızlığı tipin kendisi taşıyor, üstelik değer eşitliği olduğu için özet record'ları
-determinizm testlerinde karşılaştırılabilir kalıyor.
+**2. The same limb could be severed more than once.** `_lostParts` held a single `BodyPart`
+per warrior and every new loss erased the previous one; since `AlreadyLost` only looked at
+the last one, a warrior who had lost an arm counted as "arm intact" once they lost a leg.
+Measured: **22 severings** on a single warrior, `[Arm, Leg, Arm, Leg, ...]`. The record is
+now a `BodyPartSet` — the type itself carries the no-duplicates guarantee, and since it has
+value equality the summary records stay comparable in the determinism tests.
 
-Aynı hata, birden fazla uzvunu kaybeden savaşçının fazladan kayıplarını da yutuyordu:
-zırhsız 3v3'te 5440 sakat savaşçıya karşılık **5830 kopan uzuv** var.
+The same bug also swallowed the extra losses of a warrior who lost more than one limb: in an
+unarmoured 3v3 there are **5830 severed limbs** against 5440 crippled warriors.
 
-### Ölçülen band (3v3, 20.000 dövüş, `losing:0.7`)
+### The measured band (3v3, 20,000 fights, `losing:0.7`)
 
-| Kuşam | Ölüm | **Uzuv kaybı** | Zafer |
+| Kit | Death | **Limb loss** | Victory |
 |---|---|---|---|
-| Zırhsız | %41.6 | **%8.6** | %68 |
-| Hafif keikogi | %38.8 | **%6.7** | %70 |
-| Dō-maru | %22.5 | **%2.9** | %89 |
-| Ō-yoroi | %16.3 | **%0.4** | %96 |
+| Unarmoured | 41.6% | **8.6%** | 68% |
+| Light keikogi | 38.8% | **6.7%** | 70% |
+| Dō-maru | 22.5% | **2.9%** | 89% |
+| Ō-yoroi | 16.3% | **0.4%** | 96% |
 
-`BaseDismembermentChance` **0.35 → 0.05**. Eski değer, kopmanın yalnızca kaçış
-penceresinde ateşlendiği ağaca göre ayarlanmıştı; yeni ağaçta aynı sayı uzuv kaybını
-%45'e çıkarıyordu. 0.35/0.15/0.08/0.05/0.03 tarandı — knob ölüm ve zafer oranlarını
-kayda değer biçimde oynatmıyor, yalnızca uzuv kaybını ölçekliyor.
+`BaseDismembermentChance` **0.35 → 0.05**. The old value had been tuned for the tree in
+which severing only fired inside the escape window; in the new tree the same number pushed
+limb loss to 45%. 0.35/0.15/0.08/0.05/0.03 were swept — the knob does not move death and
+victory rates appreciably, it only scales limb loss.
 
-> **Tuş artık oranı belirlemiyor, ölümü belirliyor.** Aynı kuşamda hiç çekilmeyen ile
-> erken çeken oyuncunun uzuv kaybı neredeyse aynı (%8.8'e karşı %8.0); ölüm %48'den
-> %29'a düşüyor. Kazanılan dövüşlerin **%16.5'i** eve sakat bir savaşçı getiriyor.
+> **The button no longer determines the rate, it determines death.** In the same kit, limb
+> loss for a player who never pulls out and one who pulls out early is almost the same
+> (8.8% against 8.0%); death drops from 48% to 29%. **16.5%** of won fights bring home a
+> crippled warrior.
 
-Testler: `TestBuilders.PointBlank` artık `BaseDismembermentChance`'i **sabitliyor** —
-sonuç ağacını sınayan testler kuralı sınıyor, dengeyi değil; denge sayısı devralınsaydı
-her ayarda kırılırlardı. Toplam 180 test yeşil.
+Tests: `TestBuilders.PointBlank` now **pins** `BaseDismembermentChance` — tests that probe
+the outcome tree test the rule, not the balance; if the balance number were inherited they
+would break on every tuning change. 180 tests green in total.
 
-### Bundan geriye kalan
+### What is left of this
 
-Önceki oturumun dört seçeneğinden **C · künt silah kalıcı yaralanma yapsın** hâlâ açık
-(kullanıcı "sonraki tura" dedi). GDD §7 "künt → kırık/sersemleme" vaat ediyor, çekirdekte
-karşılığı yok; tetsubo'nun kopma çarpanı 0.15 olduğu için ağır zırhlı savaşçıya karşı
-neredeyse hiçbir kalıcı etkisi olmuyor. B/D seçenekleri artık gereksiz — oranı
-yükseltmek için konmuşlardı.
+Of the previous session's four options, **C · blunt weapons should cause permanent injury**
+is still open (the user said "next round"). GDD §7 promises "blunt → fracture/stun", the
+core has nothing to match; since the tetsubo's severing multiplier is 0.15 it has almost no
+permanent effect against a heavily armoured warrior. Options B/D are now unnecessary — they
+had been put there to raise the rate.
 
 ---
 
-## Sersemletme çekirdeğe girdi (2026-09-02)
+## Stunning entered the core (2026-09-02)
 
-Açık Karar **#4-B'nin ilk maddesi kapandı**: künt silahın sersemletme etkisi artık
-çekirdekte. GDD §7'nin "kod ile fark" notu silindi, yerine kural ve sayı tablosu geldi.
+Open Decision **#4-B's first item closed**: the stunning effect of blunt weapons is now in
+the core. The "differs from the code" note in GDD §7 was deleted and replaced with the rule
+and a table of numbers.
 
-Kural: aynı ağır darbe iki zar attırır — uzuv kopma ve sersemletme. Sersemleyen savaşçı
-0.9 saniye donar; yürümez, vurmaz, **kaçınamaz**.
+The rule: the same grievous blow rolls two dice — limb severing and stunning. A stunned
+warrior freezes for 0.9 seconds; they do not walk, do not strike and **cannot dodge**.
 
-### Ölçüm — takas nerede dönüyor
+### Measurement — where the trade turns
 
-İki yeni senaryo eklendi (`blade` / `club`): aynı savaşçı, aynı düşman, **yalnızca silah
-sınıfı farklı** (Nodachi 34/1.60 karşısında Tetsubo 30/1.55). Ayrım bu kadar dar olmasa
-"künt silah işe yaradı" cümlesi statlardan mı silahtan mı geliyor ayrışmazdı.
+Two new scenarios were added (`blade` / `club`): same warrior, same enemy, **only the weapon
+class differs** (Nodachi 34/1.60 against Tetsubo 30/1.55). Without a distinction this narrow,
+it would not be separable whether the sentence "blunt weapons became useful" comes from the
+stats or from the weapon.
 
-| Taban şans | Kesici zafer | Künt zafer |
+| Base chance | Cutting victory | Blunt victory |
 | --- | --- | --- |
-| 0 (kural yok) | %91.57 | %88.68 |
-| 0.15 | %91.89 | %90.46 |
-| **0.35** | **%92.06** | **%92.08** |
-| 0.60 | %92.30 | %93.83 |
-| 1.00 | %92.70 | %95.67 |
+| 0 (no rule) | 91.57% | 88.68% |
+| 0.15 | 91.89% | 90.46% |
+| **0.35** | **92.06%** | **92.08%** |
+| 0.60 | 92.30% | 93.83% |
+| 1.00 | 92.70% | 95.67% |
+> Without the rule the blunt weapon was worse **on every axis**: it lost on the severing
+> multiplier (0.15 against 1.0) and got nothing in return. 0.35 brings the two classes level;
+> beyond that it tips in favour of blunt.
 
-> Kural yokken künt silah **her eksende** kötüydü: kopma çarpanında kaybediyor
-> (0.15'e karşı 1.0), karşılığında hiçbir şey almıyordu. 0.35 iki sınıfı başa baş
-> getiriyor; ondan sonrası künt lehine bozuluyor.
+The threshold was swept too and left at 0.20: at 0.30 stunning almost never fires and blunt
+falls behind again (89.07% against 91.55%) — that is, the problem comes straight back. At
+0.10 **cutting weapons start stunning as well** and both sides weaken at once.
 
-Eşik de tarandı ve 0.20'de bırakıldı: 0.30'da sersemletme neredeyse hiç ateşlenmiyor ve
-künt yine geriye düşüyor (%89.07'ye karşı %91.55) — yani sorun aynen geri geliyor.
-0.10'da **kesici silah da** sersemletmeye başlıyor ve iki taraf birden zayıflıyor.
+### An unexpected result on the duration
 
-### Sürede beklenmedik sonuç
+There is **no difference at all** between 0.5 and 0.9 seconds (92.06% / 92.08%). The reason:
+in that band the stun mostly lands in a gap where the warrior was already waiting. What
+bites about the rule is not the lost blow but **the closed dodge**. Teeth appear above 1.0
+seconds — at 1.4 blunt jumps to 94.16%. 0.9 was chosen because it sits just below that
+threshold and is long enough to read on screen.
 
-0.5 ile 0.9 saniye arasında **hiçbir fark yok** (%92.06 / %92.08). Sebep: bu bantta
-sersemleme çoğunlukla savaşçının zaten beklemekte olduğu boşluğa denk geliyor. Kuralın
-ısıran tarafı kaybedilen hamle değil, **kapanan kaçınma**. Diş 1.0 saniyenin üstünde
-çıkıyor — 1.4'te künt %94.16'ya fırlıyor. 0.9 o eşiğin hemen altında ve ekranda
-okunacak kadar uzun olduğu için seçildi.
+### 4-D's tier trade survived
 
-### 4-D'nin kademe takası ayakta kaldı
+Armour damps stunning too, but not with the whole of its severing resistance — with a
+**share of 0.6** (blunt force passes under the plate). Measured (3v3, 20,000 fights): at a
+share of 0, 0.51 stuns per warrior; at 0.6, 0.33; at 1.0, 0.22. At 0.6 the tiers are still
+each best at something: dō-maru has less death (43.78% against 44.15%), ō-yoroi less limb
+loss (0.83% against 3.43%).
 
-Zırh sersemletmeyi de damperliyor ama kopma direncinin tamamıyla değil, **0.6 payıyla**
-(künt kuvvet plakanın altından geçer). Ölçüldü (3v3, 20.000 dövüş): pay 0'da savaşçı
-başına 0.51, 0.6'da 0.33, 1.0'da 0.22 sersemleme. 0.6'da kademeler hâlâ bir şeyde en
-iyi: dō-maru daha az ölüm (%43.78'e karşı %44.15), ō-yoroi daha az uzuv kaybı
-(%0.83'e karşı %3.43).
+### The player pays the cost too
 
-### Bedeli oyuncu da ödüyor
+In a 3v3 the Oni's tetsubo now bites: player victory fell from 69.31% to **65.20%**, and
+stuns taken per warrior rose to 0.39. Absolute balance is Phase 9's job; what is held in
+this round is the **ratio** between classes.
 
-3v3'te Oni'nin tetsubo'su artık ısırıyor: oyuncu zaferi %69.31'den **%65.20**'ye,
-savaşçı başına yenen sersemleme 0.39'a çıktı. Mutlak denge Faz 9'un işi; bu turda
-tutulan şey sınıflar arası **oran**.
+### Two protective rules
 
-### İki koruma kuralı
+- **A withdrawing warrior cannot be stunned** — otherwise an enemy with a blunt weapon would
+  cancel §5's only intervention with a single die
+- **A stunned warrior cannot be stunned again**, and the duration is not refreshed. When the
+  duration ends, a buffered "Flee" command is processed: stunning does not **swallow** the
+  command, it delays it
 
-- **Çekilen savaşçı sersemlemez** — yoksa künt silahlı düşman §5'in tek müdahalesini
-  tek zarla iptal ederdi
-- **Sersemleyen tekrar sersemlemez**, süre yenilenmez. Süre bitince buffer'lanmış "Kaç"
-  komutu işlenir: sersemletme komutu **yutmaz**, geciktirir
+New test file: `StunTests` (9 tests). 233 tests green in total.
 
-Yeni test dosyası: `StunTests` (9 test). Toplam 233 test yeşil.
-
-**4-B'de açık kalanlar:** zehir, jitte/sai ile kılıç yakalama, silah kırılması.
+**Still open in 4-B:** poison, sword catching with jitte/sai, weapon breakage.
 
 ---
 
-## Kılıç yakalama çekirdeğe girdi (2026-09-03)
+## Sword catching entered the core (2026-09-03)
 
-Açık Karar **#4-B'nin ikinci maddesi kapandı**: jitte ve sai artık GDD §4'ün kalkanı
-reddederken bıraktığı boşluğu dolduruyor. Kural ve sayı tablosu §7'de.
+Open Decision **#4-B's second item closed**: jitte and sai now fill the gap GDD §4 left when
+it rejected shields. The rule and the table of numbers are in §7.
 
-Kural: yakalama **kaçınmadan önce** denenen ikinci savunma eksenidir. Kaçınma darbeyi
-ıskalatır ve orada biter; yakalama darbeyi siler **ve** saldıranı 0.6 sn kilitler —
-kilitli savaşçı yürümez, vurmaz, kaçınamaz. Zar savunanın kavrayışından, saldıranın
-silahının yakalanabilirliğinden ve savunanın **İsabet**'inden beslenir.
+The rule: catching is the second line of defence, attempted **before dodging**. A dodge makes
+the blow miss and it ends there; a catch erases the blow **and** binds the attacker for
+0.6 s — a bound warrior does not walk, does not strike, cannot dodge. The die is fed by the
+defender's Grip, the catchability of the attacker's weapon and the defender's **Accuracy**.
 
-### Ölçüm — takas nerede dönüyor
+### Measurement — where the trade turns
 
-Üç yeni senaryo (`katana` / `jitte` / `sai`): aynı savaşçı, aynı düşman, üçü de **tek
-el**, yalnızca silah farklı. El sayısı sabit tutuldu ki ölçülen şey silah sınıfı değil
-yakalama olsun.
+Three new scenarios (`katana` / `jitte` / `sai`): same warrior, same enemy, all three
+**one-handed**, only the weapon differs. The number of hands was held fixed so that what is
+measured is catching and not the weapon class.
 
-| Silah | Zafer | Uzuv kaybı | Yakalama/dövüş |
+| Weapon | Victory | Limb loss | Catches/fight |
 | --- | --- | --- | --- |
-| Katana (kontrol) | %73.09 | %0.90 | 0.00 |
-| Jitte | %72.63 | %0.52 | 2.75 |
-| Sai | %72.73 | %0.45 | 3.71 |
+| Katana (control) | 73.09% | 0.90% | 0.00 |
+| Jitte | 72.63% | 0.52% | 2.75 |
+| Sai | 72.73% | 0.45% | 3.71 |
 
-Taban şans tarandı: 0.15'te jitte %61.16, 0.20'de %68.53, 0.30'da %77.22. **0.24**
-takasın döndüğü yer — katana zaferde önde kalıyor, yakalama aletleri eve sakat
-dönmemeyi alıyor. 4-D'nin "her seçenek bir şeyde en iyi" deseni ayakta.
+The base chance was swept: at 0.15 jitte gets 61.16%, at 0.20 68.53%, at 0.30 77.22%.
+**0.24** is where the trade turns — the katana stays ahead on victory, the catching tools
+buy not coming home crippled. 4-D's "every option is best at something" pattern holds.
 
-### Ağır silah yakalamanın cevabı
+### Heavy weapons are the answer to catching
 
-İki senaryo daha (`jitte-heavy` / `katana-heavy`): düşman çift el nodachi taşıyor.
-Jitte %29.37, katana %34.78 kazanıyor ve jitte uzuv korumasını da kaybediyor (%11.77'ye
-karşı %11.42) — nodachi'ye karşı jitte düpedüz yanlış seçim. Kaldıraç çarpanı 0.5'te
-delik 14 puana çıkıyordu (%21.04); **0.75** tuzağı bir tercihe indiriyor.
+Two more scenarios (`jitte-heavy` / `katana-heavy`): the enemy carries a two-handed nodachi.
+Jitte wins 29.37%, katana 34.78%, and the jitte also loses its limb protection (11.77%
+against 11.42) — against a nodachi the jitte is simply the wrong choice. At a leverage
+multiplier of 0.5 the hole widened to 14 points (21.04%); **0.75** turns the trap into a
+preference.
 
-### Kilit süresi yine ölçülmedi — ama sebebi başka
+### The bind duration was again not measured — but for a different reason
 
-Sersemletme süresindeki bulgunun aynısı: 1v1'de 0 sn ile 1.2 sn arası yalnızca
-%72.44 → %73.72. Açılan pencere savaşçının zaten beklediği boşluğa denk geliyor;
-kuralın ısırdığı yer **silinen vuruş**.
+The same finding as with the stun duration: in a 1v1, going from 0 s to 1.2 s only moves
+72.44% → 73.72%. The window that opens lands in a gap where the warrior was already waiting;
+where the rule bites is **the erased blow**.
 
-Kilidin takım değerini ölçmek için `3v3-jitte` eklendi ve orada da ayrışmadı — ama
-sebebi farklı: jitte taşıyan acemi dövüş başına yalnızca **~0.57 yakalanabilir vuruş**
-görüyor (tavan `--catch-chance 1.0` ile ölçüldü, 0.19/savaşçı). Kalabalıkta hedef
-bölünüyor, Tengu mermi atıyor, Oni'nin tetsubo'su zaten zor yakalanıyor. **Kilidin takım
-değeri hâlâ ölçülmemiş bir soru.** 0.6 sn, ekranda okunacak kadar uzun ve takasın
-döndüğü yerin altında olduğu için seçildi.
+`3v3-jitte` was added to measure the bind's team value, and there too it did not separate —
+but for a different reason: a novice carrying a jitte sees only **~0.57 catchable blows** per
+fight (the ceiling was measured with `--catch-chance 1.0`, 0.19/warrior). In a crowd the
+targets split, the Tengu throws projectiles, and the Oni's tetsubo is hard to catch anyway.
+**The team value of the bind is still an unmeasured question.** 0.6 s was chosen because it
+is long enough to read on screen and below where the trade turns.
 
-### Stamina bedeli beklenmedik yerden ısırıyor
+### The stamina cost bites from an unexpected direction
 
-Bedel 0'da zafer %76.85, 16'da %72.63 — ama **yakalama sayısı ikisinde de aynı**
-(2.72 / 2.75). Yani bedel yakalamayı seyrekleştirmiyor, savaşçıyı **yoruyor**: stamina
-saldırıyı ve kaçınmayı besliyor. 8'de hiç bağlamıyor, 30'da yıkıcı (%41.07).
+At a cost of 0 victory is 76.85%, at 16 it is 72.63% — but **the number of catches is the
+same in both** (2.72 / 2.75). So the cost does not make catching rarer, it **tires** the
+warrior: stamina feeds both attacking and dodging. At 8 it binds nothing at all, at 30 it is
+ruinous (41.07%).
 
-### Sai'nin ilk sayıları yanlıştı
+### The sai's first numbers were wrong
 
-13/1.05 ile başladı ve düpedüz kötüydü (%61.92): fazladan kavrayış kaybedilen hasarı
-ödemiyordu. 14/1.05'te üçü de yarım puan içinde. Jitte ile farkı hasar değil **hacim** —
-sai daha çok yakalar, yani kalabalığa karşı daha çok işi olmalı. **Bu kuşatma ölçümü
-yapılmadı.**
+It started at 13/1.05 and was simply bad (61.92%): the extra grip did not pay for the lost
+damage. At 14/1.05 all three sit within half a point. Its difference from the jitte is not
+damage but **volume** — the sai catches more, so it should have more work to do against a
+crowd. **This encirclement measurement was not done.**
 
-Yeni durum: `CombatState.WeaponBound` — sersemlemeden ayrı tutuldu, çünkü sebebi de
-ekrandaki görüntüsü de ayrı (sersemleyen çöker ve salınır, yakalanan gergin durur).
-Yeni test dosyası: `WeaponCatchTests` (12 test). Toplam 245 test yeşil.
+New state: `CombatState.WeaponBound` — kept separate from stunning, because both its cause
+and its look on screen are different (a stunned warrior collapses and sways, a bound one
+stands taut). New test file: `WeaponCatchTests` (12 tests). 245 tests green in total.
 
-**4-B'de açık kalan:** silah kırılması.
+**Still open in 4-B:** weapon breakage.
 
 ---
 
-## Zehir çekirdeğe girdi (2026-09-03)
+## Poison entered the core (2026-09-03)
 
-Açık Karar **#4-B'nin üçüncü maddesi kapandı**: zehir artık kodda. Kural ve sayı
-tablosu GDD §7'de.
+Open Decision **#4-B's third item closed**: poison is now in the code. The rule and the table
+of numbers are in GDD §7.
 
-Kural: zehirli silahın **her isabeti** savunana bir doz bırakır — zar yok, namlu deriyi
-çizdiyse zehir de girmiştir. Doz saniyede bir can yer ve bu hasar **ne zırhtan ne
-Savunma statından** geçer; zehir, hasar azaltımının etrafından dolaşan tek yoldur. Doz
-birikir (tavan 3.0), süre her yeni vuruşta baştan kurulur (6.0 sn).
+The rule: **every hit** from a poisoned weapon leaves a dose on the defender — no die, if the
+blade broke the skin the poison went in too. A dose eats one health per second and this damage
+passes through **neither armour nor the Defence stat**; poison is the only route that goes
+around damage reduction. Doses stack (ceiling 3.0) and the duration is reset from scratch on
+each new hit (6.0 s).
 
-Kilitlenen sayılar: tik başına 2.5 hasar, tik aralığı 1.0 sn, dozun ömrü 6.0 sn, azami
-doz 3.0. Zehirli tantō 7/0.85 (temiz tantō 13/0.85), zehirli shuriken 12 hasar / 2
-cephane.
+The locked numbers: 2.5 damage per tick, tick interval 1.0 s, dose lifetime 6.0 s, maximum
+dose 3.0. Poisoned tantō 7/0.85 (clean tantō 13/0.85), poisoned shuriken 12 damage /
+2 ammunition.
 
-### İlk kurulum yanlış cevap veriyordu
+### The first setup gave the wrong answer
 
-Zehirli bıçak 13 hasarla dururken ölçüm "zehir işe yarıyor" diyordu ama **iddiayı
-doğrulamıyordu**: açık dövüşte %74.00, ō-yoroi kuşanmış oni'ye karşı %55.99 (katana
-%73.09 / %68.62). Yani zehir zırhı aşmıyor, yalnızca zayıf bir bıçağı kurtarıyordu —
-çünkü çıktının çoğu hâlâ çelikti ve zırh çeliği okuyor.
+With the poisoned blade left at 13 damage, the measurement said "poison works" but did **not
+confirm the claim**: 74.00% in an open fight, 55.99% against an oni wearing ō-yoroi (katana
+73.09% / 68.62%). That is, poison was not beating armour, it was only rescuing a weak blade —
+because most of the output was still steel, and armour reads steel.
 
-Bıçak 7'ye indirilip doz büyütülünce çıktının %60'ı zehre geçti ve iddia doğrulandı:
+Once the blade was reduced to 7 and the dose enlarged, 60% of the output moved to poison and
+the claim was confirmed:
 
-| Silah | Zırhsız oni | Ō-yoroi kuşanmış oni |
+| Weapon | Unarmoured oni | Oni wearing ō-yoroi |
 |---|---|---|
-| Katana (kontrol) | %73.09 | %68.62 |
-| Temiz tantō | %31.14 | %1.23 |
-| Zehirli tantō | %72.19 | **%77.19** |
+| Katana (control) | 73.09% | 68.62% |
+| Clean tantō | 31.14% | 1.23% |
+| Poisoned tantō | 72.19% | **77.19%** |
 
-Beklenmedik sonuç: **zehirlinin karşısında ağır kuşanmak zarardır.** Plaka dozu
-durdurmuyor, ağırlığı ise oni'nin vuruşunu geciktiriyor — zırhın işareti bu eşleşmede
-ters dönüyor.
+An unexpected result: **against a poisoner, wearing heavy armour is a liability.** The plate
+does not stop the dose, while its weight slows the oni's blow — the sign of armour flips in
+this matchup.
 
-### Asıl düğme doz tavanı, ömür değil
+### The real knob is the dose ceiling, not the lifetime
 
-Tavan: 1'de zehirli bıçak düpedüz kötü (%16.71), 2'de hâlâ geride (%50.92), 3'te katana
-ile başa baş, 5'te baskın (%82.25).
+Ceiling: at 1 the poisoned blade is simply bad (16.71%), at 2 still behind (50.92%), at 3 level
+with the katana, at 5 dominant (82.25%).
 
-Ömür 6 saniyeden sonra neredeyse hiçbir şey yapmıyor (3 sn %52.90, 4.5 sn %68.83,
-6 sn %72.19, 9 sn %73.11): hızlı vuran silah süreyi zaten sürekli yeniliyor, uzun ömür
-yalnızca **son** vuruştan sonrasını uzatıyor — o da çoğu dövüşte bitmiş dövüş.
+The lifetime does almost nothing past 6 seconds (3 s 52.90%, 4.5 s 68.83%, 6 s 72.19%, 9 s
+73.11%): a fast-hitting weapon already keeps refreshing the duration, and a long lifetime only
+extends what comes after the **last** hit — which in most fights is a finished fight.
 
-Tik aralığı tarafsız bir düğme değil, doğrudan hasar hızı (0.5 sn'de %94.93, 1 sn'de
-%72.19, 2 sn'de %30.40). 1 sn seçildi çünkü dozun ömrüne bölününce zehir **sayılabilir**
-oluyor: altı vuruş.
+The tick interval is not a neutral knob but the damage rate directly (0.5 s 94.93%, 1 s 72.19%,
+2 s 30.40%). 1 s was chosen because, divided into the dose's lifetime, poison becomes
+**countable**: six hits.
 
-### Zehir oyuncunun üstüne dönünce
+### When poison turns on the player
 
-`3v3-poison` eklendi (tengu zehirli shuriken atıyor; kontrol aynı kadro): zafer
-%65.20'den %60.35'e, kaçış %8.10'dan %6.86'ya iniyor, ölüm %45.45'ten %50.44'e çıkıyor
-ve ölümlerin %1.3'ü doğrudan zehirden.
+`3v3-poison` was added (the tengu throws poisoned shuriken; the control uses the same roster):
+victory falls from 65.20% to 60.35%, escape from 8.10% to 6.86%, death rises from 45.45% to
+50.44% and 1.3% of deaths are directly from poison.
 
-**Çekilen savaşçının zehri durmuyor** — bu kasıtlı: sersemletme ve yakalama kaçış
-vaadinin üstüne *yeni bir zar* konmasın diye çekilene işlemiyor, ama zehir yeni bir zar
-değil, çoktan ödenmiş bir bedelin devamı; tuş bir panzehir değil. Ölçüm §5'in
-merdiveninin ayakta kaldığını söylüyor: kaçış hâlâ çalışıyor, yalnızca daha pahalı.
+**A withdrawing warrior's poison does not stop** — this is deliberate: stunning and catching do
+not apply to a withdrawing warrior so that *a new die* is not laid on top of the promise of
+escape, but poison is not a new die, it is the continuation of a price already paid; the button
+is not an antidote. The measurement says §5's ladder still stands: escape still works, it is
+just more expensive.
 
-### Zehrin almadığı şeyler
+### What poison does not take
 
-Zehir uzuv koparmaz ve sersemletmez — ikisi de *darbenin* sonucu, zehirde vuran kimse
-yok. Zehirle gelen ölüm ayrı bir sebep taşıyor (`DeathCause.Poison`), yoksa "başka türlü
-öldürüyor" iddiası hiçbir sayaçta görünmezdi.
+Poison does not sever limbs and does not stun — both are the result of *a blow*, and with poison
+nobody is striking. Death that comes from poison carries its own cause (`DeathCause.Poison`);
+otherwise the claim "it kills a different way" would show up in no counter.
 
-Yeni test dosyası: `PoisonTests` (9 test). Toplam 257 test yeşil.
+New test file: `PoisonTests` (9 tests). 257 tests green in total.
 
-**4-B'de açık kalan:** silah kırılması.
+**Still open in 4-B:** weapon breakage.
 
-> **Not:** `ThroughputTests` Debug'da bütçenin (10 sn) sınırında duruyor ve tüm süit
-> birlikte koşarken düşebiliyor. Değişiklikten bağımsız: izole koşuda üçer kez
-> ölçüldü, değişiklikten önce de sonra da 7-9 sn. Release'te 2 sn. Bütçe ya
-> yükseltilmeli ya da test Release'e bağlanmalı.
+> **Note:** `ThroughputTests` sits right at the edge of the budget (10 s) in Debug and can fail
+> when the whole suite runs together. Unrelated to the change: measured three times in isolation,
+> 7-9 s both before and after the change. 2 s in Release. Either the budget must be raised or the
+> test must be tied to Release.
 
 ---
 
-## Sıradaki iş
+## Next up
 
-**Faz 2.2 — sanat üretimi.** Stil kararı verildi, önünde engel kalmadı.
+**Phase 2.2 — art production.** The style decision is made, nothing is blocking it.
 
-### Görsel stil — karara bağlandı (2026-08-13)
+### Visual style — decided (2026-08-13)
 
-**Karanlık Edo ahşap baskı × katmanlı kâğıt tiyatrosu.** Tam kural GDD §12'de.
+**Dark Edo woodblock print × layered paper theatre.** The full rule is in GDD §12.
 
-Süreç: beş aday stil için aynı sahne üretildi (dojo, antrenman alanı, silah atölyesi,
-strateji odası), sonra kazanan yönde parça ayrılmış karakter sayfası istendi.
+Process: the same scene was produced for five candidate styles (dojo, training ground, weapon
+workshop, strategy room), then a character sheet with separated parts was requested in the
+winning direction.
 
-| Aday | Sonuç |
+| Candidate | Result |
 |---|---|
-| Sumi-e | **Elendi.** Gri yıkama üstünde gri figür — savaşçı zeminden ayrılmıyor, dört zırh kademesi monokromda okunmuyor |
-| Ukiyo-e | Çalışıyor ama arka plan figür kadar kontrastlı; dövüş sahnesinde savaşçıyı yer |
-| Ahşap baskı + kâğıt tiyatrosu | **Seçildi** |
-| Gotik boyama / temiz vektör | Değerlendirildi, kimlik veya maliyet gerekçesiyle geçildi |
+| Sumi-e | **Eliminated.** Grey figure over a grey wash — the warrior does not separate from the ground, and four armour tiers do not read in monochrome |
+| Ukiyo-e | Works, but the background is as contrasty as the figure; in a fight scene it eats the warrior |
+| Woodblock print + paper theatre | **Chosen** |
+| Gothic painting / clean vector | Considered, passed over for identity or cost reasons |
 
-Seçim gerekçesi estetik değil: kâğıt tiyatrosunda değer boşluğu **figürle zemin
-arasında** (açık kâğıt / koyu kütle). Ukiyo-e'de bu ayrım renkten geliyor, burada
-değerden — değer küçültmede hayatta kalır, renk kalmaz. 128 px testi bunu doğruladı.
+The reason for the choice is not aesthetic: in paper theatre the value gap sits **between the
+figure and the ground** (light paper / dark mass). In ukiyo-e that distinction comes from colour,
+here from value — value survives being scaled down, colour does not. The 128 px test confirmed
+this.
 
-Ayrıca stil, rig'in zayıflığını kendi diline çeviriyor: düz bir uzuv mekanik
-döndüğünde boyalı figürde yanlış görünür, kâğıt kesiminde doğru görünür.
+The style also translates the rig's weakness into its own language: a flat limb rotating
+mechanically looks wrong on a painted figure and right on a paper cut-out.
 
-> **Kritik üretim kuralı — temiz varlık, dokulu ekran.** Doku ve ışık parçaya
-> pişirilmez; ahşap baskı hissi tam ekran `CanvasLayer` overlay'inden, gün döngüsü
-> `CanvasModulate` tintinden gelir. Aksi hâlde 15 parçanın her biri ayrı
-> ışıklandırılmak zorunda kalır. Kan/vermilion tint dışında tutulur, yoksa vurgu ölür.
+> **Critical production rule — clean asset, textured screen.** Texture and light are not baked
+> into the part; the woodblock feel comes from a full-screen `CanvasLayer` overlay and the day
+> cycle from a `CanvasModulate` tint. Otherwise each of the 15 parts has to be lit separately.
+> Blood/vermilion is kept out of the tint, or the accent dies.
 
-### Hedef seçimi rastgele oldu (2026-08-13)
+### Target selection became random (2026-08-13)
 
-Çekirdek artık hedefi listedeki ilk ayakta düşman yerine **rastgele** seçiyor; hedef
-düşman ölene/kaçana kadar yapışkan. `CombatantSnapshot.TargetId` eklendi — koreografi
-hedefi artık kendisi türetmiyor, çekirdekten okuyor (eski kopyalanmış kural silindi).
+The core now picks its target **at random** instead of the first standing enemy in the list; the
+target is sticky until that enemy dies or flees. `CombatantSnapshot.TargetId` was added — the
+choreography no longer derives the target itself, it reads it from the core (the old duplicated
+rule was deleted).
 
-| 3v3, 10.000 dövüş, `below:0.3` | Ön saf | Rastgele |
+| 3v3, 10,000 fights, `below:0.3` | Front rank | Random |
 | --- | --- | --- |
-| Zafer | %5.1 | **%36.1** |
-| Oyuncu ölümü | %32.0 | %25.8 |
-| Kaçış | %63.3 | %40.8 |
-| Uzuv kaybı | %2.50 | **%1.10** |
+| Victory | 5.1% | **36.1%** |
+| Player death | 32.0% | 25.8% |
+| Escape | 63.3% | 40.8% |
+| Limb loss | 2.50% | **1.10%** |
 
-> Eski kuralda üç düşman da aynı savaşçıya yükleniyor, o savaşçı hızla eşiğin altına
-> düşüyor ve politika tüm ekibi çekiyordu. Rastgele hedefleme hasarı yayıyor.
+> Under the old rule all three enemies piled onto the same warrior, that warrior dropped below
+> the threshold quickly and the policy pulled the whole team out. Random targeting spreads the
+> damage.
 >
-> **Not:** odaklı ateş matematiksel olarak daha güçlü AI'dır (ölen savaşçı hasar
-> vermez), yani bu değişiklik düşmanı zayıflattı. **Uzuv kaybı yarıya indi** — oyunun
-> imza mekaniği. Faz 9'da zorluk düşman sayısı/statlarından geri alınmalı, hedefleme
-> kuralından değil.
+> **Note:** focused fire is mathematically the stronger AI (a dead warrior deals no damage), so
+> this change weakened the enemy. **Limb loss halved** — the game's signature mechanic. In Phase 9
+> difficulty must be recovered from enemy count/stats, not from the targeting rule.
 
-Testler: bir yeni test — aynı kadrodaki iki savaşçı farklı hedeflere hamle yapıyor;
-koreografi hedefi türetseydi ikisi aynı noktaya koşardı.
+Tests: one new test — two warriors in the same roster lunge at different targets; if the
+choreography derived the target, both would run to the same point.
 
-### Arena bir düzlem oldu (2026-08-13) — en büyük değişiklik
+### The arena became a plane (2026-08-13) — the largest change
 
-Çekirdeğe **uzam** girdi: her savaşçının `ArenaPoint` konumu var, gerçekten yürüyor,
-silahın menzili var, kuşatma mümkün. Fizik motoru yok — kendi kinematiğimiz, sabit
-tick, determinizm bozulmadı.
+**Space** entered the core: every warrior has an `ArenaPoint` position, actually walks, weapons
+have reach, and encirclement is possible. There is no physics engine — our own kinematics, fixed
+tick, determinism intact.
 
-Getirdikleri:
+What it brought:
 
-- **Menzil:** menzil dışında saldırı başlamıyor; uzun silah uzaktan vuruyor
-- **Hedefleme uzamdan çıkıyor:** "en yakın düşman". Rastgele seçim gerekmiyor
-- **Iska:** hedef hamle sırasında menzilden çıkarsa kılıç boşluğa iniyor
-- **Kuşatma:** arkadan gelen vuruş daha isabetli, daha ağır, kaçınılamaz
-- **Kaçışın bedeli mesafeye bağlı:** çekilirken menzilindeki **her** düşman bedava
-  vuruş kazanıyor; çevrildiysen kaçmak üç darbe demek
-- **Kaçış artık sayaç değil mesafe:** savaşçı arenayı gerçekten terk ediyor
+- **Reach:** an attack does not start out of reach; a long weapon strikes from further away
+- **Targeting comes out of space:** "nearest enemy". Random selection is no longer needed
+- **Miss:** if the target leaves reach mid-lunge the sword comes down into empty space
+- **Encirclement:** a blow from behind is more accurate, heavier, undodgeable
+- **The cost of escape depends on distance:** while withdrawing, **every** enemy in reach gets a
+  free blow; if you are surrounded, fleeing means three blows
+- **Escape is no longer a counter but a distance:** the warrior really leaves the arena
 
-> **Sunum katmanı küçüldü.** `ArenaChoreography` sahte bir uzam taklit ediyordu: hamle
-> mesafesi, kaçış mesafesi, ölünün düştüğü yerin hatırlanması. Hepsi silindi; sınıf
-> artık yalnızca arena düzlemini ekrana yansıtıyor (derinlik = dikey kayma + ölçek +
-> çizim sırası, brawler sahnelemesi) ve tek bir görsel süsleme bırakıyor: kılıcı
-> toplarken geri yaslanma. Ölünün yerinde kalması bedava geldi — çekirdek ölüyü
-> hareket ettirmiyor.
+> **The presentation layer shrank.** `ArenaChoreography` was imitating a fake space: lunge
+> distance, escape distance, remembering where the dead fell. All of it was deleted; the class now
+> only projects the arena plane onto the screen (depth = vertical offset + scale + draw order,
+> brawler staging) and keeps one visual flourish: leaning back while picking up a sword. The dead
+> staying where they fell came for free — the core does not move corpses.
 
-Ölçüm (3v3, 10.000 dövüş, `below:0.3`): zafer %67.8, ölüm %33.6, kaçış %12.3,
-uzuv kaybı %0.56. Hız 16.000 → **8.700 dövüş/sn** (kriter: 10.000 dövüş < 10 sn,
-hâlâ sekiz kat üstünde). Dövüş süresi 7.9 → 13.1 sn (yaklaşma süresi eklendi).
+Measurement (3v3, 10,000 fights, `below:0.3`): victory 67.8%, death 33.6%, escape 12.3%, limb loss
+0.56%. Speed 16,000 → **8,700 fights/s** (criterion: 10,000 fights < 10 s, still eight times
+above it). Fight duration 7.9 → 13.1 s (approach time added).
 
-### Uzuv kaybı hedefe çekildi (2026-08-13)
+### Limb loss pulled to target (2026-08-13)
 
-Gün boyunca %2.50 → %1.10 → %0.87 → %0.56'ya kadar aşınmıştı. Hedef: makul oynayan
-oyuncunun savaşçılarının ~%5'i sakat dönsün.
+Over the course of the day it had eroded from 2.50% → 1.10% → 0.87% → 0.56%. The target: ~5% of a
+reasonably playing player's warriors should come back crippled.
 
-Ölçerek arandı. `Domina.Sim`'e iki bayrak eklendi: **`--grievous`** (ağır darbe eşiği)
-ve **`--sever`** (kopma şansı) — Faz 9'un denge çalışması bunlarla yapılacak.
+It was searched for by measuring. Two flags were added to `Domina.Sim`: **`--grievous`** (grievous
+blow threshold) and **`--sever`** (severing chance) — Phase 9's balance work will be done with
+these.
 
-Bulunan iki şey:
+Two things were found:
 
-1. **`--sever` beklendiği gibi davranmıyor.** Yükseltmek uzuv kaybını *azaltabiliyor*:
-   düşmanlar da uzuv kaybediyor, zayıflıyor, dövüş erken bitiyor. Ayrıca kopma zarı
-   tutmazsa müdahale edilmemiş savaşçı da ölmüyor — yani bu sayı hem ölümü hem
-   sakatlığı aynı anda ölçekliyor.
-2. **Asıl belirleyici tuning değil, oyuncunun ne zaman çektiği.** Aynı ayarlarla
-   politika %30 → %50 → %70 olunca uzuv kaybı %1.3 → %5.6 → %7.7 oluyor.
+1. **`--sever` does not behave as expected.** Raising it can *reduce* limb loss: enemies lose limbs
+   too, weaken, and the fight ends early. Also, if the severing die does not hold, an unattended
+   warrior does not die either — that is, this number scales death and crippling at the same time.
+2. **The real determinant is not tuning but when the player pulls out.** With the same settings,
+   moving the policy 30% → 50% → 70% moves limb loss to 1.3% → 5.6% → 7.7%.
 
-Yapılan tek değişiklik: `GrievousSeverityThreshold` **0.28 → 0.20**. Eşik, silah
-hasarlarının kümelendiği yerin hemen altına çekildi — 0.24 ile 0.28 arasında hiçbir
-fark yok, çünkü o aralığa düşen darbe hiç yok.
+The single change made: `GrievousSeverityThreshold` **0.28 → 0.20**. The threshold was pulled to
+just below where weapon damages cluster — there is no difference at all between 0.24 and 0.28,
+because no blow falls in that range.
 
-| Politika | Zafer | Ölüm | Kaçış | Uzuv kaybı |
+| Policy | Victory | Death | Escape | Limb loss |
 | --- | --- | --- | --- | --- |
-| `below:0.2` | %59.8 | %54.5 | %3.8 | %0.88 |
-| `below:0.3` | %53.7 | %55.0 | %6.3 | %1.27 |
-| **`below:0.5`** | %11.6 | %43.2 | %47.7 | **%5.57** |
-| `below:0.7` | %1.3 | %9.1 | %89.8 | %7.73 |
+| `below:0.2` | 59.8% | 54.5% | 3.8% | 0.88% |
+| `below:0.3` | 53.7% | 55.0% | 6.3% | 1.27% |
+| **`below:0.5`** | 11.6% | 43.2% | 47.7% | **5.57%** |
+| `below:0.7` | 1.3% | 9.1% | 89.8% | 7.73% |
 
-> Geç çeken oyuncu **ceset** getiriyor, erken çeken **sakat**. Hedeflenen tam olarak bu:
-> tuşun ne zaman basıldığı roster'ın nasıl göründüğünü belirliyor. GDD §7'ye bu tablo
-> denge hedefi olarak işlendi.
+> A player who pulls out late brings home **corpses**, one who pulls out early brings home
+> **cripples**. That is exactly what is intended: when the button is pressed determines what the
+> roster looks like. This table was written into GDD §7 as a balance target.
 >
-> Zafer oranının politikaya göre %60'tan %1'e savrulması ayrı bir sorun — **Faz 9'un
-> asıl işi bu**, uzuv kaybı değil.
+> The victory rate swinging from 60% to 1% with the policy is a separate problem — **that is
+> Phase 9's real job**, not limb loss.
 
-> ⚠️ **Bu tablo 2026-08-14'te geçersizleşti.** Sonuç ağacı ikiye ayrılınca uzuv kaybı
-> artık çekme politikasının değil **kuşamın** fonksiyonu oldu; GDD §7'deki denge hedefi
-> zırh bandıyla değiştirildi. Bkz. yukarıdaki "Uzuv kaybı oranı — karara bağlandı".
+> ⚠️ **This table was invalidated on 2026-08-14.** Once the outcome tree was split in two, limb
+> loss became a function not of the pull-out policy but of **the kit**; the balance target in
+> GDD §7 was replaced with the armour band. See "Limb loss rate — decided" above.
 
-Yeni test dosyası: `MovementTests` (yaklaşma, menzil, uzun silah mesafesi, kişisel
-alan, kuşatılmış kaçışın bedeli, ıska). Toplam 175 test yeşil.
+New test file: `MovementTests` (approach, reach, long-weapon distance, personal space, the cost of
+a surrounded escape, misses). 175 tests green in total.
 
-### İsabet bölgesi eklendi (2026-08-13)
+### Hit locations were added (2026-08-13)
 
-Her isabet artık bir bölgeye iniyor: gövde 45 / bacak 25 / kol 20 / kafa 10 ağırlıkla
-(`CombatTuning`). Amaç ileride gelecek **yuva yuva zırhın** anlamlı olması — bölgeler
-eşit olsaydı gövde zırhı dörtte bir değerinde kalırdı.
+Every hit now lands on a region: torso 45 / leg 25 / arm 20 / head 10 by weight
+(`CombatTuning`). The purpose is for the **slot-by-slot armour** to come later to be meaningful —
+if the regions were equal, torso armour would only be worth a quarter.
 
-> **Yazarken yakalanan tasarım sızıntısı.** İlk sürümde gövdeye inen ağır darbe uzuv
-> koparmıyordu; ölçüm oyuncu zaferini %36'dan **%53'e** çıkardı. Sebep: müdahale
-> %45 ihtimalle **tamamen bedava** hâle gelmişti — ölümden dönüyorsun, hiçbir şey
-> kaybetmiyorsun. GDD §7'nin vaadi bunun tersi. Kural düzeltildi: bölge hasarı ve zırhı
-> ilgilendirir, sonuç ağacını değil; gövde vuruşunda kopan uzuv kalanlar arasından aynı
-> ağırlıklarla seçilir. `DismembermentTests.BlowsToTheTorsoStillCostALimb` bunu
-> koruyor.
+> **A design leak caught while writing.** In the first version a grievous blow to the torso did not
+> sever a limb; the measurement raised player victory from 36% to **53%**. The reason: with 45%
+> probability intervention had become **completely free** — you come back from death and lose
+> nothing. GDD §7's promise is the opposite. The rule was fixed: the region concerns damage and
+> armour, not the outcome tree; on a torso hit the severed limb is chosen from the remaining ones
+> with the same weights. `DismembermentTests.BlowsToTheTorsoStillCostALimb` guards this.
 
-Düzeltme sonrası sayılar rastgele hedeflemedeki değerlere döndü: zafer %35.9, ölüm
-%26.0, kaçış %40.9, uzuv kaybı %1.17. Toplam 175 test yeşil.
+After the fix the numbers returned to the random-targeting values: victory 35.9%, death 26.0%,
+escape 40.9%, limb loss 1.17%. 175 tests green in total.
 
-### İlk iş
+### First job
 
-Varlık üretim şartnamesi netleşti; sıradaki somut adım **tam ekran doku overlay'i +
-gün tinti**, ardından kesik yüzey varlıkları (omuz kütüğü, kalça kütüğü, kopan uzvun
-ucu). Konsept sayfalarında kesik yüzey **düz vermilion disk + koyu kontur** olarak
-sadeleştirilecek — kemik detayı 128 px'te kayboluyor, kopmayı taşıyan şey eksik
-zincirin siluetidir.
+The asset production specification is settled; the next concrete step is the **full-screen texture
+overlay + day tint**, then the cut-surface assets (shoulder stump, hip stump, the end of the severed
+limb). On the concept sheets the cut surface will be simplified to a **flat vermilion disc + dark
+contour** — bone detail is lost at 128 px, and what carries the severing is the silhouette of the
+missing chain.
 
-### Silah yeterliliği — karara bağlandı (2026-08-13)
+### Weapon proficiency — decided (2026-08-13)
 
-Üç soru cevaplandı ve **GDD §4'e işlendi**; artık burada değil orada yaşıyor.
+Three questions were answered and **written into GDD §4**; they now live there, not here.
 
-| Soru | Karar |
+| Question | Decision |
 |---|---|
-| Hat sayısı | **Üç** — tek el / çift el / fırlatma. Fırlatma hattı uykuda, çekirdeğe mermi/uzam girene kadar (Açık Karar #4-C) |
-| Büyüme kaynağı | **Dövüşte kullanım + dojo antrenmanı** |
-| Acemi cezası | Yeterlilik 0'da **kuşanılabilir**, isabet belirgin düşük |
+| Number of lines | **Three** — one-handed / two-handed / thrown. The throwing line is dormant until projectiles/space enter the core (Open Decision #4-C) |
+| Source of growth | **Use in fights + dojo training** |
+| Novice penalty | At proficiency 0 the weapon **can be wielded**, accuracy is markedly lower |
 
-Aynı geçişte: GDD §2'nin Skeleton2D satırı düzeltildi, §5 (blok) ve §7 (künt sersemletme)
-altına "kod ile fark" notları düşüldü, Açık Karar #4 dörde bölündü (A kilitli, B/C/D açık).
+In the same pass: GDD §2's Skeleton2D line was corrected, "differs from the code" notes were added
+under §5 (block) and §7 (blunt stunning), and Open Decision #4 was split into four (A locked,
+B/C/D open).
 
-> Kullanıcının eklediği nüans GDD'ye girdi: kavrayış kaybı **yalnızca hattı** sıfırlar.
-> Statlar hatta bağlı değil, yani sakat usta sıfırdan başlamıyor — **acemi isabetli bir
-> veteran** olarak dönüyor. Risk keskin ama yıkıcı değil.
+> A nuance added by the user went into the GDD: losing grip resets **only the line**. Stats are not
+> tied to the line, so a crippled master does not start from zero — they come back as **an accurate
+> novice**. The risk is sharp but not devastating.
 
-Kod tarafında henüz **hiçbir şey yok** — yeterlilik Faz 3 (meta katman) ile gelir;
-çekirdekteki karşılığı `CombatTuning` içinde isabet ve saldırı hızı çarpanı olacak.
+On the code side there is **nothing at all** yet — proficiency comes with Phase 3 (the meta layer);
+its counterpart in the core will be an accuracy and attack speed multiplier inside `CombatTuning`.
 
-### Akılda tutulacaklar
-- Denge sayıları **kasıtlı olarak ham**. İlk ölçüm 3v3'te oyuncu ölüm oranını
-  %45-57 gösteriyor; bu Faz 9'un işi, şimdi ayarlanmayacak (bkz. ROADMAP riski).
-- `Domina.Chat` hâlâ boş iskele (Faz 5). Test projesi de boş — `dotnet test`
-  "no test is available" uyarısı buradan geliyor, hata değil.
-- Dövüş savaşçıların kalıcı halini değiştirmiyor; ölüm/sakatlığı kalıcı hale
-  işlemek **meta katmanın** işi ve henüz yazılmadı (Faz 3). Arenadaki kadro da
-  geçici — `DemoRoster` Faz 3'te gerçek roster'a bırakacak.
-- Sanat geldiğinde değişecek yer bellidir: `WarriorRig.Limb` (kemiğe asılı çizim) ve
-  `RigAnimator`'daki duruş sayıları. `RigPose`'un alanları ve `BattleArena` değişmez —
-  yordamsal duruşun yerini AnimationPlayer alsa bile arayüz aynı kalır.
+### Things to keep in mind
+- The balance numbers are **deliberately raw**. The first measurement shows a player death rate of
+  45-57% in a 3v3; that is Phase 9's job and will not be tuned now (see the ROADMAP risk).
+- `Domina.Chat` is still an empty scaffold (Phase 5). Its test project is empty too — the
+  "no test is available" warning from `dotnet test` comes from there, it is not an error.
+- A fight does not change the warriors' permanent state; writing death/crippling into the permanent
+  state is **the meta layer's** job and has not been written yet (Phase 3). The roster in the arena
+  is temporary too — `DemoRoster` will hand over to the real roster in Phase 3.
+- When the art arrives, the places that change are known: `WarriorRig.Limb` (the drawing hung on the
+  bone) and the pose numbers in `RigAnimator`. `RigPose`'s fields and `BattleArena` do not change —
+  even if an AnimationPlayer replaces the procedural pose, the interface stays the same.
 
 ---
 
-## Silahın elden düşmesi çekirdeğe girdi (2026-09-03)
+## Losing the weapon from the hand entered the core (2026-09-03)
 
-Açık Karar **#4-B'nin son maddesi kapandı; madde tamamen kapandı.** Kural ve sayı
-tablosu GDD §7'de.
+Open Decision **#4-B's last item closed; the item is now fully closed.** The rule and the table of
+numbers are in GDD §7.
 
-Kural iki yerden gelir. **Zırha inen vuruş** saldıranın kavrayışını bozar: zar, silahın
-elden çıkma eğilimi ile vurulan parçanın sertliğinden çıkar ve sertlik parçanın kopma
-direncinden okunur — yani **çıplak bölgeye inen vuruş hiç düşürmez**. **Yakalanan silah**
-çengelde avuçtan sökülebilir; bu zar kilidin üstüne binmez, **yerine geçer**.
+The rule comes from two places. **A blow landing on armour** breaks the attacker's grip: the die
+comes from the weapon's tendency to leave the hand and the hardness of the piece that was struck,
+and hardness is read from that piece's severing resistance — that is, **a blow to a bare region
+never disarms**. **A caught weapon** can be wrenched out of the palm on the hook; this die does not
+stack on top of the bind, it **replaces** it.
 
-Silah **kırılmaz, düşer**. İlk kurulum kırılmaydı; bakım defteri (envanter, onarım, yedek
-silah) açtığı için düşmeye çevrildi. Düşen silah arenada durur, dövüş bitince sahibine
-döner ve **eli boş olan herkes** alabilir: düşüren, takım arkadaşı, düşman. Elinde silah
-olan ne alır ne arar — yerdeki namluya bir adım bile atmaz; kolunu kaybeden savaşçı da
-yerdeki çift el silahı geçer.
+The weapon **does not break, it drops**. The first setup was breakage; it was turned into dropping
+because it opened a maintenance ledger (inventory, repair, spare weapons). A dropped weapon stays in
+the arena, returns to its owner when the fight ends, and **anyone with an empty hand** can pick it
+up: the one who dropped it, a teammate, an enemy. Someone with a weapon in hand neither picks up nor
+searches — they will not take a single step towards the blade on the ground; a warrior who has lost
+an arm also passes over a two-handed weapon on the ground.
 
-Kilitlenen sayılar: zırha inen vuruşta taban şans 0.05, yakalanan silahta 0.05, sertlik
-payı 1.0, savrulma mesafesi 250 birim, alma mesafesi 60 birim; elden çıkma eğilimi kesici
-1.0 / delici 0.6 / künt 0.2 / yumruk 0.
+The locked numbers: base chance 0.05 on a blow to armour, 0.05 on a caught weapon, hardness share
+1.0, throw distance 250 units, pickup distance 60 units; tendency to leave the hand cutting 1.0 /
+piercing 0.6 / blunt 0.2 / fists 0.
 
-### Takas plakanın önünde dönüyor
+### The trade turns in front of the plate
 
-Zırhlı düşmana karşı üç sınıf (20.000 dövüş, `losing:0.7`):
+Three classes against an armoured enemy (20,000 fights, `losing:0.7`):
 
-| Silah | Kural yok | Kural var | Düşürme | Yerden alınan |
+| Weapon | No rule | With rule | Disarms | Picked up |
 | --- | --- | --- | --- | --- |
-| Nodachi (kesici) | %94.25 | %87.53 | %11.76 | %7.3 |
-| Tetsubo (künt) | %90.55 | **%89.20** | %2.73 | %4.8 |
-| Yari (delici) | %79.69 | %75.48 | %9.86 | %8.4 |
+| Nodachi (cutting) | 94.25% | 87.53% | 11.76% | 7.3% |
+| Tetsubo (blunt) | 90.55% | **89.20%** | 2.73% | 4.8% |
+| Yari (piercing) | 79.69% | 75.48% | 9.86% | 8.4% |
 
-Künt sınıf, kesicinin plakanın önünde de üstün olduğu son yeri böyle kaybediyor. Taban
-şans tarandı: 0.02'de hiçbir şey dönmüyor (%91.50 / %89.77), 0.05 takasın döndüğü yer,
-0.08'den sonra kesici silah zırhlı düşmanın önünde taşınamaz oluyor (0.20'de %72.93).
-Sertlik payı fazladan bir düğme değil, taban şansın kopyası çıktı (0.5'te düşürme
-%11.71 → %6.04); 1.0'da bırakıldı.
+This is how the blunt class loses the last place where cutting was superior in front of the plate.
+The base chance was swept: at 0.02 nothing turns (91.50% / 89.77%), 0.05 is where the trade turns,
+and past 0.08 a cutting weapon becomes uncarryable in front of an armoured enemy (72.93% at 0.20).
+The hardness share turned out not to be an extra knob but a copy of the base chance (at 0.5, disarms
+11.71% → 6.04%); it was left at 1.0.
 
-### Bedeli taşıyan şey mesafe değil, yön
+### What carries the cost is not distance but direction
 
-Silahın nereye savrulduğu üç kez ölçüldü ve kuralın tamamı buna bakıyor:
+Where the weapon is thrown was measured three times, and the whole of the rule hangs on it:
 
-- **Sahibinin gerisine** düşerse yerden alma yürüyüşü savaşçıyı dövüşten geri çeker ve
-  yavaş bir düşmanın önünde düşürme **bedava** olur: mesafe arttıkça oyuncunun zaferi
-  yükseliyor (%94.30 → %94.55; kural yokken %94.25). Yani kural hiçbir şeye mal olmuyor
-- **Yana** savrulmak da aynı kapıya çıkıyor (%94.4): yavaş düşman hattı terk eden
-  savaşçıyı cezalandıramıyor
-- **Karşıdakinin arkasına** düşünce bedel gerçek: silaha gitmek düşmanın içinden geçmek
-  demek, kişisel alan buna izin vermiyor. Takas ancak burada dönüyor
+- If it falls **behind its owner**, the walk to pick it up pulls the warrior back out of the fight
+  and, in front of a slow enemy, disarming becomes **free**: as the distance grows the player's
+  victory rises (94.30% → 94.55%; 94.25% with no rule). That is, the rule costs nothing at all
+- Being thrown **sideways** comes to the same thing (94.4%): a slow enemy cannot punish a warrior
+  who leaves the line
+- When it falls **behind the opponent** the cost is real: going for the weapon means walking through
+  the enemy, and personal space does not allow it. Only here does the trade turn
 
-Yön oturunca mesafe bir düğme olmaktan çıkıyor: 150 / 250 / 400 birim %87.43 / %87.45 /
-%87.48 veriyor. 250 seçildi (savaşçı boyuna yakın, ekranda okunur).
+Once the direction is settled, distance stops being a knob: 150 / 250 / 400 units give 87.43% /
+87.45% / 87.48%. 250 was chosen (close to a warrior's height, readable on screen).
 
-### Yerden alma teke tekte çalışmaz, kalabalıkta çalışır
+### Picking up does not work in a duel, it works in a crowd
 
-Düşen silahların 1v1'de %7.3'ü, 3v3'te %40.4'ü geri alınıyor. Kalabalıkta hedef
-bölündüğü için silahın başına gidilebiliyor — kuralın bedeli sabit bir ceza değil,
-dövüşün şekline bağlı.
+7.3% of dropped weapons are recovered in a 1v1, 40.4% in a 3v3. In a crowd the targets
+split, so it becomes possible to go to the weapon — the cost of the rule is not a fixed
+penalty but depends on the shape of the fight.
 
-### Yakalamanın düşürme şansı: 0.10'da fren kırılıyor
+### The disarm chance on a catch: at 0.10 the brake breaks
 
-0'da yakalama aleti silah düşürmekle hiçbir şey kazanmıyor (jitte %74.87, katana %75.02).
-0.05'te jitte %78.00 / sai %78.88 ile kılıç taşıyan düşmanın önünde öne geçiyor.
-**0.10'da jitte nodachi'ye karşı da doğru seçim oluyor** (%38.27'ye karşı katana %37.84)
-ve `CatchTwoHandedFactor` anlamsızlaşıyor — 0.05 bu yüzden.
+At 0, a catching implement gains nothing from disarming (jitte 74.87%, katana 75.02%).
+At 0.05 the jitte goes ahead of a sword-carrying enemy with 78.00% / sai 78.88%.
+**At 0.10 the jitte becomes the right choice against a nodachi as well** (38.27% against
+katana 37.84%) and `CatchTwoHandedFactor` becomes meaningless — hence 0.05.
 
-Kural yakalamayı üstün silah yapmıyor, çünkü iki freni de duruyor: nodachi'ye karşı jitte
-%35.22 / katana %37.84, ō-yoroi kuşanmış düşmana karşı jitte %34.14 / katana %60.81.
-"Her seçenek bir şeyde en iyi" deseni ayakta — yalnızca katana'nın en iyi olduğu yer
-değişti: zafer değil, **zırhlı düşman**.
+The rule does not make catching a superior weapon, because both of its brakes still hold:
+against a nodachi jitte 35.22% / katana 37.84, against an enemy wearing ō-yoroi jitte
+34.14% / katana 60.81%. The "every option is best at something" pattern holds — only the
+place where the katana is best has changed: not victory, but **the armoured enemy**.
 
-### Zırh ilk kez gerçek bir duvar
+### Armour is a real wall for the first time
 
-3v3'te yokai'lerin hepsini tam kuşam yapmak kural olmadan oyuncunun **işine yarıyordu**
-(%65.20 → %67.32; ağır kuşam vuruşu geciktirir). Kuralla birlikte %65.35'e iniyor ve
-oyuncu savaşçılarının %9.32'si dövüş içinde silahını düşürüyor.
+In a 3v3, giving all the yokai full kit **worked in the player's favour** while there was no
+rule (65.20% → 67.32%; heavy kit slows the blow). With the rule it comes down to 65.35% and
+9.32% of the player's warriors drop their weapon during the fight.
 
-### Kural iki kilitli tabloyu bozdu
+### The rule broke two locked tables
 
-Düşürme zırhla dövüşen **herkesi** etkilediği için daha önce kilitlenen ölçümler kaydı —
-kural kapatıldığında (`--disarm-chance 0 --disarm-catch 0`) eski sayılar birebir geri
-geliyor (3v3 %65.20), yani kayan tek şey bu kural.
+Because disarming affects **everyone** who fights against armour, previously locked
+measurements shifted — when the rule is switched off (`--disarm-chance 0 --disarm-catch 0`)
+the old numbers come back exactly (3v3 65.20%), so the only thing that moved is this rule.
 
-- **Zehir:** zehirli tantō da ō-yoroi'ye vururken silahını düşürüyor (%20.18). Yeni tablo
-  katana %75.02 / %60.81, zehirli tantō %74.26 / **%69.39**. Zehrin iddiası ayakta, ama
-  **"zehirlinin karşısında ağır kuşanmak zarardır" artık doğru değil**
-- **Yakalama:** katana %75.02 / jitte %78.00 / sai %78.88. Yakalama aletleri kılıçlı
-  düşmanın önünde artık zaferde de önde
+- **Poison:** the poisoned tantō also drops its weapon while striking ō-yoroi (20.18%). The
+  new table is katana 75.02% / 60.81%, poisoned tantō 74.26% / **69.39%**. Poison's claim
+  still stands, but **"against a poisoner, wearing heavy armour is a liability" is no longer
+  true**
+- **Catching:** katana 75.02% / jitte 78.00% / sai 78.88%. Catching implements are now ahead
+  on victory too in front of a sword-carrying enemy
 
-GDD §7'nin ilgili iki bölümüne bu düzeltmeler işlendi.
+These corrections were written into the two relevant sections of GDD §7.
 
-### Ölçümü besleyen yeni araçlar
+### New tools feeding the measurement
 
-Beş senaryo (`blade-armored`, `club-armored`, `spear-armored`, `jitte-armored`,
-`3v3-armored`), beş düğme (`--disarm-chance`, `--disarm-catch`, `--disarm-armor-share`,
-`--drop-distance`, `--pickup-radius`) ve üç sayaç: silahını düşürme oranı, düşenlerin
-yerden alınma oranı ve **düşmanın** düşürme oranı. Sonuncusu ayrı duruyor çünkü plakaya
-vurup silahını elinden kaçıran düşmanı kimse düşürmemiştir — düşüreni olmayan tek olay bu.
+Five scenarios (`blade-armored`, `club-armored`, `spear-armored`, `jitte-armored`,
+`3v3-armored`), five knobs (`--disarm-chance`, `--disarm-catch`, `--disarm-armor-share`,
+`--drop-distance`, `--pickup-radius`) and three counters: the rate of dropping one's weapon,
+the rate at which dropped weapons are picked up, and **the enemy's** disarm rate. The last
+stands apart because nobody disarmed the enemy who hit a plate and lost their weapon — it is
+the only event with no disarmer.
 
-Yeni durum: `CombatState` değişmedi (silahsızlık bir durum değil, bir işaret),
-`CombatantSnapshot.Disarmed` (HUD "· silahsız" yazar), `RigReactionKind.WeaponLost`,
-`GroundWeapon`. Yeni test dosyası: `DisarmTests` (12 test). Toplam 271 test yeşil.
+New state: `CombatState` did not change (being disarmed is not a state but a flag),
+`CombatantSnapshot.Disarmed` (the HUD writes "· unarmed"), `RigReactionKind.WeaponLost`,
+`GroundWeapon`. New test file: `DisarmTests` (12 tests). 271 tests green in total.
 
-> **Yol boyunca çıkan iki hata:** `ArenaPoint.MovedAwayFrom` istenen mesafeyi kaynağa
-> olan uzaklıkla kırpıyordu (yön birim vektöre indirgenmemişti), o yüzden savrulma
-> mesafesi ilk ölçümlerde hiçbir şey yapmıyor gibi göründü. `Combatant.Weapon` her
-> okumada yeni bir `Weapon.Fists()` üretiyordu; dövüş başına ~109 KB ayırma demekti ve
-> `ThroughputTests` yakaladı — tek bir statik örneğe indirildi.
+> **Two bugs that came up along the way:** `ArenaPoint.MovedAwayFrom` was clamping the
+> requested distance by the distance to the source (the direction had not been reduced to a
+> unit vector), which is why the throw distance appeared to do nothing in the first
+> measurements. `Combatant.Weapon` was producing a new `Weapon.Fists()` on every read; that
+> meant ~109 KB allocated per fight and `ThroughputTests` caught it — reduced to a single
+> static instance.
 
-**#4-B'de açık kalan yok.** Ekipmanın kalıcı bedeli (yedek silah, onarım) bilinçli olarak
-**yok**: düşen silah dövüş sonunda geri geliyor.
+**Nothing left open in #4-B.** A permanent cost for equipment (spare weapons, repair) is
+deliberately **absent**: a dropped weapon comes back at the end of the fight.
 
 ---
 
-## Zırh yıpranıyor ve dağılıyor (2026-09-03)
+## Armour wears down and falls apart (2026-09-03)
 
-Ekipmanın son ucu kapandı: silah düşer ve geri alınır, **zırh yıpranır ve gider**.
+The last end of equipment closed: the weapon drops and is picked up, **armour wears down and
+goes**.
 
-Kural: bir parça durdurduğu hasar kadar aşınır — emdiği her puan kendi dayanıklılık
-havuzundan düşer. Havuz bitince parça dövüşün ortasında dağılır, o bölge çıplak kalır ve
-parça **kalıcı olarak gider**. Yıpranma dövüşe değil **savaşçıya** aittir: tek dövüşte
-tükenmez, seferler boyunca birikir (`Warrior.ArmorWear`), dövüş onu okur ama yazmaz —
-kalıcı hale işlemek dojo katmanının işi, uzuv kaybındaki yolun aynısı.
+The rule: a piece wears down by as much damage as it stops — every point it absorbs comes off
+its own durability pool. When the pool runs out the piece falls apart in the middle of the
+fight, that region is left bare and the piece is **permanently gone**. Wear belongs not to the
+fight but to **the warrior**: it is not exhausted in a single fight, it accumulates across
+expeditions (`Warrior.ArmorWear`), and the fight reads it but does not write it — writing it
+into the permanent state is the dojo layer's job, the same route as limb loss.
 
-Dayanıklılıklar: keikogi 40, dō-maru 110, ō-yoroi gövdeliği 180, kote 45 / ağır kote 75,
-suneate 45 / ağır suneate 75, kabuto 90. Tek denge düğmesi `ArmorDurabilityScale`.
+Durabilities: keikogi 40, dō-maru 110, ō-yoroi torso 180, kote 45 / heavy kote 75, suneate
+45 / heavy suneate 75, kabuto 90. The single balance knob is `ArmorDurabilityScale`.
 
-### En çok emen kuşam en çok yıpranan kuşam
+### The kit that absorbs the most is the kit that wears the most
 
-3v3, 20.000 dövüş, `losing:0.7`:
+3v3, 20,000 fights, `losing:0.7`:
 
-| Kuşam | Dövüş başına yıpranma | Takımın dayanıklılığı | Ömür |
+| Kit | Wear per fight | Team durability | Lifetime |
 | --- | --- | --- | --- |
-| Hafif keikogi | 5.4 | 40 | ~7 dövüş |
-| Dō-maru | 20.2 | 290 | ~14 dövüş |
-| Ō-yoroi | 38.7 | 570 | ~15 dövüş |
+| Light keikogi | 5.4 | 40 | ~7 fights |
+| Dō-maru | 20.2 | 290 | ~14 fights |
+| Ō-yoroi | 38.7 | 570 | ~15 fights |
 
-Ō-yoroi hafif kuşamın yedi katı hasar emiyor ve yedi katından biraz fazla dayanıklılık
-taşıyor: pahalı kuşam korumayı satın alıyor, bedavaya almıyor.
+Ō-yoroi absorbs seven times the damage of light kit and carries a little more than seven times
+the durability: expensive kit buys protection, it does not get it for free.
 
-### Dağılma anı: uzuv kaybı ikiye katlanıyor
+### The moment of falling apart: limb loss doubles
 
-Varsayılan havuzlarda tek bir dövüşte parça dağılmıyor (20.000 dövüşte sıfır) — dağılma,
-**yıpranmış kuşamla** sahaya çıkıldığında geliyor. Havuz ölçeği düşürülerek ölçüldü:
+At default pools no piece falls apart in a single fight (zero in 20,000 fights) — falling apart
+comes from **taking the field in worn kit**. It was measured by lowering the pool scale:
 
-| Ölçek | Dağılan parça (savaşçı başına) | Zafer | Uzuv kaybı |
+| Scale | Pieces destroyed (per warrior) | Victory | Limb loss |
 | --- | --- | --- | --- |
-| 1.0 | 0.00 | %70.27 | %0.83 |
-| 0.25 | 0.12 | %69.92 | %0.94 |
-| 0.1 | 0.89 | %67.55 | **%1.93** |
+| 1.0 | 0.00 | 70.27% | 0.83% |
+| 0.25 | 0.12 | 69.92% | 0.94% |
+| 0.1 | 0.89 | 67.55% | **1.93%** |
 
-Yıpranmış zırhla dövüşe girmek yalnızca daha çok hasar yemek değil; plakası dağılan
-savaşçının uzuv kaybı iki katına çıkıyor. Kuşamı yenilememenin bedeli roster'da görünüyor.
+Entering a fight in worn armour is not only about taking more damage; the limb loss of a warrior
+whose plate falls apart doubles. The cost of not renewing the kit shows up in the roster.
 
-### Zincirin ucu: gitmiş zırh silah da düşürmez
+### The end of the chain: armour that is gone does not disarm either
 
-Dağılan parça ağırlığını da sertliğini de bırakıyor. Yokai'ler tam kuşamken oyuncunun
-silahını düşürme oranı %1.81, kuşam yıpranmış girdiğinde %1.41 (zafer %65.35 → %63.83):
-zırh gittikçe dövüş daha ölümcül ama daha temiz hale geliyor — daha çok kesik, daha az
-elden düşen silah.
+A piece that falls apart leaves behind both its weight and its hardness. With the yokai in full
+kit the rate at which the player's weapon is dropped is 1.81%, and with worn kit it is 1.41%
+(victory 65.35% → 63.83%): as the armour goes, the fight becomes more lethal but cleaner — more
+cuts, fewer weapons dropped from the hand.
 
-### Yeni durum ve araçlar
+### New state and tools
 
-`ArmorPiece.Durability`, `ArmorWearSet` (değer türü — özet savaşçı başına üretiliyor,
-sözlük ayırmak ölçümü yavaşlatırdı), `Warrior.ArmorWear`, `HitLocationSet`,
-`ArmorDestroyed` olayı, `CombatantSnapshot.DestroyedArmor` (rig kuşamı buradan söker),
-`RigReactionKind.ArmorShattered`, `--armor-durability` düğmesi ve iki sayaç (dövüş başına
-yıpranma, dağılan parça oranı). Yeni test dosyası: `ArmorDurabilityTests` (7 test).
-Toplam 278 test yeşil.
+`ArmorPiece.Durability`, `ArmorWearSet` (a value type — the summary is produced per warrior, and
+allocating a dictionary would slow the measurement down), `Warrior.ArmorWear`, `HitLocationSet`,
+the `ArmorDestroyed` event, `CombatantSnapshot.DestroyedArmor` (the rig strips the kit from here),
+`RigReactionKind.ArmorShattered`, the `--armor-durability` knob and two counters (wear per fight,
+rate of pieces falling apart). New test file: `ArmorDurabilityTests` (7 tests).
+278 tests green in total.
 
-
----
-
-## Blok ayrı bir durum oldu (2026-09-03)
-
-Açık Karar **#12 kapandı.** Blok GDD §5'te ayrı bir durum sayılıyordu ama çekirdekte
-Savunma statının içinde eriyordu; doküman bunu "kod ile fark (açık)" diye taşıyordu.
-Fark kapandı: `CombatState.Blocking` gerçek bir hamle.
-
-Kural ve sayı tablosu GDD §5'te. Özet: karar Savunma statından çıkar (taban yok —
-Savunma 0 hiç bloklamaz), şart gelen vuruşu okumaktır, duruş 0.8 sn sürer ve o sürede
-savaşçı vurmaz, hasarın %70'i × silahın blok kalitesi silinir, uzuv kopmaz, künt
-sarsıntının %75'i geçer.
-
-### İlk hâli kuralı ters çalıştırıyordu
-
-Duruş yalnızca "menzilde düşman var mı" diye alınınca körlemesine alınıyordu: savaşçı
-başına yine 0.20 darbe karşılıyor ama **zaferi düşürüyordu** (%71.21 → %70.50). Boşa
-alınan her duruş saldırı döngüsünden yeniyordu; blok, Savunma statının karşılığı değil
-cezasıydı. Şart "gelen vuruşu oku"ya (`AttackWindup` ya da koşan hücum) çevrilince
-işaret döndü: **%72.39 zafer, ölüm %50.44 → %49.19, uzuv kaybı %5.19 → %4.96.**
-
-### Zincirleme blok dövüşü kilitliyordu
-
-Zar her karar adımında yeniden atılınca savunması yüksek savaşçı arka arkaya bloklayıp
-hiç vurmuyordu — sabit zarla koşan 47 test bunu anında yakaladı. Kural: blok arkasına
-blok gelmez. Duruş bir ritme bağlandı — karşıla, sonra karşılık ver.
-
-### Kuralın kendi freni yok
-
-`MaxBlockChance` büyüdükçe oyuncu tek yönlü kazanıyor: 0.25'te %71.61, 0.45'te %72.39,
-0.70'te %73.05, 1.0'da %74.08. İçeride bir fren yok; freni Savunma statının dojo'da
-başka statlarla yarışması sağlıyor. Sayı Faz 9'a bırakıldı.
-
-### Yakalama aletine blok kayrılmadı
-
-Jitte/sai'ye çift el silah kadar blok kalitesi verilmişti; ölçüm bunun **kilitli bir
-freni kırdığını** gösterdi — ağır silah taşıyan düşmanın önünde jitte yanlış seçim
-olmaktan çıkıyordu (jitte-heavy %35.38 > katana-heavy %34.96). Override kaldırıldı.
 
 ---
 
-## Hedef seçimi bir karar oldu (2026-09-03)
+## Block became a separate state (2026-09-03)
 
-`FindTarget` tek satırlık bir sıralamaydı: en yakını seç, ölene kadar ona sadık kal.
-Artık savaşçı her karar adımında düşmanları puanlıyor — mesafe, yara, açık bölge,
-takım arkadaşlarının yığılması, ve yön değiştirmenin bedeli. Ağırlıklar `CombatTuning`'de,
-puanlama **deterministik** (zar yok): rastgelelik kararın kendisinde değil savaşçının
-kimliğinde.
+Open Decision **#12 closed.** Block counted as a separate state in GDD §5 but in the core it
+dissolved inside the Defence stat; the document carried this as "differs from the code (open)".
+The difference is closed: `CombatState.Blocking` is a real move.
 
-Tablo GDD §4'te.
+The rule and the table of numbers are in GDD §5. In brief: the decision comes out of the Defence
+stat (no base — Defence 0 never blocks), the condition is reading the incoming blow, the stance
+lasts 0.8 s and during it the warrior does not strike, 70% of the damage × the weapon's block
+quality is erased, no limb is severed, and 75% of blunt concussion gets through.
 
-### Fırsat penceresi olmadan kural düz bir zorluk artışıydı
+### The first version ran the rule backwards
 
-Sınırsız yara ağırlığı savaşçıyı yanındaki sağlam düşmanı bırakıp arenanın öbür ucundaki
-yaralıya yürütüyor, yol boyunca bedava vuruş yediriyordu. Tek yönlü aşağı: ağırlık 0'da
-%72.29, 40'ta %72.28, 80'de %72.03, 120'de %71.77, 200'de %70.74. Yara ve açık bölge
-kazançları 200 birimde sıfıra inen bir pencereye bağlanınca eğri düzeldi: **%72.17**
-(eski kural %72.28) ve tam kuşamlı düşmana karşı yeni kural açık ara iyi — `3v3-armored`
-%71.84 → **%72.68**.
+When the stance was taken merely on "is there an enemy in range" it was taken blindly: the warrior
+still meets 0.20 blows each, but it **lowered victory** (71.21% → 70.50%). Every stance taken for
+nothing ate into the attack cycle; block was not the payoff of the Defence stat but its penalty.
+Once the condition was turned into "read the incoming blow" (`AttackWindup` or a running charge)
+the sign flipped: **72.39% victory, death 50.44% → 49.19%, limb loss 5.19% → 4.96%.**
 
-Ölüm oranı yine de artıyor (%49.11 → %50.30): odaklanan takım daha çok öldürüyor, dövüş
-daha keskin bitiyor.
+### Chained blocking was locking up the fight
 
-### Açık bölge ağırlığı şimdilik uykuda
+When the die was rolled again at every decision step, a warrior with high defence would block over
+and over and never strike — the 47 tests running with fixed dice caught it instantly. The rule: a
+block does not follow a block. The stance was tied to a rhythm — meet it, then answer.
 
-Varsayılan dayanıklılıkta tek dövüşte parça dağılmıyor, dolayısıyla ağırlığın ısırdığı
-yer sefer boyunca yıpranmış kuşam. Yıpranmış kuşamla ölçüldüğünde etkisi küçük ve oyuncu
-aleyhine (%70.06 → %69.91) — açık bölgeyi düşman da görüyor.
+### The rule has no brake of its own
 
-### Ölçüm bir performans borcunu ödetti
+The bigger `MaxBlockChance` grows, the more the player wins one-directionally: 71.61% at 0.25,
+72.39% at 0.45, 73.05% at 0.70, 74.08% at 1.0. There is no brake inside; the brake comes from the
+Defence stat competing against the other stats in the dojo. The number was left to Phase 9.
 
-Puanlama tik başına koşarken 10.000 dövüş bütçenin iki katına çıktı (19.86 sn / 10 sn) ve
-dövüş başına ayırma 350 KB'ye fırladı. İki düzeltme: hedef yalnızca karar adımlarında
-seçiliyor (yürüyüş döngüsü seçimi devralıyor), ve `HitLocationSet.Count()` artık iterator
-yerine bit sayımı kullanıyor.
+### The catching implement was not favoured with block
 
-### Kilitli tablolar korundu — ama payları inceldi
+Jitte/sai had been given as much block quality as a two-handed weapon; the measurement showed
+this **broke a locked brake** — the jitte stopped being the wrong choice in front of an enemy
+carrying a heavy weapon (jitte-heavy 35.38% > katana-heavy 34.96%). The override was removed.
 
-| Karşılaştırma | Önce | Sonra |
+---
+
+## Target selection became a decision (2026-09-03)
+
+`FindTarget` was a one-line sort: pick the nearest, stay loyal until they die. Now a warrior
+scores the enemies at every decision step — distance, wounds, bare regions, the pile-up of
+teammates, and the cost of changing direction. The weights are in `CombatTuning` and the scoring
+is **deterministic** (no dice): the randomness is not in the decision itself but in the warrior's
+identity.
+
+The table is in GDD §4.
+
+### Without an opportunity window the rule was a flat difficulty increase
+
+An unbounded wounded weight walked a warrior past the intact enemy next to them all the way to
+the wounded one at the far end of the arena, eating free blows along the way. One-directionally
+down: 72.29% at weight 0, 72.28% at 40, 72.03% at 80, 71.77% at 120, 70.74% at 200. Once the
+wounded and bare-region gains were tied to a window falling to zero at 200 units the curve
+straightened out: **72.17%** (old rule 72.28%) and against a fully kitted enemy the new rule is
+clearly better — `3v3-armored` 71.84% → **72.68%**.
+
+The death rate still rises (49.11% → 50.30%): a focused team kills more and the fight ends more
+sharply.
+
+### The bare-region weight is dormant for now
+
+At default durability no piece falls apart in a single fight, so where the weight bites is kit
+worn down over an expedition. Measured with worn kit, the effect is small and against the player
+(70.06% → 69.91%) — the enemy sees the bare region too.
+
+### The measurement made us pay a performance debt
+
+With the scoring running every tick, 10,000 fights went to twice the budget (19.86 s / 10 s) and
+allocation per fight jumped to 350 KB. Two fixes: the target is only chosen at decision steps
+(the walk cycle inherits the choice), and `HitLocationSet.Count()` now uses bit counting instead
+of an iterator.
+
+### The locked tables were preserved — but their margins thinned
+
+| Comparison | Before | After |
 |---|---|---|
-| kesici / künt (blade / club) | %92.52 / %92.51 | %92.25 / %92.90 |
-| jitte / katana | %78.00 / %75.02 | %78.70 / %78.28 |
-| sai | %78.88 | %80.55 |
-| jitte-heavy / katana-heavy (fren) | %35.22 / %37.84 | %34.72 / %34.96 |
-| jitte-armored / katana-armored (fren) | %41.38 / %60.32 | %35.44 / %60.77 |
-| zehirli / katana, zırhlı düşmana | %77.19 / %68.62 | %71.85 / %60.77 |
+| cutting / blunt (blade / club) | 92.52% / 92.51% | 92.25% / 92.90% |
+| jitte / katana | 78.00% / 75.02% | 78.70% / 78.28% |
+| sai | 78.88% | 80.55% |
+| jitte-heavy / katana-heavy (brake) | 35.22% / 37.84% | 34.72% / 34.96% |
+| jitte-armored / katana-armored (brake) | 41.38% / 60.32% | 35.44% / 60.77% |
+| poisoned / katana, against an armoured enemy | 77.19% / 68.62% | 71.85% / 60.77% |
 
-Yönler duruyor: künt kesiciyle başa baş, jitte katanayı geçiyor, iki fren de ayakta,
-zehir zırhın önünde hâlâ tek doğru cevap. Ama **jitte'nin payı 2.98 puandan 0.42'ye,
-ağır silah freni 2.62 puandan 0.24'e indi** — blok, yakalama aletinin yaptığı işin bir
-kısmını herkese dağıtıyor. Açık dövüşte zehirli bıçak katananın 0.90 puan gerisindeyken
-şimdi 2.04 puan geride. Bu üç sayı Faz 9'da yeniden bakılmalı.
+The directions hold: blunt is level with cutting, the jitte beats the katana, both brakes stand,
+and poison is still the only right answer in front of armour. But **the jitte's margin fell from
+2.98 points to 0.42, and the heavy-weapon brake from 2.62 points to 0.24** — block distributes
+part of the catching implement's job to everyone. In an open fight the poisoned blade was 0.90
+points behind the katana; now it is 2.04 points behind. These three numbers must be revisited in
+Phase 9.
 
-### Yeni durum ve araçlar
+### New state and tools
 
-`CombatState.Blocking`, `BlockRaised` / `AttackBlocked` olayları, `Weapon.BlockFactor`,
-`WarriorBattleSummary.BlocksPerformed`, `RigReactionKind.Block` + `Guard()` duruşu,
-altı yeni ayar düğmesi (`MaxBlockChance`, `BlockSeconds`, `BlockDamageReduction`,
-`BlockDismembermentShare`, `BlockStunShare`, `BlockStaminaCost`) ve beş hedef seçimi
-ağırlığı (`TargetDistanceWeight`, `TargetWoundedWeight`, `TargetExposedWeight`,
-`TargetCrowdPenalty`, `TargetStickiness`, `TargetOpportunityRange`). Sim tarafında
+`CombatState.Blocking`, the `BlockRaised` / `AttackBlocked` events, `Weapon.BlockFactor`,
+`WarriorBattleSummary.BlocksPerformed`, `RigReactionKind.Block` + the `Guard()` pose,
+six new tuning knobs (`MaxBlockChance`, `BlockSeconds`, `BlockDamageReduction`,
+`BlockDismembermentShare`, `BlockStunShare`, `BlockStaminaCost`) and five target selection
+weights (`TargetDistanceWeight`, `TargetWoundedWeight`, `TargetExposedWeight`,
+`TargetCrowdPenalty`, `TargetStickiness`, `TargetOpportunityRange`). On the sim side
 `--block-chance`, `--block-seconds`, `--block-reduction`, `--target-wounded`,
-`--target-exposed`, `--target-crowd`, `--target-sticky` ve savaşçı başına blok sayacı.
+`--target-exposed`, `--target-crowd`, `--target-sticky` and a per-warrior block counter.
 
-Yeni test dosyaları: `BlockTests` (8 test), `TargetSelectionTests` (6 test).
-Toplam 292 test yeşil, 0 uyarı.
+New test files: `BlockTests` (8 tests), `TargetSelectionTests` (6 tests).
+292 tests green in total, 0 warnings.
 
 ---
 
-## Dojo çekirdeğe girdi (2026-09-04)
+## The dojo entered the core (2026-09-04)
 
-Faz 3'ün ilk parçası: **kadro, gün döngüsü ve kayıt sistemi**. Üçü de
-`Domina.Core/Dojo` altında ve motora bağımlı değil — arayüz yok, Godot yok.
+Phase 3's first piece: **the roster, the day cycle and the save system**. All three live under
+`Domina.Core/Dojo` and have no dependency on the engine — no interface, no Godot.
 
-### Kadro, dövüşün bilmediği hâli taşıyor
+### The roster carries the state the fight does not know
 
-`Warrior` dövüşün okuduğu kalıcı hâl olarak kaldı; yanına `RosterEntry` geldi ve meta
-durumu o taşıyor: kalan revir günü, o günkü uğraş, tamamlanmış antrenman günü. Ayrı
-tutulmasının sebebi mimari kural — dövüş çözümleyicisi takvimi bilmez ve toplu
-simülasyon aynı savaşçıyı on binlerce kez koşturur, orada "gün" diye bir şey yoktur.
+`Warrior` stayed as the permanent state the fight reads; `RosterEntry` came alongside it and
+carries the meta state: remaining infirmary days, that day's occupation, completed training days.
+The reason for keeping them apart is the architectural rule — the fight resolver does not know
+about the calendar, and the batch simulation runs the same warrior tens of thousands of times,
+where there is no such thing as a "day".
 
-`Roster` iki kuralı zorluyor:
+`Roster` enforces two rules:
 
-- **Ölen silinmez.** Permadeath kalıcı, ama savaşçının adı, onuru ve sakatlıkları
-  kayıtta durur. Canlılık `Warrior.IsAlive`'dan okunur.
-- **İsim eşsizliği yalnızca canlılar arasında.** GDD §6'nın kuralı: X ölünce adı havuza
-  döner, ileride yeni bir X gelebilir. Chat komutunun (`!ronin-<isim>`) tek bir hedefe
-  çözülmesini sağlayan şey bu.
+- **The dead are not deleted.** Permadeath is permanent, but the warrior's name, honour and
+  disabilities stay on the record. Aliveness is read from `Warrior.IsAlive`.
+- **Name uniqueness only among the living.** GDD §6's rule: when X dies the name returns to the
+  pool and a new X may come along later. This is what lets the chat command (`!ronin-<name>`)
+  resolve to a single target.
 
-### Gün döngüsü deterministik
+### The day cycle is deterministic
 
-`DojoState.AdvanceDay()` bir günü kapatır: antrenman sayaçları işler, revir günleri erir,
-onur nötre doğru bir adım kayar. Rastgelelik **yok** — aynı durum aynı çağrılarla aynı
-sonucu verir. Karşılaşmaya girmek de tam bir gün yer (GDD §10), yani sefer katmanı da
-dövüş bitince aynı çağrıyı yapacak; gün başına iki kez çağrılmaz.
+`DojoState.AdvanceDay()` closes a day: it processes training counters, erodes infirmary days,
+and shifts honour one step towards neutral. There is **no** randomness — the same state with the
+same calls gives the same result. Entering an encounter also takes a full day (GDD §10), so the
+expedition layer will make the same call when the fight ends; it is not called twice per day.
 
-Onur decay'i eşiğin öbür tarafına **sarkmıyor**: nötre olan mesafe adımdan küçükse
-savaşçı tam 50'ye oturur. Aksi hâlde onur nötrün etrafında salınırdı.
+Honour decay does **not** overshoot to the other side of the threshold: if the distance to
+neutral is smaller than the step, the warrior settles exactly on 50. Otherwise honour would
+oscillate around neutral.
 
-Kapanan gün bir `DayReport` döndürüyor (revirden çıkanlar, antrenman görenler) — "bugün
-ne oldu" ekranının girdisi.
+The closed day returns a `DayReport` (who left the infirmary, who trained) — the input for the
+"what happened today" screen.
 
-### Kayıt: dosya dengeyi taşımıyor
+### Save: the file does not carry the balance
 
-Kayıt ayrı bir tip ailesi (`DojoSnapshot` ve arkadaşları), canlı modelin serileştirilmiş
-hâli değil. Sebep ölçülebilir bir tehlike: canlı model doğrudan yazılsaydı her denge
-alanı (menzil, uzuv kopma çarpanı, blok kalitesi, zırh dayanıklılığı) dosyaya girer ve
-**eski kayıt yeni dengeyi geri getirirdi** — oyuncu bir sonraki yamada düzeltilen sayıyı
-kaydından geri yüklerdi. Dosyaya yalnızca oyuncunun ürettiği şey yazılıyor: kim, hangi
-adla, hangi statlarla, ne kuşanmış, ne kaybetmiş.
+The save is a separate family of types (`DojoSnapshot` and friends), not a serialised form of the
+live model. The reason is a measurable danger: if the live model were written directly, every
+balance field (reach, limb severing multiplier, block quality, armour durability) would enter the
+file and **an old save would bring back the old balance** — the player would restore from their
+save a number that was fixed in the next patch. Only what the player produced is written to the
+file: who, under what name, with what stats, wearing what, having lost what.
 
-GDD §2'nin üç kuralı da testle bağlandı:
+All three of GDD §2's rules were tied to tests:
 
-| Kural | Karşılığı |
-|---|---|
-| Versiyonlu | `DojoSnapshot.CurrentVersion`; daha yeni sürümden gelen dosya yükleniyor ama uyarı bırakıyor |
-| Merge-on-load | Eksik alan varsayılanıyla, tanınmayan alan yok sayılarak yükleniyor |
-| try/catch | `Load` **hiçbir koşulda fırlatmıyor**; bozuk metin başarısız bir `LoadResult` döndürüyor |
+| Rule | Its counterpart |
+| --- | --- |
+| Versioned | `DojoSnapshot.CurrentVersion`; a file from a newer version loads but leaves a warning |
+| Merge-on-load | Missing fields load with their defaults, unrecognised fields are ignored |
+| try/catch | `Load` **never throws under any circumstances**; corrupt text returns a failed `LoadResult` |
 
-Bozuk tek bir savaşçı kaydı kadronun geri kalanını götürmüyor: çakışan kimlik atlanıyor,
-adsız kayda ad veriliyor, aynı adı taşıyan ikinci canlı yeniden adlandırılıyor — hepsi
-uyarı listesine yazılarak. Merge-on-load'ın bedeli dosyanın sessizce eksik yüklenmesidir;
-uyarılar tam olarak bunu görünür kılmak için taşınıyor.
+A single corrupt warrior record does not take the rest of the roster with it: a clashing id is
+skipped, a nameless record is given a name, a second living warrior with the same name is
+renamed — all of it written to the warning list. The cost of merge-on-load is that the file
+silently loads incomplete; the warnings are carried precisely to make that visible.
 
-### Kasıtlı olarak yazılmayanlar
+### Deliberately not written
 
-- **Antrenman statlara dokunmuyor.** Yalnızca gün sayıyor. Etkisi ölçülüp kilitlenmeden
-  bir sayı uydurmak, sonradan sökülmesi zor bir denge borcu olurdu.
-- ~~**İlaçla iyileşme hızlandırma yok.**~~ 2026-09-04'te yazıldı — aşağıya bakın.
-- **Karşılaşma teklifi yok.** Faz 4'ün işi; gün döngüsü onu bekleyecek şekilde duruyor.
+- **Training does not touch stats.** It only counts days. Inventing a number before the effect is
+  measured and locked would be a balance debt that is hard to remove later.
+- ~~**No speeding up recovery with medicine.**~~ Written on 2026-09-04 — see below.
+- **No encounter offer.** That is Phase 4's job; the day cycle stands ready to wait for it.
 
-### Dövüşün bilançosu kadroya yazılıyor
+### The fight's tally is written into the roster
 
-`BattleAftermath` dövüş sonucunu alıp kalıcı hale çeviren **tek yer**. Çekirdek hâlâ
-kalıcı hale dokunmuyor — ölüm, uzuv kaybı, dağılan zırh ve emilen yıpranma dövüş
-özetinde birer rapor; geri dönüşsüz hale gelmeleri burada oluyor. Ayrım mimari kuralın
-gereği: toplu simülasyon aynı kadroyu on binlerce kez koşturuyor ve hiçbirinde savaşçının
-kalıcı hali bozulmamalı.
+`BattleAftermath` is the **single place** that takes the fight's outcome and turns it into
+permanent state. The core still does not touch the permanent state — death, limb loss, destroyed
+armour and absorbed wear are each a report in the fight summary; they become irreversible here.
+The separation is required by the architectural rule: the batch simulation runs the same roster
+tens of thousands of times and in none of them may a warrior's permanent state be corrupted.
 
-| Girdi | Kadroya etkisi |
-|---|---|
-| `Died` | `Roster.Kill` — permadeath; revir günü ve onur işlenmez |
-| `LostParts` | Kalıcı sakatlık; aynı uzuv ikinci kez kaybedilmez |
-| `ArmorWear` | Savaşçının yıpranma defterine **eklenir** (seferler boyunca birikir) |
-| `DestroyedArmor` | Parça kuşamdan çıkar ve o yuvanın yıpranması **sıfırlanır** |
-| Kalan can + uzuv sayısı | Revir günü |
-| İsabet oranı, kaçış | `HonorEngine` üzerinden onur |
+| Input | Effect on the roster |
+| --- | --- |
+| `Died` | `Roster.Kill` — permadeath; infirmary days and honour are not processed |
+| `LostParts` | Permanent disability; the same limb is not lost a second time |
+| `ArmorWear` | **Added** to the warrior's wear ledger (accumulates across expeditions) |
+| `DestroyedArmor` | The piece leaves the kit and that slot's wear is **reset** |
+| Remaining health + number of limbs | Infirmary days |
+| Hit rate, escape | Honour via `HonorEngine` |
 
-Dağılan yuvanın sayacının sıfırlanması gerekiyordu: yıpranma **parçaya** ait, yuvaya
-değil. Sayaç kalsaydı yerine takılan yepyeni parça dağılanın defterini devralır ve ilk
-darbede dağılırdı.
+The counter of a destroyed slot had to be reset: wear belongs to **the piece**, not the slot. Had
+the counter stayed, a brand-new piece fitted in its place would inherit the destroyed one's
+ledger and fall apart on the first blow.
 
-Takım filtresi de kural: yokai'ler kendi kimliklerini taşıyor ve bu kimlikler
-kadrodakilerle **çakışabilir**. Filtre olmasaydı düşmanın kaybettiği kol dojo'daki bir
-savaşçıya yazılabilirdi.
+The team filter is a rule too: the yokai carry their own identities and those identities **can
+clash** with those in the roster. Without the filter, an arm lost by an enemy could be written to
+a warrior in the dojo.
 
-Revir günü sayıları (`RecoveryDaysAtFullDamage` 6, `RecoveryDaysPerLostLimb` 5,
-`RecoveryFreeDamageShare` 0.25) **kilitli değil** — GDD §7 yalnızca "yara ağırlığına
-göre" diyor. Bedava hasar payı olmadan her dövüş bir gün revir demek olurdu ve gün
-döngüsünün asıl kararı (bugün sefere mi, antrenmana mı) kendiliğinden ortadan kalkardı.
+The infirmary day numbers (`RecoveryDaysAtFullDamage` 6, `RecoveryDaysPerLostLimb` 5,
+`RecoveryFreeDamageShare` 0.25) are **not locked** — GDD §7 only says "according to the weight of
+the wound". Without a free damage share, every fight would mean a day in the infirmary and the day
+cycle's real decision (expedition today, or training) would disappear by itself.
 
-Yeni test dosyaları: `DojoTests` (15 test), `DojoSaveTests` (13 test),
-`DojoAftermathTests` (16 test). Toplam 336 test yeşil, 0 uyarı.
-
-
-## 2026-09-04 — Ekonomi sayıları ölçüldü ve kilitlendi (Açık Karar #5)
-
-Kasa katmanı girdi ve fiyatlar ölçümle kapandı. Yeni dosyalar:
-`Domina.Core/Dojo/EconomyTuning.cs` (bütün sayılar tek yerde),
-`Domina.Core/Dojo/Quartermaster.cs` (fiyat sorusu ile alışverişi ayıran tek kapı),
-`Domina.Sim/CampaignRunner.cs` (dojo'yu gün gün oynatan ölçüm aracı).
-
-### Neden dövüş değil, sefer dizisi ölçüldü
-
-Ekonomi tek dövüşe bakarak kilitlenemiyor: zırhın bedeli seferler boyunca birikiyor,
-revir günü geliri değil **zamanı** yiyor, ölen savaşçının yerine alınan da kasadan
-çıkıyor. Ölçüm birimi bu yüzden dövüş değil dojo ömrü oldu —
-`Domina.Sim --mode campaign` aynı kadroyu günlerce oynatıp kasanın eğrisine bakıyor.
-Oyuncunun yerine sabit bir politika oynuyor (onar, yenile, adam al, sefere çık);
-politikanın akıllı olması değil, **aynı** olması gerekiyor.
-
-### Ölçüm ayrı bir senaryoda yapıldı: `patrol`
-
-Mevcut senaryoların hepsi birer denge sondası — bir kuralın ucunu görebilmek için kasten
-ağır kurulmuşlar ve savaşçı-dövüş başına ölüm oranları %38-49 bandında. Böyle bir dövüş
-her gün yapılamıyor: kadro günde bir cenaze kaldıramıyor ve o kadroyla ölçülen fiyat
-aslında savaşçı fiyatını ölçüyor, zırhın ya da ilacın fiyatını değil. `patrol` sıradan
-günün karşılaşması: zafer %98.6, savaşçı-dövüş başına ölüm %7.
-
-### Kilitlenen sayılar (1000 dojo × 60 gün)
-
-| Kalem | Sayı |
-|---|---|
-| Zafer ödülü | 0.45 altın / düşman canı (çekilme ve bozgun: 0) |
-| Zırh parçası | 1.50 altın / dayanıklılık puanı |
-| Onarım | 0.90 altın / yıpranma puanı |
-| Yiyecek / su | 2 / 1 altın, savaşçı başına günde 1'er |
-| İlaç | 12 altın, revirdeki savaşçı başına günde 1 |
-| Savaşçı alımı / başlangıç sermayesi | 150 / 600 altın |
-
-Sonuç: dövüş başına net **31.3 altın**, günlük tüketim 34.5, boş gün %33.8, aç gün %4.4,
-sermayesini koruyan dojo %66.4, kapanan dojo %1.2.
-
-### Ölçümün ortaya çıkardığı üç şey
-
-1. **Bağlayıcı kısıt altın değil, kadro.** Karşılaşma zorluğu savaşçı-dövüş başına %20
-   ölümün üstüne çıktığında hiçbir fiyat ayarı dojo'yu ayakta tutmuyor — gelirin tamamı
-   savaşçı yerine koymaya gidiyor. Zorluk eğrisi (GDD §10) aynı zamanda ekonominin eğrisi.
-2. **Takvimi ilacın fiyatı belirliyor.** Günlük tüketimin üçte ikisi ilaç. Bedava ilaçla
-   boş gün %28.3, 12 altında %33.8, 24 altında %59.1 — "bugün sefere mi, revire mi"
-   baskısını yaratan kalem bu.
-3. **Ödül eğrisi dar.** 0.35'te dojoların %14.3'ü sermayesini koruyor, 0.70'te kasa 3719
-   altına çıkıp para kısıt olmaktan çıkıyor. 0.45 ikisinin arasındaki diz.
-
-### İki kural, ölçümden çıktı
-
-- **Onarım daima yenilemeden ucuz** (0.90 < 1.50). Eşit ya da pahalı olsaydı onarım diye
-  bir karar kalmazdı. Ölçümde iki uç neredeyse başa baş (erken onaran 959, sonuna kadar
-  kullanan 1012 altınla bitiriyor) — ama sonuna kadar kullanan, parçayı **dövüşün
-  ortasında** kaybediyor. Altın eşitken riski seçmek oyuncunun kararı.
-- **Kıtlığın bedeli zaman, ölüm değil.** Ambar yetmezse revirdekiler önce doyuyor; aç
-  savaşçı o gün ne iyileşiyor ne antrenman yapıyor, ama kimse açlıktan ölmüyor. Sıra
-  keyfî olamazdı: yaralıyı aç bırakmak kıtlığı telafisi olmayan bir cezaya çevirirdi.
-
-### İlaç artık gerçekten iyileştiriyor
-
-İlaçsız gün bir revir günü eritiyor, ilaçlı gün iki. İlaç bu yüzden zorunlu bir vergi
-değil, hızlandırıcı — Faz 3'ün "revir/hekim" maddesi bununla kapandı.
-
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 353/353 yeşil (+17:
-`EconomyTests` 12, `CampaignRunnerTests` 5). Yeni dosyalarda `dotnet format` temiz.
+New test files: `DojoTests` (15 tests), `DojoSaveTests` (13 tests),
+`DojoAftermathTests` (16 tests). 336 tests green in total, 0 warnings.
 
 
-## 2026-09-04 (ikinci tur) — Günün karşılaşma teklifi (Faz 4 girişi)
+## 2026-09-04 — The economy numbers were measured and locked (Open Decision #5)
 
-Yeni klasör `Domina.Core/Campaign`: `Bestiary` (ölçeklenebilir yokai kalıpları),
-`EncounterGenerator` + `EncounterTuning` (günün teklifi ve zorluk eğrisi), `EncounterOffer`
-(tehdit bandı, kaba tanım, dayatılan ekip sayısı), `Expedition` (teklifi dövüşe çeviren
-tek köprü).
+The treasury layer went in and the prices were closed by measurement. New files:
+`Domina.Core/Dojo/EconomyTuning.cs` (every number in one place),
+`Domina.Core/Dojo/Quartermaster.cs` (the single gate separating the price question from the
+purchase), `Domina.Sim/CampaignRunner.cs` (the measurement tool that plays the dojo day by day).
 
-### Teklif kayıtta durmuyor
+### Why an expedition series was measured rather than a fight
 
-Üretim gün ile seferin tohumunun **saf** bir fonksiyonu. Kazandığı iki şey var: kayıt
-dosyası bestiary'yi taşımıyor (eski kayıt yeni dengeyi geri getiremez, GDD §2) ve oyuncu
-beğenmediği teklifi kaydı yeniden yükleyerek değiştiremiyor. `DojoSnapshot` yalnızca bir
-`Seed` alanı kazandı — biçim bozulmadı, eksik alan varsayılanla yükleniyor.
+The economy cannot be locked by looking at a single fight: the cost of armour accumulates across
+expeditions, an infirmary day eats not income but **time**, and the replacement for a dead warrior
+also comes out of the treasury. The unit of measurement therefore became not the fight but the
+dojo's lifetime — `Domina.Sim --mode campaign` plays the same roster for days and looks at the
+curve of the treasury. A fixed policy plays in the player's place (repair, renew, hire, go on
+expedition); the policy does not need to be clever, it needs to be **the same**.
 
-### Köprü tek yerde
+### The measurement was done in a separate scenario: `patrol`
 
-`DojoState` dövüşü kurmuyor, `Battle` günü kapatmıyor. `Expedition.Send` üçünü sırayla
-yapıyor: dövüşü koşturur, sonucu kadroya yazar (`BattleAftermath`), ödülü öder ve **günü
-kendi kapatır**. Sefer bir gün yiyor, kaçılsa da (GDD §10) — "gir-bak-kaç" döngüsünü
-kapatan kalem bu. `Expedition.Refuse` ekibi gerekçesiyle geri çeviriyor: boş ekip, dünün
-teklifi, yanlış ekip sayısı (düello tam bir savaşçı ister), kadroda olmayan savaşçı,
-revirdeki savaşçı.
+All the existing scenarios are balance probes — deliberately set up heavy so that the edge of a
+rule can be seen, with death rates per warrior-fight in the 38-49% band. Such a fight cannot be
+had every day: the roster cannot bear a funeral a day, and a price measured with that roster
+actually measures the price of a warrior, not the price of armour or medicine. `patrol` is the
+ordinary day's encounter: victory 98.6%, death per warrior-fight 7%.
 
-### Ölçüm: "al ya da bırak" gerçekten bir karar mı
+### The locked numbers (1000 dojos × 60 days)
 
-`Domina.Sim --mode campaign --offers on` artık sabit senaryo yerine üretilen teklifleri
-oynatıyor. 500 dojo × 120 gün, tek fark politikanın teklifi eleme hakkı:
+| Item | Number |
+| --- | --- |
+| Victory reward | 0.45 gold / enemy health (withdrawal and rout: 0) |
+| Armour piece | 1.50 gold / durability point |
+| Repair | 0.90 gold / wear point |
+| Food / water | 2 / 1 gold, 1 each per warrior per day |
+| Medicine | 12 gold, 1 per day per warrior in the infirmary |
+| Hiring a warrior / starting capital | 150 / 600 gold |
 
-| Politika | Kapanan dojo | Ayakta kalınan gün (ortanca) | Ölüm / savaşçı-dövüş | Aç gün | Geri çevrilen |
+Result: net **31.3 gold** per fight, daily consumption 34.5, idle days 33.8%, hungry days 4.4%,
+dojos that preserved their capital 66.4%, dojos that closed 1.2%.
+
+### Three things the measurement revealed
+
+1. **The binding constraint is not gold but the roster.** Once encounter difficulty goes above 20%
+   death per warrior-fight, no price adjustment keeps the dojo standing — all the income goes into
+   replacing warriors. The difficulty curve (GDD §10) is at the same time the economy's curve.
+2. **The price of medicine sets the calendar.** Two thirds of daily consumption is medicine. With
+   free medicine idle days are 28.3%, at 12 gold 33.8%, at 24 gold 59.1% — this is the item that
+   creates the "expedition today, or the infirmary" pressure.
+3. **The reward curve is narrow.** At 0.35, 14.3% of dojos preserve their capital; at 0.70 the
+   treasury climbs to 3719 gold and money stops being a constraint. 0.45 is the knee between the
+   two.
+
+### Two rules that came out of the measurement
+
+- **Repair is always cheaper than replacement** (0.90 < 1.50). Had it been equal or dearer, there
+  would be no decision called repair. In the measurement the two extremes are almost level (an
+  early repairer finishes with 959 gold, someone who uses a piece to the end with 1012) — but the
+  one who uses it to the end loses the piece **in the middle of a fight**. With gold equal,
+  choosing the risk is the player's decision.
+- **The price of scarcity is time, not death.** If the store falls short, those in the infirmary
+  eat first; a hungry warrior neither heals nor trains that day, but nobody starves to death. The
+  order could not be arbitrary: leaving the wounded hungry would turn scarcity into a penalty with
+  no recovery.
+
+### Medicine now really heals
+
+A day without medicine erodes one infirmary day, a day with medicine two. Medicine is therefore
+not a compulsory tax but an accelerator — this closed Phase 3's "infirmary/physician" item.
+
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 353/353 green (+17:
+`EconomyTests` 12, `CampaignRunnerTests` 5). `dotnet format` clean on the new files.
+
+
+## 2026-09-04 (second round) — The day's encounter offer (entering Phase 4)
+
+New folder `Domina.Core/Campaign`: `Bestiary` (scalable yokai templates),
+`EncounterGenerator` + `EncounterTuning` (the day's offer and the difficulty curve),
+`EncounterOffer` (threat band, rough description, imposed team size), `Expedition` (the single
+bridge that turns the offer into a fight).
+
+### The offer is not kept in the save
+
+Generation is a **pure** function of the day and the expedition's seed. It gains two things: the
+save file does not carry the bestiary (an old save cannot bring back the old balance, GDD §2) and
+the player cannot change an offer they dislike by reloading the save. `DojoSnapshot` only gained a
+`Seed` field — the format was not broken, missing fields load with their defaults.
+
+### The bridge is in one place
+
+`DojoState` does not set up the fight and `Battle` does not close the day. `Expedition.Send` does
+all three in order: it runs the fight, writes the result into the roster (`BattleAftermath`), pays
+the reward and **closes the day itself**. An expedition eats a day, even if you flee (GDD §10) —
+this is the item that closes the "go in, look, run" loop. `Expedition.Refuse` turns the team back
+with its reason: an empty team, yesterday's offer, the wrong team size (a duel wants exactly one
+warrior), a warrior not in the roster, a warrior in the infirmary.
+
+### Measurement: is "take it or leave it" really a decision
+
+`Domina.Sim --mode campaign --offers on` now plays generated offers instead of a fixed scenario.
+500 dojos × 120 days, the only difference being the policy's right to filter offers:
+
+| Policy | Dojos closed | Days survived (median) | Death / warrior-fight | Hungry days | Refused |
 |---|---|---|---|---|---|
-| Her teklife girer | %99.2 | 54 | %9.2 | %7.1 | %0 |
-| Kadro eksikken ağır teklifi çevirir | %0.4 | 120 (hepsi) | %7.1 | %50.8 | %67.7 |
+| Takes every offer | 99.2% | 54 | 9.2% | 7.1% | 0% |
+| Refuses heavy offers when the roster is short | 0.4% | 120 (all of them) | 7.1% | 50.8% | 67.7% |
 
-İki başarısızlık birbirinin zıddı: hiç reddetmeyen dojo **kadrosunu**, her ağırı reddeden
-dojo **kasasını** kaybediyor. Reddetmek bir kaçış değil, gün ile savaşçı arasında takas.
+The two failures are opposites of each other: the dojo that never refuses loses **its roster**, the
+one that refuses everything heavy loses **its treasury**. Refusing is not an escape but a trade
+between a day and a warrior.
 
-### Ölçüm sırasında düzeltilen kural
+### A rule corrected during the measurement
 
-İlk hâlde kalabalık teklifin gücü düşmanlara **bölünüyordu** (`power / √sayı`). Sonuç:
-aynı tehdit daha az canla taşınıyor, ödül düşman canına bağlı olduğu için (§11) kalabalık
-teklif aynı riski yarı fiyata satıyordu — ölçümde dojo'lar %99 oranında kapanıyordu.
-Kalabalık artık gücü bölmüyor: üç düşman üç kat düşman, üç kat ödül.
+In the first version a crowded offer's power was **divided** among the enemies (`power / √count`).
+The result: the same threat was carried with less health, and since the reward depends on enemy
+health (§11) a crowded offer sold the same risk at half price — in the measurement 99% of dojos
+were closing. A crowd no longer divides the power: three enemies are three times the enemy, three
+times the reward.
 
-### Kasıtlı olarak yazılmayanlar
+### Deliberately not written
 
-- **Eğrinin sayıları kilitlenmedi.** Ölçüm neyin ölçüldüğünü söylüyor, hangi eğrinin doğru
-  olduğunu değil; eğri Faz 9'un denge turunda kapanacak.
-- **Yokai davranışı yok.** Bestiary'de yalnızca sayılar var (Açık Karar #3'ün açık kalan
-  yarısı davranış). Kalıba bir alan eklendiğinde encounter üretimi değişmeyecek.
-- **Rastgele olaylar yok** (GDD §11) — ekonominin açık kalan tek kalemi.
+- **The curve's numbers were not locked.** The measurement says what was measured, not which curve
+  is right; the curve will close in Phase 9's balance round.
+- **No yokai behaviour.** The bestiary holds only numbers (behaviour is Open Decision #3's other,
+  still-open half). When a field is added to the template, encounter generation will not change.
+- **No random events** (GDD §11) — the economy's only remaining open item.
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 368/368 yeşil (+15:
-`EncounterTests` 12, `CampaignRunnerTests` +3). Yeni dosyalarda `dotnet format` temiz.
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 368/368 green (+15:
+`EncounterTests` 12, `CampaignRunnerTests` +3). `dotnet format` clean on the new files.
 
 
-## 2026-09-04 (üçüncü tur) — Rastgele olaylar (GDD §11'in son kalemi)
+## 2026-09-04 (third round) — Random events (GDD §11's last item)
 
-`Domina.Core/Dojo/RandomEvents.cs`: günde %15 olasılıkla bir aksilik. Beş tür —
-hırsızlık, erzak bozulması, kuyunun bulanması, ilacın küflenmesi, hastalık.
-Hepsi eksiltir; bağış ya da hazine yok, çünkü §11 olayları **tampon baskısı** olarak
-tarif ediyor ve çift yönlü bir tablo baskıyı ortadan kaldırırdı.
+`Domina.Core/Dojo/RandomEvents.cs`: a 15% chance of a mishap per day. Five kinds — theft, spoiled
+provisions, the well going foul, medicine going mouldy, illness. All of them take away; there are
+no donations or treasure, because §11 describes events as **pressure on the buffer** and a
+two-way table would remove that pressure.
 
-### Etkinin ambara vurmaması gerekiyordu
+### The effect had to not land on the store
 
-İlk akla gelen olay "erzak çalındı" ama günlük alışveriş ambarı tam ihtiyaç kadar
-dolduruyor (`Quartermaster.Restock`), yani stok neredeyse hep sıfır — çalınan erzağın
-karşılığı da sıfır olurdu. Bu yüzden olaylar üç yerden birine vuruyor: **kasa** (hırsızlık),
-**o günün faturası** (bozulan erzak, bulanan kuyu, küflenen ilaç) ya da **takvim**
-(hastalık).
+The first event that comes to mind is "provisions were stolen", but the daily shopping fills the
+store to exactly what is needed (`Quartermaster.Restock`), so stock is nearly always zero — the
+value of stolen provisions would be zero too. Events therefore hit one of three places: **the
+treasury** (theft), **that day's bill** (spoiled provisions, a foul well, mouldy medicine) or
+**the calendar** (illness).
 
-Aksilik `AdvanceDay` içinde upkeep'ten **önce** işleniyor: bozulan erzak o günün
-alışverişini pahalılaştırmalı, ertesi güne ötelenmemeli.
+The mishap is processed inside `AdvanceDay` **before** upkeep: spoiled provisions should make that
+day's shopping more expensive, not be deferred to the next day.
 
-### Ayrı tuz
+### A separate salt
 
-Olay da teklif gibi gün ile tohumun saf fonksiyonu, ama karıştırma sabiti ayrı. Aynı tuz
-kullanılsaydı ağır teklifin geldiği gün daima hırsızlık da olurdu ve iki sistem tek bir
-sisteme dönüşürdü. Test bunu tutuyor: olay günleri ağır teklif günlerinin alt kümesi değil.
+Like the offer, the event is a pure function of the day and the seed, but the mixing constant is
+separate. Had the same salt been used, theft would always fall on the day a heavy offer arrived and
+the two systems would collapse into one. A test holds this: event days are not a subset of heavy
+offer days.
 
-### Ölçüm (400 dojo × 60 gün, `patrol`)
+### Measurement (400 dojos × 60 days, `patrol`)
 
-| Günlük olay olasılığı | Bitiş kasası | Sermayesini koruyan | Aç gün | Kapanan dojo |
+| Daily event probability | Final treasury | Preserved capital | Hungry days | Dojos closed |
 |---|---|---|---|---|
-| %0 | 945 | %66.2 | %4.8 | %1.2 |
-| **%15 (seçilen)** | **766** | **%58.5** | **%6.7** | **%2.2** |
-| %30 | 562 | %44.8 | %9.4 | %3.0 |
+| 0% | 945 | 66.2% | 4.8% | 1.2% |
+| **15% (chosen)** | **766** | **58.5%** | **6.7%** | **2.2%** |
+| 30% | 562 | 44.8% | 9.4% | 3.0% |
 
-%15'te tamponun yaklaşık beşte biri aksiliklere gidiyor. Baskı hissediliyor ama kasayı
-belirleyen kalem hâlâ ilaç ve savaşçı — olaylar oyunu tek başına bitirmiyor.
+At 15% roughly a fifth of the buffer goes to mishaps. The pressure is felt but the item that
+determines the treasury is still medicine and warriors — events do not end the game on their own.
 
-Ölçüm sırasında bir şey daha görüldü: teklif kipinde (dojo zaten kasası boş yaşarken)
-aksiliklerin etkisi neredeyse yok — boş kasadan çalınacak bir şey yok. Yani olay tablosu
-**varlıklı** dojo'yu cezalandırıyor, batmakta olanı değil. Tampon baskısı tam olarak bu
-demek.
+One more thing was seen during the measurement: in offer mode (where the dojo already lives with an
+empty treasury) mishaps have almost no effect — there is nothing to steal from an empty treasury.
+That is, the event table punishes **the wealthy** dojo, not the one that is sinking. That is exactly
+what pressure on the buffer means.
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 378/378 yeşil
-(+10: `DayEventTests`). Yeni dosyada `dotnet format` temiz.
-
-
-### Ek (aynı gün) — şiddet rastgeleleşti, pas düştü
-
-İki düzeltme geldi:
-
-- **Pas olayı kaldırıldı.** Kuşamın yıpranması zaten dövüşten geliyor; ikinci bir kaynak
-  gerekmiyordu.
-- **Oranlar sabit değil.** Yazılı sayılar artık **üst sınır**: hırsızlık kasanın en fazla
-  %12'sini, bozulma ve bulanan kuyu o günün faturasının en fazla iki katını, hastalık en
-  fazla 3 günü alır; gerçek miktar her seferinde sıfır ile üst sınır arasında çekilir.
-  Gerekçe: sabit oran aksiliği hesaplanabilir bir vergiye çevirir, oyuncu kaybı baştan
-  bilirse tampon tutmak karar değil aritmetik olur.
-
-Ölçüm (400 dojo × 60 gün, `patrol`, %15): bitiş kasası 815 altın, sermayesini koruyan
-%60.8, aç gün %6.1, kapanan dojo %1.5 — beklendiği gibi sabit oranlı hâlden (766 / %58.5)
-biraz daha hafif, çünkü kayıp artık ortalamada üst sınırın yarısı.
-
-Test sayısı 378 (`DayEventTests` 10 test; pas testi düştü, şiddetin sabit olmadığını
-tutan test eklendi).
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 378/378 green
+(+10: `DayEventTests`). `dotnet format` clean on the new file.
 
 
-### Karar: boş kasada hırsızlık boşa düşsün (2026-09-04)
+### Addendum (same day) — the severity became random, rust was dropped
 
-Ölçümde "kasası boş dojo hırsızlıktan etkilenmiyor" diye not düşülmüştü; bunun bir eksik
-değil **karar** olduğu netleşti. Kasanın boş olması kalıcı bir hâl değil — oyuncu zırh,
-onarım ya da yeni savaşçı için para biriktirdiğinde kasa dolar ve hırsızlık tam o anda
-ısırır. Olay böylece biriktirme kararının bedeli oluyor.
+Two corrections came in:
 
-Değerlendirilip **reddedilen** iki alternatif:
+- **The rust event was removed.** Kit wear already comes from the fight; a second source was not
+  needed.
+- **The rates are not fixed.** The written numbers are now **upper bounds**: theft takes at most 12%
+  of the treasury, spoilage and the foul well at most twice that day's bill, illness at most 3 days;
+  the actual amount is drawn each time between zero and the upper bound. Rationale: a fixed rate
+  turns a mishap into a calculable tax, and if the player knows the loss in advance, holding a buffer
+  becomes arithmetic rather than a decision.
 
-- Boş kasada hırsızın erzağa el atması (o günün faturasını artırması): batmakta olan
-  dojo'yu ikinci kez cezalandırırdı ve olayın "biriktirdiğin şeye vurur" anlamını silerdi.
-- Toplu alım + ambar kapasitesi ile gerçek bir stok tamponu kurmak: fikir olarak duruyor
-  ama ekonomiye yeni bir karar ekler, bu yüzden kendi ölçüm turunu ister — bugünkü
-  kilitli fiyatlarla karıştırılmadı.
+Measurement (400 dojos × 60 days, `patrol`, 15%): final treasury 815 gold, preserved capital 60.8%,
+hungry days 6.1%, dojos closed 1.5% — as expected, slightly lighter than the fixed-rate version
+(766 / 58.5%), because the loss now averages half the upper bound.
+
+Test count 378 (`DayEventTests` 10 tests; the rust test was dropped, a test holding that the severity
+is not fixed was added).
 
 
-## 2026-09-04 (dördüncü tur) — Savaşçı pazarı
+### Decision: theft should fall flat on an empty treasury (2026-09-04)
 
-Domina'nın köle pazarı araştırıldı ve modeli birebir alındı (kaynak: Steam tartışmaları ve
-oyuncu rehberleri). Oradaki üç kural: adaylar rastgele statlarla gelir ve statlar alım
-öncesi görünür, pazarın kalitesi oyuncunun mevcut kadrosunu takip eder, ve seviye başına
-gelişim hızı savaşçıya göre değişir.
+The measurement had noted "a dojo with an empty treasury is unaffected by theft"; it became clear
+that this is not a shortcoming but **a decision**. Having an empty treasury is not a permanent state
+— when the player saves up for armour, repairs or a new warrior the treasury fills and theft bites
+at exactly that moment. The event thereby becomes the price of the decision to save up.
 
-Yeni dosya `Domina.Core/Dojo/RecruitMarket.cs`; `Warrior` bir `Talent` alanı kazandı
-(kayda giriyor, dövüş okumuyor — antrenman okuyacak).
+Two alternatives were considered and **rejected**:
 
-### Üç kural koda geçti
+- A thief going for the provisions when the treasury is empty (raising that day's bill): it would
+  punish a sinking dojo a second time and would erase the event's meaning of "it hits what you have
+  built up".
+- Building a real stock buffer with bulk buying + store capacity: the idea stands, but it adds a new
+  decision to the economy and therefore wants its own measurement round — it was not mixed into
+  today's locked prices.
 
-- **Fiyat stattan çıkıyor.** Adayın taban savaşçıya göre skoru fiyatı belirliyor; yetenek
-  de fiyata giriyor ama yarım ağırlıkla (yetenek bir vaat, stat elde olan).
-- **Pazar kadroyu takip ediyor** (%70). Kadro tamamen ölürse pazar acemi seviyesine
-  düşüyor, sıfıra değil — çöken dojo'nun toparlanma yolu kapanmasın diye.
-- **Liste iki günde bir yenileniyor ve gün içinde donuyor.** Donmasaydı, pazar kadro
-  ortalamasını takip ettiği için bir aday almak kalan adayları değiştirirdi: oyuncu ucuz
-  birini alıp listeyi istediği kadar çevirebilirdi. Test bunu tutuyor.
 
-### Ölçüm iki şeyi ortaya çıkardı (400 dojo × 60 gün, `patrol`)
+## 2026-09-04 (fourth round) — The warrior market
 
-| Alım politikası | Bitiş kasası | Sermayesini koruyan | Ölüm (dojo başına) | Kapanan dojo |
+Domina's slave market was researched and its model taken over as-is (sources: Steam discussions and
+player guides). The three rules there: candidates come with random stats and the stats are visible
+before purchase, the quality of the market follows the player's current roster, and the growth rate
+per level varies from warrior to warrior.
+
+New file `Domina.Core/Dojo/RecruitMarket.cs`; `Warrior` gained a `Talent` field (it goes into the
+save, the fight does not read it — training will).
+
+### Three rules went into the code
+
+- **The price comes out of the stats.** The candidate's score relative to a base warrior sets the
+  price; talent enters the price too, but at half weight (talent is a promise, stats are what you
+  have in hand).
+- **The market follows the roster** (70%). If the roster dies out entirely the market falls to
+  recruit level, not to zero — so that the recovery route of a collapsed dojo is not closed.
+- **The list refreshes every two days and is frozen within a day.** Had it not been frozen, since the
+  market follows the roster average, buying one candidate would change the remaining candidates: the
+  player could buy a cheap one and reroll the list as often as they liked. A test holds this.
+
+### The measurement revealed two things (400 dojos × 60 days, `patrol`)
+
+| Hiring policy | Final treasury | Preserved capital | Deaths (per dojo) | Dojos closed |
 |---|---|---|---|---|
-| Sabit fiyat, sabit stat (eski) | 815 | %60.8 | 6.21 | %1.5 |
-| Pazardan altın başına en çok stat | 354 | %26.5 | 7.16 | %11.8 |
-| Pazardan parası yeten en iyisi | 705 | %52.2 | 5.93 | %4.8 |
+| Fixed price, fixed stats (old) | 815 | 60.8% | 6.21 | 1.5% |
+| Most stats per gold from the market | 354 | 26.5% | 7.16 | 11.8% |
+| The best the money can buy from the market | 705 | 52.2% | 5.93 | 4.8% |
 
-1. **Eski model yerine koymayı sübvanse ediyormuş:** 150 altına veteran kalitesinde
-   savaşçı geliyordu. Pazar bunu gerçek fiyata çekince dojo zorlanıyor — bu bir denge
-   bozulması değil, gizli bir sübvansiyonun görünür olması.
-2. **"Ucuz ham al, eğit" stratejisi şu an kaybediyor** çünkü ham aday gelişmiyor:
-   antrenmanın stat etkisi yazılmadı. İki stratejinin rakip olması tasarımın hedefi;
-   354'e karşı 705 altınlık fark, antrenman sisteminin kapatması gereken boşluğun ölçüsü.
-   Sıradaki iş bu.
+1. **The old model turned out to be subsidising replacement:** for 150 gold you got a warrior of
+   veteran quality. Once the market pulls this to a real price the dojo struggles — this is not a
+   balance break but a hidden subsidy becoming visible.
+2. **The "buy cheap and raw, then train" strategy currently loses** because a raw candidate does not
+   grow: training's stat effect has not been written. The two strategies being rivals is the design's
+   goal; the 354 against 705 gold gap is the measure of the gap the training system has to close.
+   That is the next job.
 
-`Domina.Sim` iki yeni düğme kazandı: `--market on|off` ve `--market-pick value|best`.
+`Domina.Sim` gained two new knobs: `--market on|off` and `--market-pick value|best`.
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 388/388 yeşil
-(+10: `RecruitMarketTests`). Yeni dosyalarda `dotnet format` temiz.
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 388/388 green
+(+10: `RecruitMarketTests`). `dotnet format` clean on the new files.
 
 
-## 2026-09-04 (beşinci tur) — Pazar tavanı ve kelle avı
+## 2026-09-04 (fifth round) — The market ceiling and bounties
 
-### Pazar artık kadronun en iyisini geçemiyor
+### The market can no longer exceed the roster's best
 
-Pazar kadro **ortalamasını** takip ediyordu ama bir tavanı yoktu: oynama payı üstten
-vurduğunda tek bir aday dojodaki en iyi savaşçıyı aşabiliyordu. Yetiştirilen savaşçı satın
-alınabiliyorsa antrenmanın anlamı kalmaz.
+The market followed the roster **average** but had no ceiling: when the variance hit from above, a
+single candidate could exceed the best warrior in the dojo. If a trained warrior can be bought,
+training has no meaning left.
 
-`MarketAnchor` yeni bir tip: taban (nereye oturur) ve tavan (nereye kadar çıkar) ayrı iki
-soru. Tavan **en iyi yaşayan savaşçıyı** izliyor (`BestFollowCeiling` 0.75), ortalamayı
-değil — ortalamaya bağlansaydı iki ucuz acemi alıp ortalamayı düşürerek pazar
-sömürülebilirdi. Tavanı aşan aday **kırpılmıyor, oranlanıyor**: kırpma tavana dayanan her
-adayı aynı düz profile çevirir, "kimi alayım" sorusunu geri öldürürdü.
+`MarketAnchor` is a new type: the base (where it settles) and the ceiling (how high it can go) are
+two separate questions. The ceiling follows **the best living warrior** (`BestFollowCeiling` 0.75),
+not the average — had it been tied to the average, the market could be exploited by buying two cheap
+recruits and lowering it. A candidate over the ceiling is **not clipped but scaled**: clipping turns
+every candidate leaning on the ceiling into the same flat profile and would kill off the question
+"which one should I buy".
 
-**Ölçüm bir kusur yakaladı.** İlk hâlde tavan düz `0.75 × en iyi` idi; acemi skoru 355
-olduğu için acemi kadroda bile her aday acemiden %25 zayıf çıkıyordu. 400 dojonun
-**tamamı** kasayı sıfırladı, boş gün %93.7'ye çıktı. Tavana acemi tabanı eklendi:
-`max(Score(acemi), en_iyi × oran)`.
+**The measurement caught a flaw.** In the first version the ceiling was a flat `0.75 × best`; since a
+recruit's score is 355, even in a recruit roster every candidate came out 25% weaker than a recruit.
+**All** 400 dojos zeroed their treasury and idle days rose to 93.7%. A recruit floor was added to the
+ceiling: `max(Score(recruit), best × ratio)`.
 
-Tavanın bedeli (400 dojo × 60 gün, `patrol`):
+The cost of the ceiling (400 dojos × 60 days, `patrol`):
 
-| Tavan | Politika | Bitiş kasası | Sermayesini koruyan | Ölüm | Kapanan |
+| Ceiling | Policy | Final treasury | Preserved capital | Deaths | Closed |
 |---|---|---|---|---|---|
-| yok | value | 354 | %26.5 | 7.16 | %11.8 |
-| yok | best | 705 | %52.2 | 5.93 | %4.8 |
-| 0.75 | value | 147 | %9.8 | 7.75 | %18.8 |
-| 0.75 | best | 204 | %13.0 | 7.08 | %13.2 |
-| 1.00 | best | 385 | %27.3 | 6.65 | %7.0 |
+| none | value | 354 | 26.5% | 7.16 | 11.8% |
+| none | best | 705 | 52.2% | 5.93 | 4.8% |
+| 0.75 | value | 147 | 9.8% | 7.75 | 18.8% |
+| 0.75 | best | 204 | 13.0% | 7.08 | 13.2% |
+| 1.00 | best | 385 | 27.3% | 6.65 | 7.0% |
 
-Oran 0.75'te kilitlendi. `patrol` kadrosunda 0.75, 0.85 ve 0.90 **aynı** sonucu veriyor:
-en iyi savaşçının skoru 387, acemi tabanı 355, yani tavan ancak skor ~473'ü geçtiğinde
-konuşmaya başlıyor — oraya da ancak antrenmanla çıkılır. Bugün ölçülen bedel oranın değil
-**tavanın kendisinin** bedeli.
+The ratio was locked at 0.75. On the `patrol` roster, 0.75, 0.85 and 0.90 give **the same** result:
+the best warrior's score is 387 and the recruit floor is 355, so the ceiling only starts to speak
+once the score passes ~473 — and you only get there through training. What was measured today is the
+cost not of the ratio but **of the ceiling itself**.
 
-### Kelle avı sözleşmeleri
+### Bounty contracts
 
-Yeni dosya `Domina.Core/Campaign/Bounty.cs`. Günlük teklifin yanında duran, isimli hedefli,
-süreli sözleşme. Ayrıntılı gerekçe GDD §11'de; kodun tuttuğu kararlar:
+New file `Domina.Core/Campaign/Bounty.cs`. A timed contract with a named target, standing alongside
+the daily offer. The detailed rationale is in GDD §11; the decisions the code holds:
 
-- Hedef **isimli ve tek**; ekip büyüklüğü dayatılmaz, kaç kişi göndereceğin karar.
-- Sözleşme 4 günde bir asılır, 3 gün açık kalır — **sözleşmesiz günler** kasten var.
-- Kabul günü yemez, **süre** satın alır. Dönülemezse kadronun tamamı onur kaybeder.
-- Kelleyi getiren **ekip** onur kazanır; kırılan sözün borcu **kadroya** yazılır.
-- Kellesi alınan sözleşme tahtadan iner. Bu kayıt olmadan aynı hedef ertesi gün yeniden
-  asılı görünüyordu — ölçümde dojo başına 12.7 kelle avı çıktı, tahta bir para musluğuydu.
-- Üretim saf; kayda yalnızca "söz verildi mi" ve "kelle alındı mı" yazılıyor.
+- The target is **named and single**; the team size is not imposed, how many you send is a decision.
+- A contract is posted every 4 days and stays open for 3 — **days with no contract** exist on purpose.
+- Accepting does not eat a day, it buys **time**. If you cannot come back, the whole roster loses
+  honour.
+- The **team** that brings the head gains honour; the debt of a broken promise is written to **the
+  roster**.
+- A contract whose head has been taken comes off the board. Without this record the same target
+  appeared posted again the next day — the measurement showed 12.7 bounties per dojo, the board was a
+  money tap.
+- Generation is pure; only "was a promise made" and "was the head taken" are written to the save.
 
-Sefer katmanı `Expedition.SendToBounty` ile aynı dövüş yolundan geçiyor: dövüşe giden
-ikinci bir kapı açmak çözümleyiciyi ikiye bölerdi.
+The expedition layer goes down the same fight route via `Expedition.SendToBounty`: opening a second
+door to the fight would split the resolver in two.
 
-**Ölçüm (400 dojo × 60 gün, `patrol`, teklif kipi, pazar açık):**
+**Measurement (400 dojos × 60 days, `patrol`, offer mode, market on):**
 
-| Kabul sınırı | Kelle avı | Bitiş kasası | Sermayesini koruyan | Ölüm | Kapanan |
+| Acceptance limit | Bounties | Final treasury | Preserved capital | Deaths | Closed |
 |---|---|---|---|---|---|
-| `dire`, avsız | 0.00 | 4 | %0.0 | 8.37 | %75.5 |
-| `dire`, av açık | 7.44 | 1 | %0.0 | 9.62 | %80.8 |
-| `rising`, avsız | 0.00 | 393 | %20.8 | 1.26 | %0.0 |
-| `rising`, av açık | 0.69 | 412 | %22.2 | 1.25 | %0.0 |
+| `dire`, no bounties | 0.00 | 4 | 0.0% | 8.37 | 75.5% |
+| `dire`, bounties on | 7.44 | 1 | 0.0% | 9.62 | 80.8% |
+| `rising`, no bounties | 0.00 | 393 | 20.8% | 1.26 | 0.0% |
+| `rising`, bounties on | 0.69 | 412 | 22.2% | 1.25 | 0.0% |
 
-Şekil istenen şekil: **seçen kazanır, her işe atlayan batar.** Ama sayı tarafı açık kaldı:
-`PowerMultiplier` 1.8 hedefi çoğu gün `Heavy`/`Dire` bandına itiyor, seçici dojo 60 günde
-ancak 0.69 sözleşmeye giriyor. Sistem doğru çalışıyor ama neredeyse görünmüyor; güç ile
-ödül çarpanının birlikte taranması antrenman turuna bırakıldı.
+The shape is the shape we want: **whoever chooses wins, whoever jumps at every job sinks.** But the
+numbers side stayed open: a `PowerMultiplier` of 1.8 pushes the target into the `Heavy`/`Dire` band
+on most days, and a selective dojo enters only 0.69 contracts in 60 days. The system works correctly
+but is almost invisible; sweeping power together with the reward multiplier was left to the training
+round.
 
-`Domina.Sim` üç yeni düğme kazandı: `--market-ceiling <oran>`, `--bounty on|off` ve rapora
-"Kelle avı" satırı.
+`Domina.Sim` gained three new knobs: `--market-ceiling <ratio>`, `--bounty on|off` and a "Bounties"
+line in the report.
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 401/401 yeşil
-(+13: `BountyTests` 10, `RecruitMarketTests` +3). Yeni dosyalarda `dotnet format` temiz.
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 401/401 green
+(+13: `BountyTests` 10, `RecruitMarketTests` +3). `dotnet format` clean on the new files.
 
 
-## 2026-09-04 (altıncı tur) — Sahipsiz üç ekran
+## 2026-09-04 (sixth round) — Three orphaned screens
 
-Kadro ekranından sonra geriye kalan üç ekran yazıldı: **pazar**, **okul** ve **günün
-teklifi**. Yeni kural yok — üçü de çekirdekte duran kuralların önüne cam takıyor.
+After the roster screen, the three remaining screens were written: **the market**, **the school** and
+**the day's offer**. No new rules — all three put glass in front of rules that already stand in the
+core.
 
-### Kararlar ekranın değil modelin
+### The decisions belong to the model, not the screen
 
-Kadro ekranındaki kalıp korundu: ne yazılacağına ve neyin kapalı olacağına
-`Domina.Presentation` karar veriyor (motorsuz, testli), Godot tarafı düğüm kurup
-basıyor. Üç yeni model:
+The pattern from the roster screen was preserved: `Domina.Presentation` decides what will be written
+and what will be disabled (engineless, tested), and the Godot side builds nodes and prints. Three new
+models:
 
-- **`MarketModel`** — sıra **fiyata** göre, kasaya göre değil: alınabilirlik altın
-  harcandıkça değişir, tezgâh her alımda yeniden dizilseydi oyuncu adayın yerini
-  kaybederdi. Satır kadroya göre konum taşıyor (`BetterInRoster`), çünkü pazarın sorusu
-  "bu aday iyi mi" değil "elimdekinden iyi mi". Yetenek **sayı değil bant** olarak
-  okunuyor (`TalentBand`): stat elde olandır, yetenek bir vaat — "1.23" yazmak onu
-  ölçülmüş bir stat gibi gösterirdi. Skor formülü pazarın tavan hesabıyla birebir aynı,
-  yoksa ekran adayın neden kırpıldığını açıklayamazdı.
-- **`SchoolModel`** — kapalı düğümün **iki ayrı sebebi** var: sırası gelmemiş olmak ve
-  parasının yetmemesi. Biri beklemekle, diğeri kazanmakla açılır; aynı sönük tuşla
-  gösterilemezler. `School.Available()` yalnızca sırayı bilir, kasayı bilmez — ayrımı
-  model yapıyor, eksik altın da satırda yazıyor. Kilitli düğüm gizlenmiyor: okul uzun
-  vadeli yatırım, oyuncu neye biriktirdiğini görmeden biriktiremez.
-- **`OfferModel`** — düşman kadrosunu **hiç taşımıyor**. Teklif nesnesi onu tutar (dövüş
-  aynı kadroyla kurulsun diye) ama GDD §10'a göre girmeden önce yalnızca bant ve kaba
-  tanım okunur; model kadroyu taşımayınca ekran onu yanlışlıkla da basamaz. Sefere çıkma
-  hükmü `Expedition.Refuse`'dan okunuyor, ikinci bir kural kümesi yazılmadı: yazılsaydı
-  iki taraf ayrışır ve tuş gönderilebilen bir seferi kapatmaya başlardı.
+- **`MarketModel`** — the order is by **price**, not by the treasury: affordability changes as gold is
+  spent, and if the stall were re-sorted on every purchase the player would lose track of where a
+  candidate was. A row carries its position relative to the roster (`BetterInRoster`), because the
+  market's question is not "is this candidate good" but "is he better than what I have". Talent is
+  read as a **band, not a number** (`TalentBand`): stats are what you have, talent is a promise —
+  writing "1.23" would present it as a measured stat. The score formula is exactly the same as the
+  market's ceiling calculation, otherwise the screen could not explain why a candidate was scaled
+  down.
+- **`SchoolModel`** — a disabled node has **two separate reasons**: its turn has not come, and you
+  cannot afford it. One is opened by waiting, the other by earning; they cannot be shown with the same
+  greyed-out button. `School.Available()` only knows the order, not the treasury — the model makes the
+  distinction, and the gold shortfall is written on the row too. A locked node is not hidden: the
+  school is a long-term investment and the player cannot save up without seeing what they are saving
+  for.
+- **`OfferModel`** — it does **not carry** the enemy roster at all. The offer object holds it (so that
+  the fight is set up with the same roster) but per GDD §10 only the band and the rough description
+  are read before entering; since the model does not carry the roster, the screen cannot print it even
+  by accident. The verdict on going on an expedition is read from `Expedition.Refuse`; a second rule
+  set was not written — had it been, the two sides would drift apart and the button would start
+  closing off an expedition that could be sent.
 
-### Dört ekran tek dojo
+### Four screens, one dojo
 
-`DojoScreen` ortak iskelet (zemin, kenar boşluğu, en üstte gezinme çubuğu); `DojoHub`
-dördünü tek bir `DojoState` üzerinde gezdiriyor. Tek nesne olması şart: pazardan alınan
-savaşçı kadro ekranında, okuldan alınan tesis günün hesabında anında görünmeli. Ekran
-değişince yenisi baştan kuruluyor — gizlenip geri gösterilen ekran eski günü basardı.
+`DojoScreen` is the common skeleton (background, margins, a navigation bar at the top); `DojoHub`
+moves between the four over a single `DojoState`. Being one object is essential: a warrior bought at
+the market must show up immediately on the roster screen, and a facility bought at the school in the
+day's accounts. When the screen changes, the new one is built from scratch — a screen that is hidden
+and shown again would print the old day.
 
-Komutların hepsi çekirdeğin kendi kapılarından geçiyor: `Quartermaster.Hire`,
-`DojoState.BuySchoolNode`, `DojoState.AcceptBounty`, `Expedition.Send` /
-`SendToBounty`, `DojoState.Decline`. Sefer akışı gün ve tohumdan türetiliyor; rastgele
-tohum "kaydı yükleyip dövüşü yeniden çevirme" kapısını açardı.
+All commands go through the core's own gates: `Quartermaster.Hire`, `DojoState.BuySchoolNode`,
+`DojoState.AcceptBounty`, `Expedition.Send` / `SendToBounty`, `DojoState.Decline`. The expedition
+flow is derived from the day and the seed; a random seed would open the door to "load the save and
+reroll the fight".
 
-**Açık kalan iki kalem:**
+**Two items left open:**
 
-1. Dövüş şimdilik **arka planda** çözülüyor, sonucu bilanço olarak yazılıyor. Arenada
-   izlemek sefer akışının arenaya bağlanmasıyla gelecek (Faz 4); kural tarafı aynı
-   yoldan geçtiği için sonuç değişmeyecek.
-2. Aynı adayın gün içinde iki kez alınmasını şimdilik **ekran** engelliyor. Tezgâh gün
-   boyu donduğu için (`DojoState.Recruits`) çekirdek bunu kaydetmiyor; kayda geçmesi
-   gerekirse yeri çekirdek.
+1. The fight is for now resolved **in the background** and its result written as a tally. Watching it
+   in the arena will come with the expedition flow being connected to the arena (Phase 4); since the
+   rules side goes down the same route, the result will not change.
+2. Buying the same candidate twice within a day is for now prevented by **the screen**. Because the
+   stall is frozen for the day (`DojoState.Recruits`) the core does not record this; if it needs to be
+   recorded, its place is the core.
 
-Yeni sahne `src/Game/dojo.tscn` (`main.tscn` hâlâ arena demosu).
+New scene `src/Game/dojo.tscn` (`main.tscn` is still the arena demo).
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 482/482 yeşil
-(+28: `MarketModelTests` 9, `SchoolModelTests` 7, `OfferModelTests` 12). Yeni dosyalarda
-`dotnet format` temiz.
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 482/482 green
+(+28: `MarketModelTests` 9, `SchoolModelTests` 7, `OfferModelTests` 12). `dotnet format` clean on the
+new files.
 
-## 2026-09-04 (yedinci tur) — Dövüş arenada, pazar her gün
+## 2026-09-04 (seventh round) — The fight in the arena, the market every day
 
-### Sefer arenaya bağlandı
+### The expedition was connected to the arena
 
-Sefer katmanı dövüşü kendi koşturuyordu (`Expedition.Send`), o yüzden gün ekranı dövüşü
-arka planda çözüp bilanço basıyordu. Arena dövüşü **gerçek zamanla** adımlamak zorunda —
-oyuncu "çek" komutuyla müdahale edebiliyor — yani dövüşün kurulması, koşturulması ve
-muhasebesi ayrı ayrı çağrılabilir olmalı. `Expedition` üçe bölündü:
+The expedition layer ran the fight itself (`Expedition.Send`), which is why the day screen resolved
+the fight in the background and printed a tally. The arena has to step the fight **in real time** —
+the player can intervene with the "pull out" command — so setting up the fight, running it and
+accounting for it must be callable separately. `Expedition` was split into three:
 
-- `Prepare` / `PrepareBounty` — ekibi tartar, dövüşü kurar, **koşturmaz**. Dojo'ya
-  dokunmaz (gün de kasa da yerinde kalır).
-- `Settle` / `SettleBounty` — bitmiş bir dövüşün hesabını kapatır: kadroya yazar, ödülü
-  öder, kelle avıysa onuru ve sözü işler, günü kapatır.
-- `Send` / `SendToBounty` — ikisinin arasına dövüşü koyar; toplu simülasyon ve testler
-  bu yolu kullanmaya devam ediyor.
+- `Prepare` / `PrepareBounty` — weighs the team, sets up the fight, **does not run it**. It does not
+  touch the dojo (both the day and the treasury stay put).
+- `Settle` / `SettleBounty` — closes the books on a finished fight: writes to the roster, pays the
+  reward, processes honour and the promise if it is a bounty, and closes the day.
+- `Send` / `SendToBounty` — puts the fight between the two; the batch simulation and the tests keep
+  using this route.
 
-Muhasebenin tek yerde kalması şart: arena kendi muhasebesini yazsaydı izlenen dövüş ile
-`Domina.Sim`'in çözdüğü dövüş farklı sonuçlar bırakır, denge ölçümü ekrandakini ölçmemiş
-olurdu. `ExpeditionSettleTests` bunu tutuyor — aynı tohum, aynı ekip, aynı teklif: iki yol
-tek dojo (kasa, kadro, revir günleri birebir).
+The accounting staying in one place is essential: had the arena written its own accounting, the fight
+that is watched and the fight `Domina.Sim` resolves would leave different results, and the balance
+measurement would not have been measuring what is on screen. `ExpeditionSettleTests` holds this — same
+seed, same team, same offer: two routes, one dojo (treasury, roster, infirmary days identical).
 
-Godot tarafında `BattleArena` artık dışarıdan dövüş alabiliyor (`Bout`) ve bitince ham
-sonucu veriyor (`Finished`); kurulum ya da muhasebe yapmıyor. `DayScreen` dövüşü kurup
-`PendingBattle` olarak veriyor, `DojoHub` ekranları kapatıp arenayı açıyor, dövüş bitince
-"Dojo'ya dön" tuşu bilançoyla gün ekranına dönüyor. `Watcher` verilmezse (ekran tek başına
-açıldıysa) dövüş arka planda çözülüyor — aynı iki çağrı, arada arena yok.
+On the Godot side `BattleArena` can now take a fight from outside (`Bout`) and gives the raw result
+when it ends (`Finished`); it does no setup and no accounting. `DayScreen` sets up the fight and hands
+it over as `PendingBattle`, `DojoHub` closes the screens and opens the arena, and when the fight ends
+a "Return to the dojo" button goes back to the day screen with the tally. If no `Watcher` is given
+(the screen was opened on its own) the fight is resolved in the background — the same two calls, with
+no arena in between.
 
-### Pazar her gün yenileniyor, alım sayısı serbest
+### The market refreshes every day, the number of purchases is unrestricted
 
-`RefreshDays` 2 → **1**, `Candidates` 3 → **10**. Gerekçe: beklemenin bedeli zaten var —
-bir gün beklemek bir gün yer — o yüzden tezgâhı durgun tutmak ikinci bir ceza. Alım
-sayısına tavan **konmadı**: pazar gün boyu açık, kasa el verdiği sürece birden fazla
-savaşçı alınabilir. Sınır altın, sayaç değil; aksi hâlde aynı gün iki ölünün yerine iki
-savaşçı konamazdı.
+`RefreshDays` 2 → **1**, `Candidates` 3 → **10**. Rationale: waiting already has a cost — waiting a
+day eats a day — so keeping the stall stagnant is a second penalty. **No** ceiling was put on the
+number of purchases: the market is open all day and, as long as the treasury allows, more than one
+warrior can be bought. The limit is gold, not a counter; otherwise two warriors could not be put in
+the place of two dead ones on the same day.
 
-Aynı adayın iki kez satılması sorunu **çekirdeğe** taşındı (önceki turda ekranda duran
-geçici işaret kalktı): `DojoState.HireRecruit(index)` alınan sırayı kaydediyor, gün
-kapanınca işaret düşüyor, ve alınan sıralar **kayıt dosyasına** yazılıyor — yoksa kaydı
-yükleyip aynı adamı yeniden almak açık kalırdı. `Domina.Sim` de artık bu kapıdan geçiyor:
-ölçüm oyuncunun oynadığı kapıdan geçmezse ölçtüğü şey oyun olmaz.
+The problem of the same candidate being sold twice was moved **into the core** (the temporary marker
+that sat on the screen in the previous round was removed): `DojoState.HireRecruit(index)` records the
+index that was bought, the marker drops when the day closes, and the bought indices are written **to
+the save file** — otherwise loading the save and buying the same man again would stay open.
+`Domina.Sim` now goes through this gate too: if the measurement does not go through the gate the
+player plays, what it measures is not the game.
 
-**Ölçüm (400 dojo × 60 gün, `patrol`, `--market-pick value`):**
+**Measurement (400 dojos × 60 days, `patrol`, `--market-pick value`):**
 
-| Tezgâh | Bitiş kasası | Sermayesini koruyan | Ölüm / savaşçı-dövüş | Kapanan dojo |
-|---|---|---|---|---|
-| 2 günde bir, 3 aday (eski) | 1254 | %51.7 | %9.6 | %17.5 |
-| Her gün, 3 aday | 1288 | %54.5 | %9.5 | %14.5 |
-| Her gün, 4 aday | 1184 | %50.5 | %10.0 | %19.2 |
-| Her gün, 6 aday | 1258 | %55.2 | %9.8 | %17.0 |
-| Her gün, 8 aday | 1301 | %56.0 | %9.7 | — |
-| Her gün, 10 aday (yeni) | 1285 | %55.2 | %9.7 | — |
+| Stall | Final treasury | Preserved capital | Death / warrior-fight | Dojos closed |
+| --- | --- | --- | --- | --- |
+| Every 2 days, 3 candidates (old) | 1254 | 51.7% | 9.6% | 17.5% |
+| Every day, 3 candidates | 1288 | 54.5% | 9.5% | 14.5% |
+| Every day, 4 candidates | 1184 | 50.5% | 10.0% | 19.2% |
+| Every day, 6 candidates | 1258 | 55.2% | 9.8% | 17.0% |
+| Every day, 8 candidates | 1301 | 56.0% | 9.7% | — |
+| Every day, 10 candidates (new) | 1285 | 55.2% | 9.7% | — |
 
-Satırlar arasındaki fark bu örneklemde gürültünün içinde: tezgâhın sıklığı ve genişliği
-**denge kolu değil**, pazarı bağlayan şey stat tavanı ile kasa. Aday sayısı bu yüzden
-denge değil his kararı olarak verildi — on aday, referans oyunun tezgâhıyla aynı ölçek
-(2026-09-05). Ölçümün kendi sınırı da
-görünüyor — simülasyon günde en çok bir aday alıyor, oysa kural birden fazlasına izin
-veriyor; "aynı gün iki ölünün yerine iki savaşçı" ancak oynayarak görülecek.
+The differences between the rows are inside the noise for this sample: the stall's frequency and width
+are **not a balance lever**; what binds the market is the stat ceiling and the treasury. The number of
+candidates was therefore given as a feel decision rather than a balance one — ten candidates, the same
+scale as the reference game's stall (2026-09-05). The measurement's own limit is visible too — the
+simulation buys at most one candidate a day, whereas the rule allows more than one; "two warriors in
+the place of two dead ones on the same day" will only be seen by playing.
 
-`Domina.Sim` iki yeni düğme kazandı: `--market-refresh <gün>` ve `--market-candidates <n>`.
+`Domina.Sim` gained two new knobs: `--market-refresh <days>` and `--market-candidates <n>`.
 
-### Okul sırası duruyor
+### The school's ordering stands
 
-Kol içi sıra zorunluluğu (kata ustası talimhanesiz gelmez) tartışıldı ve **korundu**;
-ekran "önce Talimhane" diye yazmaya devam ediyor.
+The requirement of an order within a branch (the kata master does not come before the drill hall) was
+discussed and **kept**; the screen keeps writing "the training ground first".
 
-Doğrulama: build 0 hata / 0 uyarı, `dotnet test -c Release` 495/495 yeşil
+Verification: build 0 errors / 0 warnings, `dotnet test -c Release` 495/495 green
 (+13: `ExpeditionSettleTests` 4, `RecruitMarketTests` +6, `DojoSaveTests` +1,
-`MarketModelTests` +2). `dojo.tscn` headless Godot'ta hatasız açılıyor.
+`MarketModelTests` +2). `dojo.tscn` opens without errors in headless Godot.
 
-## 2026-09-05 — Kayıt oyuna bağlandı
+## 2026-09-05 — The save was wired into the game
 
-Dojo artık `DemoRoster.Dojo()` ile kurulmuyor: oyun **başlangıç ekranıyla** açılıyor ve
-dojo ya yuvadan yükleniyor ya da `NewGame.Create(seed)` ile kuruluyor. Playtest'in ön
-şartı buydu — 60 günlük bir dojo tek oturumda oynanmıyor.
+The dojo is no longer built with `DemoRoster.Dojo()`: the game opens with a **title screen** and the
+dojo is either loaded from the slot or built with `NewGame.Create(seed)`. This was the precondition for
+playtesting — a 60-day dojo is not played in a single session.
 
-**Ne eklendi:**
+**What was added:**
 
-- `NewGame` (çekirdek): 600 altın, boş ambar, dört savaşçı. Kadro elle yazılmıyor,
-  pazarın kendi üreticisinden **ayrı bir tohumla** çekiliyor — aynı akış kullanılsaydı
-  ilk gün tezgâhta duran adaylar kadronun birebir kopyası olurdu. Başlangıç çekirdekte
-  duruyor ki ölçüm koşusu ile oynanan oyun aynı kurulumdan başlasın.
-- `SaveSlot` (Godot katmanı): `user://dojo.json`. Yazma iki adımlı — önce geçici dosya,
-  sonra takas; otomatik kayıt her değişiklikte çalıştığı için "yazarken kapanan oyun"
-  penceresi sık sık açılır ve doğrudan üstüne yazmak seferi silerdi.
-- `TitleScreen`: devam et / yeni oyun. Kayıt varken "yeni oyun" **iki kez** sorar —
-  tek yuva var ve permadeath'li bir sefer yanlış tuşla silinmemeli.
-- Otomatik kayıt: ekranlar dojo'yu değiştirdiklerini `DojoScreen.Changed` ile söylüyor,
-  yazan tek yer hub. Yazma noktaları: gün kapanışı, dövüş sonrası hesap, sözleşme kabulü,
-  aday alımı, tesis alımı, yol seçimi, talim ve ad değişikliği; üstüne kapanışta son bir
-  tur. Kapanışa **tek başına** güvenilmiyor (çökme, güç kesintisi).
-- Yükleme uyarıları sessiz kalmıyor: merge-on-load bir şeyi kurtaramadıysa gün ekranının
-  bilançosunda yazıyor (GDD §2).
-- `project.godot` artık `dojo.tscn` ile açılıyor, arena demosuyla değil.
+- `NewGame` (core): 600 gold, an empty store, four warriors. The roster is not written by hand, it is
+  drawn from the market's own generator with **a separate seed** — had the same stream been used, the
+  candidates standing at the stall on day one would be an exact copy of the roster. The starting setup
+  lives in the core so that a measurement run and a played game start from the same setup.
+- `SaveSlot` (Godot layer): `user://dojo.json`. Writing is two-step — a temporary file first, then a
+  swap; since autosave runs on every change, the "the game closed while writing" window opens often and
+  writing directly over the file would erase the expedition.
+- `TitleScreen`: continue / new game. When a save exists, "new game" asks **twice** — there is a single
+  slot and a permadeath expedition must not be erased with a wrong keypress.
+- Autosave: the screens say they changed the dojo via `DojoScreen.Changed`, and the hub is the only
+  place that writes. Write points: closing the day, post-fight accounting, accepting a contract, hiring
+  a candidate, buying a facility, choosing a path, drills and a name change; plus one final pass on
+  shutdown. Shutdown is not relied on **on its own** (crash, power cut).
+- Load warnings do not stay silent: if merge-on-load could not rescue something, it is written in the
+  day screen's tally (GDD §2).
+- `project.godot` now opens with `dojo.tscn`, not the arena demo.
 
-**Doğrulama:** build 0 hata / 0 uyarı; `dotnet test` 499/500 — tek kırmızı
-`ThroughputTests.TenThousandBattlesRunWithinTheBudget` (10.11 sn / 10 sn bütçe, Debug'da
-ölçüm gürültüsü, kayıt işiyle ilgisi yok). Yeni testler: `NewGameTests` 5 (başlangıç
-sayıları, tohum determinizmi, kadro ≠ ilk gün tezgâhı, kayıt turu).
+**Verification:** build 0 errors / 0 warnings; `dotnet test` 499/500 — the single red one is
+`ThroughputTests.TenThousandBattlesRunWithinTheBudget` (10.11 s against a 10 s budget, measurement noise
+in Debug, unrelated to the save work). New tests: `NewGameTests` 5 (starting numbers, seed determinism,
+roster ≠ day one's stall, save round trip).
 
-**Sırada:** kendi oynayışın — revir kolu tuzak mı, seppuku eşiği 30 doğru mu, kelle avı
-60 günde görünür mü, on aday tezgâhı kalabalık mı.
+**Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
+does a bounty show up within 60 days, is a ten-candidate stall too crowded.
