@@ -2195,6 +2195,61 @@ The **school tree** was layered on top of this rate (the same day, below): the d
 multiplies the rate by ×1.30 and the inner dojo by ×1.30 again, and the kata master raises the ceiling.
 0.04 is the base itself, not the rate of a facility-equipped dojo.
 
+### Growth from fighting (2026-09-10)
+
+Until this rule existed the only road to growth was training, and going on an expedition was **pure
+loss**: the warrior spent a day, took wounds, wore his armour and came back the man he left as. The
+decision round reversed the tempo — a fight grows him, and **faster than a drill does**. The
+compulsory fight of the season stops being a punishment and becomes an opportunity.
+
+- **The fight chooses the lesson, not the player.** The four counters of the fight are read as they
+  stand — swings, blocks, dodges, blows taken — and the largest one names the drill the fight
+  amounted to: a warrior who spent it swinging learns to strike, one who spent it being hit gets
+  tougher. The counters all count **events**, so they need no scaling against one another.
+- **The shape is the drill's shape** — one primary and one secondary stat, the same secondary share,
+  the same ceilings. So the two roads are directly comparable and the ratio of two numbers says how
+  much faster the risky one is. **The wall is shared:** a dojo that does not build cannot grow a
+  warrior past the facility ceiling however hard it fights.
+- **A fight that touched him teaches; standing on the field does not.** All four counters zero (pulled
+  out before contact, never reached the enemy) means no lesson.
+- **The dead learn nothing**, and the wounded do: the lesson is written before the infirmary days,
+  because a warrior who comes back hurt still comes back having learned.
+- **Talent multiplies it**, as in training. The raw stat is written, so a disability's multiplier
+  still sits on top (§7) — no amount of fighting gives an arm back.
+- **A fight counts as a day of schooling** for the path requirement
+  (`TrainingTuning.PathTrainingDays`): the path is unlocked by what the warrior has been through,
+  and fighting is the harder way through.
+
+**The rate was locked at 0.08 — twice the training rate.** Two beds, 400 dojos × 60 days:
+
+| Fight rate | Fixed `patrol`: best warrior (gain) | Deaths / dojo | Purse | Offer mode: best warrior (gain) |
+|---|---|---|---|---|
+| 0 (the old rule) | 423 (+36) | 5.74 | 3200 | 469 (+82) |
+| 0.04 (= training) | 468 (+81) | 3.98 | 4005 | 508 (+121) |
+| **0.08** | **493 (+106)** | **3.16** | **4454** | **529 (+142)** |
+| 0.16 | 514 (+127) | 2.35 | 5019 | 553 (+166) |
+
+Every line is linear in the rate — **there is no knee here either**, so the number is a budget. Two
+things fixed it. First, the design requires the risky road to pay better than the safe one, which
+rules out anything at or below 0.04. Second, the rule feeds back into survival — a dojo that grows
+faster loses fewer men (5.74 → 3.16 deaths per dojo) — and at 0.16 that feedback has taken 60% of
+the base difficulty out, which is the same failure the training lock rejected at rate 0.08 ("the
+dojo rescues itself and the price of playing badly disappears"). 0.08 keeps the reversal of tempo
+while leaving permadeath its teeth.
+
+**Training did not become decorative** — that was the brake tested first, and it holds. Best-warrior
+score with training on against off, at each fight rate: +37 (rate 0), +37 (0.04), +32 (0.08), +30
+(0.16). Fights only teach the one or two axes the fight consisted of, and the idle days are still
+there; drilling remains the only way to **shape** a warrior rather than let the fight shape him.
+
+> ⚠️ **This rule moves a landmark the training rate was calibrated against.** The 0.04 training rate
+> was locked because a well-running dojo reached ~465 in 60 days, just under the ~473 at which the
+> market ceiling starts to bite. With fights teaching, the same dojo reaches 493 (and 529 in offer
+> mode), so the market's replacement role now ends earlier in the season. Nothing was retuned here:
+> the two rates share one ceiling and only their **ratio** matters, so the training rate is
+> re-examined when facilities land (build-order step 5), which is where the ceiling itself becomes a
+> purchase.
+
 ### The school tree and the warrior's path (2026-09-04)
 
 The rule is in §10. The question here is a single one: **which branch pays for itself?** A branch is only

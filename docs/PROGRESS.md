@@ -1733,6 +1733,48 @@ state only — there is no meta-progression.
 delay) are proposals, and the claim that the move counter closes the
 endless-training exploit is exactly that — a claim. Sim work before any of it is locked.
 
+## 2026-09-10 — Build order step 3: a fight grows the warrior
+
+`Dojo/CombatSchooling.cs` (engine-free, stateless, no die of its own — the fight's randomness is
+already in the counters it reads). The largest of four counters — swings, blocks, dodges, blows
+taken — names the drill the fight amounted to, and the gain runs through `TrainingGround` with
+`TrainingTuning.FightGapClosed` in place of the daily rate, so the two roads of growth share the
+secondary share, the ceilings and the talent multiplier. `BattleAftermath` writes the lesson for
+every warrior who came off the field (the dead learn nothing, the wounded do) and counts the fight
+as a day of schooling toward the path. `--fight-rate` was added to the sim.
+
+**The sweep** (400 dojos × 60 days, two beds):
+
+| Fight rate | `patrol`: best warrior | Deaths/dojo | Purse | Offers: best warrior |
+|---|---|---|---|---|
+| 0 | 423 (+36) | 5.74 | 3200 | 469 (+82) |
+| 0.04 | 468 (+81) | 3.98 | 4005 | 508 (+121) |
+| **0.08** | **493 (+106)** | **3.16** | **4454** | **529 (+142)** |
+| 0.16 | 514 (+127) | 2.35 | 5019 | 553 (+166) |
+
+Linear again, no knee — the third sweep in a row with none, which is itself worth noting: these
+share-of-the-gap rules do not produce thresholds, so their numbers are always budgets. **0.08
+locked** (twice the training rate): the design requires the risky road to pay better than the safe
+one, which rules out ≤0.04, and at 0.16 the rule's own feedback — a dojo that grows faster loses
+fewer men — has removed 60% of the base difficulty, the same failure the training lock rejected.
+
+**The brake that was tested and held:** training does not become decorative. Best-warrior score with
+training on against off is +37 / +37 / +32 / +30 across the four rates. A fight teaches only the
+axis it consisted of, so drilling stays the only way to **shape** a warrior.
+
+**A landmark moved, deliberately left alone.** The 0.04 training rate was locked against the ~473
+score at which the market ceiling starts to bite; with fights teaching, the same dojo reaches 493
+(529 in offer mode), so the market stops being a replacement route earlier in the season. The two
+rates share one ceiling and only their ratio matters, so retuning waits for facilities (step 5),
+where the ceiling becomes a purchase. Written into GDD §11 as a warning banner rather than a new
+number.
+
+**One existing sim test had to be re-grounded:** `TrainingShowsUpAsStatGrowth` used a zero training
+rate as its control, which now still grows through fighting. Both sides of that test zero
+`FightGapClosed` so the control measures training alone.
+
+512 tests green (362 core + 99 presentation + 52 sim; 8 new).
+
 ## 2026-09-10 — Build order step 2: a stun drops the weapon
 
 The third trigger of dropping a weapon, and the first in which the **defender** loses one: the
