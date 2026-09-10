@@ -73,7 +73,7 @@ public class EncounterTests
     [Fact]
     public void DuelsDemandExactlyOneWarrior()
     {
-        EncounterOffer duel = new(1, [Bestiary.Kappa.Spawn(new WarriorId(1), 1)], ThreatBand.Faint, "Kappa", 1);
+        EncounterOffer duel = new(1, [Adversaries.Collector.Spawn(new WarriorId(1), 1)], ThreatBand.Faint, "Collector", 1);
 
         Assert.True(duel.Accepts(1));
         Assert.False(duel.Accepts(2));
@@ -84,28 +84,28 @@ public class EncounterTests
         Assert.False(open.Accepts(0));
     }
 
-    /// <summary>Strong yokai do not take the field at the start of the curve.</summary>
+    /// <summary>Strong enemy do not take the field at the start of the curve.</summary>
     [Fact]
     public void HeavyKindsWaitForTheirPlaceOnTheCurve()
     {
-        Assert.DoesNotContain(Bestiary.Oni, Bestiary.AvailableAt(1.0));
-        Assert.Contains(Bestiary.Kappa, Bestiary.AvailableAt(1.0));
-        Assert.Contains(Bestiary.Oni, Bestiary.AvailableAt(2.0));
+        Assert.DoesNotContain(Adversaries.Kabukimono, Adversaries.AvailableAt(1.0));
+        Assert.Contains(Adversaries.Collector, Adversaries.AvailableAt(1.0));
+        Assert.Contains(Adversaries.Kabukimono, Adversaries.AvailableAt(2.0));
     }
 
     /// <summary>Power grows health and damage directly, accuracy/evasion softly.</summary>
     [Fact]
     public void PowerScalesTheBodyHarderThanTheSkill()
     {
-        Warrior weak = Bestiary.Kappa.Spawn(new WarriorId(1), 1.0);
-        Warrior strong = Bestiary.Kappa.Spawn(new WarriorId(2), 2.25);
+        Warrior weak = Adversaries.Collector.Spawn(new WarriorId(1), 1.0);
+        Warrior strong = Adversaries.Collector.Spawn(new WarriorId(2), 2.25);
 
         Assert.Equal(weak.BaseStats.MaxHealth * 2.25, strong.BaseStats.MaxHealth, 3);
         Assert.Equal(weak.BaseStats.Strength * 2.25, strong.BaseStats.Strength, 3);
         Assert.Equal(weak.BaseStats.Accuracy * 1.5, strong.BaseStats.Accuracy, 3);
 
         // The stats are on a 0-100 scale; they must not overflow as the curve grows.
-        Warrior extreme = Bestiary.Kappa.Spawn(new WarriorId(3), 100);
+        Warrior extreme = Adversaries.Collector.Spawn(new WarriorId(3), 100);
         Assert.InRange(extreme.BaseStats.Accuracy, 0, 95);
         Assert.InRange(extreme.BaseStats.Evasion, 0, 95);
     }

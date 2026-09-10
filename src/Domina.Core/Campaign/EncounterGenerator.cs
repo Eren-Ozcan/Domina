@@ -109,7 +109,7 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
         double each = power;
         for (int i = 0; i < count; i++)
         {
-            YokaiKind kind = Pick(power, random);
+            EnemyKind kind = Pick(power, random);
             enemies.Add(kind.Spawn(new WarriorId(FirstEnemyId + (day * 10) + i), each));
         }
 
@@ -158,18 +158,18 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
         return most == 1 ? 1 : 1 + random.NextInt(most);
     }
 
-    private static YokaiKind Pick(double power, IRandomSource random)
+    private static EnemyKind Pick(double power, IRandomSource random)
     {
-        List<YokaiKind> pool = [.. Bestiary.AvailableAt(power)];
+        List<EnemyKind> pool = [.. Adversaries.AvailableAt(power)];
         if (pool.Count == 0)
         {
-            return Bestiary.Kappa;
+            return Adversaries.Collector;
         }
 
         double total = pool.Sum(k => k.Weight);
         double roll = random.NextDouble() * total;
 
-        foreach (YokaiKind kind in pool)
+        foreach (EnemyKind kind in pool)
         {
             roll -= kind.Weight;
             if (roll <= 0)

@@ -22,7 +22,7 @@ internal static class Scenarios
     public static IReadOnlyList<Scenario> All { get; } =
     [
         new("duel", "recruit vs kappa (1v1)", Duel),
-        new("3v3", "dojo team vs yokai team (3v3)", ThreeVsThree),
+        new("3v3", "dojo team vs enemy team (3v3)", ThreeVsThree),
         new("veteran", "equipped veteran vs oni (1v1)", Veteran),
         new("ambush", "a veteran is ambushed (1v3)", Ambush),
         new("blade", "blade master vs oni (1v1) — the cutting end of the blunt/cutting trade", Blade),
@@ -43,7 +43,7 @@ internal static class Scenarios
         new("club-armored", "the same fight with a blunt weapon — steel striking plate", ClubVsArmored),
         new("spear-armored", "the same fight with a piercing weapon — where the third class sits", SpearVsArmored),
         new("jitte-armored", "jitte vs armoured oni — the catching implement's wall", JitteVsArmored),
-        new("3v3-armored", "3v3, every yokai in full armour — disarming's team price", ThreeVsThreeArmored),
+        new("3v3-armored", "3v3, every enemy in full armour — disarming's team price", ThreeVsThreeArmored),
         new("patrol", "the daily patrol (3v3) — the ordinary encounter the economy is measured on", Patrol),
     ];
 
@@ -55,7 +55,7 @@ internal static class Scenarios
             new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), Weapon.Katana()),
         ],
         [
-            Yokai(101, "Kappa", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35, speed: 55),
+            Enemy(101, "Collector", health: 85, aggression: 60, defense: 15, evasion: 30, strength: 35, speed: 55),
         ]);
 
     private static BattleSetup ThreeVsThree() => ThreeVsThreeWith(Weapon.Katana());
@@ -68,7 +68,7 @@ internal static class Scenarios
     /// can be seen, and their deaths per warrior-fight sit in the 38-49% band. Such a fight cannot be
     /// fought <b>every day</b> — a roster cannot bear a funeral a day, and the price measured with that
     /// roster actually measures the price of warriors, not of armour or medicine. That is why the patrol
-    /// stands apart: the same dojo roster against a weakened trio of yokai. The economy numbers (Open
+    /// stands apart: the same dojo roster against a weakened trio of enemies. The economy numbers (Open
     /// Decision #5) are measured on top of it.
     /// </remarks>
     private static BattleSetup Patrol() => new(
@@ -88,9 +88,9 @@ internal static class Scenarios
                 Armor.Light()),
         ],
         [
-            Yokai(101, "Kappa", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
-            Yokai(102, "Kappa", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
-            Yokai(103, "Kitsune", health: 78, aggression: 62, defense: 14, evasion: 42, strength: 33, speed: 72, weapon: Weapon.Tanto()),
+            Enemy(101, "Collector", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
+            Enemy(102, "Collector", health: 90, aggression: 58, defense: 18, evasion: 28, strength: 36, speed: 52),
+            Enemy(103, "Cutthroat", health: 78, aggression: 62, defense: 14, evasion: 42, strength: 33, speed: 72, weapon: Weapon.Tanto()),
         ]);
 
     /// <summary>
@@ -138,11 +138,11 @@ internal static class Scenarios
                 Armor.Light()),
         ],
         [
-            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
-            Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
-            Yokai(
+            Enemy(101, "Kabukimono", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
+            Enemy(102, "Collector", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+            Enemy(
                 103,
-                "Tengu",
+                "Duelist",
                 health: 90,
                 aggression: 70,
                 defense: 10,
@@ -170,7 +170,7 @@ internal static class Scenarios
                 Armor.Heavy()),
         ],
         [
-            Yokai(101, "Oni", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
+            Enemy(101, "Kabukimono", health: 150, aggression: 55, defense: 30, evasion: 15, strength: 60, speed: 25, weapon: Weapon.Tetsubo()),
         ]);
 
     /// <summary>
@@ -199,7 +199,7 @@ internal static class Scenarios
     /// so stats, kit and enemy are the same too.
     /// </para>
     /// <para>
-    /// The enemy's weapon matters: the Oni here carries the default katana. Carrying a tetsubo, its
+    /// The enemy's weapon matters: the Kabukimono here carries the default katana. Carrying a tetsubo, its
     /// catchability would drop to 0.25 and the measurement would answer "does catching work against a
     /// blunt weapon" rather than "does catching work".
     /// </para>
@@ -295,7 +295,7 @@ internal static class Scenarios
         Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy());
 
     /// <summary>
-    /// Disarming's <b>team</b> price: the control is <c>3v3</c>, the only difference the yokai's armour.
+    /// Disarming's <b>team</b> price: the control is <c>3v3</c>, the only difference the enemy's armour.
     /// </summary>
     /// <remarks>
     /// In 1v1 a dropped weapon is one warrior's problem; in a crowd it shows which end of the roster
@@ -333,9 +333,9 @@ internal static class Scenarios
                 Armor.Medium()),
         ],
         [
-            Yokai(
+            Enemy(
                 101,
-                "Oni",
+                "Kabukimono",
                 health: 150,
                 aggression: 55,
                 defense: 30,
@@ -353,11 +353,11 @@ internal static class Scenarios
         {
             EnemySide =
             [
-                Yokai(101, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
-                Yokai(102, "Kappa", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
-                Yokai(
+                Enemy(101, "Collector", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+                Enemy(102, "Collector", health: 85, aggression: 65, defense: 15, evasion: 35, strength: 35, speed: 55),
+                Enemy(
                 103,
-                "Tengu",
+                "Duelist",
                 health: 90,
                 aggression: 70,
                 defense: 10,
@@ -370,11 +370,11 @@ internal static class Scenarios
     }
 
     /// <param name="speed">
-    /// The yokai differ in speed on purpose: the Oni is heavy and slow, the Tengu fast. This is what
+    /// The enemies differ in speed on purpose: the Kabukimono is heavy and slow, the Duelist fast. This is what
     /// sets the price of fleeing — pulling out from a slow enemy before contact is close to free, while
     /// a fast one comes after you and catches up.
     /// </param>
-    private static Warrior Yokai(
+    private static Warrior Enemy(
         int id,
         string name,
         double health,

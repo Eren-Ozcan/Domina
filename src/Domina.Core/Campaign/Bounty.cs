@@ -176,7 +176,7 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         double power = new EncounterGenerator(Encounters).PowerFor(postedDay, random)
             * Math.Max(1, Tuning.PowerMultiplier);
 
-        YokaiKind kind = Pick(power, random);
+        EnemyKind kind = Pick(power, random);
         Warrior target = kind.Spawn(new WarriorId(FirstTargetId + postedDay), power);
 
         string epithet = Tuning.Epithets.Count == 0
@@ -212,18 +212,18 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         _ => ThreatBand.Faint,
     };
 
-    private static YokaiKind Pick(double power, IRandomSource random)
+    private static EnemyKind Pick(double power, IRandomSource random)
     {
-        List<YokaiKind> pool = [.. Bestiary.AvailableAt(power)];
+        List<EnemyKind> pool = [.. Adversaries.AvailableAt(power)];
         if (pool.Count == 0)
         {
-            return Bestiary.Oni;
+            return Adversaries.Kabukimono;
         }
 
         // The contract target is picked from the <b>top</b> end of the curve: the point of a bounty hunt
         // is meeting something you would not run into on an ordinary patrol that day.
         double highest = pool.Max(k => k.MinPower);
-        List<YokaiKind> top = [.. pool.Where(k => k.MinPower >= highest)];
+        List<EnemyKind> top = [.. pool.Where(k => k.MinPower >= highest)];
 
         return top[random.NextInt(top.Count)];
     }

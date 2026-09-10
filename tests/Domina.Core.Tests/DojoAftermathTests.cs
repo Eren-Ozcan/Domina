@@ -287,8 +287,8 @@ public class DojoAftermathTests
             WarriorStats.Recruit() with { MaxHealth = 40 },
             armor: Armor.Light());
 
-        Warrior yokai = TestBuilders.Warrior(500, "Oni", health: 400, strength: 90);
-        BattleSetup setup = new([entry.Warrior], [yokai]) { Tuning = TestBuilders.PointBlank };
+        Warrior enemy = TestBuilders.Warrior(500, "Kabukimono", health: 400, strength: 90);
+        BattleSetup setup = new([entry.Warrior], [enemy]) { Tuning = TestBuilders.PointBlank };
         BattleResult result = new Battle(setup, new SeededRandom(7)).Run();
 
         AftermathReport report = _aftermath.Apply(state, result);

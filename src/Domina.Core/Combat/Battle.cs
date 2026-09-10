@@ -961,7 +961,7 @@ public sealed class Battle
     /// <para>
     /// <b>A deliberate blind spot:</b> the calculation only sees threats that come on foot. An
     /// enemy with a projectile can break the windup regardless of distance, and we do not want the
-    /// warrior to know that in advance — this is what makes the ranged yokai the charge's natural counter.
+    /// warrior to know that in advance — this is what makes the ranged enemy the charge's natural counter.
     /// </para>
     /// </remarks>
     private bool HasRoomToGather(Combatant c)

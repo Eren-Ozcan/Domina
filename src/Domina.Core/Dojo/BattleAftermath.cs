@@ -14,7 +14,7 @@ namespace Domina.Core.Dojo;
 /// warrior's persistent state must not be corrupted in any of them.
 /// </para>
 /// <para>
-/// Only the <b>dojo side's</b> summaries are processed. The yokai carry their own identities and those
+/// Only the <b>dojo side's</b> summaries are processed. The enemies carry their own identities and those
 /// identities can collide with the roster's; without the team filter, an arm lost by an enemy could be
 /// written onto a warrior in the dojo.
 /// </para>

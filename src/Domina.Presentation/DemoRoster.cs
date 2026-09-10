@@ -35,9 +35,9 @@ public static class DemoRoster
                 Armor.Light()),
         ],
         [
-            Yokai(101, "Oni", 150, 55, 30, 15, 60, Weapon.Tetsubo()),
-            Yokai(102, "Kappa", 85, 65, 15, 35, 35, Weapon.Katana()),
-            Yokai(103, "Tengu", 90, 70, 10, 50, 40, Weapon.Katana()),
+            Enemy(101, "Kabukimono", 150, 55, 30, 15, 60, Weapon.Tetsubo()),
+            Enemy(102, "Collector", 85, 65, 15, 35, 35, Weapon.Katana()),
+            Enemy(103, "Duelist", 90, 70, 10, 50, 40, Weapon.Katana()),
         ])
     {
         RetreatPolicy = null,
@@ -72,7 +72,7 @@ public static class DemoRoster
         return dojo;
     }
 
-    private static Warrior Yokai(
+    private static Warrior Enemy(
         int id,
         string name,
         double health,

@@ -4,7 +4,7 @@ namespace Domina.Core.Combat;
 
 /// <summary>A fight's inputs.</summary>
 /// <param name="PlayerSide">The 1-3 warriors the dojo sent on the expedition.</param>
-/// <param name="EnemySide">The yokai on the other side.</param>
+/// <param name="EnemySide">The enemies on the other side.</param>
 public sealed record BattleSetup(
     IReadOnlyList<Warrior> PlayerSide,
     IReadOnlyList<Warrior> EnemySide)
