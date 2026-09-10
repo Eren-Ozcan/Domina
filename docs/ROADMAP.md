@@ -57,7 +57,7 @@ one thing only; both the number and the sweeps that found nothing are written do
 | # | Step | Why here |
 |---|---|---|
 | 0 | **Open Decision #13** (leaning: (a) with real time in Godot) | Everything below is written into the engine-free core |
-| 1 | Remove `BattleOutcome.TimeLimit` | Small and isolated; re-grounds the existing measurements |
+| 1 | Remove `BattleOutcome.TimeLimit` (in three parts, see below) | Small and isolated; re-grounds the existing measurements |
 | 2 | A stun drops the weapon | A third trigger, the defender's weapon; blunt resists. Unmeasured |
 | 3 | Fights grant stats | Closes "an expedition is pure loss"; the economy measurement only means something afterwards |
 | 4 | The class layer (`class × implement`) | Catching, poison and stunning hang off this product — three locked numbers are re-measured |
@@ -65,6 +65,25 @@ one thing only; both the number and the sweeps that found nothing are written do
 | 6 | Morale + Will | Sake and scarcity (#14) hang off it |
 | 7 | The season skeleton | 180 days, a compulsory fight every 7, the 3-head gate, the 5-round final, losing ends the run |
 | 8 | Discrete day → pausable real time | The largest risk item, so last. The core stays on a fixed tick; the pausing, the speed and the flow of the day live in Godot |
+
+**Step 1 in detail.** `MaxBattleSeconds` currently does two jobs at once, and only one of
+them is being removed. The **design** job — "a fight past 180 s is a draw" — goes. The
+**safety** job cannot: a fight in which neither side can finish the other (both withdrawing,
+the range never closing, no poison running) would otherwise loop forever, and `Battle.Run()`
+is a `while` with no other exit. So:
+
+1. **Measure first.** Run every scenario as it stands and write down the time-limit rate per
+   scenario. Without that number a later shift in the victory rates cannot be told apart from
+   the rule's removal.
+2. **Remove the outcome, keep a guard.** `BattleOutcome.TimeLimit` and its event go; a hard
+   tick ceiling stays, raised far above any real fight, and hitting it is **not** a result —
+   it is an anomaly the sim counts and reports. A fight that reaches it is a bug to be looked
+   at, not a draw to be balanced around.
+3. **Re-run and compare** the same scenarios against the step 1 numbers.
+
+⏳ **Left open by this step:** what the dojo layer does if a fight ever hits the guard. In the
+sim it is a counted anomaly; in the game it cannot simply hang. Decide when step 8 (real time)
+lands, since the answer depends on whether the day keeps running underneath.
 
 **Decisions that do not wait on code:** #3 bestiary behaviour (only the per-yokai
 target-selection weights are left; the numbers are in `Campaign/Bestiary.cs`) and #16 the
