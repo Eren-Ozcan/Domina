@@ -317,6 +317,13 @@ public enum BattleOutcome
     /// <summary>Nobody was left on the dojo side and nobody escaped — the team was wiped out.</summary>
     PlayerWipe,
 
-    /// <summary>Time ran out — neither side could finish it.</summary>
-    TimeLimit,
+    /// <summary>
+    /// The stall guard fired — <b>a bug, not a result</b>.
+    /// </summary>
+    /// <remarks>
+    /// Neither side could close or finish within <see cref="CombatTuning.StallGuardSeconds"/>, which
+    /// sits far above any real fight. A fight that ends this way is to be reproduced from its seed and
+    /// looked at; it is not a draw, and no balance number may be read off it.
+    /// </remarks>
+    Stalled,
 }

@@ -288,9 +288,10 @@ public sealed class Battle
             }
         }
 
-        if (ElapsedSeconds >= _tuning.MaxBattleSeconds)
+        if (ElapsedSeconds >= _tuning.StallGuardSeconds)
         {
-            Complete(BattleOutcome.TimeLimit);
+            // The guard, not a rule: nobody could close or finish. See CombatTuning.StallGuardSeconds.
+            Complete(BattleOutcome.Stalled);
             return false;
         }
 

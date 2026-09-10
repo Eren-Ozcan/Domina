@@ -13,8 +13,19 @@ public sealed record CombatTuning
     /// <summary>Simulation step. 20 Hz, enough to tell attack windows apart.</summary>
     public double TickSeconds { get; init; } = 0.05;
 
-    /// <summary>A fight that runs past this duration counts as a draw.</summary>
-    public double MaxBattleSeconds { get; init; } = 180;
+    /// <summary>
+    /// The tick ceiling that stops a fight nobody can finish. <b>Not a design rule.</b>
+    /// </summary>
+    /// <remarks>
+    /// The old <c>MaxBattleSeconds</c> did two jobs at once: it declared a fight past 180 s a draw,
+    /// and it kept <see cref="Battle.Run"/> — a loop with no other exit — from running forever. The
+    /// design job was dropped (docs/ROADMAP.md, build order step 1); only the safety job remains.
+    /// The value sits far above any real fight — the longest of the 24 measured scenarios,
+    /// <c>jitte-armored</c>, peaked at 138.6 s over 20.000 fights — so reaching it means two sides
+    /// that can neither close nor finish. That is an <b>anomaly to be looked at</b>, reported as
+    /// <see cref="BattleOutcome.Stalled"/>, never a result to balance around.
+    /// </remarks>
+    public double StallGuardSeconds { get; init; } = 900;
 
     // ---- Arena and movement ----
 
