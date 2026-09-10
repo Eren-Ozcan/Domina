@@ -1452,7 +1452,9 @@ into an interruption.
 - **Losing the final ends the game.** A definitive ending; the game does not carry the player to
   victory
 - **Losing within the season is also possible:** when the treasury and the roster run out the dojo
-  closes, and the closing screen gives the season summary (days, victories, number of dead)
+  closes, and the closing screen gives the season summary (days, victories, the dead, and **the men who
+  walked out free** — those released during the season plus everyone alive on day 180, whose term the
+  season outlived)
 
 ### The dojo: facilities and staff
 
@@ -1521,6 +1523,18 @@ job:
   **master** — a permanent bonus to training speed, the daily food burden ends, they never take the
   field again
 - **Seppuku** (§6) and **sending them on their way**
+- **Release — walking a man out under his own name (2026-09-10).** A warrior joins on a **fixed-term
+  service contract** (the story's *nenki hōkō*): the market price settles the claim standing over him,
+  and what he gives back is the term. Releasing him early ends the term. **It costs no gold** — the
+  price was already paid at the stall, and charging a second time would be the player paying himself.
+  What it costs is the man: the roster slot, every training day invested in him, and — if he was the
+  best in the dojo — the market ceiling that follows him (`BestFollowCeiling`, §11). Nothing comes back
+  for it except the **roster's honour** (§6), which is the school's name. Keeping him is always the
+  profitable move; that is the point of the item, and it is the only thing in the game that answers
+  the rival's argument (`STORY.md`)
+- **Nothing else is attached to it.** No leaving gift, no severance, no travel money: an optional gold
+  line here would only be a second, smaller version of the same decision, and the decision is already
+  made when the man walks out
 - **Selling and killing are not included.** A student is not property. The "a maimed warrior eats
   food forever" leak is closed by retirement
 - **What passes on from the dead:** their equipment — and only **if the fight is won** (someone has

@@ -130,8 +130,11 @@ penalty for the seller.
 What makes this grey is not the purchase. It is that **the paper says three years and few live to
 see the third.** The contract is honest; the outcome is not.
 
-The one thing that answers the villain is rare, expensive and entirely optional: bring a man to the
-end of his term and walk him out of the gate under his own name.
+The one thing that answers the villain is entirely optional, and it is not bought with money: **let a
+man go**. You already paid what stood over him at the stall; releasing him early only ends what he
+still owes you. No gold changes hands — what you give up is the man himself, and every day you spent
+making him worth keeping. Nobody asks you to do it and nothing in the season rewards it but your own
+name. Everyone still standing on the last day walks out the same way: the season outlived the term.
 
 ### What this gives the market rules for free
 
@@ -238,7 +241,7 @@ school on, and the register strikes out a dojo that cannot field men. The run en
 
 Lose and it is over. No retry, no lowered difficulty. A season can also end early: a school with
 no gold and no roster is struck from the register, and the closing screen reads the season back —
-days survived, fights won, the dead.
+days survived, fights won, the dead, and the men who walked out free.
 
 ---
 
