@@ -17,8 +17,10 @@ his return he will fill the post by a contest held in his presence, and the noti
 **180 days**. The post is not an honour — its holder decides which schools in the province are
 licensed and which are not, and a school without a licence cannot teach, cannot take contracts
 and cannot exist. Your master was the strongest candidate. That is why he was killed. What he
-left you is a school with no standing, forty men bound by contracts you now hold, and his
-debts. While the lord is away the province is run by his deputy, and the deputy is the patron
+left you is his licence, a handful of men bound by contracts you now hold, and a name nobody
+in the province rates. The licence carries over to you — that is the one thing you inherit whole —
+but a licence without proven work behind it is a piece of paper, and the register is read at the
+appointment. While the lord is away the province is run by his deputy, and the deputy is the patron
 of the **Kurogane school** — the man who wants the post, and who has spent years buying the
 province one fee at a time. There is no magistrate to appeal to, no case to open, and no way to
 reach him except the one place he cannot buy: the ground in front of the lord. To stand there
@@ -69,7 +71,7 @@ nothing left to protect.
 **A settlement you take does not start paying you.** Years of his fee have emptied it; what it has
 left is the last of its rice, a bundle of medicine, a smith who owes nobody, a son with no claim
 standing over him, and now and then word of where Kurogane will move next. That is the whole of it.
-Forty men still eat, and what feeds them is contract work, as it was before.
+The men you have still eat, and what feeds them is contract work, as it was before.
 
 So this is not charity either. You need those settlements for a reason of your own: **three proven
 pieces of work** is what gets a school entered in the contest, and proven work is what settlements
@@ -91,7 +93,7 @@ will be right to.
 
 ### The villain's argument, which you cannot answer
 
-> "There were bandits on these roads before me. I ended that. You came with forty men, you gave
+> "There were bandits on these roads before me. I ended that. You came with a handful of men, you gave
 > your word to three settlements, and all three of their granaries burned. What I take is a fee,
 > and a fee can be paid. What you take is their word that you are worth having, and then you spend
 > it on a post you want for yourself."
@@ -151,7 +153,9 @@ published when the post fell vacant. Every school in the province knows it.
 Why you cannot act sooner:
 
 - **No authority to appeal to.** The province is the deputy's while the lord is away, and the
-  deputy is Kurogane's patron.
+  deputy is Kurogane's patron. His **clerk's office** still runs — it stamps licensed work and files
+  it in the lord's name, which is why contract work exists at all and why the file is worth keeping
+  clean. What it will not do is hear a complaint about Kurogane.
 - **No legal ground to reach him on** except the contest.
 - **No entry without standing.** A school may only be entered in the contest on **three proven
   pieces of work** — which is the GDD's existing "three bounties to enter the final", now with a
@@ -225,8 +229,8 @@ Win and the licensing authority is yours — which is to say the question the ga
 you do with the thing he wanted.
 
 **No two seasons open the same way.** How much of the province Kurogane already holds, how many men
-the master left, and how deep his debt runs are drawn at the start of the run. Nothing carries over
-between runs — there is no meta-progression, because permanent death has to keep costing what it
+the master left (**3-5**, never above the dojo's starting roster ceiling of 6) are drawn at the
+start of the run. Nothing carries over between runs — there is no meta-progression, because permanent death has to keep costing what it
 costs.
 
 **And there is no rescue.** A roster broken in mid-season stays broken; no lender will take the

@@ -107,6 +107,14 @@ carried over unchanged into `Campaign/Adversaries.cs`, only the identities were 
 What a human enemy buys and a creature did not: permanent death, honour and the three-year
 contract all weigh something when the other side is a person too.
 
+**The school's licence is inherited, its standing is not (2026-09-10).** The dead master's licence
+passes to the player with the school, so the dojo can take contract work from day 1 — the licence is
+what makes the contract economy legal, and without it there would be no offer queue to open the game
+with. What does **not** pass on is standing: a licence with no proven work behind it does not get a
+school entered in the appointment contest (the 3-bounty gate, §10) and does not draw good men to the
+gate (the market's `BestFollowCeiling`, §11). That split is the whole premise — you start legal and
+unknown.
+
 ---
 
 ## 4. Warrior and Combat
@@ -1521,7 +1529,15 @@ job:
 ### NPC relations — three parties, five tiers
 
 The **regional lord** (the owner of the offer queue), the **merchant guild** (market prices and
-stock), the **temple** (omamori supply, the funeral rite). A single number for each, five tiers:
+stock), the **temple** (omamori supply, the funeral rite).
+
+> **The lord is away all season; his clerk's office issues the work (2026-09-10).** The story puts the
+> lord in Edo for the whole 180 days, so nobody meets him until the appointment. The relationship is
+> still **written to him** — the office files in his name and the file is what he reads on his return.
+> What the player deals with day to day is the **deputy's clerk's office**, the administration running
+> the province in his absence. That the deputy is the rival's patron does not make the office a
+> faction to court: the clerk stamps licensed work, and the relationship number tracks the file, not
+> the man. No fourth party is added and the rival's axis stays separate (below). A single number for each, five tiers:
 Hostile / Cold / Neutral / Pleased / Loyal. Only that number is written to the save.
 
 - **Raised by:** finishing a contract on time (large), a gift (small, with diminishing returns), a
@@ -1553,8 +1569,19 @@ Twelve, not sixteen: 180 days ÷ 7 = **25 moves**. Against 12 settlements that i
 which is the point; at 16 most of the map would never be touched.
 
 **The starting state varies from run to run** (the only source of run variety — see "What was
-deliberately left out" below): how many settlements the rival already holds, the size of the starting
-roster, and the debt the master left. A set of numbers, not a system.
+deliberately left out" below): how many settlements the rival already holds, and the size of the
+starting roster — **3-5 warriors**, never above the starting roster ceiling of 6. A set of numbers, not
+a system.
+
+> **The starting roster is a range, not a fixed 4 (2026-09-10).** The economy was measured on four
+> warriors, so 4 stays the middle of the band and the band is deliberately narrow: at 3 the first week
+> is tighter, at 5 the wage and food line starts higher. It cannot cross the roster ceiling, because a
+> run that opens at the ceiling has no room to hire and the market would be dead on day 1.
+>
+> **A starting debt was rejected (2026-09-10).** It was on the list of run-variety numbers and is now
+> struck: §11 has no debt item — the treasury cannot go negative — so a debt would need a whole
+> mechanic (a creditor, a due date, what happens on default) for one number of variety. What the
+> master left behind varies through the **starting capital and the roster**, not through a liability.
 
 **What a settlement gives — never gold.**
 
@@ -1858,7 +1885,7 @@ debt; a purchase you cannot afford is not made.
 | Medicine | **12 gold**, one per warrior in the infirmary per day | Number of wounded |
 | Buying a warrior | **150 gold** | — |
 | Starting capital | **600 gold** | — |
-| Starting roster | **4 warriors**, free | — |
+| Starting roster | **3-5 warriors** (drawn per run, 4 is the measured middle), free | §10, run variety |
 
 The starting roster is the same size as the measurement's roster (four warriors) and comes free: the
 600 gold stands there for the first day's decisions, not for the roster itself. Had another number
