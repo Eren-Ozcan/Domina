@@ -324,7 +324,18 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
     /// <summary>The party was wiped out — nobody escaped.</summary>
     public int Wipes { get; private set; }
 
-    public int TimeLimits { get; private set; }
+    /// <summary>
+    /// Fights the stall guard broke off. <b>An anomaly, not an outcome</b> — see
+    /// <see cref="CombatTuning.StallGuardSeconds"/>. Anything above zero here is a bug to reproduce
+    /// from <see cref="LongestSeed"/>, not a share to balance against.
+    /// </summary>
+    public int Stalls { get; private set; }
+
+    /// <summary>The longest fight of the batch, in game seconds.</summary>
+    public double LongestSeconds { get; private set; }
+
+    /// <summary>The seed of that longest fight, so it can be replayed exactly.</summary>
+    public ulong LongestSeed { get; private set; }
 
     public int PlayerDeaths { get; private set; }
 
@@ -466,7 +477,7 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
 
     public double WipeRate => Rate(Wipes, Battles);
 
-    public double TimeLimitRate => Rate(TimeLimits, Battles);
+    public double StallRate => Rate(Stalls, Battles);
 
     /// <summary>The rate at which a player warrior who takes the field dies.</summary>
     public double PlayerDeathRate => Rate(PlayerDeaths, PlayerAppearances);
@@ -579,6 +590,12 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
         Battles++;
         TotalSeconds += row.Seconds;
 
+        if (row.Seconds > LongestSeconds)
+        {
+            LongestSeconds = row.Seconds;
+            LongestSeed = row.Seed;
+        }
+
         switch (row.Outcome)
         {
             case BattleOutcome.PlayerVictory:
@@ -590,9 +607,9 @@ internal sealed class BatchReport(int playerSideSize, int enemySideSize)
             case BattleOutcome.PlayerWipe:
                 Wipes++;
                 break;
-            case BattleOutcome.TimeLimit:
+            case BattleOutcome.Stalled:
             default:
-                TimeLimits++;
+                Stalls++;
                 break;
         }
 

@@ -82,14 +82,24 @@ internal static class SummaryReport
         writer.WriteLine($"Kit             : {options.ArmorLabel}");
         writer.WriteLine($"Wall clock      : {wallClock.TotalSeconds:F2} s ({perSecond:F0} fights/s)");
         writer.WriteLine($"Fight duration  : {report.AverageSeconds:F1} s on average (in game)");
+        writer.WriteLine(
+            $"Longest fight   : {report.LongestSeconds:F1} s (seed {report.LongestSeed})");
         writer.WriteLine();
 
         writer.WriteLine("Outcome");
         WriteCount(writer, "  Victory", report.Victories, report.VictoryRate);
         WriteCount(writer, "  Withdrawal", report.Withdrawals, report.WithdrawalRate);
         WriteCount(writer, "  Rout", report.Wipes, report.WipeRate);
-        WriteCount(writer, "  Time limit", report.TimeLimits, report.TimeLimitRate);
+        WriteCount(writer, "  Stalled (anomaly)", report.Stalls, report.StallRate);
         writer.WriteLine();
+
+        if (report.Stalls > 0)
+        {
+            // The guard is not a result. A fight that reaches it is to be looked at, not balanced around.
+            writer.WriteLine(
+                $"!! {report.Stalls} fight(s) hit the stall guard — reproduce seed {report.LongestSeed} and look at it.");
+            writer.WriteLine();
+        }
 
         writer.WriteLine($"Player side ({report.PlayerAppearances} warrior-fights)");
         WriteCount(writer, "  Deaths", report.PlayerDeaths, report.PlayerDeathRate);
