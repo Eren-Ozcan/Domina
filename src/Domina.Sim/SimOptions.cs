@@ -252,6 +252,15 @@ internal static class SimArgs
                     tuning = tuning with { BaseStunChance = stunChance };
                     break;
 
+                case "--stun-disarm":
+                    if (!TryFraction(value, out double stunDisarm))
+                    {
+                        return ParsedArgs.Fail($"--stun-disarm must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { StunDisarmChance = stunDisarm };
+                    break;
+
                 case "--stun-threshold":
                     if (!TryFraction(value, out double stunThreshold))
                     {
@@ -1069,6 +1078,7 @@ internal static class SimArgs
         writer.WriteLine("             [--armor-attack-penalty <>=0>]");
         writer.WriteLine("             [--stun-chance <0-1>] [--stun-threshold <0-1>]");
         writer.WriteLine("             [--stun-seconds <sec>] [--stun-head <>=1>]");
+        writer.WriteLine("             [--stun-disarm <0-1>]");
         writer.WriteLine("             [--stun-armor-share <0-1>]");
         writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sec>]");
         writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <number>]");
@@ -1107,6 +1117,7 @@ internal static class SimArgs
         writer.WriteLine("  --armor-speed-penalty    Walking speed lost at full armour");
         writer.WriteLine("  --armor-attack-penalty   How much the attack cycle stretches at full armour");
         writer.WriteLine("  --stun-chance      Base stun chance on a heavy blow");
+        writer.WriteLine("  --stun-disarm      The chance a stunned warrior lets go of his own weapon");
         writer.WriteLine("  --stun-threshold   The blow/max health ratio at which the stun die is rolled");
         writer.WriteLine("  --stun-seconds     How long a stunned warrior is frozen");
         writer.WriteLine("  --stun-head        The stun multiplier for a blow to the head");
