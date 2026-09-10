@@ -94,7 +94,7 @@ Grew from 6 tests to **112**:
 | `RetreatTests` | command buffering, vulnerability window, opportunity attack |
 | `HonorTests` | performance/chat/targeted vote effects, reward multiplier, decay |
 | `SeppukuTests` | queue, one-vote rule, tie, pardon immunity, AI decision |
-| `BattleFlowTests` | end-to-end 3v3, event stream ↔ summary consistency, time limit |
+| `BattleFlowTests` | end-to-end 3v3, event stream ↔ summary consistency, the stall guard |
 | `ThroughputTests` | 10,000-fight budget, per-fight allocation |
 | `BatchRunnerTests` / `SimCliTests` | aggregation accuracy, argument parsing, CSV |
 
@@ -1732,3 +1732,38 @@ state only — there is no meta-progression.
 **Nothing here is measured yet.** The numbers (12 settlements, 2/3-contract thresholds, the 2-day
 delay) are proposals, and the claim that the move counter closes the
 endless-training exploit is exactly that — a claim. Sim work before any of it is locked.
+
+## 2026-09-10 — Build order step 1: the fight's time limit goes, a stall guard stays
+
+`MaxBattleSeconds` (180 s) did two jobs at once. The **design** job — "a fight past 180 s is a
+draw" — is gone. The **safety** job could not go: `Battle.Run()` is a `while` with no other exit,
+and two sides that can neither close nor finish would loop forever. So the property became
+`CombatTuning.StallGuardSeconds` (**900 s**) and `BattleOutcome.TimeLimit` became
+`BattleOutcome.Stalled`, documented as **an anomaly, not a result** — a fight that reaches it is a
+bug to reproduce from its seed, never a share to balance around. The sim counts it as
+`BatchReport.Stalls` and shouts a line when it is above zero; `BatchReport.LongestSeconds` /
+`LongestSeed` were added with it, so the tail can be watched instead of guessed at.
+
+**Measured first, as the step required** — 24 scenarios × 20.000 fights, `--policy losing:0.7`:
+
+| | Before (180 s draw) | After (900 s guard) |
+|---|---|---|
+| Fights ending on the limit | **0 of 480.000** (0.00% in every scenario) | 0 stalls |
+| Victory rate, every scenario | duel 62.61 · patrol 96.69 · jitte-armored 35.44 · ambush 2.86 | **identical to the digit** |
+| Mean duration | 10.8-45.3 s | identical |
+
+**Why nothing moved:** the limit was never reached. The tail says how much room there was — over
+20.000 fights the longest single fight per scenario was `jitte-armored` **138.6 s** (seed 13441),
+then `tanto-armored` 93.5 s; p99.9 for the worst scenario was 102.6 s. So the old 180 s ceiling had
+only ~1.3× headroom over the worst real fight — close enough that a slower future rule (heavier
+armour, more binding) would have started clipping fights into draws without anyone noticing. The
+new guard sits ~6.5× above that worst fight, which is the point: it must never be reachable by a
+fight that is merely slow.
+
+Costs nothing, changes nothing today, and removes a rule that would have started lying later.
+
+⏳ **Left open:** what the **dojo layer** does if a fight ever hits the guard. In the sim it is a
+counted anomaly; in the game it cannot simply hang. It is decided with build-order step 8 (real
+time), since the answer depends on whether the day keeps running underneath.
+
+500 tests green (349 core + 99 presentation + 52 sim; `Domina.Chat.Tests` still contains no tests).
