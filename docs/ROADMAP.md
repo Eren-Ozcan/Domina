@@ -85,9 +85,10 @@ is a `while` with no other exit. So:
 sim it is a counted anomaly; in the game it cannot simply hang. Decide when step 8 (real time)
 lands, since the answer depends on whether the day keeps running underneath.
 
-**Decisions that do not wait on code:** #3 bestiary behaviour (only the per-yokai
-target-selection weights are left; the numbers are in `Campaign/Bestiary.cs`) and #16 the
-opponent pool close together in one sitting; #15 the save backup is a small touch in
+**Decisions that do not wait on code:** #3 adversary behaviour (only the per-kind
+target-selection weights are left; the numbers are in `Campaign/Adversaries.cs`) — #16 the
+opponent pool and #17 the rival school were closed together on 2026-09-10, and #3's behaviour
+weights are the remainder of that sitting; #15 the save backup is a small touch in
 `SaveSlot.cs`. **Decisions that wait on measurement:** #18 the round's numbers (with steps
 2-7), the rest of #5 the economy (staff wages, the daily upkeep — not before step 5), #8 the
 honour thresholds (playtest, so after step 7). #14 is decided with step 6, #17 stays parked,
@@ -370,9 +371,9 @@ closed and reopened everything is in place.
 
 ---
 
-## Phase 4 — The Expedition and the Bestiary · L
+## Phase 4 — The Expedition and the Adversaries · L
 
-**Goal:** expeditions that advance phase by phase, and yokai enemies.
+**Goal:** expeditions that advance phase by phase, and human enemies.
 
 - [x] **The daily encounter offer** — `Domina.Core/Campaign`: the offer is a pure function of
       the day and the seed (it is not stored in the save and cannot be changed by reloading),
@@ -388,23 +389,25 @@ closed and reopened everything is in place.
 - [x] **Party selection: 1-4 warriors** — `EncounterOffer.Accepts`; a duel offer imposes exactly
       one warrior, and `Expedition.Refuse` declines an unfit party with its reason
 - [ ] ~~The map/progress screen~~ — **dropped** (Open Decision #2 closed: there is no map screen)
-- [ ] Yokai behaviour/AI profiles — a different combat pattern for each yokai (the open half of
-      Open Decision #3; the number side was written with `Bestiary`)
+- [ ] Adversary behaviour/AI profiles — a different combat pattern for each kind (the open half of
+      Open Decision #3; the number side was written with `Adversaries`). The axis is **discipline**:
+      a street man takes the nearest target, a school man finishes the wounded and then turns to the
+      most dangerous
 - [ ] ~~Boss encounters~~ — **not being built** (GDD §10: difficulty rises along a single curve)
 
-### Bestiary candidates
-| Yokai | Role / character |
-|---|---|
-| **Oni** | Heavy, high damage, slow — tank/bruiser |
-| **Kappa** | Small, agile, in packs |
-| **Tengu** | Fast, high evasion, hit-and-run |
-| **Kitsune** | Deception/illusion — false targets |
-| **Yuki-onna** | Slowing/freezing, stamina pressure |
-| **Jorōgumo** | A spider — movement restriction |
-| **Nue** | A chimera — a mini boss |
-| **Gashadokuro** | A giant skeleton — a **boss** |
-| **Shuten-dōji** | The oni king — a **boss** |
-| **Yamata-no-Orochi** | The eight-headed serpent — the **final boss** |
+### The adversaries (rewritten 2026-09-10 — Open Decision #16: the enemy is human)
+| Kind | Role / character | First appears |
+|---|---|---|
+| **Collector** | A rival school's fee collector: small, quick, rarely alone | from the start |
+| **Cutthroat** | A back-alley knife: fast, evasive, no armour worth the name | from the start |
+| **Duelist** | A wandering swordsman on his own trial: hit-and-run | power 1.2 |
+| **Kabukimono** | A street bravo with an absurdly heavy weapon: high damage, slow | power 1.5 |
+| **Senior Student** | A rival school's senior: long-hafted, his reach tells in a crowd | power 1.8 |
+
+The five carry the **same numbers** the yokai templates carried before the rename, so every
+measurement taken before 2026-09-10 still stands. The old boss candidates are gone with the theme
+and were never going to be built anyway (GDD §10 builds no boss structure); the story's named
+adversaries — Kurogane's seniors and its head — sit at the top of the same single curve.
 
 **Acceptance:** an expedition can be played from start to finish, and death/loss/reward are
 reflected correctly in the dojo.

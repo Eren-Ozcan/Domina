@@ -1,6 +1,6 @@
 # Domina (working title — the final name is not decided yet)
 
-A yokai/samurai themed dojo management + fully automatic combat game. Twitch/Kick chat
+A samurai-themed dojo management + fully automatic combat game. Twitch/Kick chat
 integration, aimed at Steam, Godot 4.
 
 > ⚠️ This project is **unrelated to the finished trivia game Domina** that previously

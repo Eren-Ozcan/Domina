@@ -1,6 +1,6 @@
 # Domina *(working title)*
 
-A yokai/samurai themed **dojo management + fully automatic combat** game.
+A samurai-themed **dojo management + fully automatic combat** game.
 Godot 4 · Steam · Twitch/Kick chat integration.
 
 You are the sensei of a dojo. You train warriors and send them on expeditions that

@@ -112,7 +112,7 @@ Every row carries a **status** mark:
 | Armour | Slot by slot, weight burns stamina; `A/D/kg` on screen | **Six slots**, weight stretches the attack cycle, wear accumulates and a piece **breaks** ✅ | ✅ |
 | Dismemberment | The `Dismemberment` skill — mostly death gore | **Living on maimed** — at the centre of the system 🔵 | ✅ |
 | Obstacles on the field | `Obstacles: Lions / Tigers / It's a mystery` — written on the contract | None ⚪ | ⚪ |
-| The opponent | Human gladiators + beasts | **Yokai** (kappa, kitsune, tengu, oni, jorōgumo) 🔵 | ✅ |
+| The opponent | Human gladiators + beasts | **Human** — a rival school's men (collector, cutthroat, duelist, kabukimono, senior student) | ✅ |
 
 ## 6. Fight types
 
@@ -307,7 +307,7 @@ written into the GDD.
   interaction with the Path.
 - **The Will stat** and **the morale resource**: two new systems, tied to each other; they enter
   the seppuku and panic checks.
-- **Showing the three behavioural tendencies** on screen + the yokai profiles.
+- **Showing the three behavioural tendencies** on screen + the per-kind adversary profiles.
 - **The inheritance**: what carries over from a dead warrior and how it is shown.
 - **The retirement / seeing-off** flow and the roster cap upgrade node.
 - GDD §4's "no classes" rationale and §10's "the warrior side is kept shallow" rationale are
@@ -401,7 +401,7 @@ settled and will be revisited once the staff economy settles.
 | Armour | Six slots, weight, wear, breakage ✅ | **The mechanics stay the same; `A / D / kg` comes to the screen** | The only thing taken from Domina is the display: the armour value / durability / weight are written openly on every piece, and the player makes the trade with his eyes open. The total weight's effect on the attack cycle is read on the same screen. |
 | Dismemberment | Living on maimed 🔵 | **The same** | Severing is not a skill, it is open to everyone; not a death but a fate-changing event. A block zeroes it (`BlockDismembermentShare` 0) — the only certain promise the Defence stat makes. Section 2's limb-class fitness matrix hangs on this. |
 | Obstacles on the field | None ⚪ | **Field features are added (not a live third party)** | Fog (accuracy/range drop), mud (speed/evasion drop, an extra penalty for heavy armour), a narrow bridge (a numbers advantage does not apply), night (projectiles are weak), a screened position (tate panels). They arrive written on the contract card; they enter the existing resolver as multipliers and need no new AI. |
-| The opponent | Yokai (kappa, kitsune, tengu, oni, jorōgumo) 🔵 | ⏳ **not settled** | What the enemy pool will be (yokai only / yokai + humans / mostly humans) has not been decided. It will be looked at together with the bestiary (#3). |
+| The opponent | Human — a rival school's men | **Settled 2026-09-10: human only, no monsters** | Open Decision #16 is closed. The story (`STORY.md`) makes every fight part of one rival school's protection racket and of the same 180-day clock; a creature encounter belongs to neither. The five kinds kept the yokai templates' numbers and changed only their identities, so no measurement was invalidated. This costs us the old "we fight monsters, Domina fights people" differentiator — what carries it now is the contract economy, the chat layer and the depth-testing final. |
 
 ### The new work Section 5 brings
 - **The ō-sode and splitting the block axis**: scaling `BlockDamageReduction` from the armour
@@ -425,8 +425,8 @@ settled and will be revisited once the staff economy settles.
 | Pit fight | None ⚪ | **A blind fight enters, betting does not** | A high-reward contract type in which the opponent is unknown: you decide without knowing what kit to take. Section 4's "no gambling" decision is preserved — uncertainty becomes a risk decision, not shortcut money. |
 | Exhibition | None ⚪ | **Only the in-dojo sparring match** (accepted in Section 3) | A deathless show fight against outsiders **will not be opened**. The risk threshold stays clear: inside the dojo is safe, every fight that goes outside is lethal. Domina's exhibition was already the door to the "lose on purpose" exploit. |
 | Regional champions | Bounty contracts ✅🔵 | **Fixed-name story targets** + the bounty frame | The main story characters are **the same in every game**: their identity and stats fixed, so they can be memorised and prepared for (as in Domina). Ordinary bounties keep being generated in between. The simple story to be written later will sit on this backbone. |
-| A defeated target | — (new) | **It does not get stronger, it grows** | If you lose an intermediate story fight, the target's stats **do not change** (the memorisation is preserved); men are added beside him — a defeated oni gathers a horde (defeat 1: +2 kappa, defeat 2: +4). The difficulty rises but the counter-move stays open: the roster, the field and the kit chosen against a crowd. A stat multiplier was rejected because an uncapped multiplier makes the target unreachable and quietly ends the run. |
-| The night raid | — (new) | **A defeat triggers it** | Losing a story fight makes the dojo a target: the yokai who beat you can raid at night within a few days. Unprepared, the store is looted and the wounded in the infirmary die; prepared (a warrior on watch + a wall facility), a fight starts — but the roster is tired and the kit is half. A defeat does not stay outside, it comes home. It fits the existing decisions: the wall/gate is a facility branch, the watchman is a staff role, and "post a watch / do not" is an event that offers a choice. |
+| A defeated target | — (new) | **It does not get stronger, it grows** | If you lose an intermediate story fight, the target's stats **do not change** (the memorisation is preserved); men are added beside him — a defeated senior gathers men (defeat 1: +2 collectors, defeat 2: +4). The difficulty rises but the counter-move stays open: the roster, the field and the kit chosen against a crowd. A stat multiplier was rejected because an uncapped multiplier makes the target unreachable and quietly ends the run. |
+| The night raid | — (new) | **A defeat triggers it** | Losing a story fight makes the dojo a target: the enemy who beat you can raid at night within a few days. Unprepared, the store is looted and the wounded in the infirmary die; prepared (a warrior on watch + a wall facility), a fight starts — but the roster is tired and the kit is half. A defeat does not stay outside, it comes home. It fits the existing decisions: the wall/gate is a facility branch, the watchman is a staff role, and "post a watch / do not" is an event that offers a choice. |
 | Chariot race / Beast mode / Gravitas | None 🔵 | **The same: no special events** | Mini-games that need their own rule sets will not be opened. Variety comes from the contract types and the field features; everything uses the same resolver. |
 | The final championship | None ⚪ | **Yes — and losing ends the game** | The campaign's end is a single final fight. **Losing the final = game over**, definitively. This is where we depart from Domina: there, losing the final is the year ending (the loss condition is not official, "if you lose your best gladiator it is practically over" **[T]**), while for us it is the run ending. Losing has to be real — the game does not carry the player to a win. |
 
@@ -434,7 +434,7 @@ settled and will be revisited once the staff economy settles.
 - **The offer queue**: several offers at once, an expiry per offer, the expedition's duration
   being deducted from real time.
 - **The blind contract**: an offer type in which the opponent is hidden, and its reward multiplier.
-- **Fixed story targets**: named yokai definitions (identity + fixed stats), their connection to
+- **Fixed story targets**: named adversary definitions (identity + fixed stats), their connection to
   the bounty system, story progress state.
 - **Growth after a defeat**: building the horde beside a target according to the number of
   defeats.
@@ -625,9 +625,10 @@ whether it has its own upgrade branch, which profession a retired warrior can do
 closes here too).
 
 **The other ⏳ lines:** Section 4's stock resources (sake — now to be tied to morale) and scarcity;
-Section 5's **Opponent** row (the enemy pool — yokai only, or yokai + humans; it depends on the
-bestiary decision); the save backup not turning into a door to undo (9.9); the rival dojo and
-village NPCs (Section 7).
+~~Section 5's **Opponent** row~~ (**closed 2026-09-10** — human only) and ~~the rival dojo and
+village NPCs~~ (**closed 2026-09-10** — 12 settlements, a 7-day move counter, no recurring income from
+settlements; GDD §10 "The rival school and the settlements"); the save backup not turning into a
+door to undo (9.9).
 
 **The next job:** the decisions in this section **will be written into the GDD**. The locked rules
 invalidated in this pass: the discrete-day model, "no classes", "the warrior side is kept shallow",

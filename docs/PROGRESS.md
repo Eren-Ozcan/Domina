@@ -1692,3 +1692,43 @@ roster ≠ day one's stall, save round trip).
 
 **Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
+
+---
+
+## 2026-09-10 — The enemy became human (Open Decisions #16 and #17)
+
+The story pass (`STORY.md`) settled what the season is about, and it closed two decisions that had
+been waiting on it.
+
+**#16 — the enemy is human, and there are no monsters.** Every fight in a season now belongs to one
+rival school's protection racket and to the same 180-day clock; a creature encounter belongs to
+neither and would have been filler. The change was almost free, because an enemy is only a stat
+block:
+
+- `Campaign/Bestiary.cs` → `Campaign/Adversaries.cs`, `YokaiKind` → `EnemyKind`, `Bestiary` →
+  `Adversaries`
+- kappa → **Collector**, kitsune → **Cutthroat**, tengu → **Duelist**, oni → **Kabukimono**,
+  jorōgumo → **Senior Student**
+- **No number moved.** Stats, weapons, weights and `MinPower` are exactly what they were, so every
+  measurement in this file taken before today still holds — the earlier entries name the old kinds
+  and are left as they were written.
+- Touched with it: `Bounty.cs`, `EncounterGenerator.cs`, `Battle.cs`, `BattleSetup.cs`,
+  `BattleAftermath.cs`, `DemoRoster.cs`, `Scenario.cs`, `EncounterTests.cs`,
+  `DojoAftermathTests.cs`, `project.godot`. A leftover Turkish comment line in the old bestiary went
+  with it.
+- 500 tests green (349 core + 99 presentation + 52 sim). `Domina.Chat.Tests` contains no tests —
+  pre-existing, unrelated.
+
+**#17 — the rival school and the settlements.** The full decision is in GDD §10. The shape: 12
+settlements, a three-state allegiance and a 0-2 warning level; the rival moves every 7 days and that
+counter **replaces** the old 7-day filing penalty; a settlement never pays on a schedule (one guaranteed
+item on the day it comes over, nothing after, and a wider offer queue as the real return); the rival stores
+one number only (deniability) and his strength is derived from what he holds.
+
+Rejected in the same sitting: passive income from settlements, per-settlement traits, doctrines for
+the rival, and a rescue loan against the death spiral. Run variety comes from a randomised starting
+state only — there is no meta-progression.
+
+**Nothing here is measured yet.** The numbers (12 settlements, 2/3-contract thresholds, the 2-day
+delay) are proposals, and the claim that the move counter closes the
+endless-training exploit is exactly that — a claim. Sim work before any of it is locked.
