@@ -49,7 +49,7 @@ public sealed record BountyTuning
     /// meaning.
     public double BrokenHonorPenalty { get; init; } = 10;
 
-    /// <summary>The target's epithet — the name itself comes from the bestiary, the epithet from here.</summary>
+    /// <summary>The target's epithet — the name itself comes from the adversary list, the epithet from here.</summary>
     /// <remarks>
     /// Temporary: per GDD §8 the target's name will come from chat while streaming (phase 5) and the
     /// viewer who named him will support the enemy side throughout the fight. The pool will then be read
@@ -183,7 +183,7 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
             ? "Nameless"
             : Tuning.Epithets[random.NextInt(Tuning.Epithets.Count)];
         string patron = Tuning.Patrons.Count == 0
-            ? "bilinmeyen bir taraf"
+            ? "an unknown party"
             : Tuning.Patrons[random.NextInt(Tuning.Patrons.Count)];
 
         target.Name = $"{target.Name} — {epithet}";

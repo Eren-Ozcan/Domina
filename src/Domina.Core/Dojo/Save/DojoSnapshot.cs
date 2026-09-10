@@ -22,7 +22,7 @@ namespace Domina.Core.Dojo.Save;
 /// <param name="Warriors">The roster — the dead included.</param>
 /// <param name="Seed">
 /// The expedition's seed. Because offers are recomputed from it and the day, the offers themselves are
-/// not written to the file — so that an old save does not bring back the old bestiary.
+/// not written to the file — so that an old save does not bring back the old adversary numbers.
 /// </param>
 /// <param name="School">
 /// The school facilities bought. Only <b>which nodes</b> are written; the size of the bonuses is a

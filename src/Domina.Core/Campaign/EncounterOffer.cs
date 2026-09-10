@@ -18,7 +18,7 @@ namespace Domina.Core.Campaign;
 /// <param name="Day">The day the offer is valid for.</param>
 /// <param name="Enemies">The roster that will take the field.</param>
 /// <param name="Threat">The difficulty band readable before going in.</param>
-/// <param name="Sighting">The rough description readable before going in ("three kappa", say).</param>
+/// <param name="Sighting">The rough description readable before going in ("three collectors", say).</param>
 /// <param name="RequiredPartySize">
 /// The exact number if the encounter imposes one; <c>null</c> if it does not (the upper limit is still 4).
 /// </param>
