@@ -722,3 +722,48 @@ and 2 supplies the buyer. That combination needs no new systems at all.
 - The Akō incident — [Wikipedia](https://en.wikipedia.org/wiki/Forty-seven_r%C5%8Dnin),
   [Britannica](https://www.britannica.com/event/47-ronin),
   [Bitō Masahide, *The Akō Incident* (PDF)](http://www.columbia.edu/~hds2/pdf/2003b_Bito_Ako_Incident.pdf)
+
+---
+
+## Appendix — the official-post precedent (verified 2026-09-10)
+
+Added while settling the story's clock. The chosen premise — an official post whose holder
+licenses the schools, left vacant, filled by a contest in the lord's presence, with a patron
+working the appointment from behind — is not invented in outline. Its documented case is the
+game of Go, not swordsmanship:
+
+- **Godokoro** — the shogunate's appointed head of the discipline. Its duties included approving
+  rank promotions, mediating disputes between the four houses and tutoring the shogun. The first
+  holder, Hon'inbo Sansa, was appointed by Tokugawa Ieyasu himself.
+- **Oshirogo** — the four houses played before the shogun at Edo Castle on a fixed date each
+  year, the 17th day of the 11th month.
+- **Sogo / arasoi-go ("disputed games")** — appointments to Meijin-godokoro were settled by
+  challenge matches; the first was fought between the second Hon'inbo head and the second head
+  of the Yasui house.
+- **The patron route** — Yasui Sanchi became Meijin-godokoro in 1668 "by a backstairs route,
+  with influence exerted by the head of the Matsudaira clan", which was later contested in a
+  twenty-game match against Hon'inbo Doetsu (1668-1675).
+
+**What was not found:** any case of a domain's sword-instructor post (*shinan-yaku*) being filled
+by a contest. Applying the Go system to a sword school is our transposition, and `STORY.md` marks
+it as invented.
+
+**A correction, also from this pass:** the six-month *sankin-kotai* alternation is real but dates
+from **1684** and applied only to the Kanto *fudai* lords. It cannot be used to justify a 180-day
+absence in the 1630s-40s. The story therefore treats the 180 days as the notice period published
+for the appointment, not as a rotation cycle.
+
+### Sources for this appendix
+
+- Godokoro — [Wikipedia](https://en.wikipedia.org/wiki/Godokoro),
+  [Go Magic](https://gomagic.org/go-term/godokoro/)
+- Oshirogo — [Wikipedia](https://en.wikipedia.org/wiki/Oshirogo)
+- Disputed games and the Yasui Sanchi appointment —
+  [Yasui Sanchi](https://en.wikipedia.org/wiki/Yasui_Sanchi),
+  [Old Meijin](https://en.wikipedia.org/wiki/Old_Meijin),
+  [History of Go](https://en.wikipedia.org/wiki/History_of_Go)
+- The Go houses under state patronage —
+  [National Diet Library, *Kaleidoscope of Books*](https://www.ndl.go.jp/kaleido/e/entry/22/2.html)
+- Sankin-kotai and the 1684 six-month rule for Kanto fudai —
+  [SamuraiWiki](https://samurai-archives.com/wiki/Sankin_kotai),
+  [Wikipedia](https://en.wikipedia.org/wiki/Sankin-k%C5%8Dtai)
