@@ -19,7 +19,7 @@
 
 ## 1. Concept
 
-A yokai-themed **trainer/school management + fully automatic combat** game. The player runs
+A samurai-themed **trainer/school management + fully automatic combat** game. The player runs
 a dojo (school), trains samurai warriors and sends them on phase-by-phase expeditions.
 There is almost no intervention in the fight — the real game is in the **development and
 decision** layer.
@@ -37,7 +37,11 @@ is fully equivalent** — everything chat does is simulated by an AI audience.
 | Hades | Phase/room-based expedition progression |
 
 ### Deliberate differences from Domina
-- The opponent is **not human but yokai** (Domina is a human vs human arena)
+- The opponent is **human**, as in Domina, but the fights are not arena bouts: each one belongs to
+  a rival school's protection racket, so a fight has a **place in the province** (§10 settlements).
+  **Closed 2026-09-10 (Open Decision #16) — there are no monsters in the enemy pool.** What used to
+  carry this differentiator was "yokai instead of humans"; what carries it now is the rest of this
+  list, above all the contract economy and the depth-testing final
 - In Domina limb loss is only **death gore**; with us there is **surviving and staying
   permanently maimed**
 - Surrender in Domina is a **mash QTE**; with us it is a **single-key decision**
@@ -89,13 +93,19 @@ ceiling), Ori, Hades, Guacamelee.
 
 ## 3. Theme
 
-**Yokai / Samurai.** The player is the sensei of a dojo; the warriors fight against the
-yokai of Japanese mythology. The notion of honour (bushido) sits at the centre of both the
-economy and the life-or-death decision.
+**Samurai, early Edo.** The player is the sensei of a dojo; the warriors fight the men of a
+rival school — its collectors, its hired blades, street bravos, its own seniors. Honour sits at
+the centre of both the economy and the life-or-death decision, but not as a written code: what a
+masterless man owns is his **name**, and the honour system already models that.
 
-Why: the bestiary is very broad (Oni, Kitsune, Tengu, Kappa, Yuki-onna, Nue…), there is
-proven demand on Steam, no risk of being compared directly to Hades, and it is entirely
-disconnected from Domina.
+**There are no monsters (2026-09-10, Open Decision #16).** The earlier yokai theme is dropped.
+The reason is the story (`STORY.md`): every fight in a season belongs to the same protection
+racket and the same 180-day clock, and a creature encounter belongs to neither — it would be
+filler. Dropping it cost the design nothing, because an enemy is only a stat block: the numbers
+carried over unchanged into `Campaign/Adversaries.cs`, only the identities were rewritten.
+
+What a human enemy buys and a creature did not: permanent death, honour and the three-year
+contract all weigh something when the other side is a person too.
 
 ---
 
@@ -196,7 +206,7 @@ up, the enemy keeps walking; it takes them `(distance − enemy's range) ÷ enem
 reach you. From 320 units a Tengu arrives in 0.73 s, a Kappa in 0.88 s, an Oni in 0.87 s. If
 the wind-up is longer than these times the charge can break before it even gets going —
 **the speed stat thereby does its first real work as "the thing that breaks a charge"**, and
-because a throwing weapon can hit a winding-up warrior regardless of distance, ranged yokai
+because a throwing weapon can hit a winding-up warrior regardless of distance, a ranged enemy
 become the natural counter to the charge.
 
 ### Why there is no fixed distance threshold
@@ -225,7 +235,7 @@ of a warrior whose target has been felled). The latest charge start went from **
 
 **A deliberate blind spot:** the calculation only sees threats arriving on foot. An enemy
 with a projectile can hit regardless of distance and break the wind-up, and we do not want
-the warrior to know that in advance — **this is what makes ranged yokai the natural counter
+the warrior to know that in advance — **this is what makes the ranged enemy the natural counter
 to the charge.** A charging enemy also arrives faster than the calculation predicts: the
 second thing that breaks a charge is another charge.
 
@@ -342,7 +352,7 @@ changed was the enemy's charge showed the cause:
 | Wind-up 0.75 s | 68.1% | 80.9% |
 | Wind-up 0 (charges always complete) | 79.0% | 90.6% |
 
-The better the enemy's charge worked, the more the lone warrior won: three weak yokai were
+The better the enemy's charge worked, the more the lone warrior won: three weak enemies were
 running **defenceless** at a strong veteran and gifting them unevadable free damage.
 
 **The rule was removed and the diagnosis confirmed.** Once the defence returned to its normal
@@ -428,8 +438,8 @@ that focuses kills more and the fight ends more sharply. Against a fully kitted 
 > expedition. Measured with worn kit, the effect is small and against the player (70.06% →
 > 69.91%): the enemy sees the bare region too.
 
-> **This is the input for the bestiary (#3).** The behavioural differences between yokai will
-> not be separate behaviour code but these weights tuned per yokai: the jackal that attacks
+> **This is the input for the adversary behaviour decision (#3).** The differences between the
+> kinds will not be separate behaviour code but these weights tuned per kind: the jackal that attacks
 > the wounded, the oni that ignores the crowd, the pursuer with high stickiness.
 
 ### ~~No classes~~ → Class system (decision round, 2026-09-07)
@@ -1087,7 +1097,7 @@ at once.
 > Every option is still best at something: the jitte against the sword, the katana against
 > armour, the sai for limb protection (0.48%).
 >
-> **The team price** (3v3): when all the yokai wear full kit, victory falls from 67.32% to
+> **The team price** (3v3): when all the enemies wear full kit, victory falls from 67.32% to
 > **65.35%** and 9.32% of the player's warriors drop their weapon during the fight. Without the
 > rule, armouring the enemy **helped** the player (65.20% → 67.32%; heavy kit slows the blow); the
 > rule inverts that. Because 40% of dropped weapons are recovered in a crowd, the wall is not as
@@ -1197,7 +1207,7 @@ enemy's weapon out of their hand.
 > the kit shows up in the roster.
 >
 > **The end of the chain:** an enemy whose armour has fallen apart no longer knocks anyone's weapon
-> out of their hand. With all the yokai in full kit the rate at which the player's weapon is dropped
+> out of their hand. With all the enemies in full kit the rate at which the player's weapon is dropped
 > is 1.81%; when they enter in worn kit it falls to 1.41% (victory 65.35% → 63.83%). As the armour
 > goes, the fight becomes **deadlier but cleaner**: more cuts, fewer dropped weapons.
 
@@ -1398,10 +1408,13 @@ into an interruption.
 - **Events land at the turn of the day:** they do not pop up in the middle of the flow. In the
   morning the player sees all the offers and events together (event probability 15% per day, to be
   re-measured)
-- **A mandatory fight every 7 days.** A `Next fight: n days` counter stands on screen. A dojo that
-  misses it loses **not money but reputation**: the roster's honour drops and the offer queue gets
-  worse. Had it been a fine, a rich player would buy a safe training round and the endless-training
-  exploit would not be closed
+- **Every 7 days the rival school moves.** A `Next move: n days` counter stands on screen. This
+  **replaces** the old "a mandatory fight every 7 days, or the roster's honour drops" rule rather
+  than sitting beside it — the pressure is the same, the reason is now inside the fiction (see "The
+  rival school and the settlements" below). The endless-training exploit is closed by the same
+  arithmetic: a dojo that trains through the season loses its settlements one by one, and every
+  settlement the rival holds on day 180 is men it brings to the final. **Unmeasured** — that the
+  counter really closes the exploit is a claim, and the sim has to be run before it is locked
 - **Difficulty tiers:** Apprentice / Master / Legend. "Master" is the base of the balance
   measurement; the others are derived by multipliers, not by a separate measurement run
 
@@ -1411,6 +1424,9 @@ into an interruption.
   Champion" gate). It stands on screen as `1/3`. The number is deliberately small: bounty hunting is
   hard as it is — a selective dojo was only entering 0.69 contracts in 60 days in measurement, and
   5 bounties would turn the gate into a wall
+- **The fifth bout is the head of the rival school** (2026-09-10). The final is not an anonymous
+  ladder: four of its seniors, then the man himself. Whether the night takes the form of the
+  appointment contest or of his raid on the dojo, it ends with him
 - **The final: 5 consecutive rounds, no recovery in between.** A new team can be formed for each
   round (the expedition limit is still 4) but the wounded and the exhausted accumulate — the final
   tests **roster depth**. Domina runs a single championship with 15 gladiators at the end of the
@@ -1513,6 +1529,99 @@ Hostile / Cold / Neutral / Pleased / Loyal. Only that number is written to the s
 be open to exploitation (gathering them all on one warrior before an expedition) — to be measured in
 the balance round.
 
+### The rival school and the settlements (decision, 2026-09-10)
+
+Open Decision #17 was closed by the story (`STORY.md`). The rival **Kurogane school** funds itself by
+selling protection to the province's settlements and manufactures the trouble it then sells
+protection from. The season is the tug-of-war over those settlements.
+
+**Settlements — 12.** Each carries: who it pays (`His` / `None` / `Yours`), a warning level (0-2) and
+the day of the last reprisal. They live in `Core/Dojo`, advance inside `AdvanceDay()` and go into the
+snapshot. Engine-free and deterministic, as everything else in the core.
+
+Twelve, not sixteen: 180 days ÷ 7 = **25 moves**. Against 12 settlements that is defensible-in-part,
+which is the point; at 16 most of the map would never be touched.
+
+**The starting state varies from run to run** (the only source of run variety — see "What was
+deliberately left out" below): how many settlements the rival already holds, the size of the starting
+roster, and the debt the master left. A set of numbers, not a system.
+
+**What a settlement gives — never gold.**
+
+The settlements have paid a heavy protection fee for years; they are drained, and a freed one does
+not start paying the player instead. This is deliberate on two counts: it keeps the treasury tied to
+contracts, so the measured economy is untouched, and it answers the "are you just the next racket"
+question with the balance sheet rather than with dialogue — you protect people who cannot pay you.
+
+1. **On liberation, one guaranteed thing — and that is all a settlement ever gives.** Whatever it
+   still has: the last of the rice, a bundle of medicine, one free repair from its smith, a man who
+   signs with no claim to settle, or **the name of the rival's next target** (which makes the move
+   counter visible for one turn). Once. Never again.
+2. **The real return is the offer queue.** Each held settlement widens it: more offers standing at
+   once, better paid. This sells the player the one axis measurement showed to matter — the **right to
+   be selective** (the dojo that refuses nothing loses its roster, the one that refuses everything
+   heavy loses its treasury).
+
+> **A weekly trickle of stores was proposed and dropped (2026-09-10).** At a 20% weekly chance per
+> settlement it came to ~1.6 parcels a week at eight settlements — between 10% and 28% of an
+> eight-man roster's weekly upkeep (3 gold per warrior per day). Three grounds for dropping it:
+> stores are gold in another form, so it reintroduced through the back door the unmeasured income
+> the "no gold from settlements" rule exists to keep out; it scaled with the number of settlements
+> held, so it paid most in the late game, when the player needs it least; and it contradicted the
+> fiction it was meant to serve — settlements drained by years of protection money do not have a
+> parcel to send every week. The one-time gift already carries the feedback.
+
+**How a settlement changes hands.**
+
+The rival's move each 7 days picks a target — the player's settlements first, highest warning among
+them:
+
+```
+move            -> that settlement's warning +1
+move at warning 2 -> the settlement goes back to him, warning resets
+```
+
+So a settlement needs **three uncontested moves** to fall. With 25 moves against 12 settlements the
+player cannot hold everything and must choose — which is the intended shape of the season.
+
+The player's answer: take that settlement's contract, or hit the collectors on the road. Either gives
+**warning −1** and pushes the next move back **2 days**. The tempo runs both ways.
+
+Winning one: finish **2 contracts** for a `None` settlement and it becomes yours; a `His` settlement
+must first have its warning brought to 0, then **3 contracts**.
+
+**The rival needs one stored number, not a relationship.**
+
+- **His strength is derived**, not stored: it is the count of settlements he holds, and it is what he
+  brings to the final night.
+- **One new stored value — deniability.** He killed the master once; openly destroying a second
+  licensed school in an appointment year would end his candidacy, so how far he can go is bounded.
+  Killing his men spends that bound down, and as it approaches zero the fourth step of the ladder (a
+  direct attack on the dojo) opens.
+
+**The three-party relationship system is not touched.** The lord, the guild and the temple keep their
+five tiers; the rival is not a fourth party of the same kind, because there is no such thing as good
+relations with him. The "relationships spoil one another" model that #17 previously rejected comes
+back **only on his axis**: taking a settlement lowers what he holds and raises what the player holds,
+and nothing propagates to the other three.
+
+**Numbers to measure before locking:** 12 settlements; the 2/3-contract thresholds; the 2-day delay; and, above all, whether the move counter really closes the
+endless-training exploit that the old 7-day rule closed.
+
+**What was deliberately left out (2026-09-10):**
+
+- **Passive income from settlements**, in gold or in stores. It would open a "grow rich without
+  fighting" line and void the measured economy. A settlement gives one thing, on the day it comes
+  over, and nothing after that.
+- **Per-settlement traits** (a smith, a ferry, a gambling house). Rejected as unnecessary; the twelve
+  are equal.
+- **Doctrines for the rival** (pressure / terror / poaching the player's contracts). Rejected; he has
+  one strategy.
+- **A debt lever against the death spiral.** A roster broken on day 60 stays broken: the school is
+  struck from the register and the run ends. No rescue loan.
+- **A settlement board** as a screen the player acts on. If one is built it is a **picture only** — no
+  travel, no routing, no fight started from it — and Open Decision #2 gets a footnote saying so.
+
 ### The expedition
 
 - The base: the dojo — training grounds, infirmary, the trainer's (sensei's) skill tree
@@ -1557,7 +1666,7 @@ resolver.
   (defeat 1: +2 kappa, defeat 2: +4). A stat multiplier was rejected: a target that becomes
   unreachable closes off the counter-move, whereas a crowd can be answered with encirclement and
   field features
-- **Defeat triggers a night raid.** Losing a story fight makes the dojo a target; the yokai you lost
+- **Defeat triggers a night raid.** Losing a story fight makes the dojo a target; the enemy you lost
   to can raid within a few days. If you are unprepared, the store is plundered and the wounded in the
   infirmary die. If you are prepared (a warrior on watch + a wall facility) the raid turns into a
   fight — but one that begins tired and half-equipped
@@ -1568,7 +1677,7 @@ resolver.
   economy numbers are still open, and time is the scarcest resource anyway. This is the item that
   closes the "enter–look–flee" loop
 - **The enemy roster is partly visible:** before entering, only a rough threat marker is readable
-  (the yokai type or a difficulty band). The full roster and stats are not visible — the choice is
+  (the enemy kind or a difficulty band). The full roster and stats are not visible — the choice is
   informed, the surprise does not die
 - **One encounter offer per day:** take it or leave it. If it is not taken the day passes in the
   dojo. There is no list/map screen
@@ -1593,8 +1702,8 @@ like by reloading the save.
 - **A crowd does not divide the power:** three enemies are three times the enemy. Had it divided, a
   crowded offer would carry the same threat with less health, i.e. sell the same risk for less reward
   — reward is tied to enemy health (§11).
-- **Yokai types take their place on the curve:** kappa and kitsune from the start, tengu after power
-  1.2, oni after 1.5, jorōgumo after 1.8.
+- **Enemy kinds take their place on the curve:** collector and cutthroat from the start, duelist after
+  power 1.2, kabukimono after 1.5, senior student after 1.8.
 - **Duel:** some offers impose exactly one warrior (§10's "the encounter writes its own rule" item).
   This is the most expensive item in measurement — with a single warrior there is nobody to share the
   damage.
@@ -2213,7 +2322,7 @@ The same motion becomes acceptable.
 | Ink / shadow | Pitch dark — outline and shadow mass |
 | Stone / metal | Neutral grey |
 | Indigo | **The player's team** |
-| Ochre | **Yokai / enemies** |
+| Ochre | **Enemies** |
 | Earth / wood | Structures and furniture |
 | Vermilion | **Blood and critical emphasis only** — used nowhere else |
 
@@ -2320,15 +2429,15 @@ slot and a new measurement round.
 
 | # | Topic | Note |
 |---|---|---|
-| **13** | **Engine-free core — reopened** | Item 9.1 of the decision round. The rule is in force for now (the resolver knows no engine, is seeded, produces an event stream) but the user has not made the decision. Three options are on the table: (a) it continues as is, (b) the decision stays in the core but position/distance/animation timing are left entirely to Godot, (c) resolution is moved into the engine. **(c) conflicts with the "measure as each system enters" decision** — no sim means no measurement. **The biggest open item of this round**; it determines both the architecture and the ROADMAP | **Leaning after the 2026-09-08 round: (a), with one rider** — real time lives in Godot while the core stays on a fixed tick, so the engine carries the pausing, the speed and the flow of the day without the resolver moving. Three grounds were written down: (1) "measure everything first, then move to (c)" is not a saving — every system has to be written into the engine-free core to be measurable at all, so (c) would be a second implementation of the same rules; (2) once the sim is gone a ported number cannot be shown to still hold — real-time float timing, frame order and collision order drift, and the drift is invisible without a rig; (3) balance is not a single pass — every new yokai or weapon reopens the numbers, and without a sim retuning is playtest only, which a 180-day permadeath run makes slow and noisy. What (c) would save is **already paid for**: position, distance, projectile flight and the weapon on the ground are written and tested (`Combat/ArenaPoint.cs`, `Projectile.cs`, `GroundWeapon.cs`); the core work left (classes, staff, morale, season) is bookkeeping, which an engine barely helps with. **Not locked** — the user deliberately left it open. The right moment to reconsider (c) is **after the build plan's step 8**, once every system is written and measured and the game can be played end to end, as a rewrite decision rather than an architecture decision taken now.
+| **13** | **Engine-free core — reopened** | Item 9.1 of the decision round. The rule is in force for now (the resolver knows no engine, is seeded, produces an event stream) but the user has not made the decision. Three options are on the table: (a) it continues as is, (b) the decision stays in the core but position/distance/animation timing are left entirely to Godot, (c) resolution is moved into the engine. **(c) conflicts with the "measure as each system enters" decision** — no sim means no measurement. **The biggest open item of this round**; it determines both the architecture and the ROADMAP | **Leaning after the 2026-09-08 round: (a), with one rider** — real time lives in Godot while the core stays on a fixed tick, so the engine carries the pausing, the speed and the flow of the day without the resolver moving. Three grounds were written down: (1) "measure everything first, then move to (c)" is not a saving — every system has to be written into the engine-free core to be measurable at all, so (c) would be a second implementation of the same rules; (2) once the sim is gone a ported number cannot be shown to still hold — real-time float timing, frame order and collision order drift, and the drift is invisible without a rig; (3) balance is not a single pass — every new enemy kind or weapon reopens the numbers, and without a sim retuning is playtest only, which a 180-day permadeath run makes slow and noisy. What (c) would save is **already paid for**: position, distance, projectile flight and the weapon on the ground are written and tested (`Combat/ArenaPoint.cs`, `Projectile.cs`, `GroundWeapon.cs`); the core work left (classes, staff, morale, season) is bookkeeping, which an engine barely helps with. **Not locked** — the user deliberately left it open. The right moment to reconsider (c) is **after the build plan's step 8**, once every system is written and measured and the game can be played end to end, as a rewrite decision rather than an architecture decision taken now.
 | **14** | **Scarcity and a fourth resource** | Whether **sake** will be added to the stock resources and how scarcity will work — both to be tied to the morale system (§10 morale). Left at ⏳ in the decision round |
 | **15** | **A save backup must not be an undo gate** | The versioned, merge-on-load save is kept, and an automatic backup rolled on top of it is coming. In a game with permadeath, the backup should **not** have an in-game "go back to the previous day" option; how it will be presented (or whether it will be presented at all) is to be decided |
-| **16** | **The opponent pool: yokai only?** | Left at ⏳ in Section 5 of the decision round — will there be humans in the enemy pool too, or only yokai? Tied to bestiary decision #3 |
-| **17** | **Rival dojos and the village** | The NPC layer starts with three parties (the regional lord, the merchant guild, the temple). A rival dojo, the village and an opposite-pole model where relationships spoil one another are out for now; to be looked at once the economy and staff settle |
+| ~~16~~ | ~~The opponent pool~~ | **Closed (2026-09-10). The enemy is human; there are no monsters.** The story (`STORY.md`) makes every fight in a season part of one rival school's protection racket, and a creature encounter belongs neither to that racket nor to the 180-day clock — it would be filler. The change cost nothing mechanically: an enemy is only a stat block, so the five kinds kept their numbers and only their identities were rewritten (`Campaign/Bestiary.cs` → `Campaign/Adversaries.cs`, `YokaiKind` → `EnemyKind`; kappa → collector, kitsune → cutthroat, tengu → duelist, oni → kabukimono, jorōgumo → senior student). **Every measurement taken before the rename still holds.** §1 and §3 were rewritten with it |
+| ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days and that move counter **replaces** the old 7-day filing penalty; settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
 | **18** | **Numbers that arrived with the round** | New numbers awaiting measurement: the weapon-drop chance from stunning, the `class × implement` multipliers, the weapon mastery bonus, the reward band 0.75-1.25, staff wages, facility construction times, class facility prices, the frequency of classed candidates in the market, the reward multiplier of a surrender-forbidden contract, the honour penalty for a missed mandatory fight |
 | ~~1~~ | ~~Party size~~ | **Locked (2026-08-29).** The upper bound is **4**, the number is the player's decision; encounters such as duels/raids can impose an exact number (§10). The core already supports N warriors. **Follow-up work:** a four-warrior arena will cause camera and readability problems in 2.2 |
 | ~~2~~ | ~~Expedition/map structure~~ | **Closed (2026-08-29).** An expedition is one room/one fight; **one encounter offer** per day, take it or leave it; no map screen. **No boss structure is being built** — difficulty rises on a single curve (§10) |
-| 3 | Yokai bestiary detail | Which yokai, and each one's special combat behaviour. **The input is ready (2026-09-03):** the behavioural difference will not be separate code but the target-selection weights of §4 tuned per yokai. **The numbers side is written (2026-09-04):** `Domina.Core/Campaign/Bestiary.cs` — kappa, kitsune, tengu, oni, jorōgumo are scaled on a single power curve and take their place on it (§10). Nue and the boss candidates are absent: §10 builds no boss structure. **All that remains open is behaviour** — when that field is added to the mould, encounter generation does not change |
+| 3 | Adversary behaviour | Which kinds, and each one's special combat behaviour. **The input is ready (2026-09-03):** the behavioural difference will not be separate code but the target-selection weights of §4 tuned per kind. **The numbers side is written (2026-09-04):** `Domina.Core/Campaign/Adversaries.cs` — collector, cutthroat, duelist, kabukimono and senior student are scaled on a single power curve and take their place on it (§10). The named adversaries of the story are absent: §10 builds no boss structure. **Renamed 2026-09-10 with #16** — the numbers did not move. The natural axis for the behaviour weights is now **discipline**: a street man picks the nearest target, a school man finishes the wounded and then turns to the most dangerous. **All that remains open is behaviour** — when that field is added to the mould, encounter generation does not change |
 | 4-A | Equipment — melee weapons | **Locked.** They fit the existing `Weapon` model (a factory + a balance number): wakizashi, tantō, naginata, kanabō, kama, bō/jō, ono, tekagi. The grip lines are in §4 |
 | 4-B | Equipment — those requiring new rules | **Stunning locked (2026-09-02)** — the rule and the numbers are in §7; the blunt class now has its payoff (where cutting was 91.57% and blunt 88.68%, both are now ~92%). **Blade catching locked (2026-09-03)** — the jitte/sai now fill the gap the shield left: base chance 0.24, lock 0.6 s, ×0.75 against a two-handed weapon; all three options are best at something (the katana at victory, 73.09%, the sai at limb protection, 0.45%). **Poison locked (2026-09-03)** — the dose goes around armour: 2.5 per tick, tick 1.0 s, lifetime 6.0 s, maximum dose 3.0; the poisoned tantō is level with the katana in an open fight (72.19% against 73.09%) and ahead in front of an armoured enemy (77.19% against 68.62%). Poison neither severs limbs nor stuns, and does not stop for someone pulling out. **Dropping a weapon locked (2026-09-03)** — armour's answer: base chance 0.05 on a blow landing on armour, 0.05 on a caught weapon, tendency to leave the hand 1.0 cutting / 0.6 piercing / 0.2 blunt. The weapon does not break, it is thrown 250 units behind the opponent; anyone with an empty hand (the one who dropped it, a teammate, an enemy) can pick it up, and anyone with a weapon in hand neither picks up nor looks. In front of an enemy in ō-yoroi the trade turns (nodachi 87.53%, tetsubo 89.20%); pick-up is 7.3% one-on-one and 40.4% in 3v3. **The item is closed** — the rule and numbers are in §7. **No shields:** a hand-carried shield was not common in Japanese warfare (the *tate* is a fixed pavise planted in the ground); the same mechanical need is met by the jitte/sai |
 | 4-C | ~~Equipment — those requiring space/projectiles~~ | **Closed (2026-08-14).** The core gained projectiles: a `ThrownWeapon` is carried in a separate slot, the throw spends time in the air, and during the flight the target can flee/die/leave the field. The yumi and the fukiya come by the same route — only the range/speed/ammunition numbers differ. Makibishi is still open: that is a consumable, not a projectile |
@@ -2342,4 +2451,4 @@ slot and a new measurement round.
 | 8 | Honour threshold numbers | The decay rate, the effect coefficient of targeted commands — through playtest. **The honour price of fleeing is here too** (`RetreatHonorPenalty`, §5): the rule is locked, the number is not. **The seppuku threshold was set provisionally (2026-09-04):** **30** out of 100, a pardon at **45** (§6). The user's decision — not locked, to be played with in playtest |
 | ~~9~~ | ~~Partial reward on escape~~ | **Dropped (2026-08-29).** If an expedition is a single fight there is no such thing as loot collected in earlier rooms; pulling out erases that fight's reward, and that is all (§10) |
 | ~~10~~ | ~~The up-front price of an expedition~~ | **Closed (2026-08-29).** Entering costs **a day** (even if you flee), and the enemy roster is **partly** visible — only a threat marker (§10) |
-| ~~11~~ | ~~Charge numbers~~ | **Locked (2026-09-02)** — the table is in §4. Distance 320, probability 0.40, wind-up 0.75 s, speed 1.6, damage 1.5. During the measurement a **wind-up phase was added**: the charge's price was only written down, and because the run took 0.6 s it was never measured. Also added during the measurement were the **re-ignition** and **stats + crowd** rules; the charge is no longer an opening move and the decision comes out of the warrior's identity. **Follow-up work:** in the yokai bestiary (#3), "who it charges" can be used as a character trait — a yokai that charges recklessly pays the price of defencelessness |
+| ~~11~~ | ~~Charge numbers~~ | **Locked (2026-09-02)** — the table is in §4. Distance 320, probability 0.40, wind-up 0.75 s, speed 1.6, damage 1.5. During the measurement a **wind-up phase was added**: the charge's price was only written down, and because the run took 0.6 s it was never measured. Also added during the measurement were the **re-ignition** and **stats + crowd** rules; the charge is no longer an opening move and the decision comes out of the warrior's identity. **Follow-up work:** in the adversary behaviour decision (#3), "who it charges" can be used as a character trait — an enemy that charges recklessly pays the price of defencelessness |
