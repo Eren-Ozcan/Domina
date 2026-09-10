@@ -74,7 +74,25 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         if (summary.Died)
         {
             state.Roster.Kill(warrior.Id);
+
+            // The dead learn nothing: the lesson is applied only to a warrior who came off the field.
             return new WarriorAftermath(warrior.Id, Died: true, lost, shattered, RecoveryDays: 0, HonorDelta: 0);
+        }
+
+        // What the fight taught him. It is written before the infirmary days, because the lesson is the
+        // fight's own return: a warrior who comes back wounded still comes back having learned.
+        Drill? lesson = CombatSchooling.LessonOf(summary);
+        if (lesson is not null)
+        {
+            // The raw stat is written, as in training: a disability's multiplier sits on top of it and
+            // no amount of fighting takes an arm back (GDD §7).
+            warrior.BaseStats = CombatSchooling.After(
+                warrior.BaseStats,
+                summary,
+                warrior.Talent,
+                state.Tuning.Training);
+
+            entry.TrainingDays++;
         }
 
         double honorDelta = _honor.PerformanceDelta(summary) + _honor.RetreatDelta(summary);
@@ -83,7 +101,10 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         int days = RecoveryDays(state.Tuning, warrior, summary, lost.Count);
         entry.Injure(days);
 
-        return new WarriorAftermath(warrior.Id, Died: false, lost, shattered, days, honorDelta);
+        return new WarriorAftermath(warrior.Id, Died: false, lost, shattered, days, honorDelta)
+        {
+            Lesson = lesson,
+        };
     }
 
     /// <summary>
@@ -166,4 +187,14 @@ public sealed record WarriorAftermath(
     IReadOnlyList<BodyPart> LostParts,
     IReadOnlyList<HitLocation> ShatteredArmor,
     int RecoveryDays,
-    double HonorDelta);
+    double HonorDelta)
+{
+    /// <summary>
+    /// What the fight taught him — <c>null</c> if it taught nothing, and always <c>null</c> for the dead.
+    /// </summary>
+    /// <remarks>
+    /// The victory screen shows this: the day's return is not only gold, and a warrior who came back
+    /// wounded still came back having learned something (docs/COMPARISON-DOMINA.md, section 3).
+    /// </remarks>
+    public Drill? Lesson { get; init; }
+}

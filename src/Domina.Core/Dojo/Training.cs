@@ -60,6 +60,18 @@ public sealed record TrainingTuning
     /// </remarks>
     public double GapClosedPerDay { get; init; } = 0.04;
 
+    /// <summary>
+    /// The share of the remaining distance a <b>fight</b> closes — the other road of growth.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately larger than <see cref="GapClosedPerDay"/>: both spend the same day, but only one of
+    /// them can cost a limb or the man himself, so the risky road has to pay better or nobody would take
+    /// it (docs/COMPARISON-DOMINA.md, section 3). The ceilings and the secondary share are the same as
+    /// training's — the two roads meet the same wall, so a dojo that does not build cannot grow a
+    /// warrior past it however hard it fights.
+    /// </remarks>
+    public double FightGapClosed { get; init; } = 0.08;
+
     /// <summary>The share the secondary stat takes relative to the primary.</summary>
     public double SecondaryShare { get; init; } = 0.5;
 
