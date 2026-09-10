@@ -243,6 +243,6 @@ shield.
 | **rōnin** | A masterless samurai | A chat command: honour (−) |
 | **dojo** | A training place | The player's base; the facility tree and the staff live here |
 | **sensei** | A teacher, an instructor | The staff on the training side |
-| **yōkai** | The supernatural creatures of Japanese folklore | The enemy pool (the bestiary decision is still open) |
-| **oni** | A demon, a horned giant | The heavy enemy archetype (it carries a tetsubo) |
-| **tengu** | A winged mountain demon | The fast/ranged enemy archetype (it throws poisoned shuriken) |
+| **kabukimono** | A street bravo of the early Edo period, gaudily dressed and armed | The heavy enemy archetype (it carries a tetsubo) |
+| **rōnin** | A masterless swordsman | The rival school's hired blades; also the honour system's lower pole (§6) |
+| **nenki hōkō** | A fixed-term service contract of the period | How a warrior joins the roster: the claim over him is settled, he signs a term |

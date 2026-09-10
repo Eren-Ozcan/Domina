@@ -439,8 +439,8 @@ that focuses kills more and the fight ends more sharply. Against a fully kitted 
 > 69.91%): the enemy sees the bare region too.
 
 > **This is the input for the adversary behaviour decision (#3).** The differences between the
-> kinds will not be separate behaviour code but these weights tuned per kind: the jackal that attacks
-> the wounded, the oni that ignores the crowd, the pursuer with high stickiness.
+> kinds will not be separate behaviour code but these weights tuned per kind: the cutthroat that attacks
+> the wounded, the kabukimono that ignores the crowd, the pursuer with high stickiness.
 
 ### ~~No classes~~ → Class system (decision round, 2026-09-07)
 
@@ -1737,8 +1737,8 @@ between a day and a warrior.
 
 Because there is no expedition chain, no separate structure is **built** for a boss rhythm.
 Encounters get harder **on a single curve** as the days pass; there is no separate boss encounter, no
-boss calendar and no threat counter. The boss candidates in the bestiary (Gashadokuro, Shuten-dōji,
-Yamata-no-Orochi) are for now merely strong enemies at the upper end of the curve. The boss idea can
+boss calendar and no threat counter. The named men of the rival school (its
+seniors) are for now merely strong enemies at the upper end of the curve. The boss idea can
 be reopened later; right now it is not a rule.
 
 ### Skill tree depth
@@ -1997,7 +1997,7 @@ change, and the decision is always "do I go in today". A **named target** change
 The contract does not **replace** the daily offer, it **stands beside** it. A day still costs one job;
 which job you do is the decision.
 
-- **The target is named and singular.** A species from the bestiary, an epithet on top
+- **The target is named and singular.** A kind from the adversary list (§10), an epithet on top
   ("Rib-Breaker") and a party who issues the contract ("a village headman"). Because there is a single enemy, team
   size is not imposed: how many you go with is the contract's real decision — sending one is choosing
   the risk, piling on all four is choosing to leave the dojo defenceless that day.

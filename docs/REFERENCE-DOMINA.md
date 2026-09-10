@@ -626,7 +626,7 @@ Below it, **Rewards**: `213 gold · 75 food · 2 wine · 12 water` + two slave p
 |---|---|---|
 | A day that flows in real time, pausable | A discrete **day** step, one decision | A deliberate difference |
 | Driving a gladiator directly (mind control) | **None** — combat is fully automatic | A deliberate difference (GDD §1) |
-| Tendency stats (aggro/turtle/evasion) | Target-selection weights (§4) | **The same idea**; the yokai profiles will derive from it |
+| Tendency stats (aggro/turtle/evasion) | Target-selection weights (§4) | **The same idea**; the per-kind adversary profiles will derive from it |
 | Surrendering with a mashed QTE | A **single key** withdrawal decision | A deliberate difference |
 | Yielding = escaping an impediment | In our game withdrawing erases the reward, and maiming is separate | Different; not measured |
 | Crowd favour = money | **None** | An open question: does honour take its place? |

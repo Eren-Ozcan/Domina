@@ -45,7 +45,7 @@ Every row carries a **status** mark:
 | Who goes on the expedition | The fight contract decides (1v1, 2/3, 15 men) | **At most 4**; an offer sometimes imposes an exact number | 🔵 |
 | Stats | HP, Strength, Weapon, Defense, Agility, Meditate + derived Aggro/Turtle/Evasive/Stamina | **8 stats:** MaxHealth, Aggression, Defense, Evasion, Strength, Accuracy, MaxStamina, Speed | ✅ |
 | What Strength does | **Strength = health + damage + resistance** (a single slider) | The three are **separate stats** (MaxHealth / Strength / Defense) | 🔵 |
-| Behavioural tendency | Aggro / Turtle / Evasive as **open numbers**, by class | We have `Aggression`; the target-selection weights are in §4 — **there are no yokai profiles yet** | 🟡 |
+| Behavioural tendency | Aggro / Turtle / Evasive as **open numbers**, by class | We have `Aggression`; the target-selection weights are in §4 — **there are no per-kind profiles yet** | 🟡 |
 | Class | 8 classes (Murmillo, Thraex, Retiarius, Scissor, Velite, Sagittarius, Charioteer, Behemoth) | **No classes** (GDD §4) — identity comes from the weapon and the path | 🔵 |
 | "Path" / specialisation | The class choice cannot be undone | **WarriorPath:** None / Blade / Stone / Shadow, not undoable | ✅ |
 | Talent difference | The slave's starting stats | The `Talent` multiplier — how much he benefits from training | ✅ |
@@ -290,7 +290,7 @@ written into the GDD.
 | Who goes on the expedition | At most 4 🔵 | **The same: at most 4** | The fight scene stays readable; the balance measurement was made on this assumption. In the final tournament depth is useful as a reserve. |
 | Stats | 8 stats ✅ | **A 9th stat: Will** is added | Seppuku resistance, the panic threshold, honour gain. The counterpart of Domina's Meditate. |
 | What Strength does | The three are separate 🔵 | **The same: the three stay separate** (MaxHealth / Strength / Defense) | So that the training choice stays meaningful: a warrior who is durable but not a striker is possible. |
-| Behavioural tendency | A single `Aggression` 🟡 | **Three tendencies, as open numbers**: Aggressive / Defensive / Evasive | Visible on screen for both warriors and yokai. Because combat is fully automatic, the player being able to read the fight in advance is critical. |
+| Behavioural tendency | A single `Aggression` 🟡 | **Three tendencies, as open numbers**: Aggressive / Defensive / Evasive | Visible on screen for both warriors and adversaries. Because combat is fully automatic, the player being able to read the fight in advance is critical. |
 | Class | No classes 🔵 | **A class system is added** — unlocked, assigned, not undoable | It exists alongside the path: **Path = stat tendency, Class = role** (weapon + behaviour). The GDD §4 decision "no classes" is void. |
 | Path / specialisation | 3 paths, not undoable ✅ | **The same** — but on being maimed the **class** is chosen again, never the Path | The path is earned with 20 training days; maiming must not erase that work. A man who loses an arm does not lose his agility — what changes is how he fights. |
 | **Class change on being maimed** (a new row) | — | **Limb loss reopens the class choice**; the lost limb makes some classes impossible and the player picks among the rest | Limb loss stops being a "leak" and turns into a **second career**. Not fate, but a narrowed choice. |
