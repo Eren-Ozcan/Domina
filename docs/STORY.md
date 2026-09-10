@@ -271,13 +271,13 @@ days survived, fights won, the dead, and the men who walked out free.
 
 | Open decision | What this story needs |
 |---|---|
-| **#16 — the opponent pool: yokai only?** | **Humans required.** Kurogane's men, its collectors, its senior students and the five bouts of the last night are all human. This story cannot be told with a yokai-only pool |
-| **#17 — rival dojos and the village** | **Activated.** Kurogane becomes a fourth relationship axis alongside the lord, the guild and the temple; settlements become a source of contracts and a standing counter |
-| **#2 — expedition/map structure** | Untouched by the board as described (a picture, not a screen you act on), but the file needs a footnote saying so if the board is built |
+| **#16 — the opponent pool: yokai only?** | **Closed 2026-09-10 — humans only.** Kurogane's men, its collectors, its senior students and the five bouts of the last night are all human. This story cannot be told with a yokai-only pool |
+| **#17 — rival dojos and the village** | **Closed 2026-09-10.** 12 settlements, a three-state allegiance and a warning level; settlements become a source of contracts and a standing counter. Kurogane is **not** a fourth relationship party — there is no such thing as good relations with him: he stores one number (deniability) and his strength is the count of settlements he holds. The lord, the guild and the temple keep their five tiers untouched |
+| **#2 — expedition/map structure** | **Settled.** The board is a picture, not a screen you act on, and the GDD's Open Decision #2 now carries the footnote saying so |
 | **7-day filing penalty** | **Kept.** It runs on the same tick as the move counter: a week with no filed work costs the roster's honour, and his move lands that day as well |
 | **Contract flags** | One boolean is enough for the staged work: a contract Kurogane arranged, revealed later |
 | **Market cards** | Show the holder of the claim, the sum and the term ("Village of Hanari — 150 gold — 3 years") |
-| **Expenses** | Burial and the reading of a name become a cuttable line on the books |
+| **Expenses** | Burial and the reading of a name become a cuttable line on the books. **Still open** — §11 has no such line yet |
 
 ---
 
@@ -285,7 +285,8 @@ days survived, fights won, the dead, and the men who walked out free.
 
 - **Not a war story.** No armies, no territory taken. The scale stays at one gate and the people inside it.
 - **Not a rescue with a guaranteed ending.** The school can close. Settlements can go back to him.
-- **Not a good-versus-evil story.** You take fees too, and growing means more settlements paying them.
+- **Not a good-versus-evil story.** You never take their fee — but you take his trade, and the settlement
+  that comes over to you is the one that gets burned for it.
 - **Not folklore tourism.** Nothing stops to explain a legend to the player.
 
 ---
