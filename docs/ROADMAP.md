@@ -41,6 +41,41 @@ under it depends on it.
 - **The crowd indicator** — a collective indicator instead of fake chat in single player
 - **Screens** — the market, facilities/staff, the offer queue, the final tournament (phase 3 counted as "done"; the dojo layer grew)
 
+## Build order after the decision pass (2026-09-08)
+
+The screens are not the gap. The dojo loop is already closed end to end — `TitleScreen` →
+`DojoHub` (day / roster / market / school) → `BattleArena` → the report → the save; the
+models behind them (`MarketModel`, `SchoolModel`, `OfferModel`, `RosterModel`) are
+engine-free and tested. What is missing is that **none of the decision pass's systems are in
+the code yet**: there is no class, staff, facility, morale or season type, and
+`BattleOutcome.TimeLimit` is still there.
+
+The order below is a dependency chain — each step is its own commit, and each is measured
+before the next one starts (20.000 fights, `losing:0.7`, against a control that differs by
+one thing only; both the number and the sweeps that found nothing are written down).
+
+| # | Step | Why here |
+|---|---|---|
+| 0 | **Open Decision #13** (leaning: (a) with real time in Godot) | Everything below is written into the engine-free core |
+| 1 | Remove `BattleOutcome.TimeLimit` | Small and isolated; re-grounds the existing measurements |
+| 2 | A stun drops the weapon | A third trigger, the defender's weapon; blunt resists. Unmeasured |
+| 3 | Fights grant stats | Closes "an expedition is pure loss"; the economy measurement only means something afterwards |
+| 4 | The class layer (`class × implement`) | Catching, poison and stunning hang off this product — three locked numbers are re-measured |
+| 5 | Facilities + staff | Classes unlock through facilities; the school screen widens over the existing model. **The infirmary trap is fixed here** — its output is rebound to lives or gold |
+| 6 | Morale + Will | Sake and scarcity (#14) hang off it |
+| 7 | The season skeleton | 180 days, a compulsory fight every 7, the 3-head gate, the 5-round final, losing ends the run |
+| 8 | Discrete day → pausable real time | The largest risk item, so last. The core stays on a fixed tick; the pausing, the speed and the flow of the day live in Godot |
+
+**Decisions that do not wait on code:** #3 bestiary behaviour (only the per-yokai
+target-selection weights are left; the numbers are in `Campaign/Bestiary.cs`) and #16 the
+opponent pool close together in one sitting; #15 the save backup is a small touch in
+`SaveSlot.cs`. **Decisions that wait on measurement:** #18 the round's numbers (with steps
+2-7), the rest of #5 the economy (staff wages, the daily upkeep — not before step 5), #8 the
+honour thresholds (playtest, so after step 7). #14 is decided with step 6, #17 stays parked,
+and #7 the game's name blocks nothing.
+
+---
+
 ## Core Principle: The Core First, The Engine Second
 
 The most critical architectural decision: **the simulation core must not depend on Godot
