@@ -1,113 +1,287 @@
 # Story and Setting
 
-> A draft. Nothing here is locked yet — it is written so that the mechanics the GDD has
-> already settled have a reason to exist. Where the fiction and a locked rule disagree, the
-> rule wins and this file is rewritten. The game's name (Open Decision #7) is still open;
-> candidates are at the end.
+> **Draft, second pass (2026-09-10).** This replaces the earlier ward/yokai draft, which was
+> written when the opponent was assumed to be supernatural. The enemy is now human and the
+> premise is rebuilt around it.
+>
+> Nothing here outranks a locked rule. Where the fiction and the GDD disagree, the GDD wins and
+> this file is rewritten. The historical grounds are in `STORY-RESEARCH.md`; the entries below
+> marked **[invented]** are the places where no source was found and the fiction is our own.
+
+---
 
 ## The premise in one paragraph
 
-A province is kept from the yokai by a **ward** the temple renews once a year. The ward does
-not fail all at once — it thins. From the day the old rite ends to the night of the next one
-there are **180 days**, and every one of them lets a little more through. The provincial lord
-answers this the cheapest way a lord can: he does not raise an army, he **licenses dojos**. You
-run one of them. You do not fight — you lost the arm for that years ago. You buy people with
-nothing left, you feed them, you train them, you send them out, and you bury the ones who do
-not come back. On the last night of the season the temple performs the rite, and what came
-through has to be put down in front of everyone, five of them, between dusk and dawn. If your
-dojo is standing and proven by then, you are the one who is sent to do it.
+The province's official sword instructor is dead and his post is empty. The lord is in Edo; on
+his return he will fill the post by a contest held in his presence, and the notice he left says
+**180 days**. The post is not an honour — its holder decides which schools in the province are
+licensed and which are not, and a school without a licence cannot teach, cannot take contracts
+and cannot exist. Your master was the strongest candidate. That is why he was killed. What he
+left you is a school with no standing, forty men bound by contracts you now hold, and his
+debts. While the lord is away the province is run by his deputy, and the deputy is the patron
+of the **Kurogane school** — the man who wants the post, and who has spent years buying the
+province one fee at a time. There is no magistrate to appeal to, no case to open, and no way to
+reach him except the one place he cannot buy: the ground in front of the lord. To stand there
+you must show the province three proven pieces of work. The season is the climb.
 
-## Why the world is shaped this way
+---
 
-**The ward, and why the calendar is a countdown.** The rite is astronomical, not negotiable —
-it lands on the same night every year. So the season is a fixed 180 days shown on screen, and
-the difficulty curve is not an abstraction: the thinner the ward, the worse the thing that
-walks through it. A day spent in the dojo is a day the ward spent thinning.
+## The enemy: how the Kurogane school makes its money
 
-**The levy, and why a fight is compulsory every seven days.** A licensed dojo files with the
-lord's clerk every seventh day. Money does not settle it — a dojo that pays its way out is a
-dojo that trains in safety all season and arrives at the rite untested, which is exactly the
-exploit the honour penalty closes. What a missed filing costs is **standing**: the clerk notes
-it, the province hears it, and the work that comes to your gate gets worse.
+Kurogane does not tax fields — a share of the harvest is the lord's own revenue, and touching it
+would not be extortion but rebellion. It takes **fees**, and every one of them is for a service
+written on paper:
 
-**The market, and why a person has a price.** The dojo does not recruit the willing — the
-willing have lords. It takes the **bonded**: ronin whose house is gone, debtors sold on by
-their village, the condemned whose sentence was commuted into service, outcasts the ward
-protects but the province will not feed. The price you pay is their debt, and the dojo assumes
-it. This is the fiction under permadeath and under honour both: a warrior here is working off a
-name, and a name is the only thing they have left to lose.
+- road escort and caravan guard, per crossing and per ferry
+- keeping order on market days, a cut of the stalls
+- a share of the gambling houses
+- arbitration in water-rights and boundary disputes
+- the labour contracts on rebuilding after a fire
 
-**The crowd, and why anyone is watching.** A hunt is public because it has to be. People need
-to see the ward answered; a crossroads with a dead kappa in it is worth more to the province
-than any proclamation. So the fights draw an audience, and the audience has opinions —
-which is where chat sits in the fiction, not as an overlay on top of it.
+No law is broken. The deputy takes his share. This is the whole of the villain's protection: not
+lawlessness, but **exemption**.
 
-**Honour, and why a warrior asks to die.** Honour here is not a virtue, it is a public
-account. It is kept on the warrior, spent on their behalf by the dojo, and read aloud by the
-temple. A warrior whose account runs out is not punished by the game — they **ask**, and the
-dojo either grants it or refuses it, and both cost.
+### The cycle
 
-## The three parties
+The system does not wait for trouble; it manufactures it.
 
-| | What they are | What they want | What they give |
-|---|---|---|---|
-| **The lord's office** | The licence, the levy, the clerk who counts your filings | A province that does not need soldiers | Bounties, the right to the rite, the licence itself |
-| **The merchant guild** | Steel, rice, medicine, and credit at a price | A dojo that keeps buying | Equipment, supply, a loan you will regret |
-| **The temple** | The ward's keepers, the ones who read the rite | The rite performed and the province intact | Omamori, funerals, the reading of honour |
+> **raid, then fear, then conflict, then "protection", then the fee, then more power, then a
+> larger raid**
 
-They do not conspire against one another and there is no intrigue layer — that was rejected on
-purpose. What they do is **price the same act differently**: abandoning a contract is a broken
-word to the lord, a bad debt to the guild, and nothing at all to the temple.
+Kurogane's men rob one settlement's goods and leave them where another settlement will be blamed.
+The two turn on each other. Kurogane arrives offering to keep the peace, and the fee goes up on
+both. Some of the work in your own offer queue is staged this way. You do not know which. When
+you find out, you will have been the muscle for it for weeks.
 
-## The named ones
+### Why he cannot simply kill you
 
-Some of what comes through the ward has a name. Those are the same in every run — the same
-stats, the same weapons, the same ground — so that losing to one teaches you something you can
-use the next time. They are not bosses in the difficulty sense; they are **fixed problems**.
+He killed your master once. Openly destroying a second licensed school in an appointment year
+would end his candidacy — the deputy shields him from complaints about fees, not from a murder
+the lord would have to answer for on his return. So he has a **budget of deniability**, and every
+move he makes must stay inside it. That budget is the only reason this is a season and not a
+single night. On the last night the budget is worthless, because after the appointment there is
+nothing left to protect.
 
-Beating three of them is what earns the dojo the right to stand at the rite: the temple will
-not read a dojo in that has only ever taken generated work.
+---
 
-Losing to one does not make it stronger. It makes it **known** — the thing now knows where
-your dojo is, and it comes at night with what it has gathered. That is the night raid: not a
-punishment, an address it learned.
+## Where you stand, and why it is not clean
+
+**A settlement you take does not start paying you.** Years of his fee have emptied it; what it has
+left is the last of its rice, a bundle of medicine, a smith who owes nobody, a son with no claim
+standing over him, and now and then word of where Kurogane will move next. That is the whole of it.
+Forty men still eat, and what feeds them is contract work, as it was before.
+
+So this is not charity either. You need those settlements for a reason of your own: **three proven
+pieces of work** is what gets a school entered in the contest, and proven work is what settlements
+issue. You are protecting people who cannot pay you because their gratitude is the ledger the lord
+reads. The province is not your cause; it is your standing.
+
+Three things separate you from him, and they are only these three:
+
+1. **You do not manufacture the conflict.** The work you take is work that existed.
+2. **You take no fee from a settlement.** Not because you are better — because there is nothing left
+   in them to take, and you found that out after you had already given your word.
+3. **You carry your own dead.** Burial, the name read out, something left to those behind — all of
+   it is an expense on your books, and you can cut it. Nothing stops you. The game will not say
+   anything if you do.
+
+And the cost lands where you cannot see it: **the settlement that switches to you is the one that
+gets burned.** The field is not yours. A settlement can go back to him, and some will, and they
+will be right to.
+
+### The villain's argument, which you cannot answer
+
+> "There were bandits on these roads before me. I ended that. You came with forty men, you gave
+> your word to three settlements, and all three of their granaries burned. What I take is a fee,
+> and a fee can be paid. What you take is their word that you are worth having, and then you spend
+> it on a post you want for yourself."
+
+Part of it is true. He did clear the roads. Some settlements do not want your protection, because
+it is unproven and the reprisal does not land on you.
+
+### Where the line actually falls
+
+Not "we are kinder". The line is one rule, and it is the same rule in both directions:
+
+> **Wrong is putting a person outside the accounting.**
+
+He does it to the settlements — the bill for his war goes to them. Permanent bondage does it to a
+man's future; training on a live body does it to the man himself. That is what the 1616 edict and
+the 1602 ban on *tsujigiri* both name, from opposite ends.
+
+You are exposed to the same charge. The only thing that separates you is that you can see it.
+
+---
+
+## Where the men come from
+
+You do not buy people. You settle the claim standing over them.
+
+Most of the candidates in the market owe Kurogane — a debt the school took over from a village, a
+fine converted to service, the remainder of a contract with a school it swallowed. You pay that
+claim off. The man is free of it, signs a **three-year term** in exchange, and the term is written
+with an end date and a right to leave under his own name. This is the period's ordinary labour
+contract (*nenki hoko*), and the 1616 edict caps it at three years for exactly the reason the
+fiction needs: what Kurogane's rivals do is permanent, and permanent bondage carried the death
+penalty for the seller.
+
+What makes this grey is not the purchase. It is that **the paper says three years and few live to
+see the third.** The contract is honest; the outcome is not.
+
+The one thing that answers the villain is rare, expensive and entirely optional: bring a man to the
+end of his term and walk him out of the gate under his own name.
+
+### What this gives the market rules for free
+
+The GDD's market follows the roster and cannot exceed your best warrior (`RosterFollow`,
+`BestFollowCeiling`). That was a balance rule. Now it is the fiction:
+
+> A good fighter does not sign with a school that has no name. As far as your name reaches, that
+> far do men look at your gate.
+
+---
+
+## The season
+
+### The long clock — 180 days
+
+The lord is in Edo. The date of his return, and of the appointment contest held on it, was
+published when the post fell vacant. Every school in the province knows it.
+
+Why you cannot act sooner:
+
+- **No authority to appeal to.** The province is the deputy's while the lord is away, and the
+  deputy is Kurogane's patron.
+- **No legal ground to reach him on** except the contest.
+- **No entry without standing.** A school may only be entered in the contest on **three proven
+  pieces of work** — which is the GDD's existing "three bounties to enter the final", now with a
+  reason.
+
+### The short clock — the move counter
+
+Every seventh day Kurogane moves, because on that day moving is the sensible thing for him to do.
+The counter is shown. The moves are not equal:
+
+| Step | The move | What it shows |
+|---|---|---|
+| 1 | Fee raised, market squeezed | Settlement's income drops; still yours |
+| 2 | Caravan taken, granary raided | Settlement moves to warning |
+| 3 | Settlement falls | It goes back to him — **five or six times a season, not forty** |
+| 4 | Direct attack on the dojo | Only while his deniability allows it |
+
+Ignoring the counter does not lose the game; it sends the bill to the last night. Every settlement
+he holds at the end is men and money he brings to it.
+
+And the tempo runs both ways: hit his collectors on the road and his next move is pushed back. Sit
+still and it comes sooner. This replaces the seven-day filing penalty rather than adding to it —
+the pressure is the same, the reason is now inside the fiction.
+
+### What a freed settlement actually gives
+
+One thing, once. On the day it comes over it hands you what it still owns — the last of the rice, a
+bundle of medicine, one free repair, a man who signs with no claim to settle, or the name of
+Kurogane's next target. After that, nothing. They are not being ungrateful; there is nothing left in
+them. That is what a decade of his protection did.
+
+What it really buys you is the offer queue: more work standing at once, better paid, and therefore
+the right to turn something down. In a season where the dojo that refuses nothing loses its roster
+and the dojo that refuses everything heavy starves, that right is the whole game.
+
+### The province board
+
+A picture, not a screen you act on: the province's settlements and, for each, who it pays —
+**his**, **nobody's**, **yours** — with its fee and how long since the last reprisal. There is no
+travel, no routing, no fight started from it. Contracts still come from the offer queue; the board
+only shows what the season has done. A cell can go dark again.
+
+*(Undecided. It does not reopen the closed decision on expedition maps — that decision rejects a
+map you act on, not a picture you read.)*
+
+---
 
 ## The last night
 
-The rite runs through the **five watches of the night**. What came through the ward has to be
-put down inside them, one watch each, and the night does not stop for you to bandage anyone.
-You can send a different team into every watch; you cannot send a rested one. This is why the
-final tests the depth of a roster and not the strength of a champion — and why a dojo that
-spent 180 days perfecting four warriors arrives at the fourth watch with nobody left to send.
+The contest is held before the lord: **five bouts in one night, no healing between them**. This is
+a depth test, not a champion test — a school that spent 180 days perfecting four warriors has no
+one left to send out for the fourth bout.
 
-**If the five fall, the rite completes.** The ward is renewed, and the season's dead are read
-out by name in front of the province.
+**The fifth is Kurogane's head.** Four of his seniors first, then the man himself. He has to stand
+there for the same reason you do: the post is given to a person and not to a signboard, and a
+candidate who sends others in his place has conceded it. This is the one fixed point of the last
+night — the season ends in front of the man who had your master killed.
 
-**If they do not, the game ends there.** Not a retry, not a lower difficulty — the ward fails.
-The game is willing to be lost; that was decided deliberately.
+The other shape of the same night: a Kurogane that knows it has lost does not wait for the
+appointment. It comes to the gate before dawn, in five waves, and the last wave is again him —
+because once the appointment is gone there is no deniability left to protect. Either way the
+number is five, the night is one, there is no rest in the middle, and the fifth has a name.
 
-**A season can also end early:** a dojo with no gold and no roster is struck from the licence,
-and the closing screen reads the season back — days survived, fights won, the dead.
+Win and the licensing authority is yours — which is to say the question the game closes on is what
+you do with the thing he wanted.
 
-## What this fiction is deliberately not
+**No two seasons open the same way.** How much of the province Kurogane already holds, how many men
+the master left, and how deep his debt runs are drawn at the start of the run. Nothing carries over
+between runs — there is no meta-progression, because permanent death has to keep costing what it
+costs.
 
-- **Not a war story.** There is no army, no campaign map, no territory. The scale stays at one
-  gate and the people inside it.
-- **Not a redemption story with a guaranteed end.** The dojo can close. The named ones can go
-  unkilled.
-- **Not folklore tourism.** The yokai are opponents with rules; nothing stops to explain a
-  legend to the player.
+**And there is no rescue.** A roster broken in mid-season stays broken; no lender will take the
+school on, and the register strikes out a dojo that cannot field men. The run ends where it ends.
 
-## Open questions this draft leaves
+Lose and it is over. No retry, no lowered difficulty. A season can also end early: a school with
+no gold and no roster is struck from the register, and the closing screen reads the season back —
+days survived, fights won, the dead.
 
-- **Is the master a character or a frame?** A one-armed retired warrior explains why the player
-  never fights and hands the tone over ready-made — but a named master with a past invites story
-  the management layer has nowhere to put.
-- **Does the province have a face?** The three parties are institutions. One recurring person
-  per party (the clerk, the factor, the priest who reads the dead) would cost little and give
-  the 180 days somewhere to land.
-- **What the ward actually is** — a physical line, a rite, a bargain — is left unstated on
-  purpose. It only needs to thin on a schedule.
-- **The name.** Candidates the story throws up: *The Fifth Watch*, *Gokō* (the five watches),
-  *Kekkai* (the ward), *One Hundred and Eighty Nights*, *The Thinning*, *Dawn Debt*.
+---
 
+## What is grounded and what is not
+
+| Element | Status |
+|---|---|
+| An official post whose holder approves ranks and settles disputes between schools | **Real.** The *godokoro*, appointed by the shogunate |
+| Contests held before the lord or shogun on a fixed annual date | **Real.** *Oshirogo*, played at Edo Castle on the 17th day of the 11th month |
+| An appointment to that post decided by challenge matches | **Real.** *Sogo / arasoi-go*, the disputed games; the first fought between the second Hon'inbo head and the second Yasui head |
+| The post taken by a patron's back-stairs influence | **Real.** Yasui Sanchi, Meijin-godokoro 1668, "by a backstairs route, with influence exerted by the head of the Matsudaira clan" |
+| The same system applied to a **sword** school rather than a Go house | **[invented] — a transposition.** The Go houses are the documented case; no source was found for a domain sword post filled by contest. This is the fiction's one deliberate borrowing across disciplines |
+| Three-year service contracts, permanent bondage a capital offence for the seller | **Real.** *Nenki hoko*; the 1616 and 1619 edicts |
+| Training on a living person as a capital crime | **Real.** *Tsujigiri*, banned on pain of death from 1602 |
+| Armed gangs with an office-holding patron, taking fees and preying on a district | **Real.** *Kabukimono* and the *machi-yakko*; ronin confined to quarters and forbidden new masters |
+| Fire-rebuilding labour contracts fought over by gangs | **Real**, Edo's fire economy — but do not date a specific fire without checking |
+| A lord away in Edo with a published return date | **Real** in outline (*sankin-kotai*). **Do not claim a six-month rotation:** the half-year alternation is from **1684** and only for the Kanto *fudai* lords — an anachronism for the 1630s-40s. The 180 days are the notice period for the appointment, not a rotation |
+| Bushido as a written code the characters follow | **Rejected as anachronism.** Codified after the wars — Yamaga Soko, *Hagakure* 1710-16, Nitobe 1900. What drives a masterless man here is his **name**, which the honour system already models |
+| A dojo raiding a rival and smashing its signboard | **Rejected as later fiction.** The real forms are *taryu jiai* (a match between schools) and *musha shugyo* |
+
+---
+
+## What this forces the GDD to decide
+
+| Open decision | What this story needs |
+|---|---|
+| **#16 — the opponent pool: yokai only?** | **Humans required.** Kurogane's men, its collectors, its senior students and the five bouts of the last night are all human. This story cannot be told with a yokai-only pool |
+| **#17 — rival dojos and the village** | **Activated.** Kurogane becomes a fourth relationship axis alongside the lord, the guild and the temple; settlements become a source of contracts and a standing counter |
+| **#2 — expedition/map structure** | Untouched by the board as described (a picture, not a screen you act on), but the file needs a footnote saying so if the board is built |
+| **7-day filing penalty** | **Replaced, not supplemented,** by the move counter |
+| **Contract flags** | One boolean is enough for the staged work: a contract Kurogane arranged, revealed later |
+| **Market cards** | Show the holder of the claim, the sum and the term ("Village of Hanari — 150 gold — 3 years") |
+| **Expenses** | Burial and the reading of a name become a cuttable line on the books |
+
+---
+
+## Deliberately not
+
+- **Not a war story.** No armies, no territory taken. The scale stays at one gate and the people inside it.
+- **Not a rescue with a guaranteed ending.** The school can close. Settlements can go back to him.
+- **Not a good-versus-evil story.** You take fees too, and growing means more settlements paying them.
+- **Not folklore tourism.** Nothing stops to explain a legend to the player.
+
+---
+
+## Still open
+
+- **Is the master a character or a frame?** A one-armed retired fighter explains why the player
+  never fights and sets the tone for free; a named master with a past invites a story the
+  management layer has nowhere to put.
+- **Does the province have a face?** Three institutions and a rival school are all abstractions. One
+  recurring person each — the clerk, the guild's factor, the priest who reads the dead, Kurogane's
+  collector — would cost little and give 180 days somewhere to land.
+- **What the player does with the post if they win.** The ending question, and it is not written.
+- **The name.** Candidates from this draft: *The Register*, *Kurogane*, *Three Proven Works*,
+  *One Hundred and Eighty Days*, *The Fee*, *The Appointment*.
