@@ -1649,6 +1649,15 @@ must first have its warning brought to 0, then **3 contracts**.
   licensed school in an appointment year would end his candidacy, so how far he can go is bounded.
   Killing his men spends that bound down, and as it approaches zero the fourth step of the ladder (a
   direct attack on the dojo) opens.
+- **Deniability is the only gate the night raid has (2026-09-10).** Losing a story fight does **not**
+  summon a raid of its own; it **spends deniability**, and the raid comes out of the ladder like every
+  other move he makes. The fiction carries it: finishing a school that is already losing costs him
+  little, because nobody files a complaint on behalf of a school the province has written off. One
+  system, one stored number, one ladder — and the felt rule the player learns is unchanged: lose to
+  him and he comes to your gate.
+- **The number is never shown raw.** What the player reads is the province: his collector seen at the
+  gate, a rumour in a settlement, the tone of the offers. A visible bar would turn the season's one
+  hidden pressure into arithmetic.
 
 **The three-party relationship system is not touched.** The lord, the guild and the temple keep their
 five tiers; the rival is not a fourth party of the same kind, because there is no such thing as good
@@ -1714,13 +1723,16 @@ resolver.
   be learned and prepared for (like Domina's fixed regional champions)
 - **A defeated target does not get stronger, it grows.** If you lose an intermediate story fight the
   target's stats **do not change** — memorisation is preserved; instead men are added alongside them
-  (defeat 1: +2 kappa, defeat 2: +4). A stat multiplier was rejected: a target that becomes
+  (defeat 1: +2 of his men, defeat 2: +4). A stat multiplier was rejected: a target that becomes
   unreachable closes off the counter-move, whereas a crowd can be answered with encirclement and
   field features
-- **Defeat triggers a night raid.** Losing a story fight makes the dojo a target; the enemy you lost
-  to can raid within a few days. If you are unprepared, the store is plundered and the wounded in the
-  infirmary die. If you are prepared (a warrior on watch + a wall facility) the raid turns into a
-  fight — but one that begins tired and half-equipped
+- **Defeat makes the dojo a target — through deniability, not on its own (2026-09-10).** Losing a
+  story fight no longer schedules a raid directly; it spends the rival's deniability, and the raid
+  arrives as the fourth step of his move ladder (§10, "The rival school and the settlements"). The two
+  triggers written separately are now one gate. What happens on the night is unchanged: if you are
+  unprepared, the store is plundered and the wounded in the infirmary die; if you are prepared (a
+  warrior on watch + a wall facility) the raid turns into a fight — but one that begins tired and
+  half-equipped
 
 ### The price of entering an encounter (locked 2026-08-29)
 
