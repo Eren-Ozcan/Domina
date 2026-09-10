@@ -1733,6 +1733,45 @@ state only — there is no meta-progression.
 delay) are proposals, and the claim that the move counter closes the
 endless-training exploit is exactly that — a claim. Sim work before any of it is locked.
 
+## 2026-09-10 — Build order step 2: a stun drops the weapon
+
+The third trigger of dropping a weapon, and the first in which the **defender** loses one: the
+other two spend the striker's weapon. `CombatTuning.StunDisarmChance` is rolled right after the
+stun holds, scaled by the **stunned warrior's own** `DisarmFactor` (cutting 1.0, piercing 0.6,
+blunt 0.2), and the weapon falls behind the man who landed the blow — the disarm round's lesson
+was that the direction, not the distance, carries the cost. `--stun-disarm` was added to the sim
+so the axis could be swept on its own.
+
+**The sweep** (0 / 0.05 / 0.10 / 0.15 / 0.30 / 0.45; 24 scenarios, 20.000 fights, `losing:0.7`):
+
+| Scenario | off | 0.15 | 0.30 |
+|---|---|---|---|
+| `club` (blunt master) | 92.90% | **93.38%** | 94.08% |
+| `blade` (cutting master) | 92.25% | 92.33% | 92.26% |
+| `veteran` (nodachi vs tetsubō) | 78.42% | **75.80%** | 73.47% |
+| `3v3` | 66.80% | 66.28% | 65.50% |
+| `patrol` (the economy's bed) | 96.69% | 96.69% | 96.62% |
+| `spear-armored` | 76.07% | 76.08% | 76.05% |
+
+**There is no knee** — every line is linear in the chance, so the number is a budget rather than a
+threshold. **0.15 locked.** There the rule is visible without being paid for twice: 5.06% of the
+player's warrior-fights end up empty-handed (13% of them are picked up again, against 15-17% at
+the higher settings), the blunt class gains its third win (+0.48 as the striker, and it holds its
+own grip when struck), and the ordinary encounter does not feel it at all. The sharpest effect is
+the one the rule is for — a heavy blade in front of a club loses 2.6 points.
+
+**A finding that is not about this rule.** While looking for a brake to hang the number on, the
+old one was tested and is gone. The catch round had locked "the catching implement is still the
+wrong choice against an enemy carrying a nodachi"; with the stun-drop rule **switched off** and
+100.000 fights, `jitte-heavy` takes 34.65% against `katana-heavy`'s 34.38% — it has crossed zero,
+and `CatchTwoHandedFactor` no longer holds anything back. The margin had already been thinned to
+0.24 points by the block rule, which is under the 20.000-fight bed's own standard error (±0.34
+points at a 35% victory rate) — so it could not have been seen there at all. Written up as GDD
+Open Decision **#19**, for Phase 9; nothing was re-locked on one measurement. The working lesson:
+**a margin under ~0.5 points cannot be defended on a 20.000-fight bed.**
+
+503 tests green (352 core + 99 presentation + 52 sim).
+
 ## 2026-09-10 — Build order step 1: the fight's time limit goes, a stall guard stays
 
 `MaxBattleSeconds` (180 s) did two jobs at once. The **design** job — "a fight past 180 s is a

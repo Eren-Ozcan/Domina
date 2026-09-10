@@ -22,7 +22,7 @@ under it depends on it.
 | **Discrete day → pausable real time** | Phase 1, Phase 3 | The day's close, event triggering, `AdvanceDay` and the chat vote all assume a discrete day. The core stays on a fixed tick; what changes is the layer that consumes it. **The single largest risk item** |
 | ~~**`BattleOutcome.TimeLimit` goes away**~~ | Phase 1 | **Done (2026-09-10).** A fight lasts until someone falls; what is left is a stall guard, and reaching it is an anomaly |
 | **Fights grant stats** | Phase 1, Phase 3 | Training stops being the only route of growth; the "going on an expedition is pure loss" problem closes |
-| **A stun drops the weapon** | Phase 1 | A third trigger; for the first time the defender loses his weapon |
+| ~~**A stun drops the weapon**~~ | Phase 1 | **Done (2026-09-10).** A third trigger; for the first time the defender loses his weapon |
 | **The block splits into stat/equipment** | Phase 1, Phase 2 | The frequency comes from Defence, the effect from the ō-sode |
 | **Reward band 0.75-1.25** | Phase 5, Phase 9 | Surrender survival uses the same ratio |
 | **All the balance numbers are invalid** | Phase 9 → every phase | Measurement will no longer be one pass but done **as each system enters the code** |
@@ -58,7 +58,7 @@ one thing only; both the number and the sweeps that found nothing are written do
 |---|---|---|
 | 0 | **Open Decision #13** (leaning: (a) with real time in Godot) | Everything below is written into the engine-free core |
 | ~~1~~ | ~~Remove `BattleOutcome.TimeLimit`~~ | **Done (2026-09-10)** — measured before and after, nothing moved. The record is in `docs/PROGRESS.md` |
-| 2 | A stun drops the weapon | A third trigger, the defender's weapon; blunt resists. Unmeasured |
+| ~~2~~ | ~~A stun drops the weapon~~ | **Done (2026-09-10)** — locked at 0.15 after a 0-0.45 sweep; the rule and the measurement are in GDD §7 |
 | 3 | Fights grant stats | Closes "an expedition is pure loss"; the economy measurement only means something afterwards |
 | 4 | The class layer (`class × implement`) | Catching, poison and stunning hang off this product — three locked numbers are re-measured |
 | 5 | Facilities + staff | Classes unlock through facilities; the school screen widens over the existing model. **The infirmary trap is fixed here** — its output is rebound to lives or gold |

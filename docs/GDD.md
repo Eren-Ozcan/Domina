@@ -839,6 +839,26 @@ the lost move.
 | Freeze duration | 0.9 s |
 | Multiplier for a blow to the head | 2.0 |
 | The counted share of the armour's severing resistance | 0.6 |
+| Chance that the stunned warrior lets go of his weapon | **0.15** (locked 2026-09-10) |
+
+**A stun also drops the weapon (locked 2026-09-10).** This is the third trigger of dropping a
+weapon and the first in which the **defender** loses one — the other two spend the striker's
+weapon (a blow bouncing off armour, a blade caught in a hook). The die is read from the weapon in
+the **stunned man's own hand** (the tendency to leave the hand: cutting 1.0, piercing 0.6, blunt
+0.2), so the blunt class wins the trade a third time: it inflicts the stun, and it keeps its grip
+when it is stunned itself. The weapon falls **behind the man who landed the blow**, which is what
+makes fetching it expensive — the lesson of the disarm round was that the direction, not the
+distance, carries the cost.
+
+> **The number is a budget, not a threshold.** Swept 0 / 0.05 / 0.10 / 0.15 / 0.30 / 0.45 across
+> 24 scenarios (20.000 fights, `losing:0.7`): every effect is linear in the chance, there is no
+> knee to sit on. 0.15 is where the rule is visible without being paid for twice — 5.06% of the
+> player's warrior-fights lose a weapon this way (13% of them are picked up again), the blunt
+> master gains +0.48 points (`club` 92.90 → 93.38) while the cutting master does not move
+> (`blade` 92.25 → 92.33), the team pays -0.52 (`3v3` 66.80 → 66.28), and the ordinary encounter
+> does not feel it at all (`patrol` 96.69 → 96.69). At 0.30 the same lines read +1.18 / -1.30.
+> The rule's sharpest effect is exactly where it should be — the heavy blade in front of a club:
+> `veteran` (nodachi against a tetsubō) 78.42 → 75.80, and 73.47 at 0.30.
 
 **Two protective rules:**
 
@@ -2503,7 +2523,8 @@ slot and a new measurement round.
 | **15** | **A save backup must not be an undo gate** | The versioned, merge-on-load save is kept, and an automatic backup rolled on top of it is coming. In a game with permadeath, the backup should **not** have an in-game "go back to the previous day" option; how it will be presented (or whether it will be presented at all) is to be decided |
 | ~~16~~ | ~~The opponent pool~~ | **Closed (2026-09-10). The enemy is human; there are no monsters.** The story (`STORY.md`) makes every fight in a season part of one rival school's protection racket, and a creature encounter belongs neither to that racket nor to the 180-day clock — it would be filler. The change cost nothing mechanically: an enemy is only a stat block, so the five kinds kept their numbers and only their identities were rewritten (`Campaign/Bestiary.cs` → `Campaign/Adversaries.cs`, `YokaiKind` → `EnemyKind`; kappa → collector, kitsune → cutthroat, tengu → duelist, oni → kabukimono, jorōgumo → senior student). **Every measurement taken before the rename still holds.** §1 and §3 were rewritten with it |
 | ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days on the **same tick** as the compulsory-fight rule, which stays (the move counter was briefly written as a replacement for it — void 2026-09-10); settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
-| **18** | **Numbers that arrived with the round** | New numbers awaiting measurement: the weapon-drop chance from stunning, the `class × implement` multipliers, the weapon mastery bonus, the reward band 0.75-1.25, staff wages, facility construction times, class facility prices, the frequency of classed candidates in the market, the reward multiplier of a surrender-forbidden contract, the honour penalty for a missed mandatory fight |
+| **19** | **The heavy-weapon brake is gone** | Measured 2026-09-10, and **not** caused by the stun-drop rule: with that rule switched off and 100.000 fights (the 20.000-fight bed cannot resolve a margin this thin — its standard error is ±0.34 points), `jitte-heavy` takes **34.65%** against `katana-heavy`'s **34.38%**. The catch round had locked the opposite as a brake — "the catching implement is still the wrong choice against an enemy carrying a nodachi" — and block later thinned that margin to 0.24 points; it has now crossed zero. `CatchTwoHandedFactor` (0.75) therefore no longer holds anything back. Nothing was re-locked on the strength of one measurement: this is a Phase 9 item, and the lesson is that a margin under ~0.5 points cannot be defended on a 20.000-fight bed |
+| **18** | **Numbers that arrived with the round** | ~~the weapon-drop chance from stunning~~ (**locked 0.15 on 2026-09-10**, §7) and the rest, still awaiting measurement: the `class × implement` multipliers, the weapon mastery bonus, the reward band 0.75-1.25, staff wages, facility construction times, class facility prices, the frequency of classed candidates in the market, the reward multiplier of a surrender-forbidden contract, the honour penalty for a missed mandatory fight |
 | ~~1~~ | ~~Party size~~ | **Locked (2026-08-29).** The upper bound is **4**, the number is the player's decision; encounters such as duels/raids can impose an exact number (§10). The core already supports N warriors. **Follow-up work:** a four-warrior arena will cause camera and readability problems in 2.2 |
 | ~~2~~ | ~~Expedition/map structure~~ | **Closed (2026-08-29).** An expedition is one room/one fight; **one encounter offer** per day, take it or leave it; no map screen. **No boss structure is being built** — difficulty rises on a single curve (§10). **Footnote (2026-09-10):** the settlement board of §10 does not reopen this. It is a **picture, not a screen you act on** — no travel, no routing, no fight started from it; contracts still arrive in the offer queue and the board only reads back what the season has done |
 | 3 | Adversary behaviour | Which kinds, and each one's special combat behaviour. **The input is ready (2026-09-03):** the behavioural difference will not be separate code but the target-selection weights of §4 tuned per kind. **The numbers side is written (2026-09-04):** `Domina.Core/Campaign/Adversaries.cs` — collector, cutthroat, duelist, kabukimono and senior student are scaled on a single power curve and take their place on it (§10). The named adversaries of the story are absent: §10 builds no boss structure. **Renamed 2026-09-10 with #16** — the numbers did not move. The natural axis for the behaviour weights is now **discipline**: a street man picks the nearest target, a school man finishes the wounded and then turns to the most dangerous. **All that remains open is behaviour** — when that field is added to the mould, encounter generation does not change |
