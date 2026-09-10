@@ -61,13 +61,21 @@ public class CampaignRunnerTests
     [Fact]
     public void TrainingShowsUpAsStatGrowth()
     {
+        // The fight's own lesson is switched off on both sides: since fights grant stats too, a control
+        // that only zeroed the drill would still grow and training's share could not be read off it.
         CampaignOptions idle = Options() with
         {
-            Dojo = new DojoTuning { Training = new TrainingTuning { GapClosedPerDay = 0 } },
+            Dojo = new DojoTuning
+            {
+                Training = new TrainingTuning { GapClosedPerDay = 0, FightGapClosed = 0 },
+            },
         };
         CampaignOptions drilled = Options() with
         {
-            Dojo = new DojoTuning { Training = new TrainingTuning { GapClosedPerDay = 0.1 } },
+            Dojo = new DojoTuning
+            {
+                Training = new TrainingTuning { GapClosedPerDay = 0.1, FightGapClosed = 0 },
+            },
         };
 
         CampaignReport without = new CampaignRunner(idle).Run(firstSeed: 7);

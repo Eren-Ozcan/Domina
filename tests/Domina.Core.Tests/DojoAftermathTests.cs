@@ -38,6 +38,40 @@ public class DojoAftermathTests
         params WarriorBattleSummary[] summaries) =>
         new(BattleOutcome.PlayerVictory, ElapsedSeconds: 12, summaries);
 
+    /// <summary>A warrior who comes off the field carries the fight's lesson with him.</summary>
+    /// <remarks>
+    /// The point of the rule: going on an expedition is no longer pure loss. The lesson is written even
+    /// when the fight sent him to the infirmary — he came back having learned.
+    /// </remarks>
+    [Fact]
+    public void AFightThatWasSurvivedGrowsTheWarrior()
+    {
+        DojoState state = new();
+        RosterEntry entry = state.Roster.Recruit("Kenji");
+        double before = entry.Warrior.BaseStats.Accuracy;
+
+        AftermathReport report = _aftermath.Apply(state, Result(Summary(entry.Id)));
+
+        Assert.Equal(Drill.Strikes, report.Warriors.Single().Lesson);
+        Assert.True(entry.Warrior.BaseStats.Accuracy > before);
+        Assert.Equal(1, entry.TrainingDays);
+    }
+
+    /// <summary>The dead learn nothing.</summary>
+    [Fact]
+    public void AWarriorWhoDiedCarriesNoLesson()
+    {
+        DojoState state = new();
+        RosterEntry entry = state.Roster.Recruit("Kenji");
+
+        AftermathReport report = _aftermath.Apply(
+            state,
+            Result(Summary(entry.Id, healthRemaining: 0, finalState: CombatState.Dead)));
+
+        Assert.Null(report.Warriors.Single().Lesson);
+        Assert.Equal(0, entry.TrainingDays);
+    }
+
     [Fact]
     public void DeathIsWrittenIntoTheRosterAndCannotBeUndone()
     {
