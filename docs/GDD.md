@@ -1408,13 +1408,23 @@ into an interruption.
 - **Events land at the turn of the day:** they do not pop up in the middle of the flow. In the
   morning the player sees all the offers and events together (event probability 15% per day, to be
   re-measured)
-- **Every 7 days the rival school moves.** A `Next move: n days` counter stands on screen. This
-  **replaces** the old "a mandatory fight every 7 days, or the roster's honour drops" rule rather
-  than sitting beside it — the pressure is the same, the reason is now inside the fiction (see "The
-  rival school and the settlements" below). The endless-training exploit is closed by the same
-  arithmetic: a dojo that trains through the season loses its settlements one by one, and every
-  settlement the rival holds on day 180 is men it brings to the final. **Unmeasured** — that the
-  counter really closes the exploit is a claim, and the sim has to be run before it is locked
+- **One 7-day tick, two consequences (2026-09-10).** The compulsory-fight rule **stands** and the
+  rival's move counter runs on the **same** tick — the move counter was briefly written as a
+  replacement for it; that is now void, the two sit together on one clock:
+  - **The honour penalty stays.** A week in which the dojo files no fight costs the **roster's
+    honour** (not gold). The money penalty was rejected for the reason it always was: a rich player
+    would simply **buy** the safe training loop and the endless-training exploit would stay open.
+    Because honour also pushes towards the seppuku threshold (§6), the price of hiding accumulates
+  - **The rival's move lands on the same day.** A `Next move: n days` counter stands on screen and the
+    move takes a settlement one step further from you (see "The rival school and the settlements"
+    below). Every settlement he holds on day 180 is men he brings to the final
+  - **Why both:** the honour penalty is the rule that was **proven** to close the exploit and it bites
+    immediately, on the dojo itself; the move counter bites slowly, on the map, and can be answered by
+    a player who is willing to lose ground. One is the floor, the other is the pressure. The fiction
+    carries both without strain — the week you file no work is the week the province reads your school
+    as idle **and** the week he moves unopposed
+  - **Unmeasured:** the honour number for a missed week (Open Decision #18) and whether the map
+    pressure adds anything on top of the honour penalty
 - **Difficulty tiers:** Apprentice / Master / Legend. "Master" is the base of the balance
   measurement; the others are derived by multipliers, not by a separate measurement run
 
@@ -1605,8 +1615,8 @@ relations with him. The "relationships spoil one another" model that #17 previou
 back **only on his axis**: taking a settlement lowers what he holds and raises what the player holds,
 and nothing propagates to the other three.
 
-**Numbers to measure before locking:** 12 settlements; the 2/3-contract thresholds; the 2-day delay; and, above all, whether the move counter really closes the
-endless-training exploit that the old 7-day rule closed.
+**Numbers to measure before locking:** 12 settlements; the 2/3-contract thresholds; the 2-day delay; and whether the map pressure adds anything on top of the
+compulsory-fight honour penalty, which is the rule that actually closes the endless-training exploit.
 
 **What was deliberately left out (2026-09-10):**
 
@@ -2433,7 +2443,7 @@ slot and a new measurement round.
 | **14** | **Scarcity and a fourth resource** | Whether **sake** will be added to the stock resources and how scarcity will work — both to be tied to the morale system (§10 morale). Left at ⏳ in the decision round |
 | **15** | **A save backup must not be an undo gate** | The versioned, merge-on-load save is kept, and an automatic backup rolled on top of it is coming. In a game with permadeath, the backup should **not** have an in-game "go back to the previous day" option; how it will be presented (or whether it will be presented at all) is to be decided |
 | ~~16~~ | ~~The opponent pool~~ | **Closed (2026-09-10). The enemy is human; there are no monsters.** The story (`STORY.md`) makes every fight in a season part of one rival school's protection racket, and a creature encounter belongs neither to that racket nor to the 180-day clock — it would be filler. The change cost nothing mechanically: an enemy is only a stat block, so the five kinds kept their numbers and only their identities were rewritten (`Campaign/Bestiary.cs` → `Campaign/Adversaries.cs`, `YokaiKind` → `EnemyKind`; kappa → collector, kitsune → cutthroat, tengu → duelist, oni → kabukimono, jorōgumo → senior student). **Every measurement taken before the rename still holds.** §1 and §3 were rewritten with it |
-| ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days and that move counter **replaces** the old 7-day filing penalty; settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
+| ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days on the **same tick** as the compulsory-fight rule, which stays (the move counter was briefly written as a replacement for it — void 2026-09-10); settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
 | **18** | **Numbers that arrived with the round** | New numbers awaiting measurement: the weapon-drop chance from stunning, the `class × implement` multipliers, the weapon mastery bonus, the reward band 0.75-1.25, staff wages, facility construction times, class facility prices, the frequency of classed candidates in the market, the reward multiplier of a surrender-forbidden contract, the honour penalty for a missed mandatory fight |
 | ~~1~~ | ~~Party size~~ | **Locked (2026-08-29).** The upper bound is **4**, the number is the player's decision; encounters such as duels/raids can impose an exact number (§10). The core already supports N warriors. **Follow-up work:** a four-warrior arena will cause camera and readability problems in 2.2 |
 | ~~2~~ | ~~Expedition/map structure~~ | **Closed (2026-08-29).** An expedition is one room/one fight; **one encounter offer** per day, take it or leave it; no map screen. **No boss structure is being built** — difficulty rises on a single curve (§10) |

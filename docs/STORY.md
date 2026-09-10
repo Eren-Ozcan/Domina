@@ -166,15 +166,21 @@ The counter is shown. The moves are not equal:
 |---|---|---|
 | 1 | Fee raised, market squeezed | Settlement's income drops; still yours |
 | 2 | Caravan taken, granary raided | Settlement moves to warning |
-| 3 | Settlement falls | It goes back to him — **five or six times a season, not forty** |
-| 4 | Direct attack on the dojo | Only while his deniability allows it |
+| 3 | Settlement falls | It goes back to him — **five or six times a season, not every week** |
+| 4 | Direct attack on the dojo | Only when his deniability has run low — and losing to him is what spends it |
 
 Ignoring the counter does not lose the game; it sends the bill to the last night. Every settlement
 he holds at the end is men and money he brings to it.
 
 And the tempo runs both ways: hit his collectors on the road and his next move is pushed back. Sit
-still and it comes sooner. This replaces the seven-day filing penalty rather than adding to it —
-the pressure is the same, the reason is now inside the fiction.
+still and it comes sooner.
+
+**The same seventh day is also the day your own week is read.** A licensed school files its work; in
+an appointment year a week with nothing filed is a week the province reads as a school that has gone
+quiet. It costs you nothing in gold — it costs your **name**, which is the only thing a school
+without standing owns, and the men inside the gate feel it before anyone outside does (the roster's
+honour, §6). So the seventh day asks the same question twice: *what did you do this week*, once to the
+province and once to him.
 
 ### What a freed settlement actually gives
 
@@ -258,7 +264,7 @@ days survived, fights won, the dead.
 | **#16 — the opponent pool: yokai only?** | **Humans required.** Kurogane's men, its collectors, its senior students and the five bouts of the last night are all human. This story cannot be told with a yokai-only pool |
 | **#17 — rival dojos and the village** | **Activated.** Kurogane becomes a fourth relationship axis alongside the lord, the guild and the temple; settlements become a source of contracts and a standing counter |
 | **#2 — expedition/map structure** | Untouched by the board as described (a picture, not a screen you act on), but the file needs a footnote saying so if the board is built |
-| **7-day filing penalty** | **Replaced, not supplemented,** by the move counter |
+| **7-day filing penalty** | **Kept.** It runs on the same tick as the move counter: a week with no filed work costs the roster's honour, and his move lands that day as well |
 | **Contract flags** | One boolean is enough for the staged work: a contract Kurogane arranged, revealed later |
 | **Market cards** | Show the holder of the claim, the sum and the term ("Village of Hanari — 150 gold — 3 years") |
 | **Expenses** | Burial and the reading of a name become a cuttable line on the books |
