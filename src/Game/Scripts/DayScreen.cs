@@ -401,7 +401,7 @@ public sealed partial class DayScreen : DojoScreen
         BattleOutcome.PlayerVictory => "Victory.",
         BattleOutcome.PlayerWithdrawal => "The party left the field.",
         BattleOutcome.PlayerWipe => "The party was wiped out.",
-        _ => "Time ran out; nobody finished it.",
+        _ => "The fight stalled and was broken off.",
     };
 
     private static string RefusalText(ExpeditionRefusal refusal) => refusal switch

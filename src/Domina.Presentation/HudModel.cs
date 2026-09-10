@@ -178,7 +178,7 @@ public static class HudModel
         BattleOutcome.PlayerVictory => "VICTORY",
         BattleOutcome.PlayerWithdrawal => "WITHDREW",
         BattleOutcome.PlayerWipe => "ROUT",
-        _ => "TIME LIMIT",
+        _ => "STALLED",
     };
 
     /// <summary>What is shown for a press waiting for the first hit before contact.</summary>
