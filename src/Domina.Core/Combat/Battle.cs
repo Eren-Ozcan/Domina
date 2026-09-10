@@ -1944,6 +1944,35 @@ public sealed class Battle
         attacker.StunsInflicted++;
         defender.BeginState(CombatState.Stunned, _tuning.StunSeconds);
         Emit(new WarriorStunned(ElapsedSeconds, attacker.Id, defender.Id, _tuning.StunSeconds));
+
+        TryDropOnStun(attacker, defender);
+    }
+
+    /// <summary>
+    /// Rolls the die for the weapon slipping out of a <b>stunned</b> warrior's hand.
+    /// </summary>
+    /// <remarks>
+    /// The third trigger of dropping, and the only one that spends the defender's weapon rather than
+    /// the striker's (docs/GDD.md §7). The die is read from the stunned warrior's own weapon, so a
+    /// blunt weapon resists here as well; the weapon falls <b>behind the man who landed the blow</b>,
+    /// which is what makes fetching it expensive — the measured lesson of the disarm round was that
+    /// the direction, not the distance, carries the cost.
+    /// </remarks>
+    private void TryDropOnStun(Combatant attacker, Combatant defender)
+    {
+        if (defender.Disarmed || !defender.IsActive)
+        {
+            return;
+        }
+
+        double chance = _tuning.StunDisarmChance * defender.Weapon.DisarmFactor;
+
+        if (chance <= 0 || !_rng.Chance(Math.Clamp(chance, 0, 1)))
+        {
+            return;
+        }
+
+        DropWeapon(defender, disarmer: attacker, past: attacker);
     }
 
     /// <summary>

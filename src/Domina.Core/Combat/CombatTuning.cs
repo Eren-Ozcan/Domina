@@ -549,6 +549,31 @@ public sealed record CombatTuning
     public double BaseDisarmChance { get; init; } = 0.05;
 
     /// <summary>
+    /// The chance that a stunned warrior lets go of his weapon; his <b>own</b> weapon's tendency to
+    /// slip scales it.
+    /// </summary>
+    /// <remarks>
+    /// The third trigger of dropping a weapon, and the first in which the <b>defender</b> loses one:
+    /// the other two spend the striker's weapon. A man whose senses go loses his grip first, so the
+    /// die is read from the weapon in the stunned man's hand — a rebounding club stays in the palm
+    /// (<c>DisarmFactor</c> 0.2) where an edge does not (1.0). The blunt class gains a third time,
+    /// once by inflicting the stun and once by resisting the drop when it is stunned itself.
+    /// </remarks>
+    /// <remarks>
+    /// Swept 0 / 0.05 / 0.10 / 0.15 / 0.30 / 0.45 over 24 scenarios, 20.000 fights, <c>losing:0.7</c>.
+    /// The curve has no knee — every effect is linear in the chance — so the number is a budget, not a
+    /// threshold, and <b>0.15</b> is where the rule is visible without paying for itself twice: 5.06%
+    /// of player warrior-fights lose a weapon this way (13% of those are picked up again), the blunt
+    /// master gains +0.48 points (<c>club</c> 92.90 → 93.38) while the cutting master does not move
+    /// (<c>blade</c> 92.25 → 92.33), the team pays -0.52 (<c>3v3</c> 66.80 → 66.28) and the ordinary
+    /// encounter does not feel it at all (<c>patrol</c> 96.69 → 96.69). At 0.30 the same lines read
+    /// +1.18 / -1.30 and the price stops being a nudge. The sharpest single effect is the heavy blade
+    /// in front of a club: <c>veteran</c> (nodachi vs tetsubō) 78.42 → 75.80 at 0.15 and 73.47 at 0.30
+    /// — the intended shape of the rule, since that is the matchup a dropped weapon should decide.
+    /// </remarks>
+    public double StunDisarmChance { get; init; } = 0.15;
+
+    /// <summary>
     /// The chance of losing the weapon when it is caught; the weapon's tendency to slip scales it.
     /// </summary>
     /// <remarks>
