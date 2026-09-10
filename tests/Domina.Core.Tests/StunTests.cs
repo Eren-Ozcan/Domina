@@ -47,6 +47,10 @@ public class StunTests
     private static Weapon Harmless { get; } =
         new("Test-Sopa", WeaponClass.Cutting, 0, TwoHanded: false, AttackSeconds: 1.0);
 
+    /// <summary>The same harmless weapon of the blunt class — it isolates the grip axis.</summary>
+    private static Weapon HarmlessClub { get; } =
+        new("Test-Sopa (kütük)", WeaponClass.Blunt, 0, TwoHanded: false, AttackSeconds: 1.0);
+
     /// <summary>A cutting weapon of the same hardness — it isolates the class difference.</summary>
     private static Weapon Blade { get; } =
         new("Test-Katana", WeaponClass.Cutting, 40, TwoHanded: false, AttackSeconds: 1.0);
@@ -273,6 +277,79 @@ public class StunTests
 
             return total;
         }
+    }
+
+    /// <summary>
+    /// The third trigger of dropping a weapon: a stunned warrior lets go of his own.
+    /// </summary>
+    /// <remarks>
+    /// The other two triggers spend the <b>striker's</b> weapon (a blow bouncing off armour, a blade
+    /// caught in a hook). This is the first in which the man who was hit is the one left empty-handed,
+    /// so the event's owner is the defender and its disarmer is the striker.
+    /// </remarks>
+    [Fact]
+    public void AStunnedWarriorLetsGoOfHisWeapon()
+    {
+        var battle = new Battle(Beating(Club), new FixedRandom(0.0));
+        battle.Run();
+
+        WeaponDropped dropped = Assert.IsType<WeaponDropped>(
+            battle.Events.OfType<WeaponDropped>().FirstOrDefault());
+
+        Assert.Equal(new WarriorId(1), dropped.Warrior);
+        Assert.Equal(new WarriorId(101), dropped.Disarmer);
+
+        WarriorStunned stun = battle.Events.OfType<WarriorStunned>().First();
+        Assert.True(dropped.AtSeconds >= stun.AtSeconds);
+    }
+
+    /// <summary>
+    /// A blunt weapon stays in the stunned hand where an edge does not.
+    /// </summary>
+    /// <remarks>
+    /// Not the number but the <b>order</b> is tested, as with the stun itself: the die is read from the
+    /// weapon of the man who was stunned, so the class that rebounds keeps its grip. This is the blunt
+    /// class's third gain — it wins the trade both as the striker and as the man struck.
+    /// </remarks>
+    [Fact]
+    public void ABluntWeaponStaysInTheStunnedHand()
+    {
+        int cutting = DropsWhenVictimCarries(Harmless);
+        int blunt = DropsWhenVictimCarries(HarmlessClub);
+
+        Assert.True(cutting > 0, "The rule never fired for the cutting victim.");
+        Assert.True(blunt < cutting, $"Blunt did not hold on to its weapon ({blunt} >= {cutting}).");
+
+        static int DropsWhenVictimCarries(Weapon victimWeapon)
+        {
+            int total = 0;
+            for (ulong seed = 1; seed <= 200; seed++)
+            {
+                var setup = new BattleSetup(
+                    [TestBuilders.Warrior(1, "Kurban", health: 400, aggression: 0, weapon: victimWeapon)],
+                    [TestBuilders.Warrior(101, "Striker", aggression: 100, weapon: Club)])
+                {
+                    Tuning = StunOnly,
+                };
+
+                var battle = new Battle(setup, new SeededRandom(seed));
+                battle.Run();
+                total += battle.Events.OfType<WeaponDropped>().Count(e => e.Warrior == new WarriorId(1));
+            }
+
+            return total;
+        }
+    }
+
+    /// <summary>A warrior already empty-handed cannot drop a weapon a second time.</summary>
+    [Fact]
+    public void AWarriorWithNoWeaponDropsNothingWhenStunnedAgain()
+    {
+        var battle = new Battle(Beating(Club), new FixedRandom(0.0));
+        battle.Run();
+
+        Assert.True(battle.Events.OfType<WarriorStunned>().Count() > 1);
+        Assert.Single(battle.Events.OfType<WeaponDropped>(), e => e.Warrior == new WarriorId(1));
     }
 
     /// <summary>A light blow below the threshold does not stun — the stun is a heavy-blow branch.</summary>
