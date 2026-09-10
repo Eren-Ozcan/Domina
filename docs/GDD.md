@@ -1609,7 +1609,13 @@ question with the balance sheet rather than with dialogue — you protect people
    signs with no claim to settle, or **the name of the rival's next target** (which makes the move
    counter visible for one turn). Once. Never again.
 2. **The real return is the offer queue.** Each held settlement widens it: more offers standing at
-   once, better paid. This sells the player the one axis measurement showed to matter — the **right to
+   once, better paid. **Who pays is not the settlement (2026-09-10):** a settlement you hold does not
+   pay you, it **speaks for you**. The gold comes from the parties in the province who can still pay
+   for a named job — the merchant moving a caravan through it (the guild), the temple, a headman with
+   a granary left — and above all from the work that used to go to the rival: with the settlement out
+   of his hand, that work is offered to you **at his rates**. That is why a held settlement makes the
+   queue not only wider but better paid, and it keeps the line the story draws intact — you take his
+   trade, never their fee. This sells the player the one axis measurement showed to matter — the **right to
    be selective** (the dojo that refuses nothing loses its roster, the one that refuses everything
    heavy loses its treasury).
 

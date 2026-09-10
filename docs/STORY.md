@@ -197,7 +197,10 @@ Kurogane's next target. After that, nothing. They are not being ungrateful; ther
 them. That is what a decade of his protection did.
 
 What it really buys you is the offer queue: more work standing at once, better paid, and therefore
-the right to turn something down. In a season where the dojo that refuses nothing loses its roster
+the right to turn something down. The money is not theirs — a settlement out of his hand does not pay
+you, it **speaks** for you. What pays is the trade that moves through it: the merchant with a caravan
+to get across, the temple, a headman with a granary left, and the work that used to be his, now
+offered to you at the rates he set. You take his trade; you never take their fee. In a season where the dojo that refuses nothing loses its roster
 and the dojo that refuses everything heavy starves, that right is the whole game.
 
 ### The province board
