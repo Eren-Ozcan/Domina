@@ -769,6 +769,15 @@ internal static class SimArgs
                     training = training with { GapClosedPerDay = trainRate };
                     break;
 
+                case "--fight-rate":
+                    if (!TryFraction(value, out double fightRate))
+                    {
+                        return ParsedArgs.Fail($"--fight-rate must be between 0 and 1: {value}");
+                    }
+
+                    training = training with { FightGapClosed = fightRate };
+                    break;
+
                 case "--train-ceiling":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double trainCeiling)
