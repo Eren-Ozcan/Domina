@@ -8,7 +8,7 @@ namespace Domina.Core.Dojo;
 /// <para>
 /// A dead warrior is <b>not removed</b> from the roster: permadeath is permanent, but the warrior's
 /// history (honour, disabilities, his name) stays on record. Whether he is alive
-/// <see cref="Model.Warrior.IsAlive"/> ile okunur.
+/// is read through <see cref="Model.Warrior.IsAlive"/>.
 /// </para>
 /// <para>
 /// Name uniqueness is enforced only among <b>the living</b> — that is GDD §6's rule: a name belongs to
@@ -59,14 +59,14 @@ public sealed class Roster
     }
 
     /// <summary>Puts a warrior with an already-assigned identity onto the roster (when loading a save).</summary>
-    /// <exception cref="InvalidOperationException">Kimlik zaten kadroda varsa.</exception>
+    /// <exception cref="InvalidOperationException">The id is already on the roster.</exception>
     public RosterEntry Add(Warrior warrior)
     {
         ArgumentNullException.ThrowIfNull(warrior);
 
         if (_entries.ContainsKey(warrior.Id))
         {
-            throw new InvalidOperationException($"{warrior.Id} kadroda zaten var.");
+            throw new InvalidOperationException($"{warrior.Id} is already on the roster.");
         }
 
         RosterEntry entry = new(warrior);
@@ -127,7 +127,7 @@ public sealed class Roster
     private RosterEntry Require(WarriorId id) =>
         _entries.TryGetValue(id, out RosterEntry? entry)
             ? entry
-            : throw new KeyNotFoundException($"{id} kadroda yok.");
+            : throw new KeyNotFoundException($"{id} is not on the roster.");
 
     private void RequireFreeName([NotNull] string name)
     {

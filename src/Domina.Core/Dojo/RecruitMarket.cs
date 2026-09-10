@@ -298,7 +298,6 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
     /// <remarks>
     /// A fixed price would make a good candidate free and a bad one a robbery. Talent enters the price
     /// too but with less weight than the stats: talent is a <b>promise</b>, a stat is what you have.
-    /// olan.
     /// </remarks>
     private int Price(WarriorStats stats, double talent, WarriorStats anchor, int basePrice)
     {

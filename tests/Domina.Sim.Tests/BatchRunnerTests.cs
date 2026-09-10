@@ -11,7 +11,7 @@ namespace Domina.Sim.Tests;
 public class BatchRunnerTests
 {
     private static Scenario Scenario(string name = "3v3") =>
-        Scenarios.Find(name) ?? throw new InvalidOperationException($"Senaryo yok: {name}");
+        Scenarios.Find(name) ?? throw new InvalidOperationException($"No such scenario: {name}");
 
     [Fact]
     public void EveryScenarioIsRunnable()

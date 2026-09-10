@@ -134,7 +134,7 @@ public class SimCliTests
     [InlineData("--battles", "0")]
     [InlineData("--battles", "-5")]
     [InlineData("--battles", "abc")]
-    [InlineData("--scenario", "yok")]
+    [InlineData("--scenario", "missing")]
     [InlineData("--policy", "maybe")]
     [InlineData("--policy", "below:2")]
     [InlineData("--accept-ratio", "0")]
@@ -146,7 +146,7 @@ public class SimCliTests
     [InlineData("--path-days", "0")]
     [InlineData("--train-rate", "2")]
     [InlineData("--train-ceiling", "0")]
-    [InlineData("--bilinmeyen", "1")]
+    [InlineData("--unknown", "1")]
     public void BadInputIsRejectedWithAMessage(string flag, string value)
     {
         ParsedArgs parsed = SimArgs.Parse([flag, value]);
@@ -189,11 +189,11 @@ public class SimCliTests
         var output = new StringWriter();
         var error = new StringWriter();
 
-        int exit = SimCli.Run(["--scenario", "yok"], output, error);
+        int exit = SimCli.Run(["--scenario", "missing"], output, error);
 
         Assert.Equal(SimCli.ExitUsage, exit);
         Assert.Empty(output.ToString());
-        Assert.Contains("yok", error.ToString(), StringComparison.Ordinal);
+        Assert.Contains("missing", error.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]

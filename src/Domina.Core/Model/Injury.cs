@@ -59,7 +59,7 @@ public static class BodyPartSetExtensions
         _ => BodyPartSet.None,
     };
 
-    /// <summary>Uzuv bir kol mu?</summary>
+    /// <summary>Is the limb an arm?</summary>
     public static bool IsArm(this BodyPart part) =>
         part is BodyPart.SwordArm or BodyPart.OffArm;
 

@@ -144,7 +144,7 @@ public class PoisonTests
     }
 
     /// <summary>
-    /// Zehir uzuv koparmaz ve sersemletmez: ikisi de <b>darbenin</b> sonucudur.
+    /// Poison neither severs a limb nor stuns: both are the result of a <b>blow</b>.
     /// </summary>
     /// <remarks>
     /// The thresholds are pulled unreachably high, so the strike itself rolls no dice; only poison is

@@ -3,7 +3,7 @@ using Domina.Core.Model;
 namespace Domina.Core.Combat;
 
 /// <summary>
-/// Havada olan bir mermi.
+/// A projectile in the air.
 /// </summary>
 /// <remarks>
 /// <para>

@@ -34,7 +34,7 @@ public static class NewGame
     /// <summary>The mixer that separates the starting roster's stream from the day's market.</summary>
     private const ulong RosterSalt = 0xA5A5_5A5A_C3C3_3C3C;
 
-    /// <summary>Verilen tohumdan yeni bir dojo kurar.</summary>
+    /// <summary>Builds a new dojo from the given seed.</summary>
     /// <param name="seed">The expedition's seed; the same seed gives the same start.</param>
     /// <param name="tuning">The day-loop settings; the default if not given.</param>
     public static DojoState Create(ulong seed, DojoTuning? tuning = null)

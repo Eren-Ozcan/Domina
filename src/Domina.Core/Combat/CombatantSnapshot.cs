@@ -36,7 +36,7 @@ namespace Domina.Core.Combat;
 /// <param name="DestroyedArmor">
 /// The armour slots that broke. The visualisation strips the kit from here — a region whose plate is
 /// gone must look bare on screen too, or the warrior is fighting in armour he only thinks he has
-/// gibi durur (docs/GDD.md §12).
+/// (docs/GDD.md §12).
 /// </param>
 /// <param name="TargetId">
 /// The enemy he is trying to strike; <c>null</c> if he has no target. Because target selection is

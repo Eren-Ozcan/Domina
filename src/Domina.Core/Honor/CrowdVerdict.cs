@@ -2,7 +2,7 @@ namespace Domina.Core.Honor;
 
 /// <summary>The tally of chat's reaction to a fight.</summary>
 /// <param name="Bushi">Those who say "he fought like a real warrior".</param>
-/// <param name="Ronin">"Onursuz" diyenler.</param>
+/// <param name="Ronin">Those calling the warrior dishonourable.</param>
 /// <remarks>
 /// <para>
 /// A <b>ratio</b> is used, not the raw count. Three ronin in a chat of 5 and three ronin in a chat of

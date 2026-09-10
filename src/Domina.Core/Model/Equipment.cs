@@ -492,7 +492,7 @@ public sealed record Armor(
     public static Armor Uniform(string name, ArmorPiece piece) =>
         new(name, piece, piece, piece, piece, piece, piece);
 
-    public static Armor None() => Uniform("Yok", ArmorPiece.Bare);
+    public static Armor None() => Uniform("None", ArmorPiece.Bare);
 
     /// <summary>Cloth covering the torso only. Arms, legs and head are exposed.</summary>
     public static Armor Light() => new(

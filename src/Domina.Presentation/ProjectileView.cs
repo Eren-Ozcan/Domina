@@ -3,7 +3,7 @@ using Domina.Core.Combat;
 namespace Domina.Presentation;
 
 /// <summary>
-/// Havadaki bir merminin ekrandaki hâli.
+/// A projectile in the air as it appears on screen.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -66,7 +66,7 @@ public sealed class ProjectileTracker
     /// <summary>The number of events read so far.</summary>
     public int Consumed { get; private set; }
 
-    /// <summary>Halen havada olan mermiler.</summary>
+    /// <summary>The projectiles still in the air.</summary>
     public IReadOnlyList<ProjectileView> InFlight => _inFlight;
 
     /// <summary>Takes the new throws, advances those in the air, drops those that arrive.</summary>

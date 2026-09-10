@@ -42,7 +42,7 @@ public class StunTests
     /// <remarks>
     /// If the victim answers even with his fists, a blow arriving with a charge stuns the striker and the
     /// tests cannot tell who was stunned. What is measured is not an exchange but
-    /// tek bir darbenin sonucu.
+    /// the result of a single blow.
     /// </remarks>
     private static Weapon Harmless { get; } =
         new("Test-Sopa", WeaponClass.Cutting, 0, TwoHanded: false, AttackSeconds: 1.0);
