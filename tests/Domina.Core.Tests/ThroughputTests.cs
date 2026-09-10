@@ -48,7 +48,7 @@ public class ThroughputTests
         for (int i = 0; i < _battles; i++)
         {
             BattleResult result = new Battle(setup, new SeededRandom((ulong)i + 1)).Run();
-            if (result.Outcome != BattleOutcome.TimeLimit)
+            if (result.Outcome != BattleOutcome.Stalled)
             {
                 finished++;
             }

@@ -124,7 +124,7 @@ public class StunTests
     public void AStunnedWarriorStopsSwinging()
     {
         var battle = new Battle(
-            Beating(Club, victimAggression: 100, tuning: StunOnly with { MaxBattleSeconds = 6 }),
+            Beating(Club, victimAggression: 100, tuning: StunOnly with { StallGuardSeconds = 6 }),
             new FixedRandom(0.0));
 
         double stunnedAt = double.NaN;

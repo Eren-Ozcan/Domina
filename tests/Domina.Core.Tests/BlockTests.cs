@@ -19,7 +19,7 @@ public class BlockTests
         BaseStunChance = 0,
         BaseDisarmChance = 0,
         CatchDisarmChance = 0,
-        MaxBattleSeconds = 20,
+        StallGuardSeconds = 20,
     };
 
     private static Weapon Blade { get; } =
@@ -125,7 +125,7 @@ public class BlockTests
             // A short stun: a long one would leave the defender no chance to take the stance between two
             // blows, and the test would measure the stun lock rather than the stun.
             StunSeconds = 0.2,
-            MaxBattleSeconds = 10,
+            StallGuardSeconds = 10,
         };
 
         var setup = new BattleSetup(

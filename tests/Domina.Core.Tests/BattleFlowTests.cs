@@ -35,7 +35,7 @@ public class BattleFlowTests
         Assert.Same(result, battle.Result);
         Assert.Equal(6, result.Summaries.Count);
         Assert.True(result.ElapsedSeconds > 0);
-        Assert.True(result.ElapsedSeconds <= CombatTuning.Default.MaxBattleSeconds);
+        Assert.True(result.ElapsedSeconds <= CombatTuning.Default.StallGuardSeconds);
 
         // A finished fight does not advance.
         Assert.False(battle.Step());
@@ -131,7 +131,7 @@ public class BattleFlowTests
             case BattleOutcome.PlayerWipe:
                 Assert.False(playerStanding);
                 break;
-            case BattleOutcome.TimeLimit:
+            case BattleOutcome.Stalled:
             default:
                 Assert.True(playerStanding && enemyStanding);
                 break;
@@ -177,9 +177,10 @@ public class BattleFlowTests
     }
 
     [Fact]
-    public void ADrawnOutStalemateEndsAtTheTimeLimit()
+    public void ADrawnOutStalemateIsBrokenOffByTheStallGuard()
     {
-        // Two giants, with fists: neither can finish the other and the time runs out.
+        // Two giants, with fists: neither can finish the other, so only the guard can end it. The
+        // guard is not a draw — the fight is reported as an anomaly (CombatTuning.StallGuardSeconds).
         var setup = new BattleSetup(
             [TestBuilders.Warrior(1, health: 100_000, weapon: Weapon.Fists())],
             [TestBuilders.Warrior(101, health: 100_000, weapon: Weapon.Fists())])
@@ -189,8 +190,8 @@ public class BattleFlowTests
 
         BattleResult result = new Battle(setup, new SeededRandom(15)).Run();
 
-        Assert.Equal(BattleOutcome.TimeLimit, result.Outcome);
-        Assert.True(result.ElapsedSeconds >= CombatTuning.Default.MaxBattleSeconds);
+        Assert.Equal(BattleOutcome.Stalled, result.Outcome);
+        Assert.True(result.ElapsedSeconds >= CombatTuning.Default.StallGuardSeconds);
         Assert.DoesNotContain(result.Summaries, s => s.Died);
     }
 

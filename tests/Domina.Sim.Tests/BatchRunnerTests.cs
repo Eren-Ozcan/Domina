@@ -21,7 +21,7 @@ public class BatchRunnerTests
             BatchReport report = new BatchRunner(scenario, NeverRetreat.Instance).Run(1, 20);
 
             Assert.Equal(20, report.Battles);
-            Assert.Equal(20, report.Victories + report.Withdrawals + report.Wipes + report.TimeLimits);
+            Assert.Equal(20, report.Victories + report.Withdrawals + report.Wipes + report.Stalls);
         }
     }
 
@@ -89,7 +89,7 @@ public class BatchRunnerTests
     {
         BatchReport report = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 100);
 
-        Assert.Equal(1.0, report.VictoryRate + report.WithdrawalRate + report.WipeRate + report.TimeLimitRate, precision: 9);
+        Assert.Equal(1.0, report.VictoryRate + report.WithdrawalRate + report.WipeRate + report.StallRate, precision: 9);
     }
 
     [Fact]

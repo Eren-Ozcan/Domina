@@ -21,7 +21,7 @@ public class PoisonTests
     {
         BaseDismembermentChance = 0,
         BaseStunChance = 0,
-        MaxBattleSeconds = 12,
+        StallGuardSeconds = 12,
     };
 
     /// <summary>The poisoned implement: light on steel, its return is the dose.</summary>
@@ -119,7 +119,7 @@ public class PoisonTests
         // A single poisoned strike: the attacker is too slow to strike again.
         Weapon slowFang = Fang with { AttackSeconds = 30 };
         var battle = new Battle(
-            Bout(slowFang, tuning: PoisonOnly with { MaxBattleSeconds = 20 }),
+            Bout(slowFang, tuning: PoisonOnly with { StallGuardSeconds = 20 }),
             new FixedRandom(0.0));
         battle.Run();
 
@@ -176,7 +176,7 @@ public class PoisonTests
     {
         // One strike, then the attacker falls silent; the only thing that can end the health is the dose.
         Weapon slowFang = Fang with { AttackSeconds = 30 };
-        BattleSetup setup = Bout(slowFang, tuning: PoisonOnly with { MaxBattleSeconds = 30 }) with
+        BattleSetup setup = Bout(slowFang, tuning: PoisonOnly with { StallGuardSeconds = 30 }) with
         {
             PlayerSide =
             [

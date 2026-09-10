@@ -23,7 +23,7 @@ public class DisarmTests
         CatchDisarmChance = 0,
         BaseDismembermentChance = 0,
         BaseStunChance = 0,
-        MaxBattleSeconds = 12,
+        StallGuardSeconds = 12,
     };
 
     /// <summary>The setting with picking up disabled — it isolates the drop's own consequence.</summary>
@@ -167,7 +167,7 @@ public class DisarmTests
         {
             Tuning = DisarmOnly with
             {
-                MaxBattleSeconds = 30,
+                StallGuardSeconds = 30,
                 WeaponDropDistance = 0,
                 WeaponPickupRadius = 120,
             },
@@ -194,7 +194,7 @@ public class DisarmTests
     public void AnyEmptyHandedWarriorCanTakeIt()
     {
         var battle = new Battle(
-            Bout(Blade, tuning: DisarmOnly with { MaxBattleSeconds = 30 }),
+            Bout(Blade, tuning: DisarmOnly with { StallGuardSeconds = 30 }),
             new FixedRandom(0.0));
         battle.Run();
 
@@ -218,7 +218,7 @@ public class DisarmTests
             ],
             [TestBuilders.Warrior(101, "Vuran", health: 4000, aggression: 100, weapon: Blade)])
         {
-            Tuning = DisarmOnly with { MaxBattleSeconds = 30 },
+            Tuning = DisarmOnly with { StallGuardSeconds = 30 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));

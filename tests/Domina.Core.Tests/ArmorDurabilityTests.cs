@@ -18,7 +18,7 @@ public class ArmorDurabilityTests
         BaseStunChance = 0,
         BaseDisarmChance = 0,
         CatchDisarmChance = 0,
-        MaxBattleSeconds = 20,
+        StallGuardSeconds = 20,
     };
 
     /// <summary>A pool that runs out in one strike: so the moment of breaking can be measured.</summary>

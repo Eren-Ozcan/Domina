@@ -17,7 +17,7 @@ public class TargetSelectionTests
         BaseStunChance = 0,
         BaseDisarmChance = 0,
         CatchDisarmChance = 0,
-        MaxBattleSeconds = 6,
+        StallGuardSeconds = 6,
     };
 
     /// <summary>Who the first attack goes to — the observable form of the choice.</summary>
@@ -53,7 +53,7 @@ public class TargetSelectionTests
         {
             Tuning = Quiet with
             {
-                MaxBattleSeconds = 12,
+                StallGuardSeconds = 12,
                 TargetStickiness = 0,
                 TargetCrowdPenalty = 0,
                 TargetWoundedWeight = 10_000,
@@ -130,7 +130,7 @@ public class TargetSelectionTests
         {
             Tuning = Quiet with
             {
-                MaxBattleSeconds = 12,
+                StallGuardSeconds = 12,
 
                 // Fragile armour: so the moment of breaking happens inside the test.
                 ArmorDurabilityScale = 0.02,
@@ -175,7 +175,7 @@ public class TargetSelectionTests
                 TestBuilders.Warrior(102, "Twin-2", health: 4000),
             ])
         {
-            Tuning = Quiet with { MaxBattleSeconds = 12 },
+            Tuning = Quiet with { StallGuardSeconds = 12 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.999));
@@ -203,7 +203,7 @@ public class TargetSelectionTests
                 TestBuilders.Warrior(102, "Enemy-2", health: 4000),
             ])
         {
-            Tuning = Quiet with { MaxBattleSeconds = 12, TargetCrowdPenalty = 1000 },
+            Tuning = Quiet with { StallGuardSeconds = 12, TargetCrowdPenalty = 1000 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.999));
@@ -235,7 +235,7 @@ public class TargetSelectionTests
                 TestBuilders.Warrior(102, "Sturdy", health: 4000),
             ])
         {
-            Tuning = Quiet with { MaxBattleSeconds = 12 },
+            Tuning = Quiet with { StallGuardSeconds = 12 },
         };
 
         var battle = new Battle(setup, new FixedRandom(0.0));

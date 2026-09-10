@@ -100,7 +100,7 @@ public class WeaponCatchTests
     public void ABoundAttackerStopsSwinging()
     {
         var battle = new Battle(
-            Bout(Hook, Blade, tuning: CatchOnly with { MaxBattleSeconds = 6 }),
+            Bout(Hook, Blade, tuning: CatchOnly with { StallGuardSeconds = 6 }),
             new FixedRandom(0.0));
 
         double caughtAt = double.NaN;
@@ -259,7 +259,7 @@ public class WeaponCatchTests
     public void CatchingRequiresStamina()
     {
         var battle = new Battle(
-            Bout(Hook, Blade, defenderStamina: 0, tuning: CatchOnly with { MaxBattleSeconds = 4 }),
+            Bout(Hook, Blade, defenderStamina: 0, tuning: CatchOnly with { StallGuardSeconds = 4 }),
             new FixedRandom(0.0));
         battle.Run();
 
