@@ -46,8 +46,8 @@ public sealed record EncounterOffer(
 /// <remarks>
 /// GDD §10: the full roster and the stats are <b>invisible</b>. So that the choice is informed without
 /// killing the surprise, only a band is readable. The band comes from the raw power, <b>independent of
-/// the player's roster</b>, not from the enemy's strength — saying "hard for you" would take the
-/// oyunun eline vermek olurdu.
+/// the player's roster</b>, not from the enemy's strength — saying "hard for you" would be handing the
+/// player the answer the fight is supposed to give.
 /// </remarks>
 public enum ThreatBand
 {

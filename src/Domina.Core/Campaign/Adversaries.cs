@@ -112,6 +112,20 @@ public static class Adversaries
         Weight: 1,
         MinPower: 1.8);
 
+    /// <summary>The head of the Kurogane school — the fifth bout of the last night.</summary>
+    /// <remarks>
+    /// He is deliberately <b>outside</b> <see cref="All"/>: the pool is what the road offers, and he is
+    /// met once, at the end, or not at all. His block is a senior's shape taken further on every axis
+    /// the player can answer with his own kit — health, strength and accuracy — rather than a new
+    /// mechanic, because GDD §10 builds no boss structure.
+    /// </remarks>
+    public static EnemyKind KuroganeHead { get; } = new(
+        "Kurogane",
+        new WarriorStats(MaxHealth: 120, Aggression: 66, Defense: 30, Evasion: 38, Strength: 46, Accuracy: 66, MaxStamina: 100, Speed: 62),
+        Weapon.Katana(),
+        Weight: 0,
+        MinPower: 2.2);
+
     public static IReadOnlyList<EnemyKind> All { get; } = [Collector, Cutthroat, Duelist, Kabukimono, SeniorStudent];
 
     /// <summary>The kinds that can take the field at the given power.</summary>

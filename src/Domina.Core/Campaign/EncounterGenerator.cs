@@ -185,7 +185,7 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
     private static string Sighting(IReadOnlyList<Warrior> enemies, bool duel)
     {
         string names = string.Join(
-            " ve ",
+            " and ",
             enemies.GroupBy(e => e.Name).Select(g => g.Count() == 1 ? g.Key : $"{g.Count()} {g.Key}"));
 
         return duel ? $"{names} calls you to a duel" : names;
