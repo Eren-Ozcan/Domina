@@ -65,6 +65,16 @@ public sealed record HonorTuning
     /// </remarks>
     public double SeppukuThreshold { get; init; } = 30;
 
+    /// <summary>
+    /// What Will adds to (or takes off) the pardon chance when the chat says nothing.
+    /// </summary>
+    /// <remarks>
+    /// It is a shift, not a decision: at Will 100 the die moves by this much in the warrior's favour, at
+    /// 0 by the same much against him, and at 50 it reproduces the old number exactly — so the honour
+    /// measurements taken before Will existed still hold.
+    /// </remarks>
+    public double WillPardonBonus { get; init; } = 0.20;
+
     /// <summary>A pardoned warrior's honour is pulled to this value — a little above the threshold.</summary>
     /// <remarks>
     /// It moves with the threshold: a pardoned warrior must not fall straight into a new vote, but the
@@ -73,7 +83,7 @@ public sealed record HonorTuning
     /// </remarks>
     public double PardonedHonor { get; init; } = 45;
 
-    /// <summary>Oylama penceresi.</summary>
+    /// <summary>The voting window.</summary>
     public TimeSpan VoteWindow { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
@@ -81,6 +91,18 @@ public sealed record HonorTuning
     /// During it the vote is not triggered even if his honour falls below the threshold.
     /// </summary>
     public TimeSpan PardonImmunity { get; init; } = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    /// The same immunity on the dojo's clock — the days a pardoned warrior cannot be summoned again.
+    /// </summary>
+    /// <remarks>
+    /// The live arbiter measures the immunity in minutes because a stream's chat can call for the same
+    /// man again within the hour. The dojo's tribunal (<see cref="Dojo.Tribunal"/>) runs on days, where
+    /// fifteen minutes is nothing at all — a pardon would expire before the next morning and the
+    /// mercy would be worthless. Two weeks is the pardon meaning something without shutting the rule
+    /// off for the season.
+    /// </remarks>
+    public int PardonImmunityDays { get; init; } = 14;
 
     public static HonorTuning Default { get; } = new();
 }
