@@ -290,18 +290,50 @@ public class SeppukuTests
 
         for (int i = 0; i < 2000; i++)
         {
-            if (fallback.ShouldPardon(_tuning.SeppukuThreshold, rng))
+            if (fallback.ShouldPardon(_tuning.SeppukuThreshold, willpower: 50, rng))
             {
                 pardonsAtThreshold++;
             }
 
-            if (fallback.ShouldPardon(0, rng))
+            if (fallback.ShouldPardon(0, willpower: 50, rng))
             {
                 pardonsAtZero++;
             }
         }
 
         Assert.True(pardonsAtThreshold > pardonsAtZero * 3);
+    }
+
+    /// <summary>
+    /// With nobody speaking for him, Will is what stands the warrior up.
+    /// </summary>
+    /// <remarks>
+    /// It is the case the stat was added for (docs/GDD.md §3): an empty chat, a single man and his own
+    /// nerve. The shift never decides on its own — at the middle it reproduces the number the honour
+    /// measurements were taken on.
+    /// </remarks>
+    [Fact]
+    public void WillShiftsTheVerdictWhenTheCrowdIsSilent()
+    {
+        var fallback = new HonorWeightedFallback(_tuning);
+
+        int Pardons(double will)
+        {
+            var rng = new SeededRandom(99);
+            int count = 0;
+            for (int i = 0; i < 2000; i++)
+            {
+                if (fallback.ShouldPardon(_tuning.SeppukuThreshold / 2, will, rng))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        Assert.True(Pardons(100) > Pardons(50));
+        Assert.True(Pardons(50) > Pardons(0));
     }
 
     [Fact]

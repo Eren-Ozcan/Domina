@@ -1,6 +1,7 @@
 using Domina.Core.Combat;
 using Domina.Core.Honor;
 using Domina.Core.Model;
+using Domina.Core.Rng;
 
 namespace Domina.Core.Dojo;
 
@@ -29,6 +30,11 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(result);
 
+        // Counted before the roster is written, because a man who dies in this fight still has to weigh
+        // on the men who saw it (docs/GDD.md §3).
+        int fallen = result.Summaries.Count(s => s.Team == Battle.PlayerTeam && s.Died);
+        bool won = result.Outcome == BattleOutcome.PlayerVictory;
+
         List<WarriorAftermath> lines = [];
         foreach (WarriorBattleSummary summary in result.Summaries)
         {
@@ -46,7 +52,113 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             lines.Add(ApplyTo(state, entry, summary));
         }
 
+        SettleMorale(state, result, won, fallen);
+
         return new AftermathReport(result.Outcome, lines);
+    }
+
+    /// <summary>
+    /// Does the infirmary keep the limb the fight took?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The die is rolled <b>in the dojo, not in the fight</b>: the resolver still says the limb came
+    /// off, and the event stream a viewer watches does not change. What changes is what the dojo writes
+    /// down afterwards — which is the only place a physician could plausibly act anyway.
+    /// </para>
+    /// <para>
+    /// It is the answer to the measured <b>infirmary trap</b>: the branch used to sell time, and time
+    /// is what this economy has spare. Bound to limbs it sells the one loss training cannot undo. The
+    /// gate needs <b>both</b> the bone setter's room and a physician in it — a share of a saved limb is
+    /// meaningless, so half-efficiency does not apply.
+    /// </para>
+    /// <para>
+    /// The seed is built from the dojo's own seed, the day and the warrior, so the same season replays
+    /// identically and reloading the save cannot re-roll a lost arm.
+    /// </para>
+    /// </remarks>
+    private static bool SavedByThePhysician(DojoState state, RosterEntry entry, BodyPart part)
+    {
+        if (!state.School.Has(SchoolNodeId.BoneSetter) || !state.Staff.Has(StaffRole.Physician))
+        {
+            return false;
+        }
+
+        ulong seed = state.Seed
+            + ((ulong)state.Day * 7919UL)
+            + ((ulong)entry.Warrior.Id.Value * 104_729UL)
+            + (ulong)(part + 1);
+
+        return new SeededRandom(seed).Chance(state.StaffTuning.LimbSaveChance);
+    }
+
+    /// <summary>
+    /// Writes the fight onto the morale of everyone who came back from it.
+    /// </summary>
+    /// <remarks>
+    /// It runs after the roster is written, so it sees who actually lived — including a man the
+    /// physician pulled back, who is a survivor and not a funeral. A warrior who broke and ran carries
+    /// the defeat <b>and</b> his own panic; the rest carry only what the day did.
+    /// </remarks>
+    private static void SettleMorale(DojoState state, BattleResult result, bool won, int fallen)
+    {
+        MoraleTuning morale = state.Tuning.Morale;
+
+        foreach (WarriorBattleSummary summary in result.Summaries)
+        {
+            if (summary.Team != Battle.PlayerTeam)
+            {
+                continue;
+            }
+
+            RosterEntry? entry = state.Roster.Find(summary.Id);
+            if (entry is null || !entry.Warrior.IsAlive)
+            {
+                continue;
+            }
+
+            if (won)
+            {
+                MoraleLedger.Raise(entry.Warrior, morale.VictoryGain);
+            }
+            else
+            {
+                MoraleLedger.Lower(entry.Warrior, morale.DefeatLoss, morale);
+            }
+
+            if (summary.Panicked)
+            {
+                MoraleLedger.Lower(entry.Warrior, morale.PanicLoss, morale);
+            }
+
+            // A comrade's death weighs once per man lost: two funerals hurt twice as much as one.
+            if (fallen > 0)
+            {
+                MoraleLedger.Lower(entry.Warrior, morale.ComradeLoss * fallen, morale);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Does the physician turn a mortal wound around?
+    /// </summary>
+    /// <remarks>
+    /// The gate needs the infirmary <b>and</b> a physician in it: a building with nobody in it cannot
+    /// half-save a life. Like the limb die it is rolled in the dojo and seeded from the season, so a
+    /// reload cannot re-roll a death.
+    /// </remarks>
+    private static bool PulledBackFromDeath(DojoState state, RosterEntry entry)
+    {
+        if (!state.School.Has(SchoolNodeId.Infirmary) || !state.Staff.Has(StaffRole.Physician))
+        {
+            return false;
+        }
+
+        ulong seed = state.Seed
+            + ((ulong)state.Day * 15_486_071UL)
+            + ((ulong)entry.Warrior.Id.Value * 32_452_843UL);
+
+        return new SeededRandom(seed).Chance(state.StaffTuning.MortalSaveChance);
     }
 
     private WarriorAftermath ApplyTo(DojoState state, RosterEntry entry, WarriorBattleSummary summary)
@@ -54,8 +166,15 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         Warrior warrior = entry.Warrior;
 
         List<BodyPart> lost = [];
+        List<BodyPart> saved = [];
         foreach (BodyPart part in summary.LostParts.Parts())
         {
+            if (SavedByThePhysician(state, entry, part))
+            {
+                saved.Add(part);
+                continue;
+            }
+
             if (warrior.AddDisability(part))
             {
                 lost.Add(part);
@@ -71,12 +190,34 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             StripSlot(warrior, slot);
         }
 
+        if (summary.Died && PulledBackFromDeath(state, entry))
+        {
+            // He does not come out of it whole: the wound is what a mortal wound is, only survived. The
+            // fight's own lesson is skipped — a man carried off the field learns nothing that day.
+            entry.Injure(state.StaffTuning.MortalWoundRecoveryDays);
+
+            return new WarriorAftermath(
+                warrior.Id,
+                Died: false,
+                lost,
+                shattered,
+                state.StaffTuning.MortalWoundRecoveryDays,
+                HonorDelta: 0)
+            {
+                SavedParts = saved,
+                PulledBack = true,
+            };
+        }
+
         if (summary.Died)
         {
             state.Roster.Kill(warrior.Id);
 
             // The dead learn nothing: the lesson is applied only to a warrior who came off the field.
-            return new WarriorAftermath(warrior.Id, Died: true, lost, shattered, RecoveryDays: 0, HonorDelta: 0);
+            return new WarriorAftermath(warrior.Id, Died: true, lost, shattered, RecoveryDays: 0, HonorDelta: 0)
+            {
+                SavedParts = saved,
+            };
         }
 
         // What the fight taught him. It is written before the infirmary days, because the lesson is the
@@ -104,6 +245,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         return new WarriorAftermath(warrior.Id, Died: false, lost, shattered, days, honorDelta)
         {
             Lesson = lesson,
+            SavedParts = saved,
         };
     }
 
@@ -197,4 +339,16 @@ public sealed record WarriorAftermath(
     /// wounded still came back having learned something (docs/COMPARISON-DOMINA.md, section 3).
     /// </remarks>
     public Drill? Lesson { get; init; }
+
+    /// <summary>
+    /// The limbs the fight took and the infirmary kept. The day's report should say so out loud — it is
+    /// the whole return of the health branch.
+    /// </summary>
+    public IReadOnlyList<BodyPart> SavedParts { get; init; } = [];
+
+    /// <summary>
+    /// Was he carried off the field as a dead man and kept alive by the physician? The day's report has
+    /// to say so — it is the single most valuable thing the dojo's gold buys.
+    /// </summary>
+    public bool PulledBack { get; init; }
 }

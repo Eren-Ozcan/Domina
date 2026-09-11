@@ -69,7 +69,13 @@ public sealed record SeppukuResolution(
 /// </remarks>
 public interface ISeppukuFallback
 {
-    bool ShouldPardon(double honor, IRandomSource rng);
+    /// <param name="honor">The warrior's honour when the vote opened.</param>
+    /// <param name="willpower">
+    /// His Will (docs/GDD.md §3) — the stat that decides whether he stands his own ground when nobody
+    /// speaks for him.
+    /// </param>
+    /// <param name="rng">The seeded stream.</param>
+    bool ShouldPardon(double honor, double willpower, IRandomSource rng);
 }
 
 /// <summary>The lower the honour, the smaller the chance of a pardon.</summary>
@@ -77,13 +83,21 @@ public sealed class HonorWeightedFallback(HonorTuning? tuning = null) : ISeppuku
 {
     private readonly HonorTuning _tuning = tuning ?? HonorTuning.Default;
 
-    public bool ShouldPardon(double honor, IRandomSource rng)
+    public bool ShouldPardon(double honor, double willpower, IRandomSource rng)
     {
         ArgumentNullException.ThrowIfNull(rng);
 
         // 50% at the threshold, 5% at zero honour.
         double t = Math.Clamp(honor / Math.Max(1, _tuning.SeppukuThreshold), 0, 1);
-        return rng.Chance(0.05 + (0.45 * t));
+        double chance = 0.05 + (0.45 * t);
+
+        // Will is what a man has when nobody speaks for him: an empty chat is exactly the case the
+        // stat was added for (docs/GDD.md §3). It shifts the die, it never decides it — at Will 100 the
+        // pardon chance grows by WillPardonBonus, at 0 it shrinks by the same share, and at the middle
+        // the old number is reproduced exactly, so the honour measurements still stand.
+        double shift = ((Math.Clamp(willpower, 0, 100) - 50) / 50) * _tuning.WillPardonBonus;
+
+        return rng.Chance(Math.Clamp(chance + shift, 0, 1));
     }
 }
 
@@ -152,7 +166,8 @@ public sealed class SeppukuArbiter
             return false;
         }
 
-        _queue.Add(new PendingEntry(warrior.Id, warrior.Name, warrior.Honor));
+        _queue.Add(new PendingEntry(
+            warrior.Id, warrior.Name, warrior.Honor, warrior.EffectiveStats.Willpower));
         return true;
     }
 
@@ -208,10 +223,11 @@ public sealed class SeppukuArbiter
         bool decidedByAudience = !verdict.HasVotes;
 
         double honor = entry?.Honor ?? _tuning.SeppukuThreshold / 2;
+        double will = entry?.Willpower ?? 50;
 
         // Even a single vote is a real vote; the AI only decides at zero votes.
         bool pardon = decidedByAudience
-            ? _fallback.ShouldPardon(honor, _rng)
+            ? _fallback.ShouldPardon(honor, will, _rng)
             : verdict.FavorsMercy;
 
         if (pardon)
@@ -230,5 +246,5 @@ public sealed class SeppukuArbiter
     /// <summary>The value honour is pulled to after a pardon.</summary>
     public double PardonedHonor => _tuning.PardonedHonor;
 
-    private sealed record PendingEntry(WarriorId Id, string Name, double Honor);
+    private sealed record PendingEntry(WarriorId Id, string Name, double Honor, double Willpower);
 }
