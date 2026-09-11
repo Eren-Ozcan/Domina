@@ -11,9 +11,41 @@ public class SchoolModelTests
 {
     private static DojoState Funded(int gold)
     {
-        DojoState state = new();
+        // Construction instant: these tests are about how the screen reads the tree, and the
+        // "going up" state has its own test.
+        DojoState state = new(school: new SchoolTuning { BuildDaysFactor = 0 });
         state.Resources = new Resources(Gold: gold);
         return state;
+    }
+
+    /// <summary>A building that has been paid for but is not standing reads as its own state.</summary>
+    [Fact]
+    public void ABuildingGoingUpIsNeitherOwnedNorForSale()
+    {
+        DojoState dojo = new(school: new SchoolTuning()) { Resources = new Resources(Gold: 5000) };
+
+        Assert.True(dojo.BuySchoolNode(SchoolNodeId.TrainingGround));
+
+        SchoolNodeRow row = Row(dojo, SchoolNodeId.TrainingGround);
+        Assert.Equal(SchoolNodeState.Building, row.State);
+        Assert.Equal(SchoolTree.Find(SchoolNodeId.TrainingGround).BuildDays, row.DaysLeft);
+        Assert.Equal(1, SchoolModel.Summarize(dojo).Building);
+    }
+
+    /// <summary>The screen must be able to say that a standing building has nobody in it.</summary>
+    [Fact]
+    public void ARowSaysWhetherItsPostIsFilled()
+    {
+        DojoState dojo = Funded(gold: 5000);
+        Assert.True(dojo.BuySchoolNode(SchoolNodeId.TrainingGround));
+
+        Assert.False(Row(dojo, SchoolNodeId.TrainingGround).Staffed);
+
+        Assert.True(dojo.Hire(StaffRole.DrillMaster));
+
+        Assert.True(Row(dojo, SchoolNodeId.TrainingGround).Staffed);
+        Assert.Equal(1, SchoolModel.Summarize(dojo).Staffed);
+        Assert.Equal(dojo.StaffTuning.WageOf(StaffRole.DrillMaster), SchoolModel.Summarize(dojo).DailyWage);
     }
 
     [Fact]
@@ -87,8 +119,12 @@ public class SchoolModelTests
 
         Assert.Equal(0, summary.Owned);
         Assert.Equal(SchoolTree.All.Count, summary.Total);
-        Assert.Equal(3, summary.Affordable);
-        Assert.Equal(200, summary.NextCost);
+
+        // Every branch foot at or under today's purse — the support buildings are the cheap ones.
+        Assert.Equal(
+            SchoolTree.All.Count(n => n.Requires is null && n.Cost <= 200),
+            summary.Affordable);
+        Assert.Equal(SchoolTree.All.Where(n => n.Requires is null).Min(n => n.Cost), summary.NextCost);
     }
 
     /// <summary>When the tree is finished there is no such thing as "the next cost".</summary>

@@ -8,6 +8,13 @@ public enum SchoolNodeState
     /// <summary>Bought; its bonus is in effect.</summary>
     Owned,
 
+    /// <summary>Paid for and going up — the days left are on the row.</summary>
+    /// <remarks>
+    /// A building under construction is its own state, not a dimmed "affordable": the gold has already
+    /// gone, nothing more can be spent on it, and what the player is waiting for is the calendar.
+    /// </remarks>
+    Building,
+
     /// <summary>Its turn has come and there is enough money.</summary>
     Affordable,
 
@@ -29,6 +36,9 @@ public enum SchoolNodeState
 /// <param name="GoldShort">
 /// The gold missing on a node that is unlocked but unaffordable; 0 in the other states.
 /// </param>
+/// <param name="DaysLeft">The construction days left on a building that is going up; 0 otherwise.</param>
+/// <param name="Role">The post the building carries, if it has one.</param>
+/// <param name="Staffed">Is that post filled today — a standing building with an empty post works at half.</param>
 public readonly record struct SchoolNodeRow(
     SchoolNodeId Id,
     SchoolBranch Branch,
@@ -37,7 +47,10 @@ public readonly record struct SchoolNodeRow(
     int Tier,
     SchoolNodeState State,
     SchoolNodeId? Requires,
-    int GoldShort);
+    int GoldShort,
+    int DaysLeft = 0,
+    StaffRole? Role = null,
+    bool Staffed = false);
 
 /// <summary>One branch — its nodes in the order they are bought.</summary>
 /// <param name="Branch">Kolun kendisi.</param>
@@ -56,12 +69,18 @@ public readonly record struct SchoolBranchColumn(
 /// <param name="NextCost">
 /// The cost of the cheapest node that can be bought today; <c>null</c> if no unlocked node is left.
 /// </param>
+/// <param name="Building">How many buildings are going up today.</param>
+/// <param name="Staffed">How many posts are filled.</param>
+/// <param name="DailyWage">What those posts cost the treasury every day.</param>
 public readonly record struct SchoolSummary(
     int Gold,
     int Owned,
     int Total,
     int Affordable,
-    int? NextCost);
+    int? NextCost,
+    int Building = 0,
+    int Staffed = 0,
+    int DailyWage = 0);
 
 /// <summary>
 /// The model the school screen reads. It computes why a node is closed; it does not draw.
@@ -91,7 +110,7 @@ public static class SchoolModel
             int tier = 0;
             foreach (SchoolNode node in SchoolTree.Of(branch))
             {
-                rows.Add(Describe(node, ++tier, dojo.School, dojo.Resources.Gold));
+                rows.Add(Describe(node, ++tier, dojo.School, dojo.Resources.Gold, dojo.Staff));
             }
 
             columns.Add(new SchoolBranchColumn(
@@ -108,7 +127,12 @@ public static class SchoolModel
     /// <param name="tier">The tier within the branch (starting at 1).</param>
     /// <param name="school">Dojo'nun okulu.</param>
     /// <param name="gold">The gold in the treasury.</param>
-    public static SchoolNodeRow Describe(SchoolNode node, int tier, School school, int gold)
+    public static SchoolNodeRow Describe(
+        SchoolNode node,
+        int tier,
+        School school,
+        int gold,
+        Staff? staff = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(school);
@@ -123,7 +147,10 @@ public static class SchoolModel
             Tier: tier,
             State: state,
             Requires: node.Requires,
-            GoldShort: state == SchoolNodeState.TooExpensive ? node.Cost - gold : 0);
+            GoldShort: state == SchoolNodeState.TooExpensive ? node.Cost - gold : 0,
+            DaysLeft: school.UnderConstruction.TryGetValue(node.Id, out int days) ? days : 0,
+            Role: node.Role,
+            Staffed: node.Role is StaffRole role && staff?.Has(role) == true);
     }
 
     /// <summary>The numbers at the top of the school.</summary>
@@ -139,7 +166,10 @@ public static class SchoolModel
             Owned: dojo.School.Owned.Count,
             Total: SchoolTree.All.Count,
             Affordable: open.Count(n => n.Cost <= gold),
-            NextCost: open.Count == 0 ? null : open.Min(n => n.Cost));
+            NextCost: open.Count == 0 ? null : open.Min(n => n.Cost),
+            Building: dojo.School.UnderConstruction.Count,
+            Staffed: dojo.Staff.Hired.Count,
+            DailyWage: dojo.Staff.DailyWage(dojo.StaffTuning));
     }
 
     private static SchoolNodeState StateOf(SchoolNode node, School school, int gold)
@@ -147,6 +177,11 @@ public static class SchoolModel
         if (school.Has(node.Id))
         {
             return SchoolNodeState.Owned;
+        }
+
+        if (school.IsBuilding(node.Id))
+        {
+            return SchoolNodeState.Building;
         }
 
         if (node.Requires is SchoolNodeId required && !school.Has(required))

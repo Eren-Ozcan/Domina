@@ -11,8 +11,14 @@ namespace Domina.Core.Tests;
 public class SchoolTests
 {
     private static DojoState Rich(int gold = 5000) =>
-        // Mishaps off: what is measured is the tree itself, not the day's luck.
-        new(events: new EventTuning { ChancePerDay = 0 }) { Resources = new Resources(Gold: gold) };
+        // Mishaps off and construction instant: what is measured here is the tree itself — neither the
+        // day's luck nor the calendar. Build time has its own tests below.
+        new(
+            events: new EventTuning { ChancePerDay = 0 },
+            school: new SchoolTuning { BuildDaysFactor = 0 })
+        {
+            Resources = new Resources(Gold: gold),
+        };
 
     /// <summary>Puts the warrior on drill for the given number of days and closes the days.</summary>
     private static void Drills(DojoState state, RosterEntry entry, int days)

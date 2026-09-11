@@ -29,6 +29,16 @@ public enum Drill
 
     /// <summary>Kondisyon — Can, ikincil Stamina.</summary>
     Conditioning,
+
+    /// <summary>
+    /// Meditation — Will, and nothing else.
+    /// </summary>
+    /// <remarks>
+    /// The only drill with no secondary stat, deliberately: sitting still is the day the warrior does
+    /// not touch a sword, and that is exactly its price. It is the counterpart of the reference game's
+    /// Meditate, and the only way Will is trained (docs/GDD.md §3).
+    /// </remarks>
+    Meditation,
 }
 
 /// <summary>Training's tunable numbers.</summary>
@@ -146,6 +156,13 @@ public static class TrainingGround
                 MaxHealth = Grow(stats.MaxHealth, t.PoolCeiling, primary),
                 MaxStamina = Grow(stats.MaxStamina, t.PoolCeiling, secondary),
             },
+
+            // The one drill with no secondary: a day spent sitting still is a day the sword is not
+            // touched, and that is the whole price of Will.
+            Drill.Meditation => stats with
+            {
+                Willpower = Grow(stats.Willpower, t.SkillCeiling, primary),
+            },
             _ => stats,
         };
     }
@@ -172,6 +189,7 @@ public static class TrainingGround
                 (Drill.Guard, stats.Defense, t.SkillCeiling),
                 (Drill.Footwork, stats.Evasion, t.SkillCeiling),
                 (Drill.Conditioning, stats.MaxHealth, t.PoolCeiling),
+                (Drill.Meditation, stats.Willpower, t.SkillCeiling),
             })
         {
             double gap = ceiling <= 0 ? 0 : Math.Max(0, (ceiling - value) / ceiling);

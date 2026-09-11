@@ -40,6 +40,16 @@ public sealed record EconomyTuning
 
     public int MedicinePrice { get; init; } = 12;
 
+    /// <summary>
+    /// What one measure of sake costs (Open Decision #14).
+    /// </summary>
+    /// <remarks>
+    /// It is priced above food and below medicine deliberately: a feast should be an expense a healthy
+    /// dojo notices and a struggling one cannot justify. Sake is <b>never</b> restocked automatically —
+    /// the day's bill does not buy it, the player does.
+    /// </remarks>
+    public int SakePrice { get; init; } = 6;
+
     /// <summary>The purchase price of a new warrior.</summary>
     public int RecruitPrice { get; init; } = 150;
 
