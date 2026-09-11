@@ -255,7 +255,8 @@ public class DisarmTests
                     weapon: new Weapon("Test-Jitte", WeaponClass.Blunt, 4, false, 1.0)
                     {
                         CatchSkill = 1.0,
-                    }),
+                    },
+                    klass: WarriorClass.Torite),
             ],
             [TestBuilders.Warrior(101, "Attacker", health: 4000, aggression: 100, weapon: Blade)])
         {

@@ -23,6 +23,24 @@ public sealed record BattleSetup(
     /// means nobody pulls out on his own.
     /// </summary>
     public IRetreatPolicy? RetreatPolicy { get; init; }
+
+    /// <summary>
+    /// The share of his health a warrior walks onto the field with, when it is not all of it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A fight normally starts with everyone whole: between two expeditions a day passes, and what a
+    /// wound costs is measured in <b>days</b> rather than in health carried over. The last night is the
+    /// one place with no day in between (docs/GDD.md §10) — a man who took a beating in the second bout
+    /// answers the bell for the third with what is left of him, and that is what makes the night a test
+    /// of roster depth instead of five fresh fights.
+    /// </para>
+    /// <para>
+    /// A warrior not named here starts whole. The share is clamped to (0, 1]; it scales the health he
+    /// starts with, never his maximum, so nothing about the balance of his stats moves.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyDictionary<WarriorId, double>? StartingHealthShare { get; init; }
 }
 
 /// <summary>A fight's result.</summary>
@@ -58,6 +76,15 @@ public sealed record WarriorBattleSummary(
     /// reach while fleeing (§5) and each can cost a separate limb.
     /// </remarks>
     public BodyPartSet LostParts { get; init; } = BodyPartSet.None;
+
+    /// <summary>
+    /// Did he leave the field on his own nerve rather than on the player's order?
+    /// </summary>
+    /// <remarks>
+    /// The dojo reads it: a man who broke comes home with his morale further down, and the roster's
+    /// honour knows the difference between an order obeyed and a line that came apart (docs/GDD.md §3).
+    /// </remarks>
+    public bool Panicked { get; init; }
 
     /// <summary>How many blows were met with a block.</summary>
     /// <remarks>

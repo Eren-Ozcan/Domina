@@ -53,7 +53,8 @@ public class WeaponCatchTests
         double defenderAccuracy = 60,
         double defenderEvasion = 0,
         double defenderStamina = 100,
-        CombatTuning? tuning = null) => new(
+        CombatTuning? tuning = null,
+        WarriorClass klass = WarriorClass.Torite) => new(
         [
             TestBuilders.Warrior(
                 1,
@@ -63,7 +64,8 @@ public class WeaponCatchTests
                 evasion: defenderEvasion,
                 accuracy: defenderAccuracy,
                 stamina: defenderStamina,
-                weapon: defenderWeapon),
+                weapon: defenderWeapon,
+                klass: klass),
         ],
         [TestBuilders.Warrior(101, "Vuran", aggression: 100, weapon: attackerWeapon)])
         {
@@ -145,7 +147,13 @@ public class WeaponCatchTests
             PlayerSide =
             [
                 TestBuilders.Warrior(
-                    1, "Yakalayan", health: 400, aggression: 100, accuracy: 60, weapon: Hook),
+                    1,
+                    "Yakalayan",
+                    health: 400,
+                    aggression: 100,
+                    accuracy: 60,
+                    weapon: Hook,
+                    klass: WarriorClass.Torite),
             ],
             EnemySide =
             [
@@ -165,14 +173,57 @@ public class WeaponCatchTests
                  && e.AtSeconds <= caught.AtSeconds + CatchOnly.CatchBindSeconds);
     }
 
-    /// <summary>A warrior with no catching implement never catches.</summary>
+    /// <summary>
+    /// A warrior with no class catches nothing — even with the hook in his hand.
+    /// </summary>
+    /// <remarks>
+    /// The hard zero of the <c>class × implement</c> product (docs/GDD.md §4). It is what keeps the
+    /// class from being a decoration on top of the equipment: catching is an active skill, so handing a
+    /// jitte to a recruit buys nothing at all.
+    /// </remarks>
     [Fact]
-    public void AnOrdinaryWeaponNeverCatches()
+    public void AWarriorWithNoClassNeverCatches()
     {
-        var battle = new Battle(Bout(Blade, Blade), new FixedRandom(0.0));
+        var battle = new Battle(
+            Bout(Hook, Blade, klass: WarriorClass.None), new FixedRandom(0.0));
         battle.Run();
 
         Assert.Empty(battle.Events.OfType<AttackCaught>());
+    }
+
+    /// <summary>
+    /// A catching warrior holding the wrong implement still catches — badly.
+    /// </summary>
+    /// <remarks>
+    /// The soft end of the same product: the identity belongs to the warrior, so a torite who is
+    /// disarmed weakens instead of becoming someone else. What is tested is the <b>order</b>, not the
+    /// number — the hook must stay clearly ahead of the bare sword, or the equipment decision dies.
+    /// </remarks>
+    [Fact]
+    public void AWrongImplementCatchesWeaklyButNotNever()
+    {
+        CombatTuning tuning = CatchOnly with { BaseCatchChance = 0.5 };
+
+        int withHook = CatchesWith(Hook, tuning);
+        int withBlade = CatchesWith(Blade, tuning);
+
+        Assert.True(withBlade > 0, "The catching warrior caught nothing with the wrong implement.");
+        Assert.True(
+            withBlade < withHook,
+            $"The wrong implement was not weaker ({withBlade} >= {withHook}).");
+
+        static int CatchesWith(Weapon weapon, CombatTuning tuning)
+        {
+            int total = 0;
+            for (ulong seed = 1; seed <= 200; seed++)
+            {
+                var battle = new Battle(Bout(weapon, Blade, tuning: tuning), new SeededRandom(seed));
+                battle.Run();
+                total += battle.Events.OfType<AttackCaught>().Count();
+            }
+
+            return total;
+        }
     }
 
     /// <summary>
@@ -226,7 +277,8 @@ public class WeaponCatchTests
     {
         BattleSetup setup = new(
             [
-                TestBuilders.Warrior(1, "Yakalayan", health: 400, aggression: 0, weapon: Hook),
+                TestBuilders.Warrior(
+                    1, "Yakalayan", health: 400, aggression: 0, weapon: Hook, klass: WarriorClass.Torite),
             ],
             [
                 TestBuilders.Warrior(

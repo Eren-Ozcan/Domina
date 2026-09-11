@@ -64,6 +64,33 @@ public sealed class Warrior
     public double Honor { get; set; }
 
     /// <summary>
+    /// 0-100 — the warrior's own condition today (docs/GDD.md §3).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It is deliberately <b>not</b> honour: honour is what the province thinks of him, morale is how he
+    /// is. The two were merged once during the decision round and unmerged again, because a single bar
+    /// would carry both the chat's reputation game and the dojo's upkeep game.
+    /// </para>
+    /// <para>
+    /// It moves fast — a victory lifts it, a dead comrade or a hungry day drops it — and
+    /// <see cref="WarriorStats.Willpower"/> is its brake. The fight reads it through
+    /// <see cref="EffectiveStats"/>.
+    /// </para>
+    /// </remarks>
+    public double Morale { get; set; } = MoraleScale.Starting;
+
+    /// <summary>
+    /// What morale is worth to this warrior's stats — the two ends of the multiplier.
+    /// </summary>
+    /// <remarks>
+    /// It is a balance number, so it is carried on the warrior rather than in a static: the sim sweeps
+    /// it by setting it on the roster it builds, and two runs in the same process cannot then read each
+    /// other's band. It never goes into the save (docs/GDD.md §2).
+    /// </remarks>
+    public MoraleBand MoraleBand { get; set; } = MoraleBand.Default;
+
+    /// <summary>
     /// How quickly he benefits from training (1.0 = average).
     /// </summary>
     /// <remarks>
@@ -86,6 +113,17 @@ public sealed class Warrior
     /// </remarks>
     public WarriorPath Path { get; set; } = WarriorPath.None;
 
+    /// <summary>
+    /// The class the warrior was trained into — what he is able to <b>do</b>.
+    /// </summary>
+    /// <remarks>
+    /// It is the class half of the <c>class × implement</c> product (docs/GDD.md §4): it opens
+    /// catching outright, and scales poison and range. Unlike <see cref="Path"/> it is <b>not</b>
+    /// final — losing a limb reopens the choice, because a lost arm closes some classes and the
+    /// warrior picks again among the rest (<see cref="ClassAptitude.ChoicesFor"/>).
+    /// </remarks>
+    public WarriorClass Class { get; set; } = WarriorClass.None;
+
     public bool IsAlive { get; private set; } = true;
 
     /// <summary>Permanent disabilities. They cannot be undone.</summary>
@@ -102,6 +140,11 @@ public sealed class Warrior
             WarriorStats s = Path == WarriorPath.None
                 ? BaseStats
                 : PathScale.Apply(BaseStats, Path);
+
+            // Morale sits between the path and disability: what he chose to become is beneath it, what
+            // the field took from him is above it. A man in poor spirits is still the man he trained
+            // into; he is only worse at being him today.
+            s = MoraleScale.Apply(s, Morale, MoraleBand);
             foreach (Disability d in _disabilities)
             {
                 s = s with
@@ -221,6 +264,9 @@ public readonly record struct WarriorId(int Value)
 /// <param name="Speed">
 /// Walking speed (0-100). It sets closing, encircling and <b>being able to flee</b>.
 /// </param>
+/// <param name="Willpower">
+/// How much the warrior <b>endures</b> (0-100) — the ninth stat, and the only one that does no damage.
+/// </param>
 /// <remarks>
 /// <see cref="Speed"/> was added late and its default is 50: while speed was a single constant, chaser
 /// and fleer moved at the same rate, so <b>escape always succeeded</b>. Nobody could catch a warrior
@@ -235,7 +281,8 @@ public readonly record struct WarriorStats(
     double Strength,
     double Accuracy,
     double MaxStamina,
-    double Speed = 50)
+    double Speed = 50,
+    double Willpower = 50)
 {
     /// <summary>The base for a new recruit.</summary>
     public static WarriorStats Recruit() => new(
@@ -246,10 +293,89 @@ public readonly record struct WarriorStats(
         Strength: 40,
         Accuracy: 55,
         MaxStamina: 100,
-        Speed: 50);
+        Speed: 50,
+        Willpower: 50);
 }
 
 /// <summary>The honour scale's constants.</summary>
+/// <summary>Morale's scale and what a day of it is worth to the fight.</summary>
+/// <remarks>
+/// The band is <b>narrow on purpose</b>. Morale is a condition, not a second class: it must be able to
+/// tilt a close fight and never to decide one, or the dojo would be playing the mood bar instead of the
+/// roster. The floor is further from the middle than the ceiling because the design has no rescue loan
+/// (docs/GDD.md §10) — a bad week has to be felt.
+/// </remarks>
+public static class MoraleScale
+{
+    public const double Min = 0;
+
+    public const double Max = 100;
+
+    /// <summary>Where a warrior starts, and the point at which morale does nothing at all.</summary>
+    public const double Starting = 50;
+
+    public static double Clamp(double value) => Math.Clamp(value, Min, Max);
+
+    /// <summary>The multiplier morale puts on the fighting stats.</summary>
+    /// <remarks>
+    /// Health and stamina are left alone: those are pools that carry over between fights, and scaling
+    /// them would make a low-morale warrior lose the wounds he already had. Morale touches what he does
+    /// <b>today</b> — his hand, his guard, his feet.
+    /// </remarks>
+    public static WarriorStats Apply(WarriorStats stats, double morale, MoraleBand? band = null)
+    {
+        MoraleBand b = band ?? MoraleBand.Default;
+        double factor = b.FactorFor(morale);
+        if (factor == 1)
+        {
+            return stats;
+        }
+
+        return stats with
+        {
+            Aggression = stats.Aggression * factor,
+            Defense = stats.Defense * factor,
+            Evasion = stats.Evasion * factor,
+            Strength = stats.Strength * factor,
+            Accuracy = stats.Accuracy * factor,
+            Speed = stats.Speed * factor,
+        };
+    }
+}
+
+/// <summary>The two ends of morale's multiplier.</summary>
+/// <param name="AtZero">The multiplier at morale 0.</param>
+/// <param name="AtFull">The multiplier at morale 100.</param>
+/// <remarks>
+/// A balance number, so it lives in code and never in a save. It is interpolated linearly from
+/// <see cref="MoraleScale.Starting"/>, which is where the multiplier is exactly 1 — a warrior at the
+/// middle is the warrior every earlier measurement was taken on, so the band cannot silently move the
+/// numbers already locked.
+/// </remarks>
+public readonly record struct MoraleBand(double AtZero, double AtFull)
+{
+    /// <summary>
+    /// The locked band: ×0.94 at morale 0, ×1.03 at 100 (measured 2026-09-10).
+    /// </summary>
+    /// <remarks>
+    /// The multiplier lands on six stats at once, so it compounds far harder than it reads. Measured on
+    /// <c>3v3</c> over 20.000 fights, victory runs 63.6% at morale 0, 69.6% at the middle and 75.2% at
+    /// 100 — an end-to-end swing of about 12 points, which tilts a close fight without deciding one. A
+    /// floor of 0.90 was tried first and gave a 17.6-point swing (58.1% at morale 0), and 0.70 collapsed
+    /// the side outright at 31.1%: below about 0.90 morale stops being a condition and becomes a second
+    /// class.
+    /// </remarks>
+    public static MoraleBand Default { get; } = new(0.94, 1.03);
+
+    public double FactorFor(double morale)
+    {
+        double m = MoraleScale.Clamp(morale);
+        return m >= MoraleScale.Starting
+            ? 1 + ((AtFull - 1) * ((m - MoraleScale.Starting) / (MoraleScale.Max - MoraleScale.Starting)))
+            : AtZero + ((1 - AtZero) * (m / MoraleScale.Starting));
+    }
+}
+
 public static class HonorScale
 {
     public const double Min = 0;

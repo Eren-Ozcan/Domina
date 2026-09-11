@@ -298,6 +298,19 @@ public enum DeathCause
     Poison,
 }
 
+/// <summary>
+/// A warrior decided for himself that he had had enough and broke for the edge of the arena.
+/// </summary>
+/// <remarks>
+/// It is kept apart from <c>RetreatCommanded</c> on purpose: that one is the player's key and covers
+/// the whole team, this one is a single man's nerve giving out (docs/GDD.md §3). On screen they should
+/// not read the same either — one is an order, the other is the line breaking.
+/// </remarks>
+/// <param name="Warrior">The warrior who broke.</param>
+/// <param name="Morale">His morale at that moment — the reason, for the day's log.</param>
+public sealed record WarriorPanicked(double AtSeconds, WarriorId Warrior, double Morale)
+    : BattleEvent(AtSeconds);
+
 public enum BattleOutcome
 {
     /// <summary>The dojo side is still standing.</summary>

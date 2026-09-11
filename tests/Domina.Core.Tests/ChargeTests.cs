@@ -20,12 +20,17 @@ public class ChargeTests
     {
         ChargeChanceAtZeroAggression = 1.0,
         ChargeChanceAtMaxAggression = 1.0,
+
+        // Panic off: these tests are about the charge and the player's key, and a warrior who breaks on
+        // his own would take the field away from under them (docs/GDD.md §3).
+        BasePanicChance = 0,
     };
 
     private static CombatTuning NeverCharges { get; } = CombatTuning.Default with
     {
         ChargeChanceAtZeroAggression = 0.0,
         ChargeChanceAtMaxAggression = 0.0,
+        BasePanicChance = 0,
     };
 
     private static BattleSetup Duel(CombatTuning tuning, double playerHealth = 400) => new(

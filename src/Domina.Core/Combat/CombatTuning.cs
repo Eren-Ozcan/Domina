@@ -533,6 +533,101 @@ public sealed record CombatTuning
     /// </remarks>
     public double CatchAccuracyBonusAtMax { get; init; } = 0.5;
 
+    // ---- Panic (Will) ----
+
+    /// <summary>
+    /// The chance, per check, that a warrior in trouble breaks and runs on his own.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Until now the only way off the field was the <b>player's</b> key: nobody in this game had ever
+    /// decided for himself that he had had enough. This is that decision, and it is the reason Will
+    /// exists (docs/GDD.md §3) — the ninth stat does no damage, it decides how long a man stays.
+    /// </para>
+    /// <para>
+    /// It is a check, not a state: it is rolled at most once every
+    /// <see cref="PanicCheckSeconds"/> and only while a trigger holds, so the number is "how often does
+    /// a shaken man break", independent of the tick rate.
+    /// </para>
+    /// </remarks>
+    /// <remarks>
+    /// <b>Locked at 0.10 (2026-09-10)</b> after a 0-0.20 sweep with no knee — a budget, like the other
+    /// share rules. What the sweep did show is that the rule cuts <b>both</b> ways: it applies to the
+    /// adversaries too, so on <c>3v3</c> raising it lifts the player's victory rate (67.2% → 72.0%) and
+    /// drops warrior deaths (44.6% → 32.4%), because a rival who breaks hands you the field. Over a
+    /// season that reads as fewer closed dojos (62.0% → 52.8% at 400 dojos × 60 days).
+    /// </remarks>
+    public double BasePanicChance { get; init; } = 0.10;
+
+    /// <summary>How often the panic check is rolled while a trigger holds.</summary>
+    public double PanicCheckSeconds { get; init; } = 1.0;
+
+    /// <summary>The health share below which a warrior starts checking whether he can stand it.</summary>
+    public double PanicHealthShare { get; init; } = 0.30;
+
+    /// <summary>
+    /// How much of the check Will can take off. At 1 a warrior of Will 100 never panics.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately below 1: nerve should stretch the odds, never suspend them. A stat that made a
+    /// warrior immune would turn Will from a defence into a switch.
+    /// </remarks>
+    public double WillPanicResistance { get; init; } = 0.80;
+
+    /// <summary>
+    /// How far morale swings the check at the ends of its scale.
+    /// </summary>
+    /// <remarks>
+    /// The second half of GDD §3's two-way bond: Will slows morale's fall in the dojo, and morale
+    /// shifts the checks that rest on Will in the field. At morale 0 the die is this much heavier, at
+    /// 100 this much lighter, and at the middle it is untouched.
+    /// </remarks>
+    public double MoralePanicSwing { get; init; } = 0.50;
+
+    /// <summary>
+    /// Does a comrade falling beside him put a warrior to the check even while he is unhurt?
+    /// </summary>
+    /// <remarks>
+    /// It is what makes panic a <b>team</b> rule rather than a health threshold with another name: a
+    /// party that is losing men starts to come apart from the edges, which is exactly the moment a
+    /// player would have pressed the key himself.
+    /// </remarks>
+    public bool PanicOnComradeDown { get; init; } = true;
+
+    // ---- The class layer (class × implement) ----
+
+    /// <summary>
+    /// What a catching warrior's die is worth when the implement in his hand is not a catching one
+    /// (a katana, or bare fists).
+    /// </summary>
+    /// <remarks>
+    /// The soft end of the product (docs/GDD.md §4): the class is the identity, so a torite who is
+    /// disarmed does not stop being a torite — he catches badly. It stands opposite the system's one
+    /// hard zero: a warrior with no class catches nothing even holding a jitte
+    /// (<see cref="Model.ClassAptitude.CanCatch"/>). Set to 0 this collapses into "the implement is
+    /// everything"; set to 1 the equipment decision disappears.
+    /// </remarks>
+    public double UnskilledCatchImplementFactor { get; init; } = 0.10;
+
+    /// <summary>The share of the dose a warrior who is not of the poison class carries onto the blade.</summary>
+    /// <remarks>
+    /// Poison was deliberately <b>not</b> zeroed for the classless (decided 2026-09-10): a poisoned
+    /// tantō sitting in the store as dead equipment until a facility is built would have thrown away
+    /// the poison numbers already locked in §7, and the dose is on the blade — anyone who scratches
+    /// skin with it delivers something. The class buys the difference between something and the full
+    /// dose.
+    /// </remarks>
+    public double UnclassedPoisonFactor { get; init; } = 0.6;
+
+    /// <summary>The share of the throw hit chance a warrior who is not of the range class keeps.</summary>
+    /// <remarks>
+    /// Shuriken and the tantō stay open to everyone (docs/COMPARISON-DOMINA.md §5); what the range
+    /// class buys today is the hand, and later the yumi, which is where its real payoff sits. The
+    /// number is deliberately shallow — a deep penalty would turn the throwing slot, which every
+    /// warrior carries, into a class tax.
+    /// </remarks>
+    public double UnclassedRangeFactor { get; init; } = 0.85;
+
     // ---- Dropping the weapon ----
 
     /// <summary>

@@ -28,6 +28,10 @@ internal static class TestBuilders
     {
         StartOffsetX = 30,
         BaseDismembermentChance = 0.35,
+
+        // Panic is off in the shared bed. It fires on exactly the warriors these tests hurt on purpose,
+        // and left on it would sit inside every other rule's measurement; it has its own tests.
+        BasePanicChance = 0,
     };
 
     public static Warrior Warrior(
@@ -43,14 +47,18 @@ internal static class TestBuilders
         double speed = 50,
         Weapon? weapon = null,
         Armor? armor = null,
-        ThrownWeapon? thrown = null) =>
+        ThrownWeapon? thrown = null,
+        WarriorClass klass = WarriorClass.None) =>
         new(
             new WarriorId(id),
             name ?? $"Warrior{id}",
             new WarriorStats(health, aggression, defense, evasion, strength, accuracy, stamina, speed),
             weapon,
             armor,
-            thrown);
+            thrown)
+        {
+            Class = klass,
+        };
 
     /// <summary>A weapon that passes the heavy-blow threshold in one strike.</summary>
     public static Weapon Executioner() =>

@@ -94,7 +94,15 @@ public sealed class Battle
 
         foreach (Warrior w in setup.PlayerSide)
         {
-            _combatants.Add(new Combatant(w, PlayerTeam));
+            Combatant combatant = new(w, PlayerTeam);
+
+            // A warrior who comes to the field already hurt starts with what is left of him.
+            if (setup.StartingHealthShare?.TryGetValue(w.Id, out double share) == true)
+            {
+                combatant.Health *= Math.Clamp(share, 0.01, 1);
+            }
+
+            _combatants.Add(combatant);
         }
 
         foreach (Warrior w in setup.EnemySide)
@@ -279,6 +287,7 @@ public sealed class Battle
             }
 
             RegenerateStamina(c);
+            CheckPanic(c);
             ConsultRetreatPolicy(c);
             AdvanceState(c);
 
@@ -1363,9 +1372,14 @@ public sealed class Battle
         WarriorStats atkStats = attacker.Warrior.EffectiveStats;
         double reachedFraction =
             Math.Clamp(attacker.Position.DistanceTo(target.Position) / p.Weapon.Range, 0, 1);
+        // The class half of the product (docs/GDD.md §4): the range class throws with a full hand,
+        // everyone else keeps a share of it. Shuriken and the tantō stay open to all — the class's
+        // real payoff is the yumi, which does not exist yet.
         double hitChance = (_tuning.BaseThrowHitChance
                             + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
-                           * (1 - (reachedFraction * _tuning.ThrowFalloffAtMaxRange));
+                           * (1 - (reachedFraction * _tuning.ThrowFalloffAtMaxRange))
+                           * ClassAptitude.RangeFactor(
+                               attacker.Warrior.Class, _tuning.UnclassedRangeFactor);
 
         if (!target.CanDefend)
         {
@@ -1526,18 +1540,29 @@ public sealed class Battle
             return false;
         }
 
-        Weapon catcher = defender.Weapon;
-        if (!catcher.CanCatch || defender.Stamina < _tuning.CatchStaminaCost)
+        // The class half of the product (docs/GDD.md §4). This is the system's one hard zero: a
+        // warrior with no class does not catch even with a jitte in his hand. The implement half
+        // below is the soft end — a torite holding the wrong thing still catches, badly.
+        if (!ClassAptitude.CanCatch(defender.Warrior.Class))
         {
             return false;
         }
+
+        Weapon catcher = defender.Weapon;
+        if (defender.Stamina < _tuning.CatchStaminaCost)
+        {
+            return false;
+        }
+
+        double implementFactor =
+            catcher.CanCatch ? catcher.CatchSkill : _tuning.UnskilledCatchImplementFactor;
 
         Weapon caught = attacker.Weapon;
         double accuracyBonus =
             defender.Warrior.EffectiveStats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
 
         double chance = _tuning.BaseCatchChance
-                        * catcher.CatchSkill
+                        * implementFactor
                         * caught.CatchFactor
                         * (caught.TwoHanded ? _tuning.CatchTwoHandedFactor : 1.0)
                         * (1 + accuracyBonus);
@@ -1798,7 +1823,13 @@ public sealed class Battle
     {
         bool wasClean = !defender.IsPoisoned;
 
-        defender.PoisonDose = Math.Min(defender.PoisonDose + potency, _tuning.PoisonMaxDose);
+        // The class half of the product (docs/GDD.md §4). Poison is not zeroed for the classless —
+        // the dose is on the blade and whoever scratches skin with it delivers something; what the
+        // poison class buys is the difference between something and the full dose.
+        double dose = potency * ClassAptitude.PoisonFactor(
+            attacker.Warrior.Class, _tuning.UnclassedPoisonFactor);
+
+        defender.PoisonDose = Math.Min(defender.PoisonDose + dose, _tuning.PoisonMaxDose);
         defender.PoisonSecondsLeft = _tuning.PoisonSeconds;
         defender.PoisonSource = attacker;
 
@@ -2173,6 +2204,64 @@ public sealed class Battle
         c.Stamina = Math.Min(max, c.Stamina + (_tuning.StaminaRegenPerSecond * _tuning.TickSeconds));
     }
 
+    /// <summary>
+    /// Rolls a warrior's own nerve — the only decision to leave the field that is not the player's.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Two things put a man to the check: his own health falling under
+    /// <see cref="CombatTuning.PanicHealthShare"/>, and a comrade going down beside him. The die is
+    /// then bent by <b>Will</b> (his nerve) and by <b>morale</b> (his condition today) — GDD §3's
+    /// two-way bond, seen from the field side.
+    /// </para>
+    /// <para>
+    /// A warrior who breaks leaves <b>alone</b>. The player's key is a team order and stays one; this
+    /// is the line coming apart at one end, and the difference has to be visible both in the event
+    /// stream and in what it costs.
+    /// </para>
+    /// </remarks>
+    private void CheckPanic(Combatant c)
+    {
+        if (_tuning.BasePanicChance <= 0
+            || c.RetreatRequested
+            || !c.CanDefend
+            || ElapsedSeconds < c.NextPanicCheckAt)
+        {
+            return;
+        }
+
+        WarriorStats stats = c.Warrior.EffectiveStats;
+        bool hurt = c.Health / Math.Max(1, stats.MaxHealth) <= _tuning.PanicHealthShare;
+        bool alone = _tuning.PanicOnComradeDown && CountActive(c.Team) < CountActive(Other(c.Team));
+
+        if (!hurt && !alone)
+        {
+            return;
+        }
+
+        c.NextPanicCheckAt = ElapsedSeconds + _tuning.PanicCheckSeconds;
+
+        // Will is read from the effective stats, so morale is already in it once; the swing below is
+        // the deliberate second reading — the design wants condition to bite on exactly these checks.
+        double nerve = 1 - (Math.Clamp(stats.Willpower, 0, 100) / 100 * _tuning.WillPanicResistance);
+        double moraleShift = 1
+            + ((MoraleScale.Starting - MoraleScale.Clamp(c.Warrior.Morale))
+               / MoraleScale.Starting * _tuning.MoralePanicSwing);
+
+        double chance = _tuning.BasePanicChance * nerve * moraleShift;
+        if (!_rng.Chance(Math.Clamp(chance, 0, 1)))
+        {
+            return;
+        }
+
+        c.Panicked = true;
+        Emit(new WarriorPanicked(ElapsedSeconds, c.Id, c.Warrior.Morale));
+        CommandRetreat(c);
+    }
+
+    /// <summary>The other side.</summary>
+    private static int Other(int team) => team == PlayerTeam ? EnemyTeam : PlayerTeam;
+
     private void ConsultRetreatPolicy(Combatant c)
     {
         if (_setup.RetreatPolicy is null || c.RetreatRequested || c.Team != PlayerTeam)
@@ -2451,6 +2540,7 @@ public sealed class Battle
             c.DamageTaken,
             c.LostLimb)
         {
+            Panicked = c.Panicked,
             LostParts = _lostParts.GetValueOrDefault(c.Id),
             DestroyedArmor = _destroyedArmor.GetValueOrDefault(c.Id),
             ArmorWear = c.ArmorWear,

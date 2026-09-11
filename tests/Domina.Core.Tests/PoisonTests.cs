@@ -49,7 +49,14 @@ public class PoisonTests
                 weapon: Weapon.Fists(),
                 armor: defenderArmor),
         ],
-        [TestBuilders.Warrior(101, "Zehirleyen", aggression: 100, weapon: attackerWeapon)])
+        [
+            TestBuilders.Warrior(
+                101,
+                "Zehirleyen",
+                aggression: 100,
+                weapon: attackerWeapon,
+                klass: WarriorClass.Dokushi),
+        ])
         {
             Tuning = tuning ?? PoisonOnly,
         };
@@ -233,7 +240,8 @@ public class PoisonTests
                     "Thrower",
                     aggression: 100,
                     weapon: CleanFang,
-                    thrown: ThrownWeapon.PoisonedShuriken()),
+                    thrown: ThrownWeapon.PoisonedShuriken(),
+                    klass: WarriorClass.Dokushi),
             ])
         {
             Tuning = PoisonOnly with { StartOffsetX = 400 },

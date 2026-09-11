@@ -103,6 +103,12 @@ internal sealed class Combatant(Warrior warrior, int team)
 
     public WarriorId Id => Warrior.Id;
 
+    /// <summary>When the next panic check may be rolled (see <see cref="CombatTuning.BasePanicChance"/>).</summary>
+    public double NextPanicCheckAt { get; set; }
+
+    /// <summary>Did his own nerve take him off the field, rather than the player's key?</summary>
+    public bool Panicked { get; set; }
+
     /// <summary>The armour pieces destroyed in this fight.</summary>
     /// <remarks>
     /// A destroyed piece leaves that region <b>bare</b>: damage reduction, dismemberment resistance

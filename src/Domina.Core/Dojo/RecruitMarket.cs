@@ -23,7 +23,14 @@ namespace Domina.Core.Dojo;
 /// directly (<see cref="TrainingGround"/>).
 /// </param>
 /// <param name="Price">The gold asked.</param>
-public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent, int Price);
+/// <param name="Class">
+/// The class the candidate already carries, if any. The stall's main stock is the classless recruit;
+/// a ready-classed man is the rare shortcut past a facility, and he is priced for it (GDD §10).
+/// </param>
+public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent, int Price)
+{
+    public Model.WarriorClass Class { get; init; } = Model.WarriorClass.None;
+}
 
 /// <summary>The slave market's tunable numbers.</summary>
 /// <remarks>
@@ -33,6 +40,17 @@ public sealed record RecruitOffer(string Name, WarriorStats Stats, double Talent
 /// </remarks>
 public sealed record MarketTuning
 {
+    /// <summary>How often a candidate arrives with a class already trained into him.</summary>
+    /// <remarks>
+    /// Because classes are unlocked by facilities, the stall's main stock has to stay <b>classless</b> —
+    /// otherwise the hall a dojo saved for could be bought around for the price of one man. The rare
+    /// classed candidate is the shortcut, and <see cref="ClassedPriceFactor"/> is what it costs.
+    /// </remarks>
+    public double ClassedChance { get; init; } = 0.05;
+
+    /// <summary>What a trained class adds to a candidate's price.</summary>
+    public double ClassedPriceFactor { get; init; } = 1.6;
+
     /// <summary>The number of candidates standing in the market at once.</summary>
     /// <remarks>
     /// <para>
@@ -155,24 +173,39 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
     /// The base the market is generated around and the ceiling it cannot pass — see
     /// <see cref="AnchorFor(Roster)"/>.
     /// </param>
-    public IReadOnlyList<RecruitOffer> Stock(int day, ulong seed, MarketAnchor anchor, int basePrice)
+    public IReadOnlyList<RecruitOffer> Stock(
+        int day,
+        ulong seed,
+        MarketAnchor anchor,
+        int basePrice,
+        int extraCandidates = 0,
+        double? classedChance = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
 
         int period = (day - 1) / Math.Max(1, Tuning.RefreshDays);
-        return Stock(new SeededRandom(Mix(seed, period)), anchor, basePrice);
+        return Stock(
+            new SeededRandom(Mix(seed, period)), anchor, basePrice, extraCandidates, classedChance);
     }
 
     /// <summary>A market whose stream is supplied from outside — for measurement and tests.</summary>
-    public IReadOnlyList<RecruitOffer> Stock(IRandomSource random, MarketAnchor anchor, int basePrice)
+    public IReadOnlyList<RecruitOffer> Stock(
+        IRandomSource random,
+        MarketAnchor anchor,
+        int basePrice,
+        int extraCandidates = 0,
+        double? classedChance = null)
     {
         ArgumentNullException.ThrowIfNull(random);
         ArgumentNullException.ThrowIfNull(anchor);
 
+        int count = Math.Max(1, Tuning.Candidates + Math.Max(0, extraCandidates));
+        double classed = Math.Clamp(classedChance ?? Tuning.ClassedChance, 0, 1);
+
         List<RecruitOffer> stock = [];
-        for (int i = 0; i < Tuning.Candidates; i++)
+        for (int i = 0; i < count; i++)
         {
-            stock.Add(Draw(random, anchor, basePrice));
+            stock.Add(Draw(random, anchor, basePrice, classed));
         }
 
         return stock;
@@ -232,7 +265,11 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
         return new MarketAnchor(Blend(recruit, average, follow), ceiling);
     }
 
-    private RecruitOffer Draw(IRandomSource random, MarketAnchor anchor, int basePrice)
+    private RecruitOffer Draw(
+        IRandomSource random,
+        MarketAnchor anchor,
+        int basePrice,
+        double classedChance)
     {
         double talent = Tuning.MinTalent
             + (random.NextDouble() * Math.Max(0, Tuning.MaxTalent - Tuning.MinTalent));
@@ -254,7 +291,24 @@ public sealed class RecruitMarket(MarketTuning? tuning = null)
             ? "Nameless"
             : Tuning.Names[random.NextInt(Tuning.Names.Count)];
 
-        return new RecruitOffer(name, stats, talent, Price(stats, talent, around, basePrice));
+        int price = Price(stats, talent, around, basePrice);
+
+        // The class die is rolled last so that turning it off leaves every other stream untouched: the
+        // same seed then reproduces exactly the market measured before classes existed.
+        Model.WarriorClass klass = Model.WarriorClass.None;
+        if (classedChance > 0 && random.Chance(classedChance))
+        {
+            Model.WarriorClass[] open =
+            [
+                Model.WarriorClass.Torite,
+                Model.WarriorClass.Dokushi,
+                Model.WarriorClass.Kyudo,
+            ];
+            klass = open[random.NextInt(open.Length)];
+            price = (int)Math.Ceiling(price * Tuning.ClassedPriceFactor);
+        }
+
+        return new RecruitOffer(name, stats, talent, price) { Class = klass };
     }
 
     /// <summary>Pulls a candidate over the ceiling down by scaling his stats.</summary>
