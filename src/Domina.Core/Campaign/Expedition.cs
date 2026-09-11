@@ -139,6 +139,10 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         int reward = state.Quartermaster.RewardFor(setup, battle.Outcome);
         state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
 
+        // Filed before the day closes: the week's compulsory fight is answered by the day the dojo took
+        // the field, and the tick is weighed while that day is still the current one.
+        state.RecordFight(battle.Outcome == BattleOutcome.PlayerVictory, aftermath.Dead.Count());
+
         DayReport day = state.AdvanceDay();
         return new ExpeditionResult(battle, aftermath, reward, day);
     }
@@ -236,6 +240,8 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
             state.CloseBounty(contract.PostedDay);
         }
+
+        state.RecordFight(battle.Outcome == BattleOutcome.PlayerVictory, aftermath.Dead.Count());
 
         DayReport day = state.AdvanceDay();
         return new BountyResult(contract, battle, aftermath, reward, claimed, day);

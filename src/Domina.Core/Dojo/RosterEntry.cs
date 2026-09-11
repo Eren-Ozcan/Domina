@@ -45,8 +45,18 @@ public sealed class RosterEntry
     /// </remarks>
     public Drill Drill { get; internal set; } = Drill.Strikes;
 
+    /// <summary>
+    /// Has his term ended — did he walk out of the dojo free (docs/GDD.md §10)?
+    /// </summary>
+    /// <remarks>
+    /// A released man is <b>neither dead nor on the roster</b>: he eats nothing, trains nothing and
+    /// cannot be sent anywhere, but he is not a loss either — he is the season's other score. His record
+    /// stays for the same reason a dead man's does, and his name goes back into the pool.
+    /// </remarks>
+    public bool Released { get; internal set; }
+
     /// <summary>Can he be sent on an expedition?</summary>
-    public bool IsFitForCampaign => Warrior.IsAlive && RecoveryDaysRemaining == 0;
+    public bool IsFitForCampaign => Warrior.IsAlive && !Released && RecoveryDaysRemaining == 0;
 
     /// <summary>Puts the warrior in the infirmary. A longer stay overrides a shorter one, never the reverse.</summary>
     public void Injure(int days)

@@ -24,7 +24,12 @@ public sealed class Roster
     /// <summary>All the records on the roster — the dead included, in the order they were added.</summary>
     public IReadOnlyCollection<RosterEntry> Entries => _entries.Values;
 
-    public IEnumerable<RosterEntry> Living => _entries.Values.Where(e => e.Warrior.IsAlive);
+    /// <summary>The warriors the dojo still keeps — the dead and the released are not among them.</summary>
+    public IEnumerable<RosterEntry> Living =>
+        _entries.Values.Where(e => e.Warrior.IsAlive && !e.Released);
+
+    /// <summary>The men who walked out free while the season ran.</summary>
+    public IEnumerable<RosterEntry> Released => _entries.Values.Where(e => e.Released);
 
     /// <summary>The warriors who can be sent on an expedition today.</summary>
     public IEnumerable<RosterEntry> FitForCampaign => _entries.Values.Where(e => e.IsFitForCampaign);
@@ -85,7 +90,9 @@ public sealed class Roster
         string.IsNullOrWhiteSpace(name)
             ? null
             : _entries.Values.FirstOrDefault(
-                e => e.Warrior.IsAlive && string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
+                e => e.Warrior.IsAlive
+                     && !e.Released
+                     && string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
 
     public bool IsNameTaken(string name) => FindLiving(name) is not null;
 
@@ -119,6 +126,29 @@ public sealed class Roster
         }
 
         entry.Warrior.Kill();
+        entry.RecoveryDaysRemaining = 0;
+        entry.Activity = DojoActivity.Resting;
+        return true;
+    }
+
+    /// <summary>
+    /// Ends the warrior's term: he leaves the dojo alive and is counted on the closing screen.
+    /// </summary>
+    /// <remarks>
+    /// Releasing is not the same as dismissing a member of staff — the man is the point of the fiction,
+    /// not a running cost. He cannot be called back: a dojo that could release a mouth before a hungry
+    /// day and take him back after it would be buying the upkeep rule off.
+    /// </remarks>
+    /// <returns><c>true</c> if he walked out.</returns>
+    public bool Release(WarriorId id)
+    {
+        RosterEntry entry = Require(id);
+        if (!entry.Warrior.IsAlive || entry.Released)
+        {
+            return false;
+        }
+
+        entry.Released = true;
         entry.RecoveryDaysRemaining = 0;
         entry.Activity = DojoActivity.Resting;
         return true;
