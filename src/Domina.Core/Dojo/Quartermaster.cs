@@ -134,7 +134,7 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        if (Economy.RecruitPrice > state.Resources.Gold)
+        if (Economy.RecruitPrice > state.Resources.Gold || !state.HasRoomForAnother)
         {
             return null;
         }
@@ -157,7 +157,9 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(offer);
 
-        if (offer.Price > state.Resources.Gold)
+        // A man with nowhere to sleep is not bought: the quarters are the ceiling, and it is bought at
+        // the school like everything else that lasts (docs/GDD.md §10).
+        if (offer.Price > state.Resources.Gold || !state.HasRoomForAnother)
         {
             return null;
         }
@@ -169,6 +171,10 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         }
 
         RosterEntry entry = state.Roster.Recruit(name, offer.Stats, weapon, armor, offer.Talent);
+
+        // The class comes with the man: that is what the higher price bought, and it is what makes the
+        // stall a shortcut past the hall rather than a copy of it.
+        entry.Warrior.Class = offer.Class;
         state.Resources = state.Resources with { Gold = state.Resources.Gold - offer.Price };
         return entry;
     }

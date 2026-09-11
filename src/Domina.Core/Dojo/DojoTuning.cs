@@ -11,6 +11,19 @@ public sealed record DojoTuning
     /// <summary>A training day's stat return.</summary>
     public TrainingTuning Training { get; init; } = new();
 
+    /// <summary>What moves morale, and by how much (docs/GDD.md §3).</summary>
+    public MoraleTuning Morale { get; init; } = new();
+
+    /// <summary>
+    /// How many living warriors the dojo can house.
+    /// </summary>
+    /// <remarks>
+    /// Six is the room the dead master left (docs/STORY.md), and it is where the roster starts, not
+    /// where it ends: the quarters branch buys the rest. It is a number rather than a constant so the
+    /// sim can sweep the ceiling itself — depth is the axis the last night is decided on.
+    /// </remarks>
+    public int RosterCapacity { get; init; } = 6;
+
     /// <summary>The infirmary days burnt in one day.</summary>
     public int NaturalRecoveryPerDay { get; init; } = 1;
 
