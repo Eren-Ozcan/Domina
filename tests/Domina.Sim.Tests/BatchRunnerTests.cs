@@ -13,6 +13,16 @@ public class BatchRunnerTests
     private static Scenario Scenario(string name = "3v3") =>
         Scenarios.Find(name) ?? throw new InvalidOperationException($"No such scenario: {name}");
 
+    /// <summary>
+    /// The retreat tests measure the <b>player's key</b>, so a warrior's own nerve is switched off.
+    /// </summary>
+    /// <remarks>
+    /// With panic on, "a player who never pulls out" no longer means "nobody leaves the field" — a man
+    /// can decide for himself (docs/GDD.md §3). That is the intended game behaviour and it has its own
+    /// tests; here it would only blur the key's own ladder.
+    /// </remarks>
+    private static CombatTuning NoPanic { get; } = CombatTuning.Default with { BasePanicChance = 0 };
+
     [Fact]
     public void EveryScenarioIsRunnable()
     {
@@ -127,8 +137,8 @@ public class BatchRunnerTests
         // The sample is deliberately large: since the charge stopped closing defence (GDD §4) the
         // difference in deaths between pulling out and not narrowed — 40.2% against 38.6% over 10,000
         // fights — and it drowns in noise on a small sample.
-        BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance).Run(1, 3000);
-        BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3)).Run(1, 3000);
+        BatchReport reckless = new BatchRunner(Scenario(), NeverRetreat.Instance, NoPanic).Run(1, 3000);
+        BatchReport careful = new BatchRunner(Scenario(), new RetreatBelowHealth(0.3), NoPanic).Run(1, 3000);
 
         Assert.Equal(0, reckless.PlayerEscapes);
         Assert.True(careful.PlayerEscapes > 0);
@@ -156,9 +166,9 @@ public class BatchRunnerTests
     [Fact]
     public void PressingLaterCostsMore()
     {
-        BatchReport asSoonAsItOpens = new BatchRunner(Scenario(), new RetreatAtSecond(0)).Run(1, 400);
-        BatchReport afterAWhile = new BatchRunner(Scenario(), new RetreatAtSecond(2)).Run(1, 400);
-        BatchReport whenLosing = new BatchRunner(Scenario(), new RetreatWhenLosing(0.7)).Run(1, 400);
+        BatchReport asSoonAsItOpens = new BatchRunner(Scenario(), new RetreatAtSecond(0), NoPanic).Run(1, 400);
+        BatchReport afterAWhile = new BatchRunner(Scenario(), new RetreatAtSecond(2), NoPanic).Run(1, 400);
+        BatchReport whenLosing = new BatchRunner(Scenario(), new RetreatWhenLosing(0.7), NoPanic).Run(1, 400);
 
         // Even pressing the moment the key unlocks brings maiming: there is no escape without contact.
         Assert.True(asSoonAsItOpens.PlayerLimbLosses > 0);

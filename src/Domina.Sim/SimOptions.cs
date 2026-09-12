@@ -21,7 +21,14 @@ internal sealed record SimOptions(
     Armor? PlayerArmor,
     string ArmorLabel,
     double? PlayerSpeed = null,
-    CampaignOptions? Campaign = null);
+    CampaignOptions? Campaign = null,
+    MoraleBand MoraleBand = default,
+    double? PlayerMorale = null)
+{
+    /// <summary>The band actually used — an unset record field defaults to zeroes, not to the design's band.</summary>
+    public MoraleBand EffectiveMoraleBand =>
+        MoraleBand == default ? Domina.Core.Model.MoraleBand.Default : MoraleBand;
+}
 
 /// <summary>The parse result: settings, a help request, or an error.</summary>
 internal sealed record ParsedArgs(SimOptions? Options, string? Error, bool HelpRequested)
@@ -75,6 +82,17 @@ internal static class SimArgs
         bool useSchool = false;
         SchoolBranch? schoolOnly = null;
         bool usePaths = false;
+        bool useStaff = false;
+        MoraleTuning moraleTuning = new();
+        double? playerMorale = null;
+        MoraleBand moraleBand = MoraleBand.Default;
+        SchoolTuning schoolTuning = new();
+        StaffTuning staffTuning = new();
+        DifficultyTier difficulty = DifficultyTier.Master;
+        int rosterCapacity = new DojoTuning().RosterCapacity;
+        SeasonTuning seasonTuning = new();
+        bool hide = false;
+        int finalRest = 0;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -346,6 +364,113 @@ internal static class SimArgs
                     }
 
                     tuning = tuning with { CatchAccuracyBonusAtMax = catchAccuracy };
+                    break;
+
+                case "--morale":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double moraleAt)
+                        || moraleAt is < 0 or > 100)
+                    {
+                        return ParsedArgs.Fail($"--morale must be between 0 and 100: {value}");
+                    }
+
+                    playerMorale = moraleAt;
+                    break;
+
+                case "--panic-chance":
+                    if (!TryFraction(value, out double panicChance))
+                    {
+                        return ParsedArgs.Fail($"--panic-chance must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { BasePanicChance = panicChance };
+                    break;
+
+                case "--panic-health":
+                    if (!TryFraction(value, out double panicHealth))
+                    {
+                        return ParsedArgs.Fail($"--panic-health must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { PanicHealthShare = panicHealth };
+                    break;
+
+                case "--will-resist":
+                    if (!TryFraction(value, out double willResist))
+                    {
+                        return ParsedArgs.Fail($"--will-resist must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { WillPanicResistance = willResist };
+                    break;
+
+                case "--morale-swing":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double swing)
+                        || swing < 0)
+                    {
+                        return ParsedArgs.Fail($"--morale-swing must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { MoralePanicSwing = swing };
+                    break;
+
+                case "--morale-floor":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double floor)
+                        || floor <= 0)
+                    {
+                        return ParsedArgs.Fail($"--morale-floor must be a positive number: {value}");
+                    }
+
+                    moraleBand = moraleBand with { AtZero = floor };
+                    break;
+
+                case "--morale-ceiling":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double moraleCeiling)
+                        || moraleCeiling <= 0)
+                    {
+                        return ParsedArgs.Fail($"--morale-ceiling must be a positive number: {value}");
+                    }
+
+                    moraleBand = moraleBand with { AtFull = moraleCeiling };
+                    break;
+
+                case "--will-brake":
+                    if (!TryFraction(value, out double willBrake))
+                    {
+                        return ParsedArgs.Fail($"--will-brake must be between 0 and 1: {value}");
+                    }
+
+                    moraleTuning = moraleTuning with { WillBrake = willBrake };
+                    break;
+
+                case "--class-catch-floor":
+                    if (!TryFraction(value, out double catchFloor))
+                    {
+                        return ParsedArgs.Fail($"--class-catch-floor must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { UnskilledCatchImplementFactor = catchFloor };
+                    break;
+
+                case "--class-poison-share":
+                    if (!TryFraction(value, out double poisonShare))
+                    {
+                        return ParsedArgs.Fail($"--class-poison-share must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { UnclassedPoisonFactor = poisonShare };
+                    break;
+
+                case "--class-range-share":
+                    if (!TryFraction(value, out double rangeShare))
+                    {
+                        return ParsedArgs.Fail($"--class-range-share must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { UnclassedRangeFactor = rangeShare };
                     break;
 
                 case "--poison-damage":
@@ -741,6 +866,72 @@ internal static class SimArgs
                     schoolOnly = branch;
                     break;
 
+                case "--staff":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--staff must be on or off: {value}");
+                    }
+
+                    useStaff = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--branch-wage":
+                    if (!TryAmount(value, out int branchWage))
+                    {
+                        return ParsedArgs.Fail($"--branch-wage must be a non-negative integer: {value}");
+                    }
+
+                    staffTuning = staffTuning with { BranchWagePerDay = branchWage };
+                    break;
+
+                case "--staff-wage":
+                    if (!TryAmount(value, out int situationalWage))
+                    {
+                        return ParsedArgs.Fail($"--staff-wage must be a non-negative integer: {value}");
+                    }
+
+                    staffTuning = staffTuning with { SituationalWagePerDay = situationalWage };
+                    break;
+
+                case "--empty-share":
+                    if (!TryFraction(value, out double emptyShare))
+                    {
+                        return ParsedArgs.Fail($"--empty-share must be between 0 and 1: {value}");
+                    }
+
+                    staffTuning = staffTuning with { EmptyFacilityShare = emptyShare };
+                    break;
+
+                case "--mortal-save":
+                    if (!TryFraction(value, out double mortalSave))
+                    {
+                        return ParsedArgs.Fail($"--mortal-save must be between 0 and 1: {value}");
+                    }
+
+                    staffTuning = staffTuning with { MortalSaveChance = mortalSave };
+                    break;
+
+                case "--limb-save":
+                    if (!TryFraction(value, out double limbSave))
+                    {
+                        return ParsedArgs.Fail($"--limb-save must be between 0 and 1: {value}");
+                    }
+
+                    staffTuning = staffTuning with { LimbSaveChance = limbSave };
+                    break;
+
+                case "--build-days":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double buildDays)
+                        || buildDays < 0)
+                    {
+                        return ParsedArgs.Fail($"--build-days must be a non-negative number: {value}");
+                    }
+
+                    schoolTuning = schoolTuning with { BuildDaysFactor = buildDays };
+                    break;
+
                 case "--paths":
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
@@ -767,6 +958,154 @@ internal static class SimArgs
                     }
 
                     training = training with { GapClosedPerDay = trainRate };
+                    break;
+
+                case "--missed-week-honor":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double missedWeek)
+                        || missedWeek < 0)
+                    {
+                        return ParsedArgs.Fail(
+                            $"--missed-week-honor must be a non-negative number: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { MissedWeekHonorPenalty = missedWeek };
+                    break;
+
+                case "--roster-cap":
+                    if (!TryCount(value, out int rosterCap))
+                    {
+                        return ParsedArgs.Fail($"--roster-cap must be a positive integer: {value}");
+                    }
+
+                    rosterCapacity = rosterCap;
+                    break;
+
+                case "--difficulty":
+                    if (!Enum.TryParse(value, ignoreCase: true, out difficulty))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--difficulty must be apprentice, master or legend: {value}");
+                    }
+
+                    break;
+
+                case "--season-days":
+                    if (!TryCount(value, out int seasonDays))
+                    {
+                        return ParsedArgs.Fail($"--season-days must be a positive integer: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { Days = seasonDays };
+                    break;
+
+                case "--week-fit-days":
+                    if (!TryAmount(value, out int fitDays))
+                    {
+                        return ParsedArgs.Fail($"--week-fit-days must be a non-negative integer: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { FitDaysBeforeCharged = fitDays };
+                    break;
+
+                case "--grace-weeks":
+                    if (!TryAmount(value, out int graceWeeks))
+                    {
+                        return ParsedArgs.Fail($"--grace-weeks must be a non-negative integer: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { GraceWeeks = graceWeeks };
+                    break;
+
+                case "--final-powers":
+                {
+                    List<double> powers = [];
+                    foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!double.TryParse(
+                                part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double power)
+                            || power <= 0)
+                        {
+                            return ParsedArgs.Fail($"--final-powers takes positive numbers: {value}");
+                        }
+
+                        powers.Add(power);
+                    }
+
+                    if (powers.Count == 0)
+                    {
+                        return ParsedArgs.Fail("--final-powers needs at least one power.");
+                    }
+
+                    seasonTuning = seasonTuning with { FinalRoundPowers = powers };
+                    break;
+                }
+
+                case "--final-enemies":
+                {
+                    List<int> counts = [];
+                    foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!TryCount(part.Trim(), out int count))
+                        {
+                            return ParsedArgs.Fail($"--final-enemies takes positive integers: {value}");
+                        }
+
+                        counts.Add(count);
+                    }
+
+                    if (counts.Count == 0)
+                    {
+                        return ParsedArgs.Fail("--final-enemies needs at least one count.");
+                    }
+
+                    seasonTuning = seasonTuning with { FinalRoundEnemies = counts };
+                    break;
+                }
+
+                case "--night-wound-day":
+                    if (!TryFraction(value, out double woundDay))
+                    {
+                        return ParsedArgs.Fail($"--night-wound-day must be between 0 and 1: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { NightWoundHealthPerDay = woundDay };
+                    break;
+
+                case "--night-wound-floor":
+                    if (!TryFraction(value, out double woundFloor))
+                    {
+                        return ParsedArgs.Fail($"--night-wound-floor must be between 0 and 1: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { NightWoundHealthFloor = woundFloor };
+                    break;
+
+                case "--night-max-wound":
+                    if (!TryAmount(value, out int maxWound))
+                    {
+                        return ParsedArgs.Fail($"--night-max-wound must be a non-negative integer: {value}");
+                    }
+
+                    seasonTuning = seasonTuning with { NightMaxWoundDays = maxWound };
+                    break;
+
+                case "--final-rest":
+                    if (!TryAmount(value, out finalRest))
+                    {
+                        return ParsedArgs.Fail($"--final-rest must be a non-negative integer: {value}");
+                    }
+
+                    break;
+
+                case "--hide":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--hide must be on or off: {value}");
+                    }
+
+                    hide = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
                 case "--fight-rate":
@@ -949,12 +1288,17 @@ internal static class SimArgs
                 startingGold,
                 repairAt,
                 reserveDays,
-                economy,
-                new DojoTuning { Training = training },
+                Difficulty.Of(difficulty).Apply(economy),
+                new DojoTuning
+                {
+                    Training = training,
+                    Morale = moraleTuning,
+                    RosterCapacity = rosterCapacity,
+                },
                 tuning,
                 policy,
                 useOffers,
-                encounters,
+                Difficulty.Of(difficulty).Apply(encounters),
                 acceptUpTo,
                 cautiousWhenThin,
                 events,
@@ -965,12 +1309,19 @@ internal static class SimArgs
                 acceptRatio,
                 useSchool,
                 schoolOnly,
-                usePaths)
+                usePaths,
+                schoolTuning,
+                staffTuning,
+                useStaff,
+                moraleBand,
+                seasonTuning,
+                hide,
+                finalRest)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
             scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel,
-            playerSpeed, campaignOptions));
+            playerSpeed, campaignOptions, moraleBand, playerMorale));
     }
 
     /// <summary>
@@ -1092,6 +1443,8 @@ internal static class SimArgs
         writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sec>]");
         writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <number>]");
         writer.WriteLine("             [--catch-accuracy <0-1>]");
+        writer.WriteLine("             [--class-catch-floor <0-1>] [--class-poison-share <0-1>]");
+        writer.WriteLine("             [--class-range-share <0-1>]");
         writer.WriteLine("             [--poison-damage <number>] [--poison-seconds <sec>]");
         writer.WriteLine("             [--poison-tick <sec>] [--poison-dose <number>]");
         writer.WriteLine("             [--armor-durability <multiplier>]");
@@ -1136,6 +1489,24 @@ internal static class SimArgs
         writer.WriteLine("  --catch-two-handed The multiplier applied to a two-handed weapon's catch chance");
         writer.WriteLine("  --catch-stamina    The stamina cost of a catch");
         writer.WriteLine("  --catch-accuracy   The share added to catch chance at Accuracy 100");
+        writer.WriteLine("  --staff            on|off — the campaign fills every post it can pay for");
+        writer.WriteLine("  --branch-wage      The daily wage of a branch post (drill master, physician, smith, steward)");
+        writer.WriteLine("  --staff-wage       The daily wage of a situational post");
+        writer.WriteLine("  --empty-share      What a building with nobody in it produces (0-1)");
+        writer.WriteLine("  --limb-save        The chance the physician's branch keeps a limb the fight took");
+        writer.WriteLine("  --mortal-save      The chance the physician turns a mortal wound around");
+        writer.WriteLine("  --panic-chance     Per-check chance that a warrior in trouble breaks on his own");
+        writer.WriteLine("  --panic-health     The health share below which a warrior starts checking");
+        writer.WriteLine("  --will-resist      How much of the panic check Will takes off (0-1)");
+        writer.WriteLine("  --morale           Forces the player side's morale (0-100) for the run");
+        writer.WriteLine("  --morale-swing     How far morale bends the panic check at the ends");
+        writer.WriteLine("  --morale-floor     The stat multiplier at morale 0");
+        writer.WriteLine("  --morale-ceiling   The stat multiplier at morale 100");
+        writer.WriteLine("  --will-brake       How much of a morale fall Will absorbs at Will 100");
+        writer.WriteLine("  --build-days       Multiplier on every building's construction time (0 = instant)");
+        writer.WriteLine("  --class-catch-floor  What a catching warrior's die is worth with the wrong implement");
+        writer.WriteLine("  --class-poison-share The share of a dose a warrior of no poison class carries");
+        writer.WriteLine("  --class-range-share  The share of the throw hit chance outside the range class");
         writer.WriteLine("  --poison-damage    Damage poison deals in one tick (at dose 1)");
         writer.WriteLine("  --poison-seconds   The lifetime of one dose");
         writer.WriteLine("  --poison-tick      The interval at which poison deals damage");
@@ -1146,6 +1517,19 @@ internal static class SimArgs
         writer.WriteLine("  --disarm-armor-share The hardness share of the struck piece's dismemberment resistance");
         writer.WriteLine("  --drop-distance    How far a dropped weapon is flung from the warrior");
         writer.WriteLine("  --pickup-radius    The distance at which a weapon on the ground can be picked up");
+        writer.WriteLine("  --roster-cap       Beds the dojo starts with, before the quarters branch");
+        writer.WriteLine("  --difficulty       apprentice | master | legend (master is the measured tier)");
+        writer.WriteLine("  --season-days      The season's length in days");
+        writer.WriteLine("  --missed-week-honor  What a week with no fight filed costs every living warrior");
+        writer.WriteLine("  --week-fit-days    Days with somebody fit before a quiet week counts as hiding");
+        writer.WriteLine("  --grace-weeks      Consecutive hidden weeks that cost nothing");
+        writer.WriteLine("  --night-wound-day  Health a warrior loses per infirmary day he carries into a bout");
+        writer.WriteLine("  --night-wound-floor  The least health an accumulated wound can leave him");
+        writer.WriteLine("  --night-max-wound  The infirmary days past which he cannot answer the bell");
+        writer.WriteLine("  --final-powers     The five bouts' powers, comma separated");
+        writer.WriteLine("  --final-enemies    How many men each bout puts on the field, comma separated");
+        writer.WriteLine("  --final-rest       Days before the last night the dojo stops taking the field");
+        writer.WriteLine("  --hide             on|off — the dojo never files a fight (the exploit as a policy)");
         writer.WriteLine();
         writer.WriteLine("Scenarios:");
         foreach (Scenario s in Scenarios.All)

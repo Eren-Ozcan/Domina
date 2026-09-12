@@ -46,7 +46,9 @@ internal static class SimCli
             options.RetreatPolicy,
             options.Tuning,
             options.PlayerArmor,
-            options.PlayerSpeed);
+            options.PlayerSpeed,
+            options.EffectiveMoraleBand,
+            options.PlayerMorale);
 
         try
         {

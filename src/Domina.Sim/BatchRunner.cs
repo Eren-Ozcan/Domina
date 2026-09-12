@@ -83,11 +83,34 @@ internal sealed class BatchRunner
         IRetreatPolicy? retreatPolicy,
         CombatTuning? tuning = null,
         Armor? playerArmor = null,
-        double? playerSpeed = null)
+        double? playerSpeed = null,
+        MoraleBand? moraleBand = null,
+        double? playerMorale = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
 
         BattleSetup built = scenario.Build();
+
+        // The band is carried on the warrior rather than in a static, so a sweep has to write it onto
+        // both sides of the bed — an enemy whose morale was worth something different would make the
+        // measurement a comparison of two rules at once.
+        if (playerMorale is double morale)
+        {
+            // The campaign rarely takes a roster far from the middle of the scale (a fed, winning dojo
+            // sits at 50), so the band can only be priced by forcing the ends here.
+            foreach (Warrior w in built.PlayerSide)
+            {
+                w.Morale = morale;
+            }
+        }
+
+        if (moraleBand is MoraleBand band)
+        {
+            foreach (Warrior w in built.PlayerSide.Concat(built.EnemySide))
+            {
+                w.MoraleBand = band;
+            }
+        }
 
         if (playerArmor is not null)
         {

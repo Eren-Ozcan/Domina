@@ -188,6 +188,32 @@ internal static class CampaignSummaryReport
         writer.WriteLine($"  Infirmary days / fight {report.RecoveryDaysPerBattle:F2}");
         writer.WriteLine($"  Enemy health / fight   {report.EnemyHealthPerBattle:F0}");
         writer.WriteLine($"  Deaths / warrior-fight {report.DeathPerWarriorBattle * 100:F1}%");
+        writer.WriteLine(
+            $"  Weeks with no fight    {report.AverageMissedWeeks:F1} per dojo"
+            + $"  paid for {report.AverageChargedWeeks:F1}"
+            + $"  longest run {report.AverageLongestMissedStreak:F1}"
+            + $"  ending honour {report.AverageEndingHonor:F1}");
+        writer.WriteLine(
+            $"  Seppuku threshold      {report.SeppukuRiskRate * 100:F1}% of dojos"
+            + $"  first crossed on day {report.AverageDayAtSeppukuRisk:F0}");
+        writer.WriteLine(
+            $"  Heads / last night     {report.AverageHeads:F2} heads"
+            + $"  gate open {report.GateRate * 100:F1}%");
+        writer.WriteLine();
+
+        writer.WriteLine("The last night");
+        writer.WriteLine(
+            $"  Played it              {report.NightRate * 100:F1}% of dojos"
+            + $"  won all five {report.TriumphRate * 100:F1}%");
+        writer.WriteLine(
+            $"  Bouts won              {report.AverageNightRoundsWon:F2} of 5"
+            + $"  men sent {report.AverageNightPartySize:F1}"
+            + $"  dead {report.AverageNightDeaths:F2}");
+        writer.WriteLine(
+            "  Survived the bout      "
+            + string.Join(
+                "  ",
+                Enumerable.Range(1, 5).Select(r => $"{r}: {report.RoundSurvivalRate(r) * 100:F0}%")));
         writer.WriteLine();
 
         writer.WriteLine("Roster");
@@ -203,6 +229,10 @@ internal static class CampaignSummaryReport
         writer.WriteLine(
             $"  School facilities      {report.AverageSchoolNodes:F1}"
             + $"  {report.AverageSchoolGold:F0} gold, chose a path {report.AveragePaths:F2}");
+        writer.WriteLine(
+            $"  Posts filled           {report.AverageStaff:F1}"
+            + $"  {report.AverageStaffDays:F0} post-days");
+        writer.WriteLine($"  Beds at the end        {report.AverageCapacity:F1}");
         writer.WriteLine($"  Dojos closed           {report.CollapseRate * 100:F1}%");
         writer.WriteLine(
             $"  Days survived          average {report.AverageDaysSurvived:F0}, median {report.MedianDaysSurvived}");

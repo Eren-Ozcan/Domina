@@ -32,9 +32,15 @@ internal static class Scenarios
         new("sai", "the same fight with a sai — better grip, lower damage", SaiCatch),
         new("jitte-heavy", "jitte vs an oni carrying a two-handed nodachi — catching's answer", JitteVsTwoHanded),
         new("katana-heavy", "the control for jitte-heavy: the same enemy, with a katana", KatanaVsTwoHanded),
+        new("jitte-unclassed", "the same jitte with no class — the product's hard zero", JitteUnclassed),
+        new("torite-katana", "a catching warrior holding a katana — the product's soft end", ToriteWithKatana),
+        new("torite-katana-heavy", "the same catching warrior with a katana vs a two-handed enemy", ToriteKatanaVsTwoHanded),
+        new("torite-katana-armored", "the same catching warrior with a katana vs an armoured enemy", ToriteKatanaVsArmored),
         new("3v3-jitte", "3v3, the recruit carries a jitte instead of a katana — the bind's team value", ThreeVsThreeJitte),
+        new("3v3-torite-katana", "3v3, the recruit is a catching warrior holding a katana — the honest control", ThreeVsThreeToriteKatana),
         new("tanto", "short-knife master vs oni (1v1) — the control for poison", TantoControl),
         new("poison", "the same fight, the knife's blade poisoned — the poison end", PoisonedTanto),
+        new("poison-unclassed", "the same poisoned knife with no class — the reduced dose", PoisonedTantoUnclassed),
         new("tanto-armored", "short knife vs armoured oni — the control for the armour wall", TantoVsArmored),
         new("poison-armored", "poisoned knife vs armoured oni — does poison get through the wall", PoisonedVsArmored),
         new("katana-armored", "katana vs armoured oni — the real alternative to poison", KatanaVsArmored),
@@ -44,6 +50,8 @@ internal static class Scenarios
         new("spear-armored", "the same fight with a piercing weapon — where the third class sits", SpearVsArmored),
         new("jitte-armored", "jitte vs armoured oni — the catching implement's wall", JitteVsArmored),
         new("3v3-armored", "3v3, every enemy in full armour — disarming's team price", ThreeVsThreeArmored),
+        new("thrown", "master with a throwing slot, no class — the control for the range class", ThrownControl),
+        new("thrown-kyudo", "the same fight, the master of the range class — the throwing hand", ThrownKyudo),
         new("patrol", "the daily patrol (3v3) — the ordinary encounter the economy is measured on", Patrol),
     ];
 
@@ -103,7 +111,8 @@ internal static class Scenarios
     /// the measurement is made with a party of three; the control is <c>3v3</c>, the only difference
     /// being the recruit's weapon.
     /// </remarks>
-    private static BattleSetup ThreeVsThreeJitte() => ThreeVsThreeWith(Weapon.Jitte());
+    private static BattleSetup ThreeVsThreeJitte() =>
+        ThreeVsThreeWith(Weapon.Jitte(), WarriorClass.Torite);
 
     /// <summary>
     /// The measurement where poison turns on <b>the player's side</b>: the tengu throws poisoned shuriken.
@@ -118,12 +127,21 @@ internal static class Scenarios
         BattleSetup control = ThreeVsThree();
         control.EnemySide[2].Thrown = ThrownWeapon.PoisonedShuriken();
 
+        // The rival's thrower is a trained poisoner: without the class his dose would be cut and the
+        // scenario would silently become a weaker threat than the one measured in §7.
+        control.EnemySide[2].Class = WarriorClass.Dokushi;
+
         return control;
     }
 
-    private static BattleSetup ThreeVsThreeWith(Weapon recruitWeapon) => new(
+    private static BattleSetup ThreeVsThreeWith(
+        Weapon recruitWeapon,
+        WarriorClass recruitClass = WarriorClass.None) => new(
         [
-            new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), recruitWeapon, Armor.Light()),
+            new Warrior(new WarriorId(1), "Recruit", WarriorStats.Recruit(), recruitWeapon, Armor.Light())
+            {
+                Class = recruitClass,
+            },
             new Warrior(
                 new WarriorId(2),
                 "Senior",
@@ -207,10 +225,49 @@ internal static class Scenarios
     private static BattleSetup KatanaControl() => Trade(Weapon.Katana());
 
     /// <inheritdoc cref="KatanaControl"/>
-    private static BattleSetup JitteCatch() => Trade(Weapon.Jitte());
+    private static BattleSetup JitteCatch() => Trade(Weapon.Jitte(), klass: WarriorClass.Torite);
 
     /// <inheritdoc cref="KatanaControl"/>
-    private static BattleSetup SaiCatch() => Trade(Weapon.Sai());
+    private static BattleSetup SaiCatch() => Trade(Weapon.Sai(), klass: WarriorClass.Torite);
+
+    /// <summary>
+    /// The class layer's <b>hard zero</b>: the same jitte in the hand of a warrior with no class.
+    /// </summary>
+    /// <remarks>
+    /// The product rule (docs/GDD.md §4) says a classless warrior catches nothing even with the right
+    /// implement. Measured against <c>jitte</c> this scenario prices the class itself, and against
+    /// <c>katana</c> it prices what the jitte costs in damage when it buys nothing back.
+    /// </remarks>
+    private static BattleSetup JitteUnclassed() => Trade(Weapon.Jitte());
+
+    /// <summary>
+    /// The class layer's <b>soft end</b>: a catching warrior holding the wrong implement.
+    /// </summary>
+    /// <remarks>
+    /// The identity belongs to the warrior, so the torite still catches — weakly
+    /// (<c>UnskilledCatchImplementFactor</c>). The control is <c>katana</c>: the same fight, the same
+    /// weapon, only the class differs, so the whole difference is the weak catch.
+    /// </remarks>
+    private static BattleSetup ToriteWithKatana() => Trade(Weapon.Katana(), klass: WarriorClass.Torite);
+
+    /// <summary>
+    /// The same soft end against the two matchups the catching implement was justified by.
+    /// </summary>
+    /// <remarks>
+    /// <c>jitte</c> vs <c>katana</c> compares two different warriors once the class layer is in — one
+    /// of them cannot catch at all. The honest control for the implement decision is the <b>same</b>
+    /// torite holding a sword, which is what these two are for.
+    /// </remarks>
+    private static BattleSetup ToriteKatanaVsArmored() =>
+        Trade(Weapon.Katana(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Torite);
+
+    /// <inheritdoc cref="ToriteKatanaVsArmored"/>
+    private static BattleSetup ToriteKatanaVsTwoHanded() =>
+        Trade(Weapon.Katana(), Weapon.Nodachi(), klass: WarriorClass.Torite);
+
+    /// <inheritdoc cref="ToriteKatanaVsArmored"/>
+    private static BattleSetup ThreeVsThreeToriteKatana() =>
+        ThreeVsThreeWith(Weapon.Katana(), WarriorClass.Torite);
 
     /// <summary>
     /// The pair where catching's own answer is measured: the enemy carries a <b>two-handed</b> nodachi.
@@ -221,7 +278,8 @@ internal static class Scenarios
     /// nothing. The control (<see cref="KatanaVsTwoHanded"/>) carries a katana against the same enemy —
     /// so that the difference comes only from catching.
     /// </remarks>
-    private static BattleSetup JitteVsTwoHanded() => Trade(Weapon.Jitte(), Weapon.Nodachi());
+    private static BattleSetup JitteVsTwoHanded() =>
+        Trade(Weapon.Jitte(), Weapon.Nodachi(), klass: WarriorClass.Torite);
 
     /// <inheritdoc cref="JitteVsTwoHanded"/>
     private static BattleSetup KatanaVsTwoHanded() => Trade(Weapon.Katana(), Weapon.Nodachi());
@@ -236,7 +294,18 @@ internal static class Scenarios
     private static BattleSetup TantoControl() => Trade(Weapon.Tanto());
 
     /// <inheritdoc cref="TantoControl"/>
-    private static BattleSetup PoisonedTanto() => Trade(Weapon.PoisonedTanto());
+    private static BattleSetup PoisonedTanto() =>
+        Trade(Weapon.PoisonedTanto(), klass: WarriorClass.Dokushi);
+
+    /// <summary>
+    /// The same poisoned knife in the hand of a warrior with no class.
+    /// </summary>
+    /// <remarks>
+    /// Poison is <b>not</b> zeroed for the classless (decided 2026-09-10) — only the dose is cut
+    /// (<c>UnclassedPoisonFactor</c>). This scenario is what prices that cut: against <c>poison</c> it
+    /// shows what the class buys, against <c>tanto</c> whether a reduced dose is still worth carrying.
+    /// </remarks>
+    private static BattleSetup PoisonedTantoUnclassed() => Trade(Weapon.PoisonedTanto());
 
     /// <summary>
     /// The pair where poison's real claim is measured: the enemy wears <b>full armour</b>.
@@ -250,7 +319,7 @@ internal static class Scenarios
 
     /// <inheritdoc cref="TantoVsArmored"/>
     private static BattleSetup PoisonedVsArmored() =>
-        Trade(Weapon.PoisonedTanto(), enemyArmor: Armor.Heavy());
+        Trade(Weapon.PoisonedTanto(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Dokushi);
 
     /// <summary>
     /// The <b>real</b> alternative against an armoured enemy: an ordinary sword.
@@ -292,7 +361,7 @@ internal static class Scenarios
     /// <see cref="KatanaVsArmored"/> — the same enemy, the same stats, the only difference the weapon.
     /// </remarks>
     private static BattleSetup JitteVsArmored() =>
-        Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy());
+        Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Torite);
 
     /// <summary>
     /// Disarming's <b>team</b> price: the control is <c>3v3</c>, the only difference the enemy's armour.
@@ -315,7 +384,9 @@ internal static class Scenarios
     private static BattleSetup Trade(
         Weapon weapon,
         Weapon? enemyWeapon = null,
-        Armor? enemyArmor = null) => new(
+        Armor? enemyArmor = null,
+        WarriorClass klass = WarriorClass.None,
+        ThrownWeapon? thrown = null) => new(
         [
             new Warrior(
                 new WarriorId(1),
@@ -330,7 +401,11 @@ internal static class Scenarios
                     Accuracy = 68,
                 },
                 weapon,
-                Armor.Medium()),
+                Armor.Medium(),
+                thrown)
+            {
+                Class = klass,
+            },
         ],
         [
             Enemy(
@@ -345,6 +420,22 @@ internal static class Scenarios
                 weapon: enemyWeapon,
                 armor: enemyArmor),
         ]);
+
+    /// <summary>
+    /// The range class's pair: the same master carries a throwing slot, and only his class differs.
+    /// </summary>
+    /// <remarks>
+    /// The shuriken stays open to everyone (docs/COMPARISON-DOMINA.md §5), so what is measured here is
+    /// not access but the hand: <c>UnclassedRangeFactor</c> against a full one. The class's real payoff
+    /// is the yumi, which is not written yet — until it is, this pair is the only place the range half
+    /// of the product can be priced at all.
+    /// </remarks>
+    private static BattleSetup ThrownControl() =>
+        Trade(Weapon.Katana(), thrown: ThrownWeapon.Shuriken());
+
+    /// <inheritdoc cref="ThrownControl"/>
+    private static BattleSetup ThrownKyudo() =>
+        Trade(Weapon.Katana(), thrown: ThrownWeapon.Shuriken(), klass: WarriorClass.Kyudo);
 
     private static BattleSetup Ambush()
     {

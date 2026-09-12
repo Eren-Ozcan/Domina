@@ -1,5 +1,6 @@
 using Domina.Core.Campaign;
 using Domina.Core.Combat;
+using Domina.Core.Honor;
 using Domina.Core.Dojo;
 using Domina.Core.Model;
 using Domina.Core.Rng;
@@ -46,7 +47,14 @@ internal sealed record CampaignOptions(
     double? AcceptRatio = null,
     bool UseSchool = false,
     SchoolBranch? SchoolOnly = null,
-    bool UsePaths = false)
+    bool UsePaths = false,
+    SchoolTuning? School = null,
+    StaffTuning? Staff = null,
+    bool UseStaff = false,
+    MoraleBand MoraleBand = default,
+    SeasonTuning? Season = null,
+    bool Hide = false,
+    int FinalRest = 0)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -118,13 +126,24 @@ internal sealed class CampaignRunner(CampaignOptions options)
             seed,
             _options.Encounters,
             _options.Events,
-            _options.Market);
+            _options.Market,
+            school: _options.School,
+            staff: _options.Staff,
+
+            // The season's length is the run's length, whatever the season's own default says: a tick
+            // calendar that outlives the measurement would put the last night beyond the last day and
+            // the night would never be measured at all.
+            season: (_options.Season ?? new SeasonTuning()) with { Days = _options.Days });
         state.Resources = new Resources(Gold: _options.StartingGold);
 
         // The roster is cloned from the scenario's own roster: while measuring the economy, stepping
         // outside the roster combat balance was measured on would make the two measurements incomparable.
         IReadOnlyList<Warrior> template = _options.Scenario.Build().PlayerSide;
-        for (int i = 0; i < _options.RosterTarget; i++)
+
+        // The starting roster cannot exceed the beds: the quarters are the ceiling, and a measurement
+        // that started over it would be measuring a dojo the game cannot produce.
+        int start = Math.Min(_options.RosterTarget, state.Capacity);
+        for (int i = 0; i < start; i++)
         {
             Enlist(state, template, i);
         }
@@ -137,10 +156,20 @@ internal sealed class CampaignRunner(CampaignOptions options)
         {
             row.GoldSpentOnGear += Maintain(state, template);
 
+            // Posts are filled <b>before</b> the next building is ordered: a person is a running cost and
+            // a building is a one-off, so a policy that spent every spare coin on walls first would never
+            // be able to pay anybody, and the measurement would read as "nobody hires staff".
+            if (_options.UseStaff)
+            {
+                FillPosts(state);
+            }
+
             if (_options.UseSchool)
             {
                 row.GoldSpentOnSchool += BuildSchool(state, row);
             }
+
+            row.StaffDays += state.Staff.Hired.Count;
 
             if (_options.UsePaths)
             {
@@ -154,15 +183,45 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 row.GoldSpentOnHires += purse - state.Resources.Gold;
             }
 
-            DayReport closed = _options.UseOffers
-                ? TakeOfferOrRest(state, seed + (ulong)day, row)
-                : FightScenarioOrRest(state, seed + (ulong)day, row);
+            // The hiding dojo is the exploit made into a policy: it never files a fight and lives off
+            // the training ground. It is the only policy the missed-week penalty can be measured on —
+            // a dojo that fights every week never pays it, so a sweep run against it moves nothing.
+            // The last stretch before the night is spent healing. A player plans for a fixed date; a
+            // policy that fights up to the last day arrives at the gate with its party in the infirmary,
+            // and what that measures is the calendar, not the night.
+            bool resting = _options.FinalRest > 0 && _options.Days - day <= _options.FinalRest;
+
+            DayReport closed = _options.Hide || resting
+                ? Rest(state, row, declined: true)
+                : _options.UseOffers
+                    ? TakeOfferOrRest(state, seed + (ulong)day, row)
+                    : FightScenarioOrRest(state, seed + (ulong)day, row);
 
             if (closed.Event is DayEvent mishap)
             {
                 row.Mishaps++;
                 row.MishapGold += mishap.Gold;
             }
+            if (closed.MissedWeek)
+            {
+                row.MissedWeeks++;
+            }
+
+            if (closed.HonorLost > 0)
+            {
+                row.ChargedWeeks++;
+            }
+
+            row.LongestMissedStreak = Math.Max(row.LongestMissedStreak, state.Season.MissedStreak);
+
+            // The day the first man crosses the seppuku threshold is what the honour penalty is really
+            // measured by: the number itself says nothing until it says how long hiding can be kept up.
+            if (row.DayAtSeppukuRisk == 0
+                && state.Roster.Living.Any(e => e.Warrior.Honor < HonorTuning.Default.SeppukuThreshold))
+            {
+                row.DayAtSeppukuRisk = day + 1;
+            }
+
             row.GoldSpentOnUpkeep += closed.Upkeep.GoldSpent;
             if (!closed.Upkeep.Fed)
             {
@@ -177,13 +236,89 @@ internal sealed class CampaignRunner(CampaignOptions options)
             }
         }
 
+        FightTheNight(state, seed, row);
+
         row.DaysSurvived = _options.Days;
+        row.EndingHonor = state.Roster.Living.Any()
+            ? state.Roster.Living.Average(e => e.Warrior.Honor)
+            : 0;
+        row.HeadsTaken = state.Season.HeadsTaken;
+        row.GateOpen = state.Season.GateOpen;
         row.EndingGold = state.Resources.Gold;
         row.SurvivingWarriors = state.Roster.Living.Count();
         row.EndScore = BestScore(state);
         row.SchoolNodes = state.School.Owned.Count;
+        row.Capacity = state.Capacity;
+        row.Staff = state.Staff.Hired.Count;
         row.TrainingDays = state.Roster.Living.Sum(e => e.TrainingDays);
         return row;
+    }
+
+    /// <summary>
+    /// Plays the last night if the season reached it — five bouts, best party first, no day in between.
+    /// </summary>
+    /// <remarks>
+    /// The policy is deliberately the simplest one that is not stupid: <b>the strongest men still on
+    /// their feet</b>, up to the party limit, bout after bout. It is not how a player would play the
+    /// night — he would hold a fresh man back for Kurogane — but it is the same policy every time,
+    /// which is what makes two sets of bout numbers comparable. What it measures is whether the night
+    /// is survivable by a season's worth of roster at all.
+    /// </remarks>
+    private void FightTheNight(DojoState state, ulong seed, CampaignRow row)
+    {
+        if (state.Season.Phase != SeasonPhase.FinalNight)
+        {
+            return;
+        }
+
+        row.ReachedTheNight = true;
+        FinalNight night = new();
+
+        while (state.Season.Phase == SeasonPhase.FinalNight)
+        {
+            int round = state.Season.FinalRound;
+            List<RosterEntry> party =
+            [
+                .. state.Roster.Living
+                    .Where(FinalNight.CanAnswerTheBell(state))
+                    .OrderByDescending(e => Score(e.Warrior.EffectiveStats))
+                    .Take(EncounterOffer.MaxPartySize),
+            ];
+
+            if (party.Count == 0)
+            {
+                // Nobody can stand up: the night is over without a bout being fought.
+                row.NightPartySize += 0;
+                break;
+            }
+
+            row.NightPartySize += party.Count;
+
+            FinalRoundResult result = night.Fight(
+                state,
+                party,
+                new SeededRandom(seed + 7_777_777 + (ulong)round),
+                _options.Tuning,
+
+                // No retreat policy on the night: withdrawing from a bout <b>is</b> losing it, and the
+                // run ends with it. A policy that pulls the party out at 70% health was throwing the
+                // whole night away in the first bout — no player would, so neither does the measurement.
+                retreat: null);
+
+            row.NightRoundsFought++;
+            row.NightDeaths += result.Aftermath.Dead.Count();
+
+            if (result.Won)
+            {
+                row.NightRoundsWon++;
+            }
+            else
+            {
+                row.NightLostOnRound = round;
+            }
+        }
+
+        row.Triumph = state.Season.Phase == SeasonPhase.Triumph;
     }
 
     /// <summary>Fixed-scenario mode: fight if the roster is enough, train if it is not.</summary>
@@ -438,7 +573,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         if (_options.UseMarket)
         {
-            return HireFromMarket(state, proto, reserve, _options.Pick);
+            return HireFromMarket(state, proto, reserve, _options.Pick, Band);
         }
 
         if (!Affordable(state, _options.Economy.RecruitPrice, reserve))
@@ -453,6 +588,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             proto.Weapon,
             proto.Armor);
 
+        if (entry is not null)
+        {
+            entry.Warrior.MoraleBand = Band;
+        }
+
         return entry is not null;
     }
 
@@ -464,7 +604,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// measure is the question "cheap raw candidate or expensive ready-made one" itself, not the
     /// policy's intelligence. Choosing by value naturally probes both ends.
     /// </remarks>
-    private static bool HireFromMarket(DojoState state, Warrior proto, int reserve, MarketPick pick)
+    private static bool HireFromMarket(
+        DojoState state,
+        Warrior proto,
+        int reserve,
+        MarketPick pick,
+        MoraleBand band)
     {
         int best = -1;
         double bestValue = 0;
@@ -493,7 +638,18 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         // The purchase goes through DojoState.HireRecruit: if the measurement does not go through the
         // door the player plays, what it measures is not the game (the same candidate cannot be bought twice).
-        return best >= 0 && state.HireRecruit(best, proto.Weapon, proto.Armor) is not null;
+        if (best < 0)
+        {
+            return false;
+        }
+
+        RosterEntry? bought = state.HireRecruit(best, proto.Weapon, proto.Armor);
+        if (bought is not null)
+        {
+            bought.Warrior.MoraleBand = band;
+        }
+
+        return bought is not null;
     }
 
     /// <summary>
@@ -533,6 +689,55 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         return before - state.Resources.Gold;
+    }
+
+    /// <summary>
+    /// Fills every open post the payroll can carry, and lets people go when it cannot.
+    /// </summary>
+    /// <remarks>
+    /// The policy is deliberately blunt — hire whatever building stands, and dismiss when the treasury
+    /// falls under the reserve. What is being measured is not a clever payroll but whether a wage-bearing
+    /// staff economy is survivable at all, and a policy that hired selectively would answer a question
+    /// about the policy rather than about the numbers. Posts with no effect in the code yet are skipped:
+    /// paying for them would be measuring a wage against nothing.
+    /// </remarks>
+    private void FillPosts(DojoState state)
+    {
+        int reserve = Reserve(state) + _options.Economy.RecruitPrice;
+
+        if (state.Resources.Gold < reserve)
+        {
+            foreach (StaffRole role in state.Staff.Hired.ToList())
+            {
+                state.Dismiss(role);
+            }
+
+            return;
+        }
+
+        // A post is only taken when the purse could carry it for a stretch: hiring on the exact day the
+        // treasury crosses the line would mean hiring and firing the same person every other day, and
+        // what that measures is the policy's twitch, not the wage.
+        const int WageRunwayDays = 10;
+
+        foreach (SchoolNode node in SchoolTree.All)
+        {
+            if (node.Role is not StaffRole role
+                || Facilities.IsInert(role)
+                || state.Staff.Has(role)
+                || !state.School.Has(node.Id))
+            {
+                continue;
+            }
+
+            int runway = state.StaffTuning.WageOf(role) * WageRunwayDays;
+            if (state.Resources.Gold < reserve + runway)
+            {
+                continue;
+            }
+
+            state.Hire(role);
+        }
     }
 
     /// <summary>
@@ -590,10 +795,16 @@ internal sealed class CampaignRunner(CampaignOptions options)
         + stats.Aggression;
 
     /// <summary>Clones the roster from the scenario's roster — with its weapon and kit.</summary>
-    private static void Enlist(DojoState state, IReadOnlyList<Warrior> template, int index)
+    /// <summary>The band the run measures with — an unset record field is zeroes, not the design's band.</summary>
+    private MoraleBand Band =>
+        _options.MoraleBand == default ? MoraleBand.Default : _options.MoraleBand;
+
+    private void Enlist(DojoState state, IReadOnlyList<Warrior> template, int index)
     {
         Warrior proto = template[index % template.Count];
-        state.Roster.Recruit($"Warrior {index + 1}", proto.BaseStats, proto.Weapon, proto.Armor);
+        RosterEntry entry =
+            state.Roster.Recruit($"Warrior {index + 1}", proto.BaseStats, proto.Weapon, proto.Armor);
+        entry.Warrior.MoraleBand = Band;
     }
 
     /// <summary>
@@ -681,6 +892,12 @@ internal sealed class CampaignRow
     /// <summary>The number of school facilities bought.</summary>
     public int SchoolNodes { get; set; }
 
+    /// <summary>Posts filled at the end of the season.</summary>
+    public int Staff { get; set; }
+
+    /// <summary>Post-days worked over the season — the honest measure of how full the payroll was.</summary>
+    public int StaffDays { get; set; }
+
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
 
@@ -694,6 +911,51 @@ internal sealed class CampaignRow
 
     /// <summary>The number of warriors who chose a path.</summary>
     public int Paths { get; set; }
+
+    /// <summary>The weeks that closed with no fight filed.</summary>
+    public int MissedWeeks { get; set; }
+
+    /// <summary>The season ended with the gate open and the last night was played.</summary>
+    public bool ReachedTheNight { get; set; }
+
+    /// <summary>The bouts of the last night that were actually fought.</summary>
+    public int NightRoundsFought { get; set; }
+
+    /// <summary>The bouts won.</summary>
+    public int NightRoundsWon { get; set; }
+
+    /// <summary>The bout the night was lost on; <c>0</c> if it was not lost on the field.</summary>
+    public int NightLostOnRound { get; set; }
+
+    /// <summary>The men sent out across the whole night — the depth the night actually asked for.</summary>
+    public int NightPartySize { get; set; }
+
+    /// <summary>The warriors the last night buried.</summary>
+    public int NightDeaths { get; set; }
+
+    /// <summary>All five bouts won.</summary>
+    public bool Triumph { get; set; }
+
+    /// <summary>The missed weeks that were actually paid for — the free first week is not among them.</summary>
+    public int ChargedWeeks { get; set; }
+
+    /// <summary>The longest run of weeks missed back to back.</summary>
+    public int LongestMissedStreak { get; set; }
+
+    /// <summary>The first day a living warrior stood below the seppuku threshold; <c>0</c> if none did.</summary>
+    public int DayAtSeppukuRisk { get; set; }
+
+    /// <summary>The living roster's average honour on the last day.</summary>
+    public double EndingHonor { get; set; }
+
+    /// <summary>The beds the dojo ended the season with.</summary>
+    public int Capacity { get; set; }
+
+    /// <summary>The heads brought in — the last night's gate counts these.</summary>
+    public int HeadsTaken { get; set; }
+
+    /// <summary>Were the three heads in by the end of the season?</summary>
+    public bool GateOpen { get; set; }
 
     /// <summary>Nobody is left on the roster — the dojo has closed.</summary>
     public bool Collapsed { get; set; }
@@ -768,6 +1030,77 @@ internal sealed class CampaignReport(int days)
 
     public double AverageEndingGold => Average(r => r.EndingGold);
 
+    /// <summary>Weeks with no fight filed, per dojo.</summary>
+    public double AverageMissedWeeks => Average(r => r.MissedWeeks);
+
+    /// <summary>The missed weeks that were paid for, per dojo.</summary>
+    public double AverageChargedWeeks => Average(r => r.ChargedWeeks);
+
+    /// <summary>The longest run of missed weeks, per dojo.</summary>
+    public double AverageLongestMissedStreak => Average(r => r.LongestMissedStreak);
+
+    /// <summary>The living roster's average honour on the last day, in the dojos still standing.</summary>
+    public double AverageEndingHonor => Standing(r => r.EndingHonor);
+
+    /// <summary>The share of dojos in which somebody crossed the seppuku threshold.</summary>
+    public double SeppukuRiskRate =>
+        Campaigns == 0 ? 0 : (double)_rows.Count(r => r.DayAtSeppukuRisk > 0) / Campaigns;
+
+    /// <summary>The day the threshold was first crossed, among the dojos where it was.</summary>
+    public double AverageDayAtSeppukuRisk
+    {
+        get
+        {
+            List<int> days = [.. _rows.Where(r => r.DayAtSeppukuRisk > 0).Select(r => r.DayAtSeppukuRisk)];
+            return days.Count == 0 ? 0 : days.Average();
+        }
+    }
+
+    /// <summary>The share of dojos that played the last night.</summary>
+    public double NightRate => Campaigns == 0 ? 0 : (double)_rows.Count(r => r.ReachedTheNight) / Campaigns;
+
+    /// <summary>The share of dojos that won all five bouts.</summary>
+    public double TriumphRate => Campaigns == 0 ? 0 : (double)_rows.Count(r => r.Triumph) / Campaigns;
+
+    /// <summary>Bouts won, among the dojos that played the night.</summary>
+    public double AverageNightRoundsWon => AtTheNight(r => r.NightRoundsWon);
+
+    /// <summary>Men sent out across the night, among the dojos that played it.</summary>
+    public double AverageNightPartySize => AtTheNight(r => r.NightPartySize);
+
+    /// <summary>The warriors the night buried, among the dojos that played it.</summary>
+    public double AverageNightDeaths => AtTheNight(r => r.NightDeaths);
+
+    /// <summary>How often each bout was survived, among the dojos that reached that bout.</summary>
+    public double RoundSurvivalRate(int round)
+    {
+        List<CampaignRow> reached =
+            [.. _rows.Where(r => r.ReachedTheNight && r.NightRoundsWon >= round - 1
+                                 && (r.NightLostOnRound == 0 || r.NightLostOnRound >= round))];
+
+        if (reached.Count == 0)
+        {
+            return 0;
+        }
+
+        return (double)reached.Count(r => r.NightRoundsWon >= round) / reached.Count;
+    }
+
+    private double AtTheNight(Func<CampaignRow, double> pick)
+    {
+        List<CampaignRow> night = [.. _rows.Where(r => r.ReachedTheNight)];
+        return night.Count == 0 ? 0 : night.Average(pick);
+    }
+
+    /// <summary>The roster ceiling reached, per surviving dojo.</summary>
+    public double AverageCapacity => Standing(r => r.Capacity);
+
+    /// <summary>Heads brought in, per dojo.</summary>
+    public double AverageHeads => Average(r => r.HeadsTaken);
+
+    /// <summary>The share of dojos that reached the last night's gate.</summary>
+    public double GateRate => Campaigns == 0 ? 0 : (double)_rows.Count(r => r.GateOpen) / Campaigns;
+
     /// <summary>The best warrior's stat score in the dojos still standing — training's product.</summary>
     /// <remarks>
     /// Closed dojos are left out: a dojo whose roster is dead has a score of zero and, mixed into the
@@ -786,6 +1119,12 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>School facilities bought, per dojo.</summary>
     public double AverageSchoolNodes => Standing(r => r.SchoolNodes);
+
+    /// <summary>Posts filled at the end of the season, per dojo.</summary>
+    public double AverageStaff => Standing(r => r.Staff);
+
+    /// <summary>Post-days worked per dojo — a post filled all season counts as the season's length.</summary>
+    public double AverageStaffDays => Standing(r => r.StaffDays);
 
     /// <summary>The gold that went to the school (per dojo).</summary>
     public double AverageSchoolGold => Standing(r => r.GoldSpentOnSchool);
