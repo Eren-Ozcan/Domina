@@ -58,7 +58,8 @@ public sealed record DojoSnapshot(
     SeasonSnapshot? Season = null,
     TribunalSnapshot? Tribunal = null,
     DifficultyTier Difficulty = DifficultyTier.Master,
-    IReadOnlyList<CharmStackSnapshot>? Charms = null)
+    IReadOnlyList<CharmStackSnapshot>? Charms = null,
+    ProvinceSnapshot? Province = null)
 {
     /// <summary>
     /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;
@@ -157,6 +158,35 @@ public sealed record ImmunitySnapshot(int Warrior, int UntilDay);
 /// hall tomorrow that takes twelve days.
 /// </remarks>
 public sealed record BuildSiteSnapshot(SchoolNodeId Id, int DaysLeft);
+
+/// <summary>The province as the file keeps it (docs/GDD.md §10, Open Decision #17).</summary>
+/// <remarks>
+/// The settlements and the one number the rival stores go into the file because they are state the
+/// <b>season produced</b>: which villages the player answered for, how far he has pressed the rest.
+/// What a warning level is <b>worth</b> — how many moves it takes, how many contracts win a village —
+/// stays in the code, so a retuned patch reaches an old save.
+/// </remarks>
+/// <param name="Settlements">The twelve, in index order.</param>
+/// <param name="NextMoveDay">The day his next move falls on.</param>
+/// <param name="Deniability">How far he can still go.</param>
+/// <param name="RaidPending">Is he at the gate?</param>
+/// <param name="TargetKnownUntil">Until which day a settlement's word revealed his next target.</param>
+/// <param name="AnsweredForMoveDay">The move cycle the player has already answered.</param>
+public sealed record ProvinceSnapshot(
+    IReadOnlyList<SettlementSnapshot> Settlements,
+    int NextMoveDay,
+    int Deniability,
+    bool RaidPending = false,
+    int TargetKnownUntil = 0,
+    int AnsweredForMoveDay = 0);
+
+/// <summary>One settlement's line in the file.</summary>
+public sealed record SettlementSnapshot(
+    int Index,
+    Allegiance Held,
+    int Warning = 0,
+    int Contracts = 0,
+    int ChangedDay = 0);
 
 /// <summary>How many of one kind of charm are in the store.</summary>
 /// <remarks>

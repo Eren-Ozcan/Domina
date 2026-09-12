@@ -77,8 +77,18 @@ public static class DojoSaveFile
             SeasonSnapshot.From(state.Season),
             Capture(state.Tribunal),
             state.Difficulty,
-            [.. state.CharmStore.Select(pair => new CharmStackSnapshot(pair.Key, pair.Value))]);
+            [.. state.CharmStore.Select(pair => new CharmStackSnapshot(pair.Key, pair.Value))],
+            Capture(state.Province));
     }
+
+    private static ProvinceSnapshot Capture(Province province) => new(
+        [.. province.Settlements.Select(s =>
+            new SettlementSnapshot(s.Index, s.Held, s.Warning, s.Contracts, s.ChangedDay))],
+        province.NextMoveDay,
+        province.Deniability,
+        province.RaidPending,
+        province.TargetKnownUntil,
+        province.AnsweredForMoveDay);
 
     private static TribunalSnapshot Capture(Tribunal tribunal) => new(
         tribunal.Standing is Summons standing ? Capture(standing) : null,
@@ -161,6 +171,11 @@ public static class DojoSaveFile
         state.RestoreStaff(snapshot.Staff ?? []);
         state.RestoreFeast(snapshot.LastFeastDay);
         state.RestoreHiredToday(snapshot.HiredRecruits ?? []);
+        if (snapshot.Province is ProvinceSnapshot province)
+        {
+            state.RestoreProvince(province);
+        }
+
         state.RestoreCharms(
             (snapshot.Charms ?? []).Select(c => new KeyValuePair<OmamoriKind, int>(c.Kind, c.Count)));
         state.RestoreSeason(snapshot.Season ?? new SeasonSnapshot());
