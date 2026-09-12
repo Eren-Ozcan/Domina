@@ -41,6 +41,7 @@ public sealed partial class DayScreen : DojoScreen
     private DojoState _dojo = null!;
     private Label _seasonLabel = null!;
     private Label _offerLabel = null!;
+    private Label _readingLabel = null!;
     private Label _bountyLabel = null!;
     private VBoxContainer _partyList = null!;
     private Label _verdictLabel = null!;
@@ -79,6 +80,11 @@ public sealed partial class DayScreen : DojoScreen
 
         _offerLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_offerLabel);
+
+        // The diviner's reading sits directly under the offer it reads, and hides itself when the dojo
+        // has no hut: an empty panel would advertise the information it is withholding.
+        _readingLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
+        page.AddChild(_readingLabel);
 
         _bountyLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_bountyLabel);
@@ -143,9 +149,38 @@ public sealed partial class DayScreen : DojoScreen
                 ? $"This job wants exactly {size}."
                 : $"Party of at most {offer.MaxPartySize}.");
 
+        ShowReading(OfferModel.ReadOffer(_dojo));
+
         BuildPartyList();
         ShowBounty(OfferModel.DescribeBounty(_dojo));
         UpdateButtons();
+    }
+
+    /// <summary>Prints what the diviner's hut could read off today's offer.</summary>
+    /// <remarks>
+    /// The label is emptied and hidden when there is no hut: a dojo that has not bought the reading
+    /// must not see an empty panel where the numbers would be, or the screen would be advertising what
+    /// it is withholding.
+    /// </remarks>
+    private void ShowReading(IReadOnlyList<EnemyLine> lines)
+    {
+        _readingLabel.Visible = lines.Count > 0;
+        if (lines.Count == 0)
+        {
+            _readingLabel.Text = string.Empty;
+            return;
+        }
+
+        List<string> rows = ["The hut reads the road:"];
+        foreach (EnemyLine line in lines)
+        {
+            rows.Add(line.Stats is null
+                ? $"  · {line.Name} — {line.Weapon}"
+                : $"  · {line.Name} — {line.Weapon} — {line.Stats}");
+        }
+
+        _readingLabel.Text = string.Join('
+', rows);
     }
 
     private void BuildPartyList()

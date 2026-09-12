@@ -26,6 +26,15 @@ public readonly record struct OfferCard(
     int MaxPartySize,
     int PromisedReward);
 
+/// <summary>One line of the diviner's reading of the day's offer.</summary>
+/// <param name="Name">The enemy's name.</param>
+/// <param name="Weapon">The weapon in his hand.</param>
+/// <param name="Stats">
+/// The numbers behind him — <c>null</c> when the hut stands empty. It is the one place the screen is
+/// allowed to see the enemy roster, and only because the dojo paid for the right to see it.
+/// </param>
+public readonly record struct EnemyLine(string Name, string Weapon, string? Stats);
+
 /// <summary>The contract on the board — as the screen reads it.</summary>
 /// <param name="TargetName">The target's name; a contract is written against a single named creature.</param>
 /// <param name="Patron">The party that issued the contract.</param>
@@ -93,6 +102,40 @@ public static class OfferModel
             RequiredPartySize: offer.RequiredPartySize,
             MaxPartySize: EncounterOffer.MaxPartySize,
             PromisedReward: dojo.Quartermaster.PromisedReward(new BattleSetup([], offer.Enemies)));
+    }
+
+    /// <summary>
+    /// What the diviner's hut says about today's offer — empty when there is no hut.
+    /// </summary>
+    /// <remarks>
+    /// This is the one exception to the rule in <see cref="OfferCard"/>'s remarks, and it is the whole
+    /// of the diviner's post: the screen sees the roster only as far as the dojo has bought the right
+    /// to see it (docs/GDD.md §10). The stats are rendered here rather than on the screen so that what
+    /// each depth reveals is decided in one tested place.
+    /// </remarks>
+    public static IReadOnlyList<EnemyLine> ReadOffer(DojoState dojo)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+
+        OfferReading reading = dojo.Reading;
+        if (!reading.Any)
+        {
+            return [];
+        }
+
+        List<EnemyLine> lines = [];
+        foreach (EnemyReading line in reading.Enemies)
+        {
+            lines.Add(new EnemyLine(
+                line.Name,
+                line.Weapon,
+                line.Stats is WarriorStats stats
+                    ? $"{stats.MaxHealth:F0} health · {stats.Strength:F0} strength · "
+                      + $"{stats.Accuracy:F0} accuracy · {stats.Defense:F0} defence · {stats.Evasion:F0} evasion"
+                    : null));
+        }
+
+        return lines;
     }
 
     /// <summary>The card if there is a contract on the board today, otherwise <c>null</c>.</summary>
