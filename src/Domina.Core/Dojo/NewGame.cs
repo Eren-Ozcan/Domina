@@ -43,6 +43,9 @@ public static class NewGame
     /// <summary>The mixer that separates the starting roster's stream from the day's market.</summary>
     private const ulong RosterSalt = 0xA5A5_5A5A_C3C3_3C3C;
 
+    /// <summary>And the one that separates the province's deal from both.</summary>
+    private const ulong ProvinceSalt = 0x3C3C_C3C3_5A5A_A5A5;
+
     /// <summary>Builds a new dojo from the given seed.</summary>
     /// <param name="seed">The expedition's seed; the same seed gives the same start.</param>
     /// <param name="tuning">The day-loop settings; the default if not given.</param>
@@ -66,6 +69,10 @@ public static class NewGame
         {
             Resources = new Resources(Gold: StartingGold),
         };
+
+        // The province is dealt before the roster, off the run's own seed: how much of the map he
+        // already holds is the other half of the run-to-run variety the design allows (docs/GDD.md §10).
+        dojo.Province.Deal(new SeededRandom(seed ^ ProvinceSalt), difficulty.RivalShare);
 
         SeededRandom random = new(seed ^ RosterSalt);
 

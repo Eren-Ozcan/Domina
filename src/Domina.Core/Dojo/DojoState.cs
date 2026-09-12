@@ -1,5 +1,6 @@
 using Domina.Core.Campaign;
 using Domina.Core.Model;
+using Domina.Core.Rng;
 
 namespace Domina.Core.Dojo;
 
@@ -35,6 +36,7 @@ public sealed class DojoState
         StaffTuning? staff = null,
         SeasonTuning? season = null,
         Honor.HonorTuning? honor = null,
+        ProvinceTuning? province = null,
         DifficultyTier difficulty = DifficultyTier.Master)
     {
         _baseTuning = tuning ?? new DojoTuning();
@@ -47,6 +49,7 @@ public sealed class DojoState
         Bounties = new BountyBoard(bounties, encounters);
         Season = new Season(season);
         Tribunal = new Tribunal(honor);
+        Province = new Province(province);
         Difficulty = difficulty;
         Seed = seed;
         Tuning = _baseTuning;
@@ -68,6 +71,16 @@ public sealed class DojoState
 
     /// <summary>The dojo's facilities — the investment that does not die (GDD §10).</summary>
     public School School { get; }
+
+    /// <summary>
+    /// The province: the twelve settlements and the rival's one stored number (GDD §10, #17).
+    /// </summary>
+    /// <remarks>
+    /// It advances inside <see cref="AdvanceDay"/> on its own clock, which starts on the compulsory
+    /// fight's: the week the dojo has to answer and the week he moves are deliberately the same week,
+    /// so one counter on the screen answers both.
+    /// </remarks>
+    public Province Province { get; }
 
     /// <summary>Who is on the payroll. A building is bought once; a person is paid every day.</summary>
     public Staff Staff { get; } = new();
@@ -212,6 +225,12 @@ public sealed class DojoState
             SettleMorale(entry, fed);
         }
 
+        // The order matters and it is the day's own order. A raid announced on an earlier evening is
+        // <b>this</b> day's offer: if the day is closing and it is still standing, nobody met him in the
+        // yard and the store pays for it. Only then does he move again.
+        SackReport? sack = Province.RaidPending ? Sack() : null;
+        ProvinceMove? move = Province.Advance(Day);
+
         // The promise is weighed at the end of the day: if the last day too closed without a fight, the contract is broken.
         bool broken = BreakBountyIfExpired();
 
@@ -252,7 +271,9 @@ public sealed class DojoState
             season.MissedWeek,
             season.Phase,
             season.HonorPenalty,
-            verdict);
+            verdict,
+            move,
+            sack);
     }
 
     /// <summary>
@@ -399,7 +420,17 @@ public sealed class DojoState
     /// the day and the seed. That is also why loading the save to change an offer you did not like
     /// does not work.
     /// </remarks>
-    public EncounterOffer Offer => _offer ??= Encounters.Offer(Day, Seed);
+    public EncounterOffer Offer => _offer ??= Province.RaidPending
+        ? Encounters.Raid(Day, new SeededRandom(Seed + ((ulong)Day * 6_364_136_223_846_793_005UL)), Province.HisHoldings)
+        : Encounters.Offer(Day, Seed);
+
+    /// <summary>Is today's offer him at the gate rather than work on the road?</summary>
+    /// <remarks>
+    /// A raid cannot be declined the way an offer can: declining spends the day in the dojo, and a day
+    /// spent in the dojo with his men in the yard is the sack (<see cref="SackHonorPenalty"/>). The
+    /// screen has to be able to say which of the two today is.
+    /// </remarks>
+    public bool UnderRaid => Province.RaidPending;
 
     /// <summary>
     /// The candidates standing in the market today.
@@ -518,6 +549,19 @@ public sealed class DojoState
     internal void CloseBounty(int postedDay)
     {
         Season.RecordHead();
+
+        // A contract is always filed <b>for</b> a settlement: that is how a village changes hands
+        // (GDD §10). Which one is read off the contract's own day, so the same season files the same
+        // village and a reload cannot shop for a better one.
+        if (Bounty is BountyContract contract)
+        {
+            LastGift = Province.FileContract(contract.Settlement, Day);
+            if (LastGift is SettlementGift gift)
+            {
+                ReceiveGift(gift);
+            }
+        }
+
         AcceptedBountyDay = null;
         ClaimedBountyDay = postedDay;
         _bounty = null;
@@ -641,7 +685,37 @@ public sealed class DojoState
     /// week is a fight the dojo actually took the field for, and a fight simulated for measurement with
     /// no dojo behind it must not write a season it is not part of.
     /// </remarks>
-    internal void RecordFight(bool victory, int dead) => Season.RecordFight(Day, victory, dead);
+    internal void RecordFight(bool victory, int dead)
+    {
+        Season.RecordFight(Day, victory, dead);
+
+        // A raid that was met is over whichever way it went: he came, the school stood in its own yard,
+        // and the bound that brought him is spent. Losing costs the fight's own price — the dead, the
+        // wounded — not a second sacking on top of it.
+        if (Province.RaidPending)
+        {
+            Province.RaidSettled();
+        }
+
+        // Hitting his men on the road is the other half of the map's tempo: it eases the settlement he
+        // is pressing, puts his next move back, and spends the bound that keeps him off the dojo's own
+        // gate (GDD §10). Only a win counts — he is not held back by a school he beat.
+        if (victory)
+        {
+            Province.Answer(Day);
+        }
+    }
+
+    /// <summary>
+    /// The gold a finished fight pays, with the settlements that speak for the dojo counted in.
+    /// </summary>
+    /// <remarks>
+    /// The single gate for the reward, so the map's share cannot be applied twice or missed in one of
+    /// the two settle paths. A held settlement pays nothing itself: what it gives is the rival's own
+    /// work, offered to the player at his rates.
+    /// </remarks>
+    public int RewardFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome) =>
+        Province.Sweeten(Quartermaster.RewardFor(setup, outcome));
 
     /// <summary>
     /// Ends the warrior's term — he walks out free and is counted on the closing screen.
@@ -806,6 +880,54 @@ public sealed class DojoState
 
     /// <summary>What the hut says about today's offer.</summary>
     public OfferReading Reading => Divination.Read(Offer, ReadingDepth);
+
+    /// <summary>The gift the last settlement to come over gave; <c>null</c> if none has.</summary>
+    public SettlementGift? LastGift { get; private set; }
+
+    /// <summary>What a settlement hands over on the day it comes over.</summary>
+    /// <remarks>
+    /// One thing, once. The word — the name of his next target — is the only one that is not a store:
+    /// it buys a turn of sight instead, which is worth more to a player who is behind than another
+    /// bundle of rice would be.
+    /// </remarks>
+    private void ReceiveGift(SettlementGift gift) => Resources = gift switch
+    {
+        SettlementGift.Rice => Resources with { Food = Resources.Food + 10 },
+        SettlementGift.Medicine => Resources with { Medicine = Resources.Medicine + 3 },
+        SettlementGift.Sake => Resources with { Sake = Resources.Sake + 4 },
+        _ => Resources,
+    };
+
+    /// <summary>
+    /// What it costs to let him into the yard unanswered.
+    /// </summary>
+    /// <remarks>
+    /// A raid cannot simply be declined the way an offer can — he is at the gate, not on the road. A
+    /// dojo that spends that day on anything else wakes to an emptied store and a name worth less: the
+    /// price is written to the <b>whole</b> roster's honour, because the province saw the whole school
+    /// stand aside.
+    /// </remarks>
+    private SackReport Sack()
+    {
+        int gold = Resources.Gold / 3;
+        int food = Resources.Food / 3;
+        Resources = Resources with { Gold = Resources.Gold - gold, Food = Resources.Food - food };
+
+        foreach (RosterEntry entry in Roster.Living)
+        {
+            entry.Warrior.Honor = Model.HonorScale.Clamp(entry.Warrior.Honor - SackHonorPenalty);
+        }
+
+        Province.RaidSettled();
+        return new SackReport(gold, food);
+    }
+
+    /// <summary>The honour a sacked dojo loses, per warrior.</summary>
+    /// <remarks>
+    /// Deliberately heavier than a missed week's 5: a week with no fight filed is a school that did
+    /// nothing, a sack is a school that was seen doing nothing while its own gate was forced.
+    /// </remarks>
+    public const double SackHonorPenalty = 10;
 
     /// <summary>The charms in the dojo's store, kind by kind.</summary>
     /// <remarks>
@@ -1060,6 +1182,20 @@ public sealed class DojoState
         Quartermaster = new Quartermaster(School.Apply(_baseEconomy, Staff, StaffTuning));
     }
 
+    /// <summary>Restores the province coming from the save.</summary>
+    internal void RestoreProvince(Save.ProvinceSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        Province.Restore(
+            (snapshot.Settlements ?? []).Select(s => (s.Index, s.Held, s.Warning, s.Contracts, s.ChangedDay)),
+            snapshot.NextMoveDay,
+            snapshot.Deniability,
+            snapshot.RaidPending,
+            snapshot.TargetKnownUntil,
+            snapshot.AnsweredForMoveDay);
+    }
+
     /// <summary>Restores the season's books coming from the save.</summary>
     /// <remarks>
     /// The clock goes into the file because it is state the <b>player produced</b> — which weeks he
@@ -1209,7 +1345,14 @@ public sealed record DayReport(
     bool MissedWeek = false,
     SeasonPhase Phase = SeasonPhase.Running,
     double HonorLost = 0,
-    TribunalVerdict? Tribunal = null);
+    TribunalVerdict? Tribunal = null,
+    ProvinceMove? RivalMove = null,
+    SackReport? Sacked = null);
+
+/// <summary>What a raid left behind on a day nobody answered it.</summary>
+/// <param name="Gold">The gold taken out of the chest.</param>
+/// <param name="Food">The food taken out of the store.</param>
+public readonly record struct SackReport(int Gold, int Food);
 
 /// <summary>One day's store and treasury movement.</summary>
 /// <param name="GoldSpent">The gold paid that day for stock bought from the market.</param>

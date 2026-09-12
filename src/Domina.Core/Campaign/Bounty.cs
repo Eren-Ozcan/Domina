@@ -13,6 +13,17 @@ namespace Domina.Core.Campaign;
 /// </remarks>
 public sealed record BountyTuning
 {
+    /// <summary>
+    /// How many settlements a contract can be written for.
+    /// </summary>
+    /// <remarks>
+    /// It mirrors <see cref="Dojo.ProvinceTuning.Settlements"/> rather than reading it: the board is a
+    /// pure function of the day and the seed and holds no reference to the dojo's state, which is what
+    /// makes the same season post the same contracts. A sweep that changes the province's size changes
+    /// this with it.
+    /// </remarks>
+    public int Settlements { get; init; } = 12;
+
     /// <summary>How often a new contract is posted, in days.</summary>
     /// <remarks>
     /// If a new contract were posted every day, a target you did not like could be swapped by waiting a
@@ -101,7 +112,8 @@ public sealed record BountyContract(
     int Reward,
     string Patron,
     double HonorReward,
-    double BrokenHonorPenalty)
+    double BrokenHonorPenalty,
+    int Settlement = 0)
 {
     /// <summary>Is the contract still open on this day?</summary>
     public bool IsOpenOn(int day) => day >= PostedDay && day <= Deadline;
@@ -193,6 +205,11 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
             * economy.VictoryGoldPerEnemyHealth
             * Math.Max(0, Tuning.RewardMultiplier));
 
+        // Every contract is written for one of the province's settlements: the road it is on is how a
+        // village changes hands (docs/GDD.md §10). It is drawn from the contract's own seeded stream, so
+        // the same season posts the same village and reloading cannot shop for a better one.
+        int settlement = random.NextInt(Math.Max(1, Tuning.Settlements));
+
         return new BountyContract(
             postedDay,
             deadline,
@@ -201,7 +218,8 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
             reward,
             patron,
             Tuning.HonorReward,
-            Tuning.BrokenHonorPenalty);
+            Tuning.BrokenHonorPenalty,
+            settlement);
     }
 
     private ThreatBand Band(double power) => power switch

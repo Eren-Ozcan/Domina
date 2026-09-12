@@ -122,6 +122,41 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
     }
 
     /// <summary>The day's raw power — the curve plus that day's fluctuation.</summary>
+    /// <summary>
+    /// The raid he brings to the gate when his bound is spent (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// It is the ordinary curve with his holdings on top of it, not a new kind of fight: the design
+    /// builds no boss structure, and a raid the player cannot read as "his men, more of them" would be
+    /// a second difficulty system. The party size is deliberately free — the dojo is defending its own
+    /// gate, so everyone who can stand may stand.
+    /// </remarks>
+    /// <param name="day">The day it falls on.</param>
+    /// <param name="random">The dojo's own seeded source.</param>
+    /// <param name="holdings">The settlements he holds — what he can afford to send.</param>
+    public EncounterOffer Raid(int day, IRandomSource random, int holdings)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
+        ArgumentNullException.ThrowIfNull(random);
+
+        double power = Math.Min(Tuning.MaxPower, PowerFor(day, random));
+        int count = Math.Clamp(2 + (holdings / 4), 2, 5);
+
+        List<Warrior> enemies = [];
+        for (int i = 0; i < count; i++)
+        {
+            EnemyKind kind = Pick(power, random);
+            enemies.Add(kind.Spawn(new WarriorId(FirstEnemyId + (day * 10) + i), power));
+        }
+
+        return new EncounterOffer(
+            day,
+            enemies,
+            ThreatBand.Dire,
+            $"{count} of Kurogane's men are at the gate",
+            RequiredPartySize: null);
+    }
+
     public double PowerFor(int day, IRandomSource random)
     {
         ArgumentNullException.ThrowIfNull(random);

@@ -136,7 +136,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         AftermathReport aftermath = _aftermath.Apply(state, battle);
 
-        int reward = state.Quartermaster.RewardFor(setup, battle.Outcome);
+        int reward = state.RewardFor(setup, battle.Outcome);
         state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
 
         // Filed before the day closes: the week's compulsory fight is answered by the day the dojo took
@@ -221,7 +221,11 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         AftermathReport aftermath = _aftermath.Apply(state, battle);
 
         bool claimed = battle.Outcome == BattleOutcome.PlayerVictory;
-        int reward = claimed ? contract.Reward : state.Quartermaster.Economy.LostBattleGold;
+        // The contract's own figure is sweetened the same way an ordinary reward is: what the held
+        // settlements buy is the rival's trade at his rates, and a contract is that trade.
+        int reward = claimed
+            ? state.Province.Sweeten(contract.Reward)
+            : state.Quartermaster.Economy.LostBattleGold;
         state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
 
         if (claimed)

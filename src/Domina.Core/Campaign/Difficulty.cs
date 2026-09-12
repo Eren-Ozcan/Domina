@@ -41,16 +41,25 @@ public enum DifficultyTier
 /// <param name="Tier">Which tier this is.</param>
 /// <param name="EnemyPower">The multiplier laid over the difficulty curve.</param>
 /// <param name="Reward">The multiplier laid over what a fight pays.</param>
-public sealed record Difficulty(DifficultyTier Tier, double EnemyPower, double Reward)
+/// <param name="RivalShare">
+/// The share of the province the rival already holds on day 1. It is the tier's third dial and the
+/// cheapest one: the map is the season's slowest pressure, so how far behind the player opens says
+/// more about the run than either multiplier does.
+/// </param>
+public sealed record Difficulty(
+    DifficultyTier Tier,
+    double EnemyPower,
+    double Reward,
+    double RivalShare = 0.5)
 {
     /// <summary>The softer road.</summary>
-    public static Difficulty Apprentice { get; } = new(DifficultyTier.Apprentice, 0.85, 1.15);
+    public static Difficulty Apprentice { get; } = new(DifficultyTier.Apprentice, 0.85, 1.15, 0.33);
 
     /// <summary>The measured tier — both multipliers are 1.</summary>
-    public static Difficulty Master { get; } = new(DifficultyTier.Master, 1, 1);
+    public static Difficulty Master { get; } = new(DifficultyTier.Master, 1, 1, 0.5);
 
     /// <summary>The harder road.</summary>
-    public static Difficulty Legend { get; } = new(DifficultyTier.Legend, 1.15, 0.85);
+    public static Difficulty Legend { get; } = new(DifficultyTier.Legend, 1.15, 0.85, 0.67);
 
     /// <summary>The tier's numbers.</summary>
     public static Difficulty Of(DifficultyTier tier) => tier switch
