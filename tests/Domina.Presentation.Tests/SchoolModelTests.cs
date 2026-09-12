@@ -146,4 +146,34 @@ public class SchoolModelTests
 
     private static SchoolNodeRow Row(DojoState dojo, SchoolNodeId id) =>
         SchoolModel.Describe(dojo).SelectMany(c => c.Nodes).Single(n => n.Id == id);
+
+    /// <summary>Every post is listed, and one whose building is not up says what it waits for.</summary>
+    [Fact]
+    public void ThePayrollListsEveryPostEvenTheOnesWithNoBuilding()
+    {
+        DojoState dojo = Funded(5000);
+        IReadOnlyList<PostRow> posts = SchoolModel.Posts(dojo);
+
+        Assert.Equal(SchoolTree.All.Count(n => n.Role is not null), posts.Count);
+        Assert.All(posts, post => Assert.False(post.Filled));
+        Assert.Contains(posts, post => !post.Standing);
+        Assert.Contains(posts, post => post.Branch);
+    }
+
+    /// <summary>A standing building's post can be filled, and the row says so.</summary>
+    [Fact]
+    public void AFilledPostIsMarkedAndCarriesItsWage()
+    {
+        DojoState dojo = Funded(5000);
+        dojo.BuySchoolNode(SchoolNodeId.Shrine);
+        dojo.Hire(StaffRole.Monk);
+
+        PostRow monk = SchoolModel.Posts(dojo).Single(p => p.Role == StaffRole.Monk);
+
+        Assert.True(monk.Standing);
+        Assert.True(monk.Filled);
+        Assert.False(monk.Branch);
+        Assert.Equal(dojo.StaffTuning.WageOf(StaffRole.Monk), monk.Wage);
+        Assert.Equal(monk.Wage, SchoolModel.Summarize(dojo).DailyWage);
+    }
 }

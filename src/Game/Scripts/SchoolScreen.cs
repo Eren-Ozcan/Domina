@@ -26,6 +26,7 @@ public sealed partial class SchoolScreen : DojoScreen
     private Label _detail = null!;
     private Button _buyButton = null!;
     private Label _notice = null!;
+    private VBoxContainer _posts = null!;
     private SchoolNodeId? _selected;
 
     /// <summary>Builds the screen and prints the tree.</summary>
@@ -39,13 +40,89 @@ public sealed partial class SchoolScreen : DojoScreen
         _summary = new Label();
         page.AddChild(_summary);
 
+        // The tree and the payroll stand side by side: a building is bought once and a person is paid
+        // every day, and the decision the screen exists for is which of the two the purse can carry
+        // (docs/GDD.md §10). Reading them on separate screens would hide the trade.
+        HBoxContainer body = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        body.AddThemeConstantOverride("separation", 24);
+        page.AddChild(body);
+
         _columns = new HBoxContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         _columns.AddThemeConstantOverride("separation", 24);
-        page.AddChild(_columns);
+        body.AddChild(_columns);
+
+        body.AddChild(BuildStaffColumn());
 
         page.AddChild(BuildDetailPanel());
 
         Refresh();
+    }
+
+    private Control BuildStaffColumn()
+    {
+        VBoxContainer column = new() { CustomMinimumSize = new Vector2(300, 0) };
+        column.AddThemeConstantOverride("separation", 8);
+
+        column.AddChild(new Label { Text = "The payroll" });
+
+        ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        column.AddChild(scroll);
+
+        _posts = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        scroll.AddChild(_posts);
+
+        return column;
+    }
+
+    /// <summary>Prints the eleven posts and the one button each of them has.</summary>
+    /// <remarks>
+    /// A post whose building is not up is shown rather than hidden, and says which building it waits
+    /// for: the payroll is something the player plans toward, and a row that disappeared would take
+    /// the plan with it.
+    /// </remarks>
+    private void BuildPosts()
+    {
+        Clear(_posts);
+
+        foreach (PostRow post in SchoolModel.Posts(_dojo))
+        {
+            Label line = new()
+            {
+                Text = post.Standing
+                    ? $"{post.Name}  —  {post.Wage} gold/day" + (post.Filled ? "  ·  in post" : "  ·  empty")
+                    : $"{post.Name}  —  waits for the {post.Building.ToLowerInvariant()}",
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            };
+            line.AddThemeColorOverride(
+                "font_color",
+                !post.Standing ? MutedColor : post.Filled ? GoodColor : InkColor);
+            _posts.AddChild(line);
+
+            if (!post.Standing)
+            {
+                continue;
+            }
+
+            StaffRole role = post.Role;
+            bool filled = post.Filled;
+            Button button = new() { Text = filled ? "Let him go" : "Hire" };
+            button.Pressed += () =>
+            {
+                if (filled)
+                {
+                    _dojo.Dismiss(role);
+                }
+                else
+                {
+                    _dojo.Hire(role);
+                }
+
+                Persist();
+                Refresh();
+            };
+
+            _posts.AddChild(button);
+        }
     }
 
     private Control BuildDetailPanel()
@@ -109,10 +186,14 @@ public sealed partial class SchoolScreen : DojoScreen
             _columns.AddChild(box);
         }
 
+        BuildPosts();
+
         SchoolSummary summary = SchoolModel.Summarize(_dojo);
         _summary.Text =
             $"Day {_dojo.Day}  ·  Purse {summary.Gold} gold" +
             $"  ·  Facilities {summary.Owned}/{summary.Total}" +
+            (summary.Building > 0 ? $"  ·  Going up {summary.Building}" : string.Empty) +
+            $"  ·  Posts {summary.Staffed} at {summary.DailyWage} gold/day" +
             $"  ·  Affordable today {summary.Affordable}" +
             (summary.NextCost is int next ? $"  ·  Next cost {next} gold" : "  ·  The tree is complete");
 
@@ -176,20 +257,33 @@ public sealed partial class SchoolScreen : DojoScreen
     {
         SchoolNodeId.TrainingGround => "A training day gains more.",
         SchoolNodeId.FormsMaster => "The stat ceiling a warrior can approach rises.",
-        SchoolNodeId.InnerDojo => "Training speeds up a second time.",
+        SchoolNodeId.InnerDojo => "Training speeds up again, and the weapon master teaches mastery.",
         SchoolNodeId.Infirmary => "Natural healing takes off one more day.",
         SchoolNodeId.Herbalist => "Medicine takes off one more day.",
         SchoolNodeId.BoneSetter => "More damage counts as a scratch — fewer infirmary days.",
         SchoolNodeId.Steward => "Daily food, water and medicine get cheaper.",
         SchoolNodeId.Patron => "Victory pays more.",
-        _ => "Hiring warriors and repairing armour get cheaper.",
+        SchoolNodeId.Broker => "Hiring warriors and repairing armour get cheaper.",
+        SchoolNodeId.Forge => "Repairs cost less, and the smith's post opens.",
+        SchoolNodeId.Kitchen => "The day's food need falls.",
+        SchoolNodeId.Shrine => "Temple charms can be bought and worn.",
+        SchoolNodeId.BardHall => "The roster's spirits rise every day.",
+        SchoolNodeId.DivinerHut => "The day's offer can be read before going in.",
+        SchoolNodeId.ToriteHall => "The catching class can be trained.",
+        SchoolNodeId.PoisonGarden => "The poison class can be trained.",
+        SchoolNodeId.ArcheryRange => "The range class can be trained.",
+        _ => "The dojo can house more men.",
     };
 
     private static string BranchName(SchoolBranch branch) => branch switch
     {
         SchoolBranch.Training => "Training ground",
         SchoolBranch.Infirmary => "Infirmary",
-        _ => "Steward",
+        SchoolBranch.Steward => "Steward",
+        SchoolBranch.Equipment => "Forge",
+        SchoolBranch.Support => "Support",
+        SchoolBranch.Class => "Class halls",
+        _ => "Quarters",
     };
 
     private static Color StateColor(SchoolNodeState state) => state switch

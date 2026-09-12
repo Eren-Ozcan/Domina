@@ -82,6 +82,26 @@ public readonly record struct SchoolSummary(
     int Staffed = 0,
     int DailyWage = 0);
 
+/// <summary>One post — the person side of the school screen.</summary>
+/// <param name="Role">The role itself; the screen's command returns it.</param>
+/// <param name="Name">Display name of the role.</param>
+/// <param name="Building">The building that carries the post.</param>
+/// <param name="Standing">Is that building up? A post cannot be filled before its building opens.</param>
+/// <param name="Filled">Is someone in it today?</param>
+/// <param name="Wage">What the day costs with him in it.</param>
+/// <param name="Branch">
+/// Does the role carry one of the dojo's four continuous expenses? A branch role is the one kept all
+/// season, and its wage is what the payroll actually weighs.
+/// </param>
+public readonly record struct PostRow(
+    StaffRole Role,
+    string Name,
+    string Building,
+    bool Standing,
+    bool Filled,
+    int Wage,
+    bool Branch);
+
 /// <summary>
 /// The model the school screen reads. It computes why a node is closed; it does not draw.
 /// </summary>
@@ -152,6 +172,55 @@ public static class SchoolModel
             Role: node.Role,
             Staffed: node.Role is StaffRole role && staff?.Has(role) == true);
     }
+
+    /// <summary>
+    /// The eleven posts, in the catalogue's order.
+    /// </summary>
+    /// <remarks>
+    /// A post whose building is not up is <b>listed, not hidden</b>, for the same reason a locked node
+    /// is: the payroll is a plan, and the player cannot save toward a person he cannot see. What the
+    /// row says instead is which building has to stand first.
+    /// </remarks>
+    public static IReadOnlyList<PostRow> Posts(DojoState dojo)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+
+        List<PostRow> rows = [];
+        foreach (SchoolNode node in SchoolTree.All)
+        {
+            if (node.Role is not StaffRole role)
+            {
+                continue;
+            }
+
+            rows.Add(new PostRow(
+                Role: role,
+                Name: RoleName(role),
+                Building: node.Name,
+                Standing: dojo.School.Has(node.Id),
+                Filled: dojo.Staff.Has(role),
+                Wage: dojo.StaffTuning.WageOf(role),
+                Branch: Facilities.IsBranchRole(role)));
+        }
+
+        return rows;
+    }
+
+    /// <summary>The role's name on screen.</summary>
+    public static string RoleName(StaffRole role) => role switch
+    {
+        StaffRole.DrillMaster => "Drill master",
+        StaffRole.KataMaster => "Kata master",
+        StaffRole.WeaponMaster => "Weapon master",
+        StaffRole.Physician => "Physician",
+        StaffRole.Smith => "Smith",
+        StaffRole.Steward => "Steward",
+        StaffRole.Broker => "Broker",
+        StaffRole.Bard => "Bard",
+        StaffRole.Monk => "Monk",
+        StaffRole.Cook => "Cook",
+        _ => "Diviner",
+    };
 
     /// <summary>The numbers at the top of the school.</summary>
     public static SchoolSummary Summarize(DojoState dojo)
