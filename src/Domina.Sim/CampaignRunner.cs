@@ -56,7 +56,8 @@ internal sealed record CampaignOptions(
     bool Hide = false,
     int FinalRest = 0,
     MasteryBand MasteryBand = default,
-    bool UseCharms = false)
+    bool UseCharms = false,
+    ProvinceTuning? Province = null)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -135,8 +136,14 @@ internal sealed class CampaignRunner(CampaignOptions options)
             // The season's length is the run's length, whatever the season's own default says: a tick
             // calendar that outlives the measurement would put the last night beyond the last day and
             // the night would never be measured at all.
-            season: (_options.Season ?? new SeasonTuning()) with { Days = _options.Days });
+            season: (_options.Season ?? new SeasonTuning()) with { Days = _options.Days },
+            province: _options.Province);
         state.Resources = new Resources(Gold: _options.StartingGold);
+
+        // The map is dealt off the run's own seed, like the game's first day does it: what he already
+        // holds is half of the run-to-run variety, and a measurement that opened every season on an
+        // empty province would be measuring a start the game never gives.
+        state.Province.Deal(new SeededRandom(seed ^ 0x3C3C_C3C3_5A5A_A5A5), 0.5);
 
         // The roster is cloned from the scenario's own roster: while measuring the economy, stepping
         // outside the roster combat balance was measured on would make the two measurements incomparable.
@@ -172,6 +179,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
             }
 
             row.StaffDays += state.Staff.Hired.Count;
+            row.SettlementDays += state.Province.YourHoldings;
 
             if (_options.UsePaths)
             {
@@ -212,6 +220,16 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (closed.MissedWeek)
             {
                 row.MissedWeeks++;
+            }
+
+            if (closed.RivalMove is ProvinceMove move && move.Kind == ProvinceMoveKind.Raid)
+            {
+                row.Raids++;
+            }
+
+            if (closed.Sacked is not null)
+            {
+                row.Sacks++;
             }
 
             if (closed.HonorLost > 0)
@@ -958,6 +976,20 @@ internal sealed class CampaignRow
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
 
+    /// <summary>Settlement-days held over the season — what the map was actually worth to the dojo.</summary>
+    /// <remarks>
+    /// Counted per day rather than at the end, for the same reason post-days are: a map won in the last
+    /// week and a map held all season pay completely differently, and an end-of-season count cannot
+    /// tell the two apart.
+    /// </remarks>
+    public int SettlementDays { get; set; }
+
+    /// <summary>The raids he brought to the gate.</summary>
+    public int Raids { get; set; }
+
+    /// <summary>The raids nobody answered — the store emptied and the name lost.</summary>
+    public int Sacks { get; set; }
+
     /// <summary>The gold that went to the temple's charms.</summary>
     /// <remarks>
     /// Kept apart from the school's gold although both are optional: a building is bought once and a
@@ -1097,6 +1129,17 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>Weeks with no fight filed, per dojo.</summary>
     public double AverageMissedWeeks => Average(r => r.MissedWeeks);
+
+    /// <summary>Settlements held, averaged over every day of the season.</summary>
+    public double AverageSettlements => Campaigns == 0
+        ? 0
+        : _rows.Sum(r => (double)r.SettlementDays / Math.Max(1, r.DaysSurvived)) / Campaigns;
+
+    /// <summary>Raids per dojo.</summary>
+    public double AverageRaids => Average(r => r.Raids);
+
+    /// <summary>Raids nobody answered, per dojo.</summary>
+    public double AverageSacks => Average(r => r.Sacks);
 
     /// <summary>The missed weeks that were paid for, per dojo.</summary>
     public double AverageChargedWeeks => Average(r => r.ChargedWeeks);

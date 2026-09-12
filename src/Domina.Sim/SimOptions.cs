@@ -94,6 +94,7 @@ internal static class SimArgs
         double? playerMastery = null;
         MasteryBand masteryBand = MasteryBand.Default;
         bool useCharms = false;
+        ProvinceTuning provinceTuning = new();
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
         SchoolTuning schoolTuning = new();
@@ -490,6 +491,58 @@ internal static class SimArgs
                     }
 
                     staffTuning = staffTuning with { FuneralRelief = funeralRelief };
+                    break;
+
+                case "--province":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--province must be on or off: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with
+                    {
+                        Active = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase),
+                    };
+                    break;
+
+                case "--province-warning":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int warning)
+                        || warning < 1)
+                    {
+                        return ParsedArgs.Fail($"--province-warning must be a positive integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { WarningToFall = warning };
+                    break;
+
+                case "--province-pushback":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int pushBack)
+                        || pushBack < 0)
+                    {
+                        return ParsedArgs.Fail($"--province-pushback must be a non-negative integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { PushBackDays = pushBack };
+                    break;
+
+                case "--deniability":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int bound)
+                        || bound < 1)
+                    {
+                        return ParsedArgs.Fail($"--deniability must be a positive integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { Deniability = bound };
+                    break;
+
+                case "--settlement-reward":
+                    if (!TryFraction(value, out double settlementReward))
+                    {
+                        return ParsedArgs.Fail($"--settlement-reward must be between 0 and 1: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { RewardSharePerSettlement = settlementReward };
                     break;
 
                 case "--charms":
@@ -1384,7 +1437,8 @@ internal static class SimArgs
                 hide,
                 finalRest,
                 masteryBand,
-                useCharms)
+                useCharms,
+                provinceTuning)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1580,6 +1634,11 @@ internal static class SimArgs
         writer.WriteLine("  --mastery-fight    The share a fight closes (campaign)");
         writer.WriteLine("  --funeral-relief   The share of a comrade's death the rite takes off");
         writer.WriteLine("  --charms on|off    The policy buys temple charms and fits them (campaign)");
+        writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
+        writer.WriteLine("  --province-warning How many moves a settlement takes before it falls");
+        writer.WriteLine("  --province-pushback The days an answered move is put back");
+        writer.WriteLine("  --deniability      How far the rival can go before the raid opens");
+        writer.WriteLine("  --settlement-reward What one held settlement adds to the day's pay");
         writer.WriteLine("  --build-days       Multiplier on every building's construction time (0 = instant)");
         writer.WriteLine("  --class-catch-floor  What a catching warrior's die is worth with the wrong implement");
         writer.WriteLine("  --class-poison-share The share of a dose a warrior of no poison class carries");

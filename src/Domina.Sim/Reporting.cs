@@ -199,6 +199,10 @@ internal static class CampaignSummaryReport
         writer.WriteLine(
             $"  Heads / last night     {report.AverageHeads:F2} heads"
             + $"  gate open {report.GateRate * 100:F1}%");
+        writer.WriteLine(
+            $"  The province           {report.AverageSettlements:F2} settlements held"
+            + $"  raids {report.AverageRaids:F2}"
+            + $"  sacked {report.AverageSacks:F2}");
         writer.WriteLine();
 
         writer.WriteLine("The last night");
