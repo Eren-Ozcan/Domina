@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Domina.Core.Campaign;
 using Domina.Core.Model;
 
 namespace Domina.Core.Dojo.Save;
@@ -52,7 +53,10 @@ public static class DojoSaveFile
                 entry.TrainingDays,
                 w.Talent,
                 entry.Drill,
-                w.Path));
+                w.Path,
+                w.Class,
+                w.Morale,
+                entry.Released));
         }
 
         return new DojoSnapshot(
@@ -64,8 +68,26 @@ public static class DojoSaveFile
             state.AcceptedBountyDay,
             state.ClaimedBountyDay,
             [.. state.School.Owned],
-            [.. state.HiredToday]);
+            [.. state.HiredToday],
+            [.. state.Staff.Hired],
+            [.. state.School.UnderConstruction.Select(s => new BuildSiteSnapshot(s.Key, s.Value))],
+            state.LastFeastDay,
+            SeasonSnapshot.From(state.Season),
+            Capture(state.Tribunal),
+            state.Difficulty);
     }
+
+    private static TribunalSnapshot Capture(Tribunal tribunal) => new(
+        tribunal.Standing is Summons standing ? Capture(standing) : null,
+        [.. tribunal.Queue.Select(Capture)],
+        [.. tribunal.Immunity.Select(pair => new ImmunitySnapshot(pair.Key.Value, pair.Value))]);
+
+    private static SummonsSnapshot Capture(Summons summons) => new(
+        summons.Warrior.Value,
+        summons.Name,
+        summons.Honor,
+        summons.Willpower,
+        summons.OpenedDay);
 
     public static string Write(DojoState state) =>
         JsonSerializer.Serialize(Capture(state), _options);
@@ -108,7 +130,16 @@ public static class DojoSaveFile
                 + "unrecognised fields were ignored.");
         }
 
-        DojoState state = new(tuning)
+        // The tier is the one balance-shaped thing that does come out of the file, because it is a
+        // decision the player made rather than a number the patch owns: the multipliers themselves are
+        // re-derived here from the code's own tables.
+        Difficulty difficulty = Difficulty.Of(snapshot.Difficulty);
+
+        DojoState state = new(
+            tuning,
+            difficulty.Apply(new EconomyTuning()),
+            encounters: difficulty.Apply(new EncounterTuning()),
+            difficulty: snapshot.Difficulty)
         {
             Resources = snapshot.Resources,
         };
@@ -121,8 +152,14 @@ public static class DojoSaveFile
         state.RestoreDay(Math.Max(1, snapshot.Day));
         state.RestoreSeed(snapshot.Seed);
         state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
-        state.RestoreSchool(snapshot.School ?? []);
+        state.RestoreSchool(
+            snapshot.School ?? [],
+            snapshot.Sites ?? []);
+        state.RestoreStaff(snapshot.Staff ?? []);
+        state.RestoreFeast(snapshot.LastFeastDay);
         state.RestoreHiredToday(snapshot.HiredRecruits ?? []);
+        state.RestoreSeason(snapshot.Season ?? new SeasonSnapshot());
+        state.RestoreTribunal(snapshot.Tribunal ?? new TribunalSnapshot());
 
         foreach (WarriorSnapshot record in snapshot.Warriors ?? [])
         {
@@ -167,6 +204,8 @@ public static class DojoSaveFile
             ArmorWear = record.ArmorWear,
             Talent = record.Talent <= 0 ? 1 : record.Talent,
             Path = record.Path,
+            Class = record.Class,
+            Morale = MoraleScale.Clamp(record.Morale),
         };
 
         foreach (BodyPart part in record.Disabilities ?? [])
@@ -182,6 +221,10 @@ public static class DojoSaveFile
         if (!record.IsAlive)
         {
             state.Roster.Kill(warrior.Id);
+        }
+        else if (record.Released)
+        {
+            state.Roster.Release(warrior.Id);
         }
     }
 }

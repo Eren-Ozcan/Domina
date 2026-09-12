@@ -11,9 +11,9 @@ namespace Domina.Core.Tests;
 /// </summary>
 public class DojoSaveTests
 {
-    private static DojoState Populated()
+    private static DojoState Populated(bool instantBuild = false)
     {
-        DojoState state = new()
+        DojoState state = new(school: instantBuild ? new SchoolTuning { BuildDaysFactor = 0 } : null)
         {
             Resources = new Resources(Gold: 120, Food: 8, Water: 6, Medicine: 2),
         };
@@ -97,7 +97,7 @@ public class DojoSaveTests
     [Fact]
     public void ARoundTripKeepsTheSchoolAndTheChosenPath()
     {
-        DojoState before = Populated();
+        DojoState before = Populated(instantBuild: true);
         before.Resources = before.Resources with { Gold = 5000 };
         before.BuySchoolNode(SchoolNodeId.TrainingGround);
         before.BuySchoolNode(SchoolNodeId.FormsMaster);
@@ -117,6 +117,67 @@ public class DojoSaveTests
         Assert.True(after.School.Has(SchoolNodeId.FormsMaster));
         Assert.Equal(before.Tuning.Training.GapClosedPerDay, after.Tuning.Training.GapClosedPerDay, 9);
         Assert.Equal(WarriorPath.Stone, after.Roster.Find(source.Id)!.Warrior.Path);
+    }
+
+    /// <summary>
+    /// A building that has been paid for but is not standing yet survives the save.
+    /// </summary>
+    /// <remarks>
+    /// Its gold has already left the treasury, so losing the site on load would be losing a paid-for
+    /// building; rounding its days up would be a way of shortening a wait gold cannot shorten.
+    /// </remarks>
+    [Fact]
+    public void ARoundTripKeepsABuildingUnderConstruction()
+    {
+        DojoState before = Populated();
+        before.Resources = before.Resources with { Gold = 5000 };
+        Assert.True(before.BuySchoolNode(SchoolNodeId.Infirmary));
+        before.AdvanceDay();
+
+        int left = before.School.UnderConstruction[SchoolNodeId.Infirmary];
+
+        DojoState after = DojoSaveFile.Load(DojoSaveFile.Write(before)).State!;
+
+        Assert.Equal(left, after.School.UnderConstruction[SchoolNodeId.Infirmary]);
+        Assert.False(after.School.Has(SchoolNodeId.Infirmary));
+    }
+
+    /// <summary>
+    /// The staff go into the save, and a post whose building is not standing is dropped.
+    /// </summary>
+    [Fact]
+    public void ARoundTripKeepsTheStaffButNotAPostWithNoBuilding()
+    {
+        DojoState before = Populated(instantBuild: true);
+        before.Resources = before.Resources with { Gold = 5000 };
+        Assert.True(before.BuySchoolNode(SchoolNodeId.TrainingGround));
+        Assert.True(before.Hire(StaffRole.DrillMaster));
+
+        DojoSnapshot tampered = DojoSaveFile.Capture(before) with
+        {
+            Staff = [StaffRole.DrillMaster, StaffRole.Physician],
+        };
+
+        DojoState after = DojoSaveFile.Restore(tampered).State!;
+
+        Assert.True(after.Staff.Has(StaffRole.DrillMaster));
+        Assert.False(after.Staff.Has(StaffRole.Physician));
+    }
+
+    /// <summary>
+    /// The class goes into the save too: it was bought with a facility, and reloading must not hand
+    /// the player a warrior who has forgotten what he can do.
+    /// </summary>
+    [Fact]
+    public void ARoundTripKeepsTheTrainedClass()
+    {
+        DojoState before = Populated();
+        RosterEntry source = before.Roster.FindLiving("Hana")!;
+        source.Warrior.Class = WarriorClass.Torite;
+
+        DojoState after = DojoSaveFile.Load(DojoSaveFile.Write(before)).State!;
+
+        Assert.Equal(WarriorClass.Torite, after.Roster.Find(source.Id)!.Warrior.Class);
     }
 
     /// <summary>A corrupted save cannot skip a branch's order: a master with no training ground is dropped.</summary>
