@@ -61,6 +61,20 @@ or the code. The numbers here are a summary; `docs/GDD.md` is what binds.
 
 ## Mechanical terms
 
+### The classes — torite, dokushi, kyūdō
+
+The class says what a warrior **can do**; the weapon says how well (`chance = base × class ×
+implement`, GDD §4). Three exist, and a fourth for the classless.
+
+| Term | What it is | Its job in the game |
+|---|---|---|
+| **torite** | "Arresting hand" — the Edo constables who took a man alive with jitte and rope | The catching class. Without it a jitte catches **nothing**; with the wrong weapon in hand he still catches, at 0.10 |
+| **dokushi** | "Poison hand" — a poisoner | The poison class. The classless still poison, at 0.6 of the dose |
+| **kyūdō** | "The way of the bow" | The range class. Today it is the throwing hand (the classless keep 0.85); its real content is the yumi, not written yet |
+
+Losing an arm closes the torite and the kyūdō and reopens the choice; the poison class survives
+every loss, and the **path** is never re-chosen.
+
 ### Catching — "chance" and "bind"
 
 Catching is the **second defensive axis**, tried before evasion. A die is rolled every time an

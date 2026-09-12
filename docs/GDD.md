@@ -133,7 +133,7 @@ Nine stats. Recruit base values in parentheses (`WarriorStats.Recruit()`).
 | **Accuracy** | `Accuracy` (55) | Chance to hit **and** blade catching (§7) |
 | **Stamina** | `MaxStamina` (100) | Running, evading, attacking and catching consume it; as it drops, damage and accuracy fall |
 | **Speed** | `Speed` (50) | Walking/running speed. While it was fixed, escape always succeeded |
-| **Will** | `Willpower` (**new**) | Seppuku resistance, panic threshold, honour gain. It also slows how fast morale falls |
+| **Will** | `Willpower` (50) | Seppuku resistance, the panic check, and the brake on morale's falls. **In the core since 2026-09-10**; trained by the fifth drill, **Meditation**, which has no secondary stat |
 
 Besides these there are two more counters attached to a warrior, neither of which is a
 combat stat:
@@ -142,7 +142,32 @@ combat stat:
 - **Morale** — the warrior's **condition**. Low morale breaks stats; it is linked to Will
   in both directions (high Will → morale falls slowly; low morale → checks that rest on
   Will shift against the warrior). Raised by: victory, rest, the bard, a feast. Lowered by:
-  defeat, a fallen comrade, going hungry. Numbers to be measured
+  defeat, a fallen comrade, going hungry. **Numbers locked 2026-09-10** (build-order step 6):
+
+| Number | Value | How it was settled |
+|---|---|---|
+| The stat multiplier | **×0.94 at morale 0, ×1.03 at 100**, ×1.00 at 50 | `3v3`, 20.000 fights: victory 63.57% / 69.64% / 75.24%. The first band tried (0.90/1.05) swung 17.6 points and a 0.70 floor collapsed the side (31.09%) — the multiplier lands on six stats at once |
+| A quiet day | **settles toward 50, never above** (+2), plus a **drift** of 1/day from either side | Measured: a flat daily gain pinned every roster at 100 within a month and made the lower half of the band unreachable |
+| Victory / defeat | **+8 / −10** | Above the middle is bought, never drifted into |
+| Panic on top of a defeat | **−6** to the man who ran | Panic has to cost, or breaking is free |
+| A comrade's death | **−6 per man lost** | It weighs on everyone who came back |
+| A hungry day | **−5** | The only daily loss Will brakes |
+| The bard's hall | **+2 a day** (halved with the post empty) | The one building whose whole output is morale |
+| A feast | **+15**, one measure of sake per warrior, then **7 days** | Open Decision #14; without the cooldown it is a button, not a decision |
+| Will's brake on a fall | **×(1 − Will/100 × 0.60)** | It slows a collapse and never stops one |
+
+Health and stamina are **not** touched by morale: they are pools that carry between fights, and
+scaling them would take back wounds the warrior already had.
+
+**The panic check (in the core since 2026-09-10).** A warrior under 30% health, or on a side that is
+outnumbered, is put to a check every second: `0.10 × (1 − Will/100 × 0.80) × the morale swing`. If it
+holds he leaves the field **alone** — the player's key stays a team order, and the two are separate
+events. The rule applies to the **adversaries too**, which is why it raises the player's victory rate
+(67.16% → 69.64% on `3v3`) and cuts warrior deaths (44.57% → 37.64%).
+
+> ⚠️ **A leak the rule exposed:** a fight the enemy fled pays the **same** reward as one where he was
+> cut down, because the reward is computed from the encounter's enemy health. It is written down here
+> and left for the season's economy (build-order step 7).
 
 > **Why honour and morale are separate:** honour is what the outside thinks about the
 > warrior, morale is the warrior's own condition. Collapsing them into a single counter
@@ -487,6 +512,38 @@ chance = base × class multiplier × implement multiplier
 > must be swept **together** — the old single-axis measurements (jitte 78.00% / katana
 > 75.02% and the like) will be retaken under this rule.
 
+**The class list (locked 2026-09-10, in the core since build-order step 4):**
+
+| Class | Opens | The implement that pays it | Closed by |
+|---|---|---|---|
+| **Torite** | Catching | jitte (`CatchSkill` 1.0), sai (1.25) | losing an arm |
+| **Dokushi** | Poison | a poisoned blade or shuriken | nothing |
+| **Kyūdō** | Range | the throwing slot, and later the yumi | losing an arm |
+
+There is no blunt/stunning class: stunning and dropping a weapon stay open to **everyone** (§7), and
+a fourth class would only have widened the balance surface. The numbers of the product:
+
+| Case | Multiplier | Measured (20.000 fights, `losing:0.7`) |
+|---|---|---|
+| Right class, right implement | 1.0 × the implement | jitte 78.65%, sai 80.47% |
+| Right class, wrong implement or empty-handed | `UnskilledCatchImplementFactor` **0.10** | torite + katana 81.07% |
+| **No class**, right implement | **0** | jitte 41.76% — the same weapon, no class |
+| No class, poison | `UnclassedPoisonFactor` **0.6** | 65.12% against the trained 76.09% |
+| No class, range | `UnclassedRangeFactor` **0.85** | 82.37% against the trained 83.52% |
+
+**Catching is the only hard zero.** Poison and range are scaled instead: the dose is on the blade,
+and zeroing it would have made the poisoned tantō dead equipment until a facility stood — measured,
+a zero dose drops that knife to 6.18%, below the *clean* tantō it is built from (34.89%). The
+throwing slot every warrior carries is not turned into a class tax either; 0.85 is a placeholder
+until the yumi exists.
+
+> ⚠️ **What the measurement then found:** with both arms of the comparison carrying the same class,
+> the torite fights **better with a katana** than with his own implement — duel 81.07% against
+> 78.65%, in front of ō-yoroi 63.63% against 35.59%. A catch is worth a lot per event, so a rare one
+> collects most of the value while the jitte pays 8 damage a strike for the frequency. This is Open
+> Decision **#19** widening, and the answer belongs to the implements' prices, not to the class
+> layer. Phase 9.
+
 **On being maimed the class is re-chosen, the Path never.** Limb loss makes some classes
 impossible; the player chooses from those that remain. The Path is the labour of 20 training
 days, and being maimed should not erase it — a man who loses his arm does not lose his
@@ -801,6 +858,26 @@ to be played with in playtest — §14 #8 stays open.
 > (50). A pardon at 45: above the threshold but below neutral — a pardoned warrior should not
 > fall straight into a new vote, but a pardon is not absolution either; the warrior gets up in
 > debt.
+
+**In the dojo since 2026-09-10 — `Dojo/Tribunal.cs`.** The rules above are the **live** half: they run
+on the wall clock and were written for a stream. Until this date nothing outside `Honor/` called them,
+so honour was a number the game wrote and never read — a broken promise, a rout and a missed week all
+cost honour and cost nothing. The dojo's half restates the same rule on the **day**:
+
+- a warrior below the threshold is **summoned when the day closes**, and answered when the **next** day
+  closes. The day in between is the crowd's; on a silent dojo it is what keeps the verdict from being
+  an execution the player never saw coming
+- **one man stands at a time**, exactly as in the live queue
+- a pardon pulls him to 45 and buys **14 days** of immunity — the live 15 minutes is nothing to a
+  calendar, and a pardon that expired overnight would be worthless
+- the sword goes through the roster like any other death: permadeath, the name back into the pool, the
+  man counted on the closing screen
+- the verdict's die is a function of the **seed and the day**, and the queue and the pardons are in the
+  save: a reload is not a reroll and not a way out
+- what does **not** go into the save is the voices already cast — they belong to a live chat that is
+  not there when the file is opened again
+
+When the chat layer arrives it casts votes into this same summons. There is one rulebook.
 
 ---
 
@@ -1451,10 +1528,31 @@ into an interruption.
     a player who is willing to lose ground. One is the floor, the other is the pressure. The fiction
     carries both without strain — the week you file no work is the week the province reads your school
     as idle **and** the week he moves unopposed
-  - **Unmeasured:** the honour number for a missed week (Open Decision #18) and whether the map
-    pressure adds anything on top of the honour penalty
+  - **In the core since build-order step 7 (2026-09-10), and the honour number is locked.** The rule
+    as measured is not "a quiet week costs honour" but **"a week you chose to sit out costs honour"**.
+    What the penalty finally reaches is the **tribunal** (§6), which was written the same day: until
+    then nothing in the game read the honour number at all, so this penalty — locked at 5 precisely
+    because honour pushes toward the seppuku threshold — was arithmetic with no consequence:
+
+    | Number | Value | How it was settled |
+    |---|---|---|
+    | Missed-week honour penalty | **5** per living warrior | 200 hiding dojos against 200 ordinary ones, 180 days each. Honour's own decay (0.5/day = 3.5 a week) sets a hard floor: at **4 or below the rule is inert** — the hiding dojo settles at honour 41 and nobody ever reaches the seppuku threshold. At 5 the hider ends at 22 and 99% cross by day 91, while the ordinary dojo ends at 47 and its crossing rate goes 8.5% → 21%. At 6 it is 41.5% of **ordinary** dojos below the threshold, at 8 it is 59% |
+    | Grace weeks | **1** | The first quiet week of a run is free. It was written as the item that would separate hiding from bad luck and **the measurement said otherwise** — the ordinary dojo's longest run of quiet weeks is 12.9, one block at the end of the season, the same shape a hider's is. It stays as a small mercy, not as the rule that closes the exploit |
+    | Days with somebody fit | **4** of the 7 | This is what actually separates them. Without it the ordinary dojo pays for 12.3 of its 13.4 quiet weeks, because its quiet weeks **are** the weeks its party is in the infirmary; with it, 5.1. A roster lying in bed is not choosing anything. Swept 1-7 the number itself barely moves (paid weeks 5.5 → 4.9): a decision knob, not a survival one |
+
+    ⚠️ **Still unmeasured:** whether the map pressure adds anything on top of the honour penalty —
+    the settlement map is not in the core yet, and what step 7 put on screen is only the shared
+    counter (`Next move: n days`)
 - **Difficulty tiers:** Apprentice / Master / Legend. "Master" is the base of the balance
-  measurement; the others are derived by multipliers, not by a separate measurement run
+  measurement; the others are derived by multipliers, not by a separate measurement run.
+  **In the core since 2026-09-10** (`Campaign/Difficulty.cs`): two multipliers, both 1 at Master —
+  enemy power ×0.85 / ×1.15 and what the work pays ×1.15 / ×0.85. They pull together on purpose: an
+  easier tier that only weakened the enemy would pile up gold and turn the dojo's decisions into
+  formalities. **Nothing** touches death, dismemberment or the seppuku threshold — a tier changes how
+  often the player is in trouble, not what trouble means. The tier is written to the save (it is the
+  player's decision, like the seed); its multipliers stay in the code, so a retuned patch reaches an
+  old save. Measured, 200 dojos × 180 days: closures 1.0% / 8.5% / 17.0%, deaths per warrior-fight
+  1.9% / 3.9% / 6.4%, the last night won 85.5% / 51.5% / 14.0%
 
 ### The end of the season: the bounty gate and the final tournament
 
@@ -1476,6 +1574,56 @@ into an interruption.
   walked out free** — those released during the season plus everyone alive on day 180, whose term the
   season outlived)
 
+**In the core since build-order step 7 (2026-09-10).** `Campaign/Season.cs` holds the clock and the
+books, `Campaign/FinalNight.cs` the five bouts. What the code fixes about the design:
+
+- **The gate is read on the last day and nowhere else.** Three heads brought in on day 12 are worth
+  exactly what three brought in on day 179 are — the gate asks whether the season did the work, not when
+- **A bout is not a day.** No day closes between the bouts: no infirmary day burns, no upkeep is paid,
+  no reward is collected. Gold on the last night would be gold with nothing left to buy; the night's
+  only currency is the men still standing
+- **A won bout that leaves nobody able to stand is a night lost**, decided on the spot rather than
+  reported one bout later
+- **A roster that runs out closes the dojo the same day**, whatever day it is: with nobody to send,
+  the remaining countdown is one the player cannot act on
+- **The five bouts** come at powers **2.2 / 2.4 / 2.6 / 2.8 / 3.2** against **2 / 3 / 3 / 4 / 1** men.
+  The fifth is `Adversaries.KuroganeHead`, deliberately kept **out of** the encounter pool: he is met
+  once, at the end, or not at all
+- **A wound is carried onto the field as health, not as a refusal (2026-09-10).** "No healing between
+  the bouts" had to be given a body. The dojo records a wound in **days**, and the first version of the
+  night simply refused anybody carrying one — measured, that made the night unplayable: three quarters
+  of the dojos that reached it could field **nobody**, and dropping the bouts below day 1's power did
+  not move it. So a man who can stand, stands, with what is left of him: **5% of his health per
+  infirmary day**, and past **10 days** he cannot be carried to the field at all
+- **There is no withdrawing from a bout.** Pulling out is losing it, and losing it ends the run
+
+**Measurement of the last night (2026-09-10, 200 dojos × 180 days per row, the party rested for the
+last week, no retreat on the night).** It took two passes, and **the first pass was measuring the
+wrong dojo**: against a policy that never built a facility, never filled a post and never chose a
+path, the night was unwinnable, and the bouts were softened to 1.8-2.8 to compensate. Re-measured
+against a dojo that plays the game, that softened night was won by 78% of well-stocked dojos — the
+ending had become a formality. The powers went back to the design's own line (at and above the
+curve's ceiling of 2.2) and the calibration moved onto the **crowd**, which is the axis that actually
+carries it: between powers 2.2-3.2 and 2.6-3.6 the night moves three points, between two men in a
+bout and four it moves forty. Past a point power only adds health and strength — an enemy's accuracy,
+defence and evasion are capped at 95 — and a developed party answers that with its kit.
+
+| The dojo that walks into the night | Won all five |
+|---|---|
+| built its school, filled its posts, chose its paths — **eight** men | **38.5%** |
+| the same dojo with **six** men | **13.5%** |
+| built none of it — six or eight men | **0%** (never past the fourth bout) |
+
+So the night asks for two things at once: **a school and the depth to use it**. Bodies alone do not
+buy it and neither does a school with nobody left to send. The fourth bout — four of his seniors at
+once — is the gate (29% survival at six men, 51% at eight); raising the crowd one further step
+(3/4/4/5) shuts it outright at 0.5%, which is a wall rather than an ending. ⚠️ The sim's night policy
+is still crude (the strongest men standing, bout after bout; it does not hold a fresh man back for
+Kurogane), so a player should beat these figures
+- **Release** is now a thing the player does: a man whose term is ended walks out alive, off the roster
+  and onto the closing screen's other column. A man in the infirmary cannot be released — releasing a
+  mouth before a hungry day and taking him back after it would buy the upkeep rule off
+
 ### The dojo: facilities and staff
 
 A **facility** = a physical building that is put up (gold up front, permanent, cannot be sold back,
@@ -1490,8 +1638,46 @@ building (a daily wage + per-head stores; you can cut them any day, the building
   ō-yoroi): those do not open at half efficiency, they either exist or they do not
 - **Buildings are physical and fixed in place.** No free placement and no adjacency bonuses — no
   layout-planning game is being opened
+- **The roster's ceiling is a building (2026-09-10).** The dojo opens with room for **six** — the
+  ceiling docs/STORY.md gives the dead master's school, and where the roster **starts** rather than
+  where it ends. The **quarters** branch raises it: barracks 300 gold / 8 days and long house
+  600 / 12, **+2 beds each**. No post (a roof needs nobody) and no half-efficiency (half a bed houses
+  nobody). Hiring is refused when the beds are full; the dead and the released free theirs.
+
+  **Measured** (300 dojos × 180 days, Master, full school): a dojo with **eight** beds from day one
+  wins the last night **29.7%** of the time and one with ten **35.0%**, while a dojo that opens at six
+  and buys its way to nine wins **10.7%** — and one that builds quarters and nothing else wins
+  **0%**. Two things fall out of that. Beds alone are not a strategy: men with no school behind them
+  never pass the fourth bout. And **a bed bought in the fifth month holds a raw recruit** — instant
+  construction moved the night by three tenths of a point, so it is not the calendar, it is that the
+  men who win the last night are the men who had a season to grow. Depth bought late converts gold
+  into bodies rather than into wins, which makes the branch an **early** commitment competing with the
+  school tiers for the same purse — the honest shape of the system, not a number to be tuned away
 - **Classes are unlocked by facilities:** once the relevant facility is built, that class becomes
   trainable (the counterpart of Domina's 400-500 gold, 16-17 turn class research)
+
+**In the core since build-order step 5 (2026-09-10).** The school tree **is** the facility tree —
+the tiers stayed as upgrades and every node became a building:
+
+| Number | Value | How it was settled |
+|---|---|---|
+| Build time | 6 / 10 / 14 days by tier, 12 for a class hall, 5-8 for a situational building | Swept ×0-×2: it moves **occupancy** (51 post-days against 26), not survival |
+| Branch post wage | **6 gold a day** (situational **4**) | Swept 0-16 over 1500 dojos: post-days 44 → 19, dojos closed 64.3% → 65.9%. A decision knob, not a survival knob |
+| Empty building | **half** its own bonus (×1.30 becomes ×1.15) | Swept 0-1: survival flat; the rule stands on the design promise, not on a measured edge |
+| Physician: a mortal wound turned around | **0.25** | 0 → 79.2% of dojos closed, 0.15 → 71.8%, **0.25 → 66.2%**, 0.40 → 60.0% |
+| Physician: no medicine bill | a gate | Needs the person; an empty infirmary still buys medicine |
+| Bone setter: a limb kept | 0.25, **measured as nothing** | Limbs are lost on ~5% of warrior-fights; a quarter of that is invisible in a season |
+| Class hall | 450 gold, 12 days | Not swept — the hall is the class's whole price and the training costs nothing further |
+
+> **The infirmary trap, closed on the second attempt.** The branch was rebound to **limbs** first and
+> that measured as nothing at all — worse than an empty infirmary once the physician's wage was
+> counted (79.2% against 75.5%). What drives a dojo under is **death**, so the branch was bound
+> there. The branch that used to sell time now sells the one loss training cannot undo.
+
+> **What the forge does not pay for.** Measured branch by branch, the equipment branch changed
+> nothing (79.2% closed, the same as no school at all): repair money is a small line beside food and
+> replacing a dead man. It is left in with the finding written down rather than repriced blind — the
+> ō-yoroi gate it is supposed to carry is not written yet.
 
 #### Professions — 11 roles (profession round, 2026-09-07)
 
@@ -2574,12 +2760,12 @@ slot and a new measurement round.
 | # | Topic | Note |
 |---|---|---|
 | **13** | **Engine-free core — reopened** | Item 9.1 of the decision round. The rule is in force for now (the resolver knows no engine, is seeded, produces an event stream) but the user has not made the decision. Three options are on the table: (a) it continues as is, (b) the decision stays in the core but position/distance/animation timing are left entirely to Godot, (c) resolution is moved into the engine. **(c) conflicts with the "measure as each system enters" decision** — no sim means no measurement. **The biggest open item of this round**; it determines both the architecture and the ROADMAP | **Leaning after the 2026-09-08 round: (a), with one rider** — real time lives in Godot while the core stays on a fixed tick, so the engine carries the pausing, the speed and the flow of the day without the resolver moving. Three grounds were written down: (1) "measure everything first, then move to (c)" is not a saving — every system has to be written into the engine-free core to be measurable at all, so (c) would be a second implementation of the same rules; (2) once the sim is gone a ported number cannot be shown to still hold — real-time float timing, frame order and collision order drift, and the drift is invisible without a rig; (3) balance is not a single pass — every new enemy kind or weapon reopens the numbers, and without a sim retuning is playtest only, which a 180-day permadeath run makes slow and noisy. What (c) would save is **already paid for**: position, distance, projectile flight and the weapon on the ground are written and tested (`Combat/ArenaPoint.cs`, `Projectile.cs`, `GroundWeapon.cs`); the core work left (classes, staff, morale, season) is bookkeeping, which an engine barely helps with. **Not locked** — the user deliberately left it open. The right moment to reconsider (c) is **after the build plan's step 8**, once every system is written and measured and the game can be played end to end, as a rewrite decision rather than an architecture decision taken now.
-| **14** | **Scarcity and a fourth resource** | Whether **sake** will be added to the stock resources and how scarcity will work — both to be tied to the morale system (§10 morale). Left at ⏳ in the decision round |
+| ~~**14**~~ | ~~**Scarcity and a fourth resource**~~ | **Closed 2026-09-10 with build-order step 6.** Sake **is** the fourth stock, and it is the only one the day's bill never buys: it sits in the store until the player calls a **feast** (one measure per living warrior, +15 morale to the roster, then a 7-day wait). Scarcity works through morale rather than through a second hunger counter — a hungry day costs morale, and a dojo that cannot feast cannot buy its way out of a bad week. A daily sake drain was rejected: it would only have been a second food |
 | **15** | **A save backup must not be an undo gate** | The versioned, merge-on-load save is kept, and an automatic backup rolled on top of it is coming. In a game with permadeath, the backup should **not** have an in-game "go back to the previous day" option; how it will be presented (or whether it will be presented at all) is to be decided |
 | ~~16~~ | ~~The opponent pool~~ | **Closed (2026-09-10). The enemy is human; there are no monsters.** The story (`STORY.md`) makes every fight in a season part of one rival school's protection racket, and a creature encounter belongs neither to that racket nor to the 180-day clock — it would be filler. The change cost nothing mechanically: an enemy is only a stat block, so the five kinds kept their numbers and only their identities were rewritten (`Campaign/Bestiary.cs` → `Campaign/Adversaries.cs`, `YokaiKind` → `EnemyKind`; kappa → collector, kitsune → cutthroat, tengu → duelist, oni → kabukimono, jorōgumo → senior student). **Every measurement taken before the rename still holds.** §1 and §3 were rewritten with it |
 | ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days on the **same tick** as the compulsory-fight rule, which stays (the move counter was briefly written as a replacement for it — void 2026-09-10); settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
-| **19** | **The heavy-weapon brake is gone** | Measured 2026-09-10, and **not** caused by the stun-drop rule: with that rule switched off and 100.000 fights (the 20.000-fight bed cannot resolve a margin this thin — its standard error is ±0.34 points), `jitte-heavy` takes **34.65%** against `katana-heavy`'s **34.38%**. The catch round had locked the opposite as a brake — "the catching implement is still the wrong choice against an enemy carrying a nodachi" — and block later thinned that margin to 0.24 points; it has now crossed zero. `CatchTwoHandedFactor` (0.75) therefore no longer holds anything back. Nothing was re-locked on the strength of one measurement: this is a Phase 9 item, and the lesson is that a margin under ~0.5 points cannot be defended on a 20.000-fight bed |
-| **18** | **Numbers that arrived with the round** | ~~the weapon-drop chance from stunning~~ (**locked 0.15 on 2026-09-10**, §7) and the rest, still awaiting measurement: the `class × implement` multipliers, the weapon mastery bonus, the reward band 0.75-1.25, staff wages, facility construction times, class facility prices, the frequency of classed candidates in the market, the reward multiplier of a surrender-forbidden contract, the honour penalty for a missed mandatory fight |
+| **19** | **The heavy-weapon brake is gone** | Measured 2026-09-10, and **not** caused by the stun-drop rule: with that rule switched off and 100.000 fights (the 20.000-fight bed cannot resolve a margin this thin — its standard error is ±0.34 points), `jitte-heavy` takes **34.65%** against `katana-heavy`'s **34.38%**. The catch round had locked the opposite as a brake — "the catching implement is still the wrong choice against an enemy carrying a nodachi" — and block later thinned that margin to 0.24 points; it has now crossed zero. `CatchTwoHandedFactor` (0.75) therefore no longer holds anything back. Nothing was re-locked on the strength of one measurement: this is a Phase 9 item, and the lesson is that a margin under ~0.5 points cannot be defended on a 20.000-fight bed. **Widened 2026-09-10 (build-order step 4):** with the class layer in, the comparison can be made between two warriors of the **same** class, and the catching implement then loses everywhere — the torite wins 81.07% with a katana against 78.65% with a jitte in a duel, 63.63% against 35.59% in front of ō-yoroi, 36.65% against 34.67% versus a two-handed enemy. The cause is that a catch pays **per event**, so the weak 0.10 floor collects most of its value while the jitte pays 8 damage a strike for the frequency. The item is now "the catching implements are priced wrong", and it is answered with their damage/speed/disarm share, not with the class numbers |
+| **18** | **Numbers that arrived with the round** | ~~the weapon-drop chance from stunning~~ (**locked 0.15 on 2026-09-10**, §7); ~~the `class × implement` multipliers~~ (**locked 2026-09-10**, §4: catch floor 0.10, classless dose 0.6, classless throw 0.85) and the rest, still awaiting measurement: the weapon mastery bonus, the reward band 0.75-1.25, ~~staff wages~~ (**locked 2026-09-10**: 6/day for a branch post, 4 for a situational one), ~~facility construction times~~ (**locked**: 6/10/14 by tier), ~~class facility prices~~ (**locked**: 450 gold, 12 days), the frequency of classed candidates in the market (0.05 in the code, still unmeasured — the campaign policy does not train classes), the reward multiplier of a surrender-forbidden contract, ~~the honour penalty for a missed mandatory fight~~ (**locked 2026-09-10**: 5 per living warrior, 1 grace week, charged only on a week the dojo had men standing for 4 days; §10) |
 | ~~1~~ | ~~Party size~~ | **Locked (2026-08-29).** The upper bound is **4**, the number is the player's decision; encounters such as duels/raids can impose an exact number (§10). The core already supports N warriors. **Follow-up work:** a four-warrior arena will cause camera and readability problems in 2.2 |
 | ~~2~~ | ~~Expedition/map structure~~ | **Closed (2026-08-29).** An expedition is one room/one fight; **one encounter offer** per day, take it or leave it; no map screen. **No boss structure is being built** — difficulty rises on a single curve (§10). **Footnote (2026-09-10):** the settlement board of §10 does not reopen this. It is a **picture, not a screen you act on** — no travel, no routing, no fight started from it; contracts still arrive in the offer queue and the board only reads back what the season has done |
 | 3 | Adversary behaviour | Which kinds, and each one's special combat behaviour. **The input is ready (2026-09-03):** the behavioural difference will not be separate code but the target-selection weights of §4 tuned per kind. **The numbers side is written (2026-09-04):** `Domina.Core/Campaign/Adversaries.cs` — collector, cutthroat, duelist, kabukimono and senior student are scaled on a single power curve and take their place on it (§10). The named adversaries of the story are absent: §10 builds no boss structure. **Renamed 2026-09-10 with #16** — the numbers did not move. The natural axis for the behaviour weights is now **discipline**: a street man picks the nearest target, a school man finishes the wounded and then turns to the most dangerous. **All that remains open is behaviour** — when that field is added to the mould, encounter generation does not change |
