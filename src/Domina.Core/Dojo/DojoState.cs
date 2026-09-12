@@ -21,6 +21,7 @@ public sealed class DojoState
     private BountyContract? _bounty;
     private bool _bountyRead;
     private readonly HashSet<int> _hiredToday = [];
+    private readonly Dictionary<OmamoriKind, int> _charms = [];
 
     public DojoState(
         DojoTuning? tuning = null,
@@ -182,6 +183,13 @@ public sealed class DojoState
                     entry.Drill,
                     entry.Warrior.Talent,
                     Tuning.Training);
+
+                // The weapon in his hand is learned on the same day, and only on a day he holds one:
+                // meditation is the drill that does not touch a sword (docs/GDD.md §10).
+                if (entry.Drill != Drill.Meditation && Tuning.Mastery.GainPerDay > 0)
+                {
+                    entry.Warrior.GainMastery(Tuning.Mastery.GainPerDay);
+                }
 
                 trained.Add(entry.Id);
             }
@@ -652,6 +660,9 @@ public sealed class DojoState
             return false;
         }
 
+        // The charms are the dojo's, not his: they come off at the gate and go back into the store.
+        ReturnCharms(entry.Warrior.StripCharms());
+
         // A man who has walked out of the gate is not tried the next morning.
         Tribunal.Forget(id);
         return true;
@@ -780,6 +791,139 @@ public sealed class DojoState
             MoraleLedger.Raise(
                 entry.Warrior,
                 morale.BardGain * School.Efficiency(SchoolNodeId.BardHall, Staff, StaffTuning));
+        }
+    }
+
+    /// <summary>How deep the dojo can read an offer today (docs/GDD.md §10).</summary>
+    /// <remarks>
+    /// The hut alone reads who is out there; the diviner in it reads the numbers as well. It is the one
+    /// place the half-efficiency rule is written as two <b>kinds</b> of answer rather than as a share:
+    /// half a stat block is not a weaker reading, it is a wrong one.
+    /// </remarks>
+    public ReadingDepth ReadingDepth => !School.Has(SchoolNodeId.DivinerHut)
+        ? ReadingDepth.None
+        : Staff.Has(StaffRole.Diviner) ? ReadingDepth.Full : ReadingDepth.Partial;
+
+    /// <summary>What the hut says about today's offer.</summary>
+    public OfferReading Reading => Divination.Read(Offer, ReadingDepth);
+
+    /// <summary>The charms in the dojo's store, kind by kind.</summary>
+    /// <remarks>
+    /// A charm on a warrior is <b>not</b> here: a fitted charm belongs to the man until it is taken off
+    /// him. Splitting the two is what makes the store's count mean "what I can fit today" rather than
+    /// "what I own", which is the number the screen has to show.
+    /// </remarks>
+    public IReadOnlyDictionary<OmamoriKind, int> CharmStore => _charms;
+
+    /// <summary>How many charms one warrior may wear today (docs/GDD.md §10).</summary>
+    /// <remarks>
+    /// Zero without the shrine: the omamori is the temple's supply, so a dojo that never builds one
+    /// never sees the system. The monk opens the second slot.
+    /// </remarks>
+    public int OmamoriSlots => StaffTuning.OmamoriSlots(
+        School.Has(SchoolNodeId.Shrine),
+        Staff.Has(StaffRole.Monk));
+
+    /// <summary>Buys a charm from the temple. It needs the shrine standing and the gold.</summary>
+    /// <returns><c>true</c> if the charm went into the store.</returns>
+    public bool BuyCharm(OmamoriKind kind)
+    {
+        OmamoriCharm charm = Omamori.Find(kind);
+        if (!School.Has(SchoolNodeId.Shrine) || Resources.Gold < charm.Price)
+        {
+            return false;
+        }
+
+        Resources = Resources with { Gold = Resources.Gold - charm.Price };
+        _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
+        return true;
+    }
+
+    /// <summary>
+    /// Sells a charm back to the temple, at a share of its price.
+    /// </summary>
+    /// <remarks>
+    /// Only a charm sitting in the store can be sold — one hanging on a warrior has to be taken off
+    /// him first. It is one click more, and it is the click that stops a bad week stripping the roster
+    /// by accident.
+    /// </remarks>
+    /// <returns>The gold that came back; 0 if there was nothing to sell.</returns>
+    public int SellCharm(OmamoriKind kind)
+    {
+        if (_charms.GetValueOrDefault(kind) <= 0)
+        {
+            return 0;
+        }
+
+        Take(kind);
+        int gold = (int)Math.Floor(Omamori.Find(kind).Price * Math.Clamp(StaffTuning.OmamoriResaleShare, 0, 1));
+        Resources = Resources with { Gold = Resources.Gold + gold };
+        return gold;
+    }
+
+    /// <summary>Hangs a charm from the store on a living warrior, if he has a slot left.</summary>
+    public bool FitCharm(WarriorId id, OmamoriKind kind)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        if (entry is null
+            || !entry.Warrior.IsAlive
+            || entry.Released
+            || entry.Warrior.Charms.Count >= OmamoriSlots
+            || _charms.GetValueOrDefault(kind) <= 0)
+        {
+            return false;
+        }
+
+        Take(kind);
+        entry.Warrior.Wear(kind);
+        return true;
+    }
+
+    /// <summary>Takes a charm off a warrior and puts it back in the store.</summary>
+    public bool UnfitCharm(WarriorId id, OmamoriKind kind)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        if (entry is null || !entry.Warrior.Remove(kind))
+        {
+            return false;
+        }
+
+        _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
+        return true;
+    }
+
+    /// <summary>Puts charms back into the store — a released man's, or a dead man's brought home.</summary>
+    internal void ReturnCharms(IEnumerable<OmamoriKind> charms)
+    {
+        foreach (OmamoriKind kind in charms)
+        {
+            _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
+        }
+    }
+
+    /// <summary>Restores the store coming from the save.</summary>
+    internal void RestoreCharms(IEnumerable<KeyValuePair<OmamoriKind, int>> store)
+    {
+        _charms.Clear();
+        foreach ((OmamoriKind kind, int count) in store)
+        {
+            if (count > 0)
+            {
+                _charms[kind] = count;
+            }
+        }
+    }
+
+    private void Take(OmamoriKind kind)
+    {
+        int left = _charms.GetValueOrDefault(kind) - 1;
+        if (left > 0)
+        {
+            _charms[kind] = left;
+        }
+        else
+        {
+            _charms.Remove(kind);
         }
     }
 

@@ -39,7 +39,7 @@ public enum SchoolNodeId
     /// <summary>Kata master: the ceiling a warrior can approach rises.</summary>
     FormsMaster,
 
-    /// <summary>Inner dojo: training speeds up a second time.</summary>
+    /// <summary>Inner dojo: training speeds up a second time, and the weapon master teaches mastery.</summary>
     InnerDojo,
 
     /// <summary>Infirmary: natural recovery burns two days a day.</summary>
@@ -66,13 +66,13 @@ public enum SchoolNodeId
     /// <summary>Kitchen: the cook's post — the day's food need falls.</summary>
     Kitchen,
 
-    /// <summary>Shrine: the monk's post. It has no number yet — omamori are not written.</summary>
+    /// <summary>Shrine: the monk's post — the omamori slots and the funeral rite.</summary>
     Shrine,
 
-    /// <summary>Bard's hall: the bard's post. It has no number yet — morale is step 6.</summary>
+    /// <summary>Bard's hall: the bard's post — the day's morale gain.</summary>
     BardHall,
 
-    /// <summary>Diviner's hut: the diviner's post. It has no number yet — the offer screen does not read it.</summary>
+    /// <summary>Diviner's hut: the diviner's post — what can be read off the day's offer before going in.</summary>
     DivinerHut,
 
     /// <summary>Torite hall: the catching class becomes trainable.</summary>
@@ -255,11 +255,12 @@ public static class Facilities
     /// </summary>
     /// <remarks>
     /// They can still be hired and they still draw a wage: hiding them would have made the payroll read
-    /// as complete when it is not. The weapon master waits on weapon mastery, the bard on morale
-    /// (build-order step 6), the monk on omamori, the diviner on the offer screen.
+    /// as complete when it is not. <b>The list is empty as of 2026-09-12</b> — the bard landed with
+    /// morale (step 6), and the weapon master, the monk and the diviner with weapon mastery, the
+    /// omamori and the reading of an offer. It is kept so the next post written ahead of its system has
+    /// somewhere to be declared.
     /// </remarks>
-    public static bool IsInert(StaffRole role) =>
-        role is StaffRole.WeaponMaster or StaffRole.Bard or StaffRole.Monk or StaffRole.Diviner;
+    public static bool IsInert(StaffRole role) => false;
 }
 
 /// <summary>The facilities the dojo owns.</summary>
@@ -457,6 +458,10 @@ public sealed class School
         // A multiplier is scaled through its bonus: ×1.30 at half is ×1.15, never ×0.65.
         double Stepped(double step, SchoolNodeId id) => 1 + ((step - 1) * Share(id));
 
+        // Mastery is the weapon master's whole output, so it is gated outright rather than stepped:
+        // without the inner dojo there is no mastery at all, and an empty hall teaches at half.
+        double masteryShare = Share(SchoolNodeId.InnerDojo);
+
         return tuning with
         {
             Training = tuning.Training with
@@ -464,6 +469,11 @@ public sealed class School
                 GapClosedPerDay = rate,
                 SkillCeiling = ceiling,
                 PoolCeiling = pool,
+            },
+            Mastery = tuning.Mastery with
+            {
+                GainPerDay = tuning.Mastery.GainPerDay * masteryShare,
+                FightGain = tuning.Mastery.FightGain * masteryShare,
             },
             // The bed is the exception to the half-efficiency rule: recovery is counted in whole days,
             // and half a day cannot be spent. A built infirmary heals at its full rate whether or not a

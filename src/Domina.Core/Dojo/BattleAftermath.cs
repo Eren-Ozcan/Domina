@@ -49,7 +49,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
                 continue;
             }
 
-            lines.Add(ApplyTo(state, entry, summary));
+            lines.Add(ApplyTo(state, entry, summary, won));
         }
 
         SettleMorale(state, result, won, fallen);
@@ -134,9 +134,32 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             // A comrade's death weighs once per man lost: two funerals hurt twice as much as one.
             if (fallen > 0)
             {
-                MoraleLedger.Lower(entry.Warrior, morale.ComradeLoss * fallen, morale);
+                MoraleLedger.Lower(entry.Warrior, morale.ComradeLoss * fallen * FuneralFactor(state), morale);
             }
         }
+    }
+
+    /// <summary>
+    /// What a comrade's death is still worth once the rite has been said over him.
+    /// </summary>
+    /// <remarks>
+    /// The monk's second job (docs/GDD.md §10), and the only place the shrine touches a fight. The
+    /// half-efficiency rule applies to the <b>relief</b>, not to the loss: an empty shrine gives half
+    /// of what the rite is worth, never half a funeral. It cannot take the whole blow away — a dojo
+    /// that stops feeling its dead is a dojo with no spiral to answer, which is the one pressure the
+    /// design has no rescue loan for.
+    /// </remarks>
+    private static double FuneralFactor(DojoState state)
+    {
+        if (!state.School.Has(SchoolNodeId.Shrine))
+        {
+            return 1;
+        }
+
+        double relief = Math.Clamp(state.StaffTuning.FuneralRelief, 0, 1)
+            * state.School.Efficiency(SchoolNodeId.Shrine, state.Staff, state.StaffTuning);
+
+        return 1 - relief;
     }
 
     /// <summary>
@@ -161,7 +184,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         return new SeededRandom(seed).Chance(state.StaffTuning.MortalSaveChance);
     }
 
-    private WarriorAftermath ApplyTo(DojoState state, RosterEntry entry, WarriorBattleSummary summary)
+    private WarriorAftermath ApplyTo(DojoState state, RosterEntry entry, WarriorBattleSummary summary, bool won)
     {
         Warrior warrior = entry.Warrior;
 
@@ -213,6 +236,14 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         {
             state.Roster.Kill(warrior.Id);
 
+            // The charms follow the same rule as the kit (docs/GDD.md §10): they come home only if
+            // somebody won the field and could carry the body. A lost fight takes them with the man.
+            IReadOnlyList<OmamoriKind> charms = warrior.StripCharms();
+            if (won)
+            {
+                state.ReturnCharms(charms);
+            }
+
             // The dead learn nothing: the lesson is applied only to a warrior who came off the field.
             return new WarriorAftermath(warrior.Id, Died: true, lost, shattered, RecoveryDays: 0, HonorDelta: 0)
             {
@@ -234,6 +265,14 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
                 state.Tuning.Training);
 
             entry.TrainingDays++;
+        }
+
+        // Mastery is paid for the fight itself, not for its lesson: a warrior who spent it being hit
+        // still spent it holding his weapon. It is gated by the weapon master's hall like the drill's
+        // share, so a dojo without one gains nothing here either.
+        if (state.Tuning.Mastery.FightGain > 0)
+        {
+            warrior.GainMastery(state.Tuning.Mastery.FightGain);
         }
 
         double honorDelta = _honor.PerformanceDelta(summary) + _honor.RetreatDelta(summary);
