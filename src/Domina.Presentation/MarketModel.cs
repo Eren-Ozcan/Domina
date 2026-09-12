@@ -60,13 +60,24 @@ public readonly record struct MarketRow(
 /// In how many days the market refreshes; a full period if it refreshed today.
 /// </param>
 /// <param name="BestLivingScore">The score of the best living warrior on the roster; 0 if the roster is empty.</param>
+/// <param name="Roster">The living warriors the dojo already houses.</param>
+/// <param name="Capacity">
+/// The beds it has. A stall full of candidates and a dojo with nowhere to put them is the commonest
+/// reason a purchase is refused, so the screen has to be able to say so instead of dimming a button.
+/// </param>
 public readonly record struct MarketSummary(
     int Gold,
     int Candidates,
     int Affordable,
     int Bought,
     int DaysToRefresh,
-    double BestLivingScore);
+    double BestLivingScore,
+    int Roster = 0,
+    int Capacity = 0)
+{
+    /// <summary>Is there a bed free?</summary>
+    public bool HasRoom => Roster < Capacity;
+}
 
 /// <summary>
 /// The model the market screen reads. It computes the comparison and the verdict; it does not draw.
@@ -98,7 +109,8 @@ public static class MarketModel
                 index,
                 dojo.Resources.Gold,
                 living,
-                dojo.HiredToday.Contains(index)))
+                dojo.HiredToday.Contains(index),
+                dojo.HasRoomForAnother))
             .OrderBy(row => row.Price)
             .ThenBy(row => row.Index)
             .ToList();
@@ -110,12 +122,14 @@ public static class MarketModel
     /// <param name="gold">The gold in the treasury.</param>
     /// <param name="livingScores">The scores of the living warriors on the roster.</param>
     /// <param name="bought">Was the candidate bought today?</param>
+    /// <param name="room">Is there a bed free for him?</param>
     public static MarketRow Describe(
         RecruitOffer offer,
         int index,
         int gold,
         IReadOnlyCollection<double> livingScores,
-        bool bought = false)
+        bool bought = false,
+        bool room = true)
     {
         ArgumentNullException.ThrowIfNull(offer);
         ArgumentNullException.ThrowIfNull(livingScores);
@@ -128,7 +142,7 @@ public static class MarketModel
             Stats: offer.Stats,
             Band: BandOf(offer.Talent),
             Price: offer.Price,
-            Affordable: offer.Price <= gold,
+            Affordable: offer.Price <= gold && room,
             Bought: bought,
             Score: score,
             BetterInRoster: livingScores.Count(s => s > score));
@@ -145,12 +159,16 @@ public static class MarketModel
         return new MarketSummary(
             Gold: dojo.Resources.Gold,
             Candidates: stock.Count,
-            Affordable: stock
-                .Where((o, i) => o.Price <= dojo.Resources.Gold && !dojo.HiredToday.Contains(i))
-                .Count(),
+            Affordable: dojo.HasRoomForAnother
+                ? stock
+                    .Where((o, i) => o.Price <= dojo.Resources.Gold && !dojo.HiredToday.Contains(i))
+                    .Count()
+                : 0,
             Bought: dojo.HiredToday.Count,
             DaysToRefresh: DaysToRefresh(dojo),
-            BestLivingScore: living.Count == 0 ? 0 : living.Max());
+            BestLivingScore: living.Count == 0 ? 0 : living.Max(),
+            Roster: living.Count,
+            Capacity: dojo.Capacity);
     }
 
     /// <summary>The days left until the market refreshes — today not included.</summary>

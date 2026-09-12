@@ -11,9 +11,11 @@ namespace Domina.Presentation.Tests;
 /// </summary>
 public class OfferModelTests
 {
-    private static DojoState Stocked(ulong seed = 12)
+    private static DojoState Stocked(ulong seed = 12, bool instantBuild = false)
     {
-        DojoState state = new(seed: seed);
+        DojoState state = new(
+            seed: seed,
+            school: instantBuild ? new SchoolTuning { BuildDaysFactor = 0 } : null);
         state.Resources = new Resources(Gold: 2000, Food: 200, Water: 200, Medicine: 20);
         return state;
     }
@@ -44,7 +46,7 @@ public class OfferModelTests
     [Fact]
     public void TheCardReadsTheSchoolAdjustedReward()
     {
-        DojoState dojo = Stocked();
+        DojoState dojo = Stocked(instantBuild: true);
         int before = OfferModel.Describe(dojo).PromisedReward;
 
         dojo.Resources = dojo.Resources with { Gold = 5000 };

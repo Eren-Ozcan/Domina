@@ -23,6 +23,10 @@ namespace Domina.Presentation;
 /// <param name="ArmorName">The kit's name.</param>
 /// <param name="ArmorWear">The total wear on the kit.</param>
 /// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
+/// <param name="CanBeReleased">
+/// Can his term be ended today? A dead man, a man already gone and a man in the infirmary cannot —
+/// letting a wounded man out of the gate to save his upkeep is the door the hungry-day rule closes.
+/// </param>
 public readonly record struct RosterRow(
     WarriorId Id,
     string Name,
@@ -42,7 +46,8 @@ public readonly record struct RosterRow(
     string WeaponName,
     string ArmorName,
     double ArmorWear,
-    bool IsFitForCampaign);
+    bool IsFitForCampaign,
+    bool CanBeReleased = false);
 
 /// <summary>The row's badge — it also sets the ordering.</summary>
 public enum RosterStatus
@@ -56,6 +61,9 @@ public enum RosterStatus
     /// <summary>In the infirmary; cannot go on an expedition.</summary>
     Recovering,
 
+    /// <summary>His term ended and he walked out free. The record stays, like a dead man's.</summary>
+    Freed,
+
     /// <summary>Dead. The record stays on the roster.</summary>
     Fallen,
 }
@@ -66,12 +74,16 @@ public enum RosterStatus
 /// <param name="Recovering">Revirdekiler.</param>
 /// <param name="Fallen">The dead.</param>
 /// <param name="PartyCapacity">The maximum warriors who can go on one expedition (GDD §1).</param>
+/// <param name="Freed">The men whose term ended — they walked out and are on the closing screen.</param>
+/// <param name="Beds">How many men the dojo can house at all — the quarters branch raises it.</param>
 public readonly record struct RosterSummary(
     int Living,
     int Fit,
     int Recovering,
     int Fallen,
-    int PartyCapacity);
+    int PartyCapacity,
+    int Freed = 0,
+    int Beds = 0);
 
 /// <summary>The result of a rename attempt.</summary>
 public enum RenameVerdict
@@ -148,7 +160,8 @@ public static class RosterModel
             WeaponName: warrior.UsableWeapon.Name,
             ArmorName: warrior.Armor.Name,
             ArmorWear: warrior.ArmorWear.Total,
-            IsFitForCampaign: entry.IsFitForCampaign);
+            IsFitForCampaign: entry.IsFitForCampaign,
+            CanBeReleased: warrior.IsAlive && !entry.Released && entry.RecoveryDaysRemaining == 0);
     }
 
     /// <summary>The numbers at the top of the roster.</summary>
@@ -160,12 +173,20 @@ public static class RosterModel
         int fit = 0;
         int recovering = 0;
         int fallen = 0;
+        int freed = 0;
 
         foreach (RosterEntry entry in dojo.Roster.Entries)
         {
             if (!entry.Warrior.IsAlive)
             {
                 fallen++;
+                continue;
+            }
+
+            // A released man is on neither side of the ledger: he is not a loss and he is not a mouth.
+            if (entry.Released)
+            {
+                freed++;
                 continue;
             }
 
@@ -181,7 +202,7 @@ public static class RosterModel
             }
         }
 
-        return new RosterSummary(living, fit, recovering, fallen, PartyCapacity);
+        return new RosterSummary(living, fit, recovering, fallen, PartyCapacity, freed, dojo.Capacity);
     }
 
     /// <summary>
@@ -211,6 +232,11 @@ public static class RosterModel
         if (!entry.Warrior.IsAlive)
         {
             return RosterStatus.Fallen;
+        }
+
+        if (entry.Released)
+        {
+            return RosterStatus.Freed;
         }
 
         if (entry.RecoveryDaysRemaining > 0)
