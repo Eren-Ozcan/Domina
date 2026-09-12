@@ -1,6 +1,7 @@
 using Domina.Core.Campaign;
 using Domina.Core.Combat;
 using Domina.Core.Dojo;
+using Domina.Core.Honor;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 using Domina.Presentation;
@@ -38,6 +39,7 @@ public sealed partial class DayScreen : DojoScreen
     private readonly Expedition _expedition = new();
 
     private DojoState _dojo = null!;
+    private Label _seasonLabel = null!;
     private Label _offerLabel = null!;
     private Label _bountyLabel = null!;
     private VBoxContainer _partyList = null!;
@@ -68,6 +70,12 @@ public sealed partial class DayScreen : DojoScreen
         _dojo = dojo;
 
         VBoxContainer page = BuildPage();
+
+        // The season's line stands above everything: the countdown, the rival's next move, this week's
+        // compulsory fight and the head gate are the four things every other decision on this screen is
+        // made against (docs/GDD.md §10).
+        _seasonLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        page.AddChild(_seasonLabel);
 
         _offerLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_offerLabel);
@@ -118,6 +126,12 @@ public sealed partial class DayScreen : DojoScreen
     {
         OfferCard offer = OfferModel.Describe(_dojo);
         Resources purse = _dojo.Resources;
+
+        SeasonBanner banner = SeasonModel.Describe(_dojo);
+        _seasonLabel.Text = SeasonModel.Line(banner);
+        _seasonLabel.AddThemeColorOverride(
+            "font_color",
+            banner.AtRisk ? PendingColor : banner.GateOpen ? GoodColor : InkColor);
 
         _offerLabel.Text = string.Join(
             '\n',

@@ -114,7 +114,11 @@ public sealed partial class MarketScreen : DojoScreen
         _summary.Text =
             $"Day {_dojo.Day}  ·  Purse {summary.Gold} gold  ·  Candidates {summary.Candidates}" +
             $"  ·  Affordable {summary.Affordable}  ·  Bought today {summary.Bought}" +
-            $"  ·  Stall refreshes in {summary.DaysToRefresh} days";
+            $"  ·  Beds {summary.Roster}/{summary.Capacity}" +
+            $"  ·  Stall refreshes in {summary.DaysToRefresh} days" +
+            (summary.HasRoom
+                ? string.Empty
+                : "\nThe quarters are full — build at the school before hiring.");
 
         ShowDetail(rows.FirstOrDefault(r => r.Index == _selected));
     }

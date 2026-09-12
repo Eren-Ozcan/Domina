@@ -34,6 +34,9 @@ public sealed partial class RosterScreen : DojoScreen
     private Label _detail = null!;
     private LineEdit _nameEdit = null!;
     private Button _renameButton = null!;
+    private Button _releaseButton = null!;
+    private Label _releaseNotice = null!;
+    private bool _releaseArmed;
     private Label _renameNotice = null!;
     private OptionButton _drillPicker = null!;
     private HBoxContainer _pathRow = null!;
@@ -109,6 +112,15 @@ public sealed partial class RosterScreen : DojoScreen
         _pathRow = new HBoxContainer();
         panel.AddChild(_pathRow);
 
+        // Releasing a man is the one thing on this screen that cannot be undone and costs nothing to
+        // press, so it asks twice — the same courtesy the rest of the dojo owes an irreversible move.
+        _releaseButton = new Button { Text = "End his term" };
+        _releaseButton.Pressed += Release;
+        panel.AddChild(_releaseButton);
+
+        _releaseNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_releaseNotice);
+
         return panel;
     }
 
@@ -134,7 +146,10 @@ public sealed partial class RosterScreen : DojoScreen
             WarriorId id = row.Id;
             button.Pressed += () =>
             {
+                // Moving to another man disarms the release: the confirmation belongs to the warrior it
+                // was armed for, not to the button.
                 _selected = id;
+                _releaseArmed = false;
                 Refresh();
             };
 
@@ -143,8 +158,9 @@ public sealed partial class RosterScreen : DojoScreen
 
         RosterSummary summary = RosterModel.Summarize(_dojo);
         _summary.Text =
-            $"Day {_dojo.Day}  ·  Roster {summary.Living}  ·  Ready {summary.Fit}" +
+            $"Day {_dojo.Day}  ·  Roster {summary.Living}/{summary.Beds}  ·  Ready {summary.Fit}" +
             $"  ·  Infirmary {summary.Recovering}  ·  Dead {summary.Fallen}" +
+            (summary.Freed > 0 ? $"  ·  Walked out {summary.Freed}" : string.Empty) +
             $"  ·  Party of at most {summary.PartyCapacity}";
 
         ShowDetail(rows.FirstOrDefault(r => r.Id == _selected));
@@ -158,6 +174,8 @@ public sealed partial class RosterScreen : DojoScreen
             _nameEdit.Editable = false;
             _drillPicker.Disabled = true;
             _renameButton.Disabled = true;
+            _releaseButton.Visible = false;
+            _releaseNotice.Text = string.Empty;
             _pathRow.Visible = false;
             return;
         }
@@ -188,8 +206,9 @@ public sealed partial class RosterScreen : DojoScreen
             $"Limb loss: {LostText(row.Lost)}",
             $"Path: {PathName(row.Path)}");
 
-        _nameEdit.Editable = row.IsAlive;
+        _nameEdit.Editable = row.IsAlive && row.Status != RosterStatus.Freed;
         _drillPicker.Disabled = !row.IsFitForCampaign;
+        UpdateReleaseControls(row);
         _drillPicker.Select(_drillPicker.GetItemIndex((int)row.Drill));
 
         BuildPathButtons(row);
@@ -234,6 +253,50 @@ public sealed partial class RosterScreen : DojoScreen
             };
             _pathRow.AddChild(button);
         }
+    }
+
+    /// <summary>The release button and what it warns about.</summary>
+    private void UpdateReleaseControls(RosterRow row)
+    {
+        _releaseButton.Visible = row.IsAlive && row.Status != RosterStatus.Freed;
+        _releaseButton.Disabled = !row.CanBeReleased;
+        _releaseButton.Text = _releaseArmed ? $"Let {row.Name} go — for good" : "End his term";
+
+        _releaseNotice.Text = row.Status switch
+        {
+            RosterStatus.Freed => "His term is over. He walked out of the gate.",
+            RosterStatus.Recovering => "A man in the infirmary is not sent out of the gate.",
+            _ when _releaseArmed =>
+                "He leaves the roster alive and does not come back. He is counted at the end of the season.",
+            _ => string.Empty,
+        };
+        _releaseNotice.AddThemeColorOverride(
+            "font_color",
+            row.Status == RosterStatus.Freed ? MutedColor : PendingColor);
+    }
+
+    /// <summary>Ends the selected warrior's term — the second press is the one that does it.</summary>
+    private void Release()
+    {
+        if (_selected is not WarriorId id)
+        {
+            return;
+        }
+
+        if (!_releaseArmed)
+        {
+            _releaseArmed = true;
+            Refresh();
+            return;
+        }
+
+        _releaseArmed = false;
+        if (_dojo.Release(id))
+        {
+            Persist();
+        }
+
+        Refresh();
     }
 
     private void UpdateRenameControls()
@@ -334,6 +397,7 @@ public sealed partial class RosterScreen : DojoScreen
         RosterStatus.Training => TrainingColor,
         RosterStatus.Recovering => RecoveringColor,
         RosterStatus.Fallen => FallenColor,
+        RosterStatus.Freed => MutedColor,
         _ => ReadyColor,
     };
 
@@ -342,6 +406,7 @@ public sealed partial class RosterScreen : DojoScreen
         RosterStatus.Training => "training",
         RosterStatus.Recovering => "infirmary",
         RosterStatus.Fallen => "dead",
+        RosterStatus.Freed => "walked out free",
         _ => "ready",
     };
 

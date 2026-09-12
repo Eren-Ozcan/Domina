@@ -1,3 +1,4 @@
+using Domina.Core.Campaign;
 using Domina.Core.Dojo;
 using Domina.Core.Dojo.Save;
 using Domina.Presentation;
@@ -162,6 +163,21 @@ public sealed partial class DojoHub : Node
         CloseArena();
         CloseScreen();
 
+        // The season decides which screen this is. Once the run is over the four tabs are meaningless —
+        // there is no day to close, no market to buy from — so the hub stops offering them rather than
+        // leaving the player to work out that the buttons do nothing.
+        if (dojo.Season.Phase == SeasonPhase.FinalNight)
+        {
+            ShowNight(dojo);
+            return;
+        }
+
+        if (dojo.Season.IsOver)
+        {
+            ShowEnd(dojo);
+            return;
+        }
+
         DojoScreen screen = tab switch
         {
             DojoTab.Roster => new RosterScreen(),
@@ -182,6 +198,45 @@ public sealed partial class DojoHub : Node
         _screen = screen;
         AddChild(screen);
         screen.Build(dojo);
+    }
+
+    /// <summary>The last night takes the hub over: one bout at a time until the run ends.</summary>
+    private void ShowNight(DojoState dojo)
+    {
+        FinalNightScreen night = new()
+        {
+            Watcher = Fight,
+            Report = _report,
+
+            // The night has no navigation: there is nowhere else to go until it is decided.
+            Changed = Save,
+            Ended = () => Show(_tab),
+        };
+
+        _report = null;
+        _screen = night;
+        AddChild(night);
+        night.Build(dojo);
+    }
+
+    /// <summary>The closing screen. The only way on from here is a new season.</summary>
+    private void ShowEnd(DojoState dojo)
+    {
+        SeasonEndScreen end = new()
+        {
+            Closed = () =>
+            {
+                // The finished run is not carried back into the title screen's "continue": the save is
+                // cleared here, so the next start is a new season rather than a dead one reopened.
+                SaveSlot.Delete();
+                _dojo = null;
+                ShowTitle(null);
+            },
+        };
+
+        _screen = end;
+        AddChild(end);
+        end.Build(dojo);
     }
 
     private void CloseScreen()
