@@ -48,7 +48,9 @@ internal static class SimCli
             options.PlayerArmor,
             options.PlayerSpeed,
             options.EffectiveMoraleBand,
-            options.PlayerMorale);
+            options.PlayerMorale,
+            options.PlayerMastery,
+            options.EffectiveMasteryBand);
 
         try
         {

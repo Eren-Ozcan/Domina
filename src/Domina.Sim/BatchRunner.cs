@@ -85,7 +85,9 @@ internal sealed class BatchRunner
         Armor? playerArmor = null,
         double? playerSpeed = null,
         MoraleBand? moraleBand = null,
-        double? playerMorale = null)
+        double? playerMorale = null,
+        double? playerMastery = null,
+        MasteryBand? masteryBand = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
 
@@ -109,6 +111,24 @@ internal sealed class BatchRunner
             foreach (Warrior w in built.PlayerSide.Concat(built.EnemySide))
             {
                 w.MoraleBand = band;
+            }
+        }
+
+        // Mastery is written on the player side only: it is the dojo's system, and an adversary who
+        // came out of the pool with the same bonus would hide the whole of what the post buys.
+        if (playerMastery is double mastery)
+        {
+            foreach (Warrior w in built.PlayerSide)
+            {
+                w.GainMastery(mastery);
+            }
+        }
+
+        if (masteryBand is MasteryBand band2)
+        {
+            foreach (Warrior w in built.PlayerSide.Concat(built.EnemySide))
+            {
+                w.MasteryBand = band2;
             }
         }
 

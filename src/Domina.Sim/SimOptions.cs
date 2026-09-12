@@ -23,11 +23,17 @@ internal sealed record SimOptions(
     double? PlayerSpeed = null,
     CampaignOptions? Campaign = null,
     MoraleBand MoraleBand = default,
-    double? PlayerMorale = null)
+    double? PlayerMorale = null,
+    double? PlayerMastery = null,
+    MasteryBand MasteryBand = default)
 {
     /// <summary>The band actually used — an unset record field defaults to zeroes, not to the design's band.</summary>
     public MoraleBand EffectiveMoraleBand =>
         MoraleBand == default ? Domina.Core.Model.MoraleBand.Default : MoraleBand;
+
+    /// <inheritdoc cref="EffectiveMoraleBand"/>
+    public MasteryBand EffectiveMasteryBand =>
+        MasteryBand == default ? Domina.Core.Model.MasteryBand.Default : MasteryBand;
 }
 
 /// <summary>The parse result: settings, a help request, or an error.</summary>
@@ -84,6 +90,10 @@ internal static class SimArgs
         bool usePaths = false;
         bool useStaff = false;
         MoraleTuning moraleTuning = new();
+        MasteryTuning masteryTuning = new();
+        double? playerMastery = null;
+        MasteryBand masteryBand = MasteryBand.Default;
+        bool useCharms = false;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
         SchoolTuning schoolTuning = new();
@@ -435,6 +445,61 @@ internal static class SimArgs
                     }
 
                     moraleBand = moraleBand with { AtFull = moraleCeiling };
+                    break;
+
+                case "--mastery":
+                    if (!TryFraction(value, out double masteryAt))
+                    {
+                        return ParsedArgs.Fail($"--mastery must be between 0 and 1: {value}");
+                    }
+
+                    playerMastery = masteryAt;
+                    break;
+
+                case "--mastery-accuracy":
+                    if (!TryFraction(value, out double masteryAccuracy))
+                    {
+                        return ParsedArgs.Fail($"--mastery-accuracy must be between 0 and 1: {value}");
+                    }
+
+                    masteryBand = masteryBand with { AccuracyAtFull = masteryAccuracy };
+                    break;
+
+                case "--mastery-rate":
+                    if (!TryFraction(value, out double masteryRate))
+                    {
+                        return ParsedArgs.Fail($"--mastery-rate must be between 0 and 1: {value}");
+                    }
+
+                    masteryTuning = masteryTuning with { GainPerDay = masteryRate };
+                    break;
+
+                case "--mastery-fight":
+                    if (!TryFraction(value, out double masteryFight))
+                    {
+                        return ParsedArgs.Fail($"--mastery-fight must be between 0 and 1: {value}");
+                    }
+
+                    masteryTuning = masteryTuning with { FightGain = masteryFight };
+                    break;
+
+                case "--funeral-relief":
+                    if (!TryFraction(value, out double funeralRelief))
+                    {
+                        return ParsedArgs.Fail($"--funeral-relief must be between 0 and 1: {value}");
+                    }
+
+                    staffTuning = staffTuning with { FuneralRelief = funeralRelief };
+                    break;
+
+                case "--charms":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--charms must be on or off: {value}");
+                    }
+
+                    useCharms = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
                 case "--will-brake":
@@ -1293,6 +1358,7 @@ internal static class SimArgs
                 {
                     Training = training,
                     Morale = moraleTuning,
+                    Mastery = masteryTuning,
                     RosterCapacity = rosterCapacity,
                 },
                 tuning,
@@ -1316,12 +1382,14 @@ internal static class SimArgs
                 moraleBand,
                 seasonTuning,
                 hide,
-                finalRest)
+                finalRest,
+                masteryBand,
+                useCharms)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
             scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel,
-            playerSpeed, campaignOptions, moraleBand, playerMorale));
+            playerSpeed, campaignOptions, moraleBand, playerMorale, playerMastery, masteryBand));
     }
 
     /// <summary>
@@ -1443,6 +1511,9 @@ internal static class SimArgs
         writer.WriteLine("             [--catch-chance <0-1>] [--catch-bind <sec>]");
         writer.WriteLine("             [--catch-two-handed <0-1>] [--catch-stamina <number>]");
         writer.WriteLine("             [--catch-accuracy <0-1>]");
+        writer.WriteLine("             [--mastery <0-1>] [--mastery-accuracy <0-1>]");
+        writer.WriteLine("             [--mastery-rate <0-1>] [--mastery-fight <0-1>]");
+        writer.WriteLine("             [--funeral-relief <0-1>] [--charms on|off]");
         writer.WriteLine("             [--class-catch-floor <0-1>] [--class-poison-share <0-1>]");
         writer.WriteLine("             [--class-range-share <0-1>]");
         writer.WriteLine("             [--poison-damage <number>] [--poison-seconds <sec>]");
@@ -1503,6 +1574,12 @@ internal static class SimArgs
         writer.WriteLine("  --morale-floor     The stat multiplier at morale 0");
         writer.WriteLine("  --morale-ceiling   The stat multiplier at morale 100");
         writer.WriteLine("  --will-brake       How much of a morale fall Will absorbs at Will 100");
+        writer.WriteLine("  --mastery          Forces the player side's mastery of its weapon (0-1)");
+        writer.WriteLine("  --mastery-accuracy What full mastery adds to Accuracy (0-1)");
+        writer.WriteLine("  --mastery-rate     The share of the gap a drill day closes (campaign)");
+        writer.WriteLine("  --mastery-fight    The share a fight closes (campaign)");
+        writer.WriteLine("  --funeral-relief   The share of a comrade's death the rite takes off");
+        writer.WriteLine("  --charms on|off    The policy buys temple charms and fits them (campaign)");
         writer.WriteLine("  --build-days       Multiplier on every building's construction time (0 = instant)");
         writer.WriteLine("  --class-catch-floor  What a catching warrior's die is worth with the wrong implement");
         writer.WriteLine("  --class-poison-share The share of a dose a warrior of no poison class carries");

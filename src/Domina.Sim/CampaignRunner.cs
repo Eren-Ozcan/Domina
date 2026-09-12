@@ -54,7 +54,9 @@ internal sealed record CampaignOptions(
     MoraleBand MoraleBand = default,
     SeasonTuning? Season = null,
     bool Hide = false,
-    int FinalRest = 0)
+    int FinalRest = 0,
+    MasteryBand MasteryBand = default,
+    bool UseCharms = false)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -174,6 +176,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (_options.UsePaths)
             {
                 row.Paths += ChoosePaths(state);
+            }
+
+            if (_options.UseCharms)
+            {
+                row.GoldSpentOnCharms += FitCharms(state);
             }
 
             int purse = state.Resources.Gold;
@@ -741,6 +748,51 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
+    /// Buys charms from the temple and hangs them on whoever has a slot free.
+    /// </summary>
+    /// <remarks>
+    /// A blunt policy on purpose, like <see cref="FillPosts"/>: fill every open slot with the first
+    /// charm in the catalogue that is affordable. The question the measurement asks is whether the
+    /// shrine branch pays for itself at all, and a policy that matched a charm to a warrior's weakest
+    /// stat would be answering a question about the policy instead.
+    /// </remarks>
+    private int FitCharms(DojoState state)
+    {
+        if (state.OmamoriSlots <= 0)
+        {
+            return 0;
+        }
+
+        int before = state.Resources.Gold;
+        int reserve = Reserve(state) + _options.Economy.RecruitPrice;
+
+        foreach (RosterEntry entry in state.Roster.Living)
+        {
+            while (entry.Warrior.Charms.Count < state.OmamoriSlots)
+            {
+                OmamoriKind? held = state.CharmStore.FirstOrDefault(pair => pair.Value > 0).Key;
+                if (state.CharmStore.Count == 0)
+                {
+                    OmamoriCharm wanted = Omamori.All[0];
+                    if (!Affordable(state, wanted.Price, reserve) || !state.BuyCharm(wanted.Kind))
+                    {
+                        return before - state.Resources.Gold;
+                    }
+
+                    held = wanted.Kind;
+                }
+
+                if (held is not OmamoriKind kind || !state.FitCharm(entry.Id, kind))
+                {
+                    return before - state.Resources.Gold;
+                }
+            }
+        }
+
+        return before - state.Resources.Gold;
+    }
+
+    /// <summary>
     /// Makes an unlocked warrior choose the path he is <b>already strong in</b>.
     /// </summary>
     /// <remarks>
@@ -799,12 +851,17 @@ internal sealed class CampaignRunner(CampaignOptions options)
     private MoraleBand Band =>
         _options.MoraleBand == default ? MoraleBand.Default : _options.MoraleBand;
 
+    /// <inheritdoc cref="Band"/>
+    private MasteryBand Mastery =>
+        _options.MasteryBand == default ? MasteryBand.Default : _options.MasteryBand;
+
     private void Enlist(DojoState state, IReadOnlyList<Warrior> template, int index)
     {
         Warrior proto = template[index % template.Count];
         RosterEntry entry =
             state.Roster.Recruit($"Warrior {index + 1}", proto.BaseStats, proto.Weapon, proto.Armor);
         entry.Warrior.MoraleBand = Band;
+        entry.Warrior.MasteryBand = Mastery;
     }
 
     /// <summary>
@@ -900,6 +957,14 @@ internal sealed class CampaignRow
 
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
+
+    /// <summary>The gold that went to the temple's charms.</summary>
+    /// <remarks>
+    /// Kept apart from the school's gold although both are optional: a building is bought once and a
+    /// charm can be sold back, so lumping them together would hide the one spending line in this
+    /// economy that is partly reversible.
+    /// </remarks>
+    public int GoldSpentOnCharms { get; set; }
 
     /// <summary>The gold that went to warriors hired to replace the dead.</summary>
     /// <remarks>
@@ -1178,6 +1243,7 @@ internal sealed class CampaignReport(int days)
                     - r.GoldSpentOnGear
                     - r.GoldSpentOnUpkeep
                     - r.GoldSpentOnSchool
+                    - r.GoldSpentOnCharms
                     - r.GoldSpentOnHires);
             return (double)net / battles;
         }
