@@ -16,6 +16,8 @@ namespace Domina.Core.Model;
 public sealed class Warrior
 {
     private readonly List<Disability> _disabilities = [];
+    private readonly List<OmamoriKind> _charms = [];
+    private Weapon _weapon;
 
     public Warrior(
         WarriorId id,
@@ -30,7 +32,7 @@ public sealed class Warrior
         Id = id;
         Name = name;
         BaseStats = baseStats;
-        Weapon = weapon ?? Weapon.Katana();
+        _weapon = weapon ?? Weapon.Katana();
         Armor = armor ?? Armor.None();
         Thrown = thrown;
         Honor = HonorScale.Starting;
@@ -44,7 +46,73 @@ public sealed class Warrior
     /// <summary>The raw stats with no disability applied.</summary>
     public WarriorStats BaseStats { get; set; }
 
-    public Weapon Weapon { get; set; }
+    public Weapon Weapon
+    {
+        get => _weapon;
+        set
+        {
+            _weapon = value;
+            RefreshMastery();
+        }
+    }
+
+    /// <summary>
+    /// What this warrior has learned about each weapon he has carried (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// It belongs to the warrior and outlives the weapon master who taught it: what the post buys is
+    /// the rate mastery grows at (<see cref="Dojo.MasteryTuning"/>), never the mastery already earned.
+    /// </remarks>
+    public WeaponMastery Mastery { get; } = new();
+
+    /// <summary>
+    /// The mastery of the weapon actually in hand - cached, because the fight reads it every tick.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="EffectiveStats"/> is batch simulation's hot path, and a dictionary lookup on every
+    /// read is paid millions of times over a sweep. So the value is recomputed only when something
+    /// that can move it moves: the weapon, a lost limb, or a day's gain.
+    /// </remarks>
+    public double WeaponSkill { get; private set; }
+
+    /// <summary>What mastery is worth in the fight - a balance number, never saved.</summary>
+    public MasteryBand MasteryBand { get; set; } = MasteryBand.Default;
+
+    /// <summary>Adds a share of the distance left to the mastery of the weapon in hand.</summary>
+    /// <remarks>
+    /// It credits <see cref="UsableWeapon"/> and not <see cref="Weapon"/>: a warrior who has lost an
+    /// arm fights with his fists whatever is strapped to his back, and what he does not use he does
+    /// not learn.
+    /// </remarks>
+    public double GainMastery(double share)
+    {
+        double value = Mastery.Grow(UsableWeapon.Name, share);
+        RefreshMastery();
+        return value;
+    }
+
+    /// <summary>Writes a saved mastery ledger back onto the warrior.</summary>
+    /// <remarks>
+    /// It goes through the warrior rather than through <see cref="WeaponMastery"/> directly because the
+    /// fight reads a cached value: a ledger written behind the cache's back would be invisible until
+    /// the next time the weapon changed.
+    /// </remarks>
+    public void RestoreMastery(IReadOnlyDictionary<string, double> learned)
+    {
+        ArgumentNullException.ThrowIfNull(learned);
+
+        foreach ((string weapon, double value) in learned)
+        {
+            if (!string.IsNullOrWhiteSpace(weapon))
+            {
+                Mastery.Set(weapon, value);
+            }
+        }
+
+        RefreshMastery();
+    }
+
+    private void RefreshMastery() => WeaponSkill = Mastery.Of(UsableWeapon.Name);
 
     public Armor Armor { get; set; }
 
@@ -124,6 +192,31 @@ public sealed class Warrior
     /// </remarks>
     public WarriorClass Class { get; set; } = WarriorClass.None;
 
+    /// <summary>
+    /// The temple charms he is wearing (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// How many he may wear is not the warrior's business but the dojo's — the shrine opens the slots
+    /// and the monk opens the second one (<see cref="Dojo.StaffTuning.OmamoriSlots"/>), so the cap is
+    /// enforced where the charm is fitted, not here. What lives here is only what he carries onto the
+    /// field, because that is what the fight has to read.
+    /// </remarks>
+    public IReadOnlyList<OmamoriKind> Charms => new ReadOnlyCollection<OmamoriKind>(_charms);
+
+    /// <summary>Hangs a charm on him. The caller has already checked the slots.</summary>
+    public void Wear(OmamoriKind charm) => _charms.Add(charm);
+
+    /// <summary>Takes a charm off him — it is never destroyed, it goes back to the dojo's store.</summary>
+    public bool Remove(OmamoriKind charm) => _charms.Remove(charm);
+
+    /// <summary>Takes every charm off him, and says what came off (a death, a release).</summary>
+    public IReadOnlyList<OmamoriKind> StripCharms()
+    {
+        List<OmamoriKind> taken = [.. _charms];
+        _charms.Clear();
+        return taken;
+    }
+
     public bool IsAlive { get; private set; } = true;
 
     /// <summary>Permanent disabilities. They cannot be undone.</summary>
@@ -145,6 +238,24 @@ public sealed class Warrior
             // the field took from him is above it. A man in poor spirits is still the man he trained
             // into; he is only worse at being him today.
             s = MoraleScale.Apply(s, Morale, MoraleBand);
+
+            // Mastery sits above morale and below disability, in the same place as everything else the
+            // warrior brings to the field himself: what he knows is his, what the field took from him
+            // lands last.
+            if (WeaponSkill > 0)
+            {
+                s = s with { Accuracy = s.Accuracy * MasteryBand.FactorFor(WeaponSkill) };
+            }
+
+            // The charms are added last among the things the warrior brings himself, and as points
+            // rather than as a share: a blessing sewn into his collar is not worth less because he is
+            // in poor spirits today. Everything above it is a multiplier, so adding the points on top
+            // also keeps the charm out of morale's and mastery's compounding.
+            if (_charms.Count > 0)
+            {
+                s = Omamori.Apply(s, _charms);
+            }
+
             foreach (Disability d in _disabilities)
             {
                 s = s with
@@ -180,6 +291,10 @@ public sealed class Warrior
         }
 
         _disabilities.Add(new Disability(part));
+
+        // A lost arm takes the two-handed weapon out of his hands, and with it the mastery that belongs
+        // to that weapon: the fists he is left with are a weapon he has never trained.
+        RefreshMastery();
         return true;
     }
 

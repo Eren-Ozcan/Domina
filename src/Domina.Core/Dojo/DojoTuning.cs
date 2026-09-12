@@ -14,6 +14,9 @@ public sealed record DojoTuning
     /// <summary>What moves morale, and by how much (docs/GDD.md §3).</summary>
     public MoraleTuning Morale { get; init; } = new();
 
+    /// <summary>How fast a warrior learns the weapon in his hand (docs/GDD.md §10).</summary>
+    public MasteryTuning Mastery { get; init; } = new();
+
     /// <summary>
     /// How many living warriors the dojo can house.
     /// </summary>

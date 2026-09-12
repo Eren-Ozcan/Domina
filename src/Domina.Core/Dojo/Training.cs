@@ -109,6 +109,39 @@ public sealed record TrainingTuning
     public double PoolCeiling { get; init; } = 180;
 }
 
+/// <summary>
+/// How fast the weapon master's students learn the weapon in their hands (docs/GDD.md §10).
+/// </summary>
+/// <remarks>
+/// <para>
+/// The numbers sit apart from <see cref="TrainingTuning"/> because they buy a different thing: training
+/// grows the <b>man</b> toward a ceiling that a new weapon does not reset, mastery grows the
+/// <b>pairing</b> of that man and one weapon and is lost the day he picks up another. Two systems that
+/// both spend the day, so they have to be swept against each other.
+/// </para>
+/// <para>
+/// Both rates are <b>zero without the weapon master's building</b>: the whole system is the post's
+/// output (<see cref="SchoolNodeId.InnerDojo"/>), scaled by the half-efficiency rule like every other
+/// facility. A dojo that never builds it never sees mastery at all.
+/// </para>
+/// </remarks>
+public sealed record MasteryTuning
+{
+    /// <summary>The share of the distance to full mastery a training day closes.</summary>
+    /// <remarks>
+    /// It is read only on a drill that puts a weapon in the hand — meditation is the day the sword is
+    /// not touched (<see cref="Drill.Meditation"/>), and it must not buy mastery by the back door.
+    /// </remarks>
+    public double GainPerDay { get; init; } = 0.03;
+
+    /// <summary>The share a fight closes.</summary>
+    /// <remarks>
+    /// Larger than the drill's, for the same reason <see cref="TrainingTuning.FightGapClosed"/> is:
+    /// the risky road has to pay better, or nobody takes it.
+    /// </remarks>
+    public double FightGain { get; init; } = 0.06;
+}
+
 /// <summary>The training ground — it computes a day's stat return.</summary>
 /// <remarks>
 /// Pure and stateless: the same stats, the same drill and the same talent always give the same result.
