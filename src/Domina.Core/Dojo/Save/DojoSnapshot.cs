@@ -33,6 +33,10 @@ namespace Domina.Core.Dojo.Save;
 /// The tier the run is played at. The tier is the player's decision, so it is written down; what it
 /// multiplies is balance and stays in the code, so a retuned patch reaches an old save.
 /// </param>
+/// <param name="Charms">
+/// The temple charms sitting in the store. A charm hanging on a warrior is written with that warrior,
+/// not here — the two lists are the two places a charm can be, and merging them would lose which.
+/// </param>
 /// <param name="HiredRecruits">
 /// The indices of the candidates bought from the stall today. The candidates themselves are not written
 /// (they are regenerated from the day and the seed); without this mark the same candidate could be
@@ -53,7 +57,8 @@ public sealed record DojoSnapshot(
     int? LastFeastDay = null,
     SeasonSnapshot? Season = null,
     TribunalSnapshot? Tribunal = null,
-    DifficultyTier Difficulty = DifficultyTier.Master)
+    DifficultyTier Difficulty = DifficultyTier.Master,
+    IReadOnlyList<CharmStackSnapshot>? Charms = null)
 {
     /// <summary>
     /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;
@@ -153,6 +158,13 @@ public sealed record ImmunitySnapshot(int Warrior, int UntilDay);
 /// </remarks>
 public sealed record BuildSiteSnapshot(SchoolNodeId Id, int DaysLeft);
 
+/// <summary>How many of one kind of charm are in the store.</summary>
+/// <remarks>
+/// A list of pairs rather than a dictionary: the kinds are an enum, and a dictionary keyed by an enum
+/// serialises as its <b>names</b> — a renamed member would then silently empty a player's store.
+/// </remarks>
+public sealed record CharmStackSnapshot(OmamoriKind Kind, int Count);
+
 /// <param name="Id">The permanent identity. Matching everywhere is done through it.</param>
 /// <param name="Name">Display name — unique among the living.</param>
 /// <param name="Stats">The raw stats with no disability applied.</param>
@@ -170,9 +182,15 @@ public sealed record BuildSiteSnapshot(SchoolNodeId Id, int DaysLeft);
 /// His term ended and he walked out free. He is saved as a separate flag from death: both take him off
 /// the roster, and the closing screen counts them on opposite sides.
 /// </param>
+/// <param name="Charms">The temple charms he is wearing (docs/GDD.md §10).</param>
 /// <param name="Morale">
 /// His condition today. It is saved because it is state the season produced, not a balance number —
 /// what a point of morale is <b>worth</b> still comes from the code.
+/// </param>
+/// <param name="Mastery">
+/// What he has learned of each weapon he has carried, weapon name to share (docs/GDD.md §10). It is
+/// saved for the same reason morale is: the days that bought it are the player's, while what a point
+/// of mastery is worth stays in the code.
 /// </param>
 public sealed record WarriorSnapshot(
     int Id,
@@ -192,7 +210,9 @@ public sealed record WarriorSnapshot(
     WarriorPath Path = WarriorPath.None,
     WarriorClass Class = WarriorClass.None,
     double Morale = MoraleScale.Starting,
-    bool Released = false);
+    bool Released = false,
+    IReadOnlyDictionary<string, double>? Mastery = null,
+    IReadOnlyList<OmamoriKind>? Charms = null);
 
 /// <summary>The weapon's <b>identifying</b> fields. The derived numbers are computed on load.</summary>
 public sealed record WeaponSnapshot(

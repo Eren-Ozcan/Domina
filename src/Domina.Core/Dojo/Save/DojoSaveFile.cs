@@ -56,7 +56,9 @@ public static class DojoSaveFile
                 w.Path,
                 w.Class,
                 w.Morale,
-                entry.Released));
+                entry.Released,
+                w.Mastery.Learned.Count == 0 ? null : new Dictionary<string, double>(w.Mastery.Learned),
+                w.Charms.Count == 0 ? null : [.. w.Charms]));
         }
 
         return new DojoSnapshot(
@@ -74,7 +76,8 @@ public static class DojoSaveFile
             state.LastFeastDay,
             SeasonSnapshot.From(state.Season),
             Capture(state.Tribunal),
-            state.Difficulty);
+            state.Difficulty,
+            [.. state.CharmStore.Select(pair => new CharmStackSnapshot(pair.Key, pair.Value))]);
     }
 
     private static TribunalSnapshot Capture(Tribunal tribunal) => new(
@@ -158,6 +161,8 @@ public static class DojoSaveFile
         state.RestoreStaff(snapshot.Staff ?? []);
         state.RestoreFeast(snapshot.LastFeastDay);
         state.RestoreHiredToday(snapshot.HiredRecruits ?? []);
+        state.RestoreCharms(
+            (snapshot.Charms ?? []).Select(c => new KeyValuePair<OmamoriKind, int>(c.Kind, c.Count)));
         state.RestoreSeason(snapshot.Season ?? new SeasonSnapshot());
         state.RestoreTribunal(snapshot.Tribunal ?? new TribunalSnapshot());
 
@@ -207,6 +212,21 @@ public static class DojoSaveFile
             Class = record.Class,
             Morale = MoraleScale.Clamp(record.Morale),
         };
+
+        // A weapon nobody in this build knows is kept rather than dropped: the mastery is stored by
+        // name, and merge-on-load must not quietly delete what a later build may hand back.
+        if (record.Mastery is not null)
+        {
+            warrior.RestoreMastery(record.Mastery);
+        }
+
+        // The slots are not checked on load: the cap belongs to the shrine standing <b>today</b>, and a
+        // dojo that lost its monk must not have the charms already on its men quietly deleted. What it
+        // cannot do is fit another one until it is back under the cap.
+        foreach (OmamoriKind charm in record.Charms ?? [])
+        {
+            warrior.Wear(charm);
+        }
 
         foreach (BodyPart part in record.Disabilities ?? [])
         {
