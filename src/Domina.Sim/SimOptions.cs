@@ -1018,50 +1018,50 @@ internal static class SimArgs
                     break;
 
                 case "--final-powers":
-                {
-                    List<double> powers = [];
-                    foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
                     {
-                        if (!double.TryParse(
-                                part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double power)
-                            || power <= 0)
+                        List<double> powers = [];
+                        foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
                         {
-                            return ParsedArgs.Fail($"--final-powers takes positive numbers: {value}");
+                            if (!double.TryParse(
+                                    part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double power)
+                                || power <= 0)
+                            {
+                                return ParsedArgs.Fail($"--final-powers takes positive numbers: {value}");
+                            }
+
+                            powers.Add(power);
                         }
 
-                        powers.Add(power);
-                    }
+                        if (powers.Count == 0)
+                        {
+                            return ParsedArgs.Fail("--final-powers needs at least one power.");
+                        }
 
-                    if (powers.Count == 0)
-                    {
-                        return ParsedArgs.Fail("--final-powers needs at least one power.");
+                        seasonTuning = seasonTuning with { FinalRoundPowers = powers };
+                        break;
                     }
-
-                    seasonTuning = seasonTuning with { FinalRoundPowers = powers };
-                    break;
-                }
 
                 case "--final-enemies":
-                {
-                    List<int> counts = [];
-                    foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
                     {
-                        if (!TryCount(part.Trim(), out int count))
+                        List<int> counts = [];
+                        foreach (string part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
                         {
-                            return ParsedArgs.Fail($"--final-enemies takes positive integers: {value}");
+                            if (!TryCount(part.Trim(), out int count))
+                            {
+                                return ParsedArgs.Fail($"--final-enemies takes positive integers: {value}");
+                            }
+
+                            counts.Add(count);
                         }
 
-                        counts.Add(count);
-                    }
+                        if (counts.Count == 0)
+                        {
+                            return ParsedArgs.Fail("--final-enemies needs at least one count.");
+                        }
 
-                    if (counts.Count == 0)
-                    {
-                        return ParsedArgs.Fail("--final-enemies needs at least one count.");
+                        seasonTuning = seasonTuning with { FinalRoundEnemies = counts };
+                        break;
                     }
-
-                    seasonTuning = seasonTuning with { FinalRoundEnemies = counts };
-                    break;
-                }
 
                 case "--night-wound-day":
                     if (!TryFraction(value, out double woundDay))
