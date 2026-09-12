@@ -111,13 +111,18 @@ warrior toward the middle, and highs drift back), and the panic rule applies to 
 it *raises* the player's victory rate. ⚠️ It also showed that a fight the enemy fled pays the same
 reward as one where he fell — an economy leak for step 7.
 
-⏳ **Left open by step 6:** the fled-enemy reward leak, morale on the screens, and whether a feast
-should touch honour as well.
+⏳ **Left open by step 6:** morale on the screens. **Closed 2026-09-12:** a feast **never** touches
+honour (GDD §3 — morale is the inside counter, honour the outside one), and the fled-enemy reward
+leak went with the rule that an adversary no longer flees at all (GDD §5).
 
 ⏳ **Left open by step 5:** retired warriors as free staff (retirement is not written), the ō-yoroi
-gate and forged weapons, the four inert posts, a measurement of the classed candidate against a
-policy that trains classes, and the school screen's staff column (the model carries it, the scene
-does not).
+gate and forged weapons, a measurement of the classed candidate against a policy that trains classes,
+and the school screen's staff column (the model carries it, the scene does not). **Closed
+2026-09-12:** the four inert posts — the bard landed with morale at step 6, and the weapon master, the
+monk and the diviner with weapon mastery, the omamori and the reading of the day's offer (GDD §10).
+Measured with them: mastery is worth +2.58 points of victory at full but the hall that teaches it
+arrives too late in a season to move anything, the charms are worth buying (dojos closed
+89.8% → 86.8%), and the funeral rite measured as nothing.
 
 ⏳ **Left open by this step:** what the dojo layer does if a fight ever hits the guard. In the
 sim it is a counted anomaly; in the game it cannot simply hang. Decide when step 8 (real time)

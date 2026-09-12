@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-10 (step 7 closed out: the season, the last night, the screens, the tribunal, the tiers, the roster ceiling)
+Last updated: 2026-09-12 (the last three posts: weapon mastery, the omamori and the funeral rite, the diviner's reading)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1694,6 +1694,60 @@ roster ≠ day one's stall, save round trip).
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
+
+## 2026-09-12 — The last three posts: mastery, the omamori, the reading
+
+Three posts had been drawing a wage against nothing since step 5. All three are written now, and
+`Facilities.IsInert` lists nobody.
+
+**The weapon master.** `Model/WeaponMastery.cs` — mastery is stored per **weapon name** on the
+warrior, grown as a share of the gap to full (0.03 a drill day, 0.06 a fight), and read by the fight
+as a multiplier on Accuracy alone. It is gated outright by the inner dojo rather than stepped: no
+hall, no mastery; an empty hall teaches at half. Meditation buys none of it — the drill that does not
+touch a sword must not teach the sword by the back door — and a lost arm takes the mastery of a
+two-handed weapon with it, because what he cannot use he does not know.
+
+The band was swept on `3v3`, 20.000 fights a point: victory 69.64% at mastery 0, **72.22%** at 1, and
+the size of the bonus was linear (0.05 → 70.95, 0.10 → 72.22, 0.20 → 74.73, 0.30 → 77.39). Fourth
+sweep in a row with **no knee**, so 0.10 is a budget. Across beds it lands where accuracy is scarcest
+— `jitte-armored` +3.20 points, `duel` +2.50, `patrol` +0.56 — which is the lean the design wanted
+from a bonus meant to carry a heavy weapon.
+
+⚠️ **What the season said: the hall arrives too late to matter.** 400 dojos × 180 days with the
+school and the payroll running, mastery on against mastery switched off entirely: **93.2% of dojos
+closed either way**, identical deaths, identical best warrior. The inner dojo is the training
+branch's third tier at 700 gold, and a dojo that lives to buy it has about a month left to use it.
+The same family as the forge's finding — written down, **not repriced blind**.
+
+**The monk.** `Model/Omamori.cs` — five charms at 120 gold, **+6 points on one stat** (+15 stamina),
+added as points rather than as a share because morale and mastery are already multipliers and a third
+would compound past measuring. Transferable, sellable back at half, and capped by **whole** slots: no
+shrine, no charms; an empty shrine one slot, the monk the second (half a slot is nothing). A released
+man leaves them in the store; a dead man's come home only if the field was won, the same rule his kit
+follows. Measured on the support branch: deaths per dojo **9.26 → 6.84**, dojos closed
+**89.8% → 86.8%**, days survived 71 → 75.
+
+The **funeral rite** (half a comrade's death taken off the survivors) measured as **nothing**:
+0 / 0.25 / 0.5 / 0.75 / 1 closed 89.8 / 89.8 / 89.8 / 89.2 / 89.5% of dojos. A quiet day already
+pulls morale back toward the middle, so the relief lands on a hole that was closing by itself. Kept
+at 0.5 as the post's colour, with the sweep on the record.
+
+**The diviner.** `Campaign/Divination.cs` — the post sells information and never lies. An empty hut
+names each enemy and his weapon; a diviner in it prints the stat block as well. `OfferModel.ReadOffer`
+is the one place the screen may see the enemy roster, and the day screen **hides the panel entirely**
+without a hut, so a dojo that has not paid is not shown what it is withholding.
+
+Also decided, no code needed: **a feast never touches honour** (GDD §3). Morale is the counter inside
+the dojo and honour the one outside it; sake drunk in your own yard is seen by nobody, and letting it
+buy honour would give the feast two payoffs for one price.
+
+New sim knobs: `--mastery`, `--mastery-accuracy`, `--mastery-rate`, `--mastery-fight`,
+`--funeral-relief`, `--charms on|off` (the campaign policy buys charms and fits them, and the gold is
+reported apart from the school's).
+
+625 tests green (463 core + 112 presentation + 52 sim; 20 new) under Release. `ThroughputTests` still
+misses its 10 s budget in **Debug** — it did before this round too (11.58 s on this machine against
+12.82 s now); in Release the same test runs in ~2 s.
 
 ## 2026-09-10 — The enemy became human (Open Decisions #16 and #17)
 

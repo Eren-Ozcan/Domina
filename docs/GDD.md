@@ -154,6 +154,7 @@ combat stat:
 | A hungry day | **−5** | The only daily loss Will brakes |
 | The bard's hall | **+2 a day** (halved with the post empty) | The one building whose whole output is morale |
 | A feast | **+15**, one measure of sake per warrior, then **7 days** | Open Decision #14; without the cooldown it is a button, not a decision |
+| A feast and honour | **a feast never touches honour** (decided 2026-09-12) | Honour is what the school's name is worth outside the dojo — it is earned in front of other people, by a contract kept or a man walked out under his own name (§6). Sake bought with the dojo's own gold and drunk in its own yard is seen by nobody, so letting it buy honour would make honour purchasable and would give the feast two payoffs for one price. Morale is the inside counter, honour the outside one, and the feast is deliberately confined to the first |
 | Will's brake on a fall | **×(1 − Will/100 × 0.60)** | It slows a collapse and never stops one |
 
 Health and stamina are **not** touched by morale: they are pools that carry between fights, and
@@ -1758,6 +1759,51 @@ activity) never made it in at all.
 
 The four roles that carry a branch correspond to the dojo's four continuous expenses:
 **training, health, equipment, supply.** The remaining seven are situational staff.
+
+##### The last three posts were written on 2026-09-12
+
+Until then the weapon master, the monk and the diviner drew a wage against nothing (the bard was
+closed with morale at build-order step 6). All three are now in the core, and `Facilities.IsInert`
+lists nobody.
+
+**Weapon master — mastery (`Model/WeaponMastery.cs`).** Mastery belongs to the **pairing** of one
+warrior and one weapon, not to the man: put a katana man behind a yari and he starts at nothing, while
+the katana keeps what he had. It grows as a share of the gap to full (0.03 a drill day, 0.06 a fight),
+it is **zero without the inner dojo** (the hall is the whole system; an empty hall teaches at half),
+meditation buys none of it, and a lost arm takes the mastery of a two-handed weapon with it. What it
+buys is **Accuracy alone**, ×(1 + 0.10 × mastery).
+
+| Number | Value | How it was settled |
+|---|---|---|
+| What full mastery is worth | **+0.10 Accuracy** | 20.000 fights per point: `3v3` victory 69.64% at mastery 0 and **72.22%** at 1; the band sweep was linear (0.05 → 70.95, 0.10 → 72.22, 0.20 → 74.73, 0.30 → 77.39), so the number is a budget, not a threshold |
+| Where it is worth most | the **armoured** enemy | `jitte-armored` +3.20 points against `duel` +2.50 and `patrol` +0.56 — accuracy is scarcest where the plate is thickest, which is the lean the design asked for |
+| The drill day / the fight | **0.03 / 0.06** | The same shape as training's two roads: the risky one pays double |
+
+> ⚠️ **Measured and left alone: over a season the hall arrives too late to matter.** With the school
+> and the payroll running (400 dojos × 180 days), turning mastery off entirely changed **nothing** —
+> 93.2% of dojos closed either way, the same deaths, the same best warrior. The inner dojo is the
+> training branch's third tier (700 gold), and a dojo that survives to buy it has ~30 days left to use
+> it. The same family of finding as the forge's, and it is written down rather than repriced blind.
+
+**Monk — the omamori and the funeral rite (`Model/Omamori.cs`).** Five charms (steady hand, iron gate,
+long breath, quiet mind, swift foot), 120 gold each from the temple, **+6 points to one stat** (+15 to
+stamina) — points, never a multiplier, because morale and mastery are already multipliers and a third
+one would compound past measuring. They are transferable and sellable back at **half**. The slots are
+whole, not halved: **no shrine, no charms**; an empty shrine opens **one** slot, the monk the
+**second**. A released man leaves his charms in the store, and a dead man's come home **only if the
+field was won** — the same rule his kit follows. The rite takes **half** a comrade's death off the
+survivors' morale.
+
+| Number | Value | How it was settled |
+|---|---|---|
+| The charms as a whole | worth buying | Support branch, 400 dojos × 180 days: deaths per dojo **9.26 → 6.84**, dojos closed **89.8% → 86.8%**, days survived 71 → 75 |
+| The funeral rite | **0.5**, and it measured as **nothing** | Swept 0 / 0.25 / 0.5 / 0.75 / 1: closure 89.8 / 89.8 / 89.8 / 89.2 / 89.5%. A quiet day already pulls morale back toward the middle, so the relief lands on a hole that was closing anyway. It is kept at half as the post's colour, with the sweep written down |
+
+**Diviner — the reading (`Campaign/Divination.cs`).** The post sells **information** and nothing else,
+and it never lies: an empty hut names each enemy and his weapon, a diviner in it prints the stat block
+too. It is the one place the screen is allowed to see the enemy roster, and only as far as the dojo
+bought the right to see it. The day screen hides the panel entirely when there is no hut, so a dojo
+that has not paid is not shown what it is missing.
 
 > **Why there are no flat passive bonuses:** a bonus like "+2 stats to the whole roster" is the most
 > dangerous thing in a staff economy — every dojo keeps it, and it stops being a decision. Domina's
