@@ -1561,8 +1561,10 @@ into an interruption.
   hard as it is — a selective dojo was only entering 0.69 contracts in 60 days in measurement, and
   5 bounties would turn the gate into a wall
 - **The fifth bout is the head of the rival school** (2026-09-10). The final is not an anonymous
-  ladder: four of its seniors, then the man himself. Whether the night takes the form of the
-  appointment contest or of his raid on the dojo, it ends with him
+  ladder: three of its seniors, **the player's elder brother**, then the man himself (the fourth bout
+  was given a name by the story on 2026-09-11 — its power and crowd do not change). Whether the night
+  takes the form of the appointment contest or of his raid on the dojo, it ends with him. Who strikes
+  the last blow is a choice, below
 - **The final: 5 consecutive rounds, no recovery in between.** A new team can be formed for each
   round (the expedition limit is still 4) but the wounded and the exhausted accumulate — the final
   tests **roster depth**. Domina runs a single championship with 15 gladiators at the end of the
@@ -1623,6 +1625,61 @@ Kurogane), so a player should beat these figures
 - **Release** is now a thing the player does: a man whose term is ended walks out alive, off the roster
   and onto the closing screen's other column. A man in the infirmary cannot be released — releasing a
   mouth before a hungry day and taking him back after it would buy the upkeep rule off
+
+#### The vendetta: naming the man (2026-09-12)
+
+The story (`STORY.md`) opens with a raid dressed as banditry: everyone knows who sent it, nobody can
+write it down. A registered vendetta is a **licence to kill one named man**, and on day 1 the player
+has no name to put on it. This decision is what produces the name.
+
+- **Testimony is the currency, and it comes from the province.** A settlement that comes over to you
+  may hand over **testimony** as its one-time gift, alongside the rice, the medicine, the free repair
+  and the tip-off it can already give (§10, "The rival school and the settlements"). Named story
+  bounty targets can carry it too. It is a flag, not a resource: a settlement either gave it or did not.
+- **Two testimonies, not one.** The clerk's office will not enter a name on one man's word — one
+  witness is a grudge, two is a file. Two also means the season has to have been played: a dojo that
+  freed nothing never files.
+- **Filing costs a day and no gold.** It is an action at the clerk's office, taken whenever the player
+  likes once the second testimony is in. It is **entirely optional**; nothing in the game asks for it.
+- **Filing spends the rival's deniability.** This is the price, and it uses the number that already
+  exists: the register is public, so the moment the name is on it your intent is on record and his move
+  ladder accelerates (§10, step 4 arrives sooner). Filing early buys the last night and pays for it with
+  the eighty days in between.
+- **It changes nothing in combat.** No bonus, no penalty, no difficulty change. It is read **once**, on
+  the last night, and it decides only whether the final choice below is offered at all.
+- **It is not written to the save as a fight outcome** but as two booleans — testimony count and whether
+  the filing was made — for the same reason the bounty board records only the word given and the head
+  taken.
+
+**Why it is gated behind the province rather than sold.** Gold would make it a purchase, and the story's
+whole line is that the settlements cannot pay you and what they give instead is their word. Making the
+vendetta run on exactly that turns the game's one act of charity into the only thing that unlocks its
+ending — without paying for it, because the ending it unlocks has no mechanical reward.
+
+#### The final blow (2026-09-12)
+
+The fifth bout is won. Before the night closes the game asks the player **one question, once per run** —
+the only physical act the player has in 180 days:
+
+- **"Let the roster finish it."** Always available, including when nothing was filed. The post is won.
+  The closing screen records the head as taken by the warrior who took it.
+- **"Take it yourself."** Offered **only if the vendetta was filed**, because the law's whole point is
+  whose hand it was (`STORY-RESEARCH.md`, the Igagoe case: help is lawful, the blow is not delegated).
+  The player crosses the floor and uses the short blade the beaten man still carries.
+
+Three things this deliberately is not:
+
+- **It is not a fight.** No resolver call, no roll, no stats. The player character has none, and a rolled
+  outcome would be either a formality or a coin flip thrown after 180 days of real decisions. The bout
+  was already won by the roster; this is what happens after it.
+- **It is not rewarded.** No gold, no honour, no unlock, no better ending screen. It changes the closing
+  text and nothing else — the same rule as releasing a man: the season does not pay for it.
+- **It is not a moral scoreboard.** Neither answer is the good one. One leaves the roster carrying the
+  debt; the other closes it in front of the province with the only thing the player's body has left.
+
+**Architecture note.** All of this sits above the resolver: `Campaign/FinalNight.cs` gains a filed flag
+and a post-bout choice, and the combat core is untouched. The rule that the resolver knows no story
+holds.
 
 ### The dojo: facilities and staff
 
@@ -1933,6 +1990,9 @@ resolver.
 
 - **The main story characters are the same in every game:** identity and stats are fixed, so they can
   be learned and prepared for (like Domina's fixed regional champions)
+- **Some of them carry testimony (2026-09-12).** A named target beaten in the season can be the second
+  voice that lets the vendetta be filed (§10, "The vendetta: naming the man"). It is a flag on the
+  target, not a drop: the fight is unchanged whether it carries one or not
 - **A defeated target does not get stronger, it grows.** If you lose an intermediate story fight the
   target's stats **do not change** — memorisation is preserved; instead men are added alongside them
   (defeat 1: +2 of his men, defeat 2: +4). A stat multiplier was rejected: a target that becomes
