@@ -1,7 +1,7 @@
 using Domina.Core.Campaign;
 using Domina.Core.Combat;
-using Domina.Core.Honor;
 using Domina.Core.Dojo;
+using Domina.Core.Honor;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
