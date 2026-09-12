@@ -172,6 +172,12 @@ brother — and not a wife, child or younger sibling. It was abolished in 1873.
 named man, and it can be filed, refused, delayed, or filed *against you*. This is possibly the
 single most game-shaped fact in the whole research pass.
 
+> **Extended and corrected 2026-09-11** — see the appendix *Lawful killing, and who may strike*.
+> Two things this section did not say: revenge for a **lord or master** was not forbidden but fell
+> outside the register's scope, being *"rarely carried out against someone who had no blood
+> relationship"*; and assistance (*sukedachi*) was lawful while the **killing blow had to be the
+> registered avenger's own**.
+
 ## 2.9 The unregistered, and the mine
 
 *Mushukunin* — people struck from the household registers, the homeless and the displaced — were
@@ -767,3 +773,118 @@ for the appointment, not as a rotation cycle.
 - Sankin-kotai and the 1684 six-month rule for Kanto fudai —
   [SamuraiWiki](https://samurai-archives.com/wiki/Sankin_kotai),
   [Wikipedia](https://en.wikipedia.org/wiki/Sankin-k%C5%8Dtai)
+
+---
+
+## Appendix — lawful killing, and who may strike (verified 2026-09-11)
+
+Added while settling the prologue and the last night. The question asked was plain: in Edo Japan,
+under what conditions could one person lawfully kill another? The answer turned out to be narrower
+and better documented than assumed, and it decided three story questions at once.
+
+### Private killing was licensed, and there were exactly three licences
+
+The *Kujikata Osadamegaki* recognised **only three** private rights to kill —
+「無礼討、敵討、妻敵討ちの三種のみ私的刑罰権として認められていた」:
+
+- **Bureiuchi / kirisute gomen** — striking down a commoner for grave insult. Every condition had
+  to hold together: the insult grave, the strike **immediate** (delay reclassified it as premeditated
+  revenge rather than defence), **witnesses** present, and the act **reported and investigated**
+  afterwards by the magistrate or the domain. Misuse cost dismissal, fines or execution. A samurai
+  travelling outside his province was advised to take a servant along purely as a witness.
+- **Katakiuchi** — the registered vendetta (§2.8).
+- **Metakiuchi / megatakiuchi** — the husband's killing of an adulterous wife and her lover. Under
+  the *Osadamegaki* both faced death for 密通, and a husband who killed **both** was not held liable.
+  Medieval custom had allowed it only at the scene of discovery; by the late 18th century the
+  shogunate was discouraging it as a disgrace to the house, and it stopped ending in blood.
+
+Everything outside those three was murder.
+
+### The gradient of killing, and where master-murder sits
+
+Commoner capital punishment ran in six degrees — *geshunin, shizai, gokumon, haritsuke, nokogibiki,
+kazai*. **Nokogibiki** (the saw) was reserved for exactly two crimes: **主殺し**, killing one's master,
+and **親殺し**, killing one's parent. The condemned was paraded for a day, buried to the neck, displayed
+three days with a bloodied bamboo saw laid beside him for passers-by, and then crucified.
+
+So killing upward inside the hierarchy was not merely illegal; it was the top of the scale.
+
+**Anachronism warning:** the *Kujikata Osadamegaki* is **1742/1747** — roughly a century after the
+game's setting. It records the ranking of values accurately but must never be cited in-game as a
+statute in force. The datable rules the game may lean on are the *tsujigiri* ban (1602), the service
+contract edicts (1616/1619) and *kenka ryoseibai*.
+
+### Killing the lord — what actually happened to bad lords
+
+A bad lord was punished, but always **from above**, never by the sword of the wronged:
+
+- **Kaieki** — attainder for misrule, confiscation of the domain (§2.2).
+- **Shukun oshikome (主君押込)** — a custom running back to the Kamakura period: the senior retainers
+  jointly confine a lord who behaves badly, and if he cannot be brought round, force him into
+  retirement and install a successor. Kasaya Kazuhiko's *Shukun "Oshikome" no Kozo* (1988) established
+  it academically; it was widely regarded as **legitimate**, as loyalty owed to the house rather than
+  to the man. **Caveat for our period:** the shogunate only moved clearly towards tacit approval from
+  the **mid-18th century**, so in the 1630s-40s the custom exists but its outcome is not safe.
+- **Matsukura Katsuie** — continued his father's extreme taxation and persecution, triggering the
+  Shimabara rebellion. Stripped of domain and status for misrule in May 1638 and **beheaded** on
+  28 August 1638 — the **only daimyo beheaded in the Edo period's three centuries**; disgraced officials
+  were otherwise allowed seppuku. This sits exactly in the game's window.
+
+**For the game:** a story that ends in the assassination of a bad lord inverts everything the sources
+show. The historically true shape is that the sword does not settle it — the **file** does.
+
+### Who may strike the blow in a registered vendetta
+
+This is the finding that decided the last night.
+
+Assistance was **normal and lawful**. *Sukedachi* (助太刀) — seconds, backup, a hired or related
+swordsman — appears in the documented cases without censure. But the killing blow belonged to the
+**registered avenger himself**.
+
+The case is the **Igagoe vendetta, 1630** — inside our window:
+
+- The registered avenger was **Watanabe Kazuma**, whose **elder brother** Watanabe Gendayu had been
+  murdered by Kawai Matagoro in 1630 (the relation falls squarely inside the vendetta's scope).
+- He was assisted by **Araki Mataemon**, his brother-in-law and a famous swordsman, plus two retainers.
+- Turnbull: *"Mataemon may have been the better swordsman, but he had no intention of killing Matagoro.
+  Kazuma was the one to do that, **as the law demanded**, so Mataemon pushed Matagoro to Kazuma's side."*
+- Kazuma fought a six-hour duel and struck the fatal blows himself. Afterwards the party carried out
+  the proper procedures and surrendered to the local daimyo; they were not treated as criminals and
+  the incident entered the official chronicle.
+
+**A correction to §2.8:** revenge for a **lord or master** was not forbidden outright but sat outside
+the register's scope — it *"was rarely carried out against someone who had no blood relationship, such
+as one's lord."* This is why `STORY.md` makes the dead master the player's **father**: it moves the
+killing from outside the register to inside it.
+
+### Blade lengths, for the last night
+
+- **Kaiken** — 20-25 cm, a close-quarters dagger for indoor use where katana and wakizashi are
+  unwieldy.
+- **Tanto** — the class, 15-30 cm (up to 1 *shaku*); the kaiken sits at its short end.
+- **Wakizashi** — 30-60 cm (1-2 *shaku*), double the tanto's upper bound.
+
+A blade held in the teeth must be at the short end: **15-20 cm**. A wakizashi cannot be carried that
+way. **Kunai was rejected** — a digging and masonry tool, associated with the ninja only through modern
+popular culture, and wrong for a licensed sword school.
+
+### Sources for this appendix
+
+- The three private rights and *metakiuchi* —
+  [National Diet Library, Collaborative Reference Database](https://crd.ndl.go.jp/reference/entry/index.php?page=ref_view&id=1000328139)
+  (citing Ujiie Mikito, *Edo Jidai no Tsumi to Batsu*, 2021),
+  [姦通 (Wikipedia JP)](https://ja.wikipedia.org/wiki/%E5%A7%A6%E9%80%9A)
+- Bureiuchi / kirisute gomen conditions — [Kiri-sute gomen (Wikipedia)](https://en.wikipedia.org/wiki/Kiri-sute_gomen)
+- The six degrees and nokogibiki for master- and parent-murder —
+  [死罪 (江戸時代)](https://ja.wikipedia.org/wiki/%E6%AD%BB%E7%BD%AA_(%E6%B1%9F%E6%88%B8%E6%99%82%E4%BB%A3)),
+  [鋸挽き](https://ja.wikipedia.org/wiki/%E9%8B%B8%E6%8C%BD%E3%81%8D),
+  [Criminal punishment in Edo-period Japan](https://en.wikipedia.org/wiki/Criminal_punishment_in_Edo-period_Japan)
+- The Osadamegaki's date — [Kujikata Osadamegaki (Wikipedia)](https://en.wikipedia.org/wiki/Kujikata_Osadamegaki)
+- Shukun oshikome — [主君押込 (Wikipedia JP)](https://ja.wikipedia.org/wiki/%E4%B8%BB%E5%90%9B%E6%8A%BC%E8%BE%BC),
+  [Kasaya Kazuhiko, Suntory Prize citation](https://www.suntory.co.jp/sfnd/prize_ssah/detail/1988sr1.html)
+- Matsukura Katsuie — [Wikipedia](https://en.wikipedia.org/wiki/Matsukura_Katsuie)
+- Vendetta scope and the register — [Katakiuchi, Japanese Wiki Corpus](https://www.japanesewiki.com/history/Katakiuchi%20(Revenge).html)
+- The Igagoe vendetta and the killing blow — [Igagoe vendetta (Wikipedia)](https://en.wikipedia.org/wiki/Igagoe_vendetta),
+  [Araki Mataemon, Tozando](https://japanesesword.net/blogs/news/the-legend-of-araki-mataemon-unraveling-the-true-story-of-the-igagoe-revenge)
+- Blade lengths — [Kaiken](https://en.wikipedia.org/wiki/Kaiken_(dagger)),
+  [Tanto](https://en.wikipedia.org/wiki/Tant%C5%8D), [Wakizashi](https://en.wikipedia.org/wiki/Wakizashi)
