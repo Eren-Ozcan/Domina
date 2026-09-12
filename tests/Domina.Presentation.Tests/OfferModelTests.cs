@@ -192,4 +192,29 @@ public class OfferModelTests
 
         throw new InvalidOperationException("No contract was posted on the board in 30 days.");
     }
+
+    /// <summary>No hut, no reading: the screen is given nothing it has not paid for.</summary>
+    [Fact]
+    public void WithoutTheHutTheScreenReadsNothingOfTheEnemy()
+    {
+        Assert.Empty(OfferModel.ReadOffer(Stocked()));
+    }
+
+    /// <summary>The empty hut names them; the diviner in it prints the numbers as well.</summary>
+    [Fact]
+    public void TheHutNamesTheEnemyAndTheDivinerPricesHim()
+    {
+        DojoState dojo = Stocked(instantBuild: true);
+        dojo.BuySchoolNode(SchoolNodeId.DivinerHut);
+
+        IReadOnlyList<EnemyLine> named = OfferModel.ReadOffer(dojo);
+        Assert.NotEmpty(named);
+        Assert.All(named, line => Assert.Null(line.Stats));
+
+        dojo.Hire(StaffRole.Diviner);
+
+        IReadOnlyList<EnemyLine> priced = OfferModel.ReadOffer(dojo);
+        Assert.Equal(named.Count, priced.Count);
+        Assert.All(priced, line => Assert.False(string.IsNullOrWhiteSpace(line.Stats)));
+    }
 }
