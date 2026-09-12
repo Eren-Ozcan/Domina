@@ -29,12 +29,12 @@ under it depends on it.
 
 **New systems** (to be distributed into the phases)
 
-- **The class system** — the class list, unlocking with a facility, the limb-class fitness matrix, the `class × implement` product
-- **Morale + Will** — the 9th stat, the source of morale, the two-way bond, its entry into the seppuku and panic checks
-- **Staff and facilities** — 11 professions, a daily wage, four upgrade branches, placing retired warriors, half efficiency for an empty facility, build time
+- **The class system** — ~~the class list~~, ~~the limb-class fitness matrix~~, ~~the `class × implement` product~~ (all three landed at build-order step 4, 2026-09-10); what is left is **unlocking with a facility**, which belongs to step 5
+- ~~**Morale + Will**~~ — landed at build-order step 6 (2026-09-10): the 9th stat, the morale band, the two-way bond, and both the seppuku and panic checks
+- **Staff and facilities** — ~~11 professions, a daily wage, four upgrade branches, half efficiency for an empty facility, build time~~ (landed at build-order step 5, 2026-09-10); what is left is **placing retired warriors**, which waits on retirement itself, and the four posts whose systems are not written (weapon master, bard, monk, diviner)
 - **NPC relationships** — three parties, five tiers, the table of actions that raise and lower them, the effects of a tier
 - **Omamori** — the charm definitions, warrior and staff slots, carrying/selling, temple supply
-- **The season skeleton** — the 180-day countdown, the 7-day compulsory fight counter, the 3-head gate, the 5-round final, the closing screen
+- ~~**The season skeleton**~~ — landed at build-order step 7 (2026-09-10): the 180-day countdown, the weekly tick, the 3-head gate, the five bouts and the closing screen's figures; the last night's own numbers were measured the same day (a developed dojo with eight men wins it 38.5%, with six 13.5%, an undeveloped one 0% — a school and depth, not one of the two), and the screens followed: the season's line on the day screen, `FinalNightScreen` (one bout at a time) and `SeasonEndScreen` (the dead and the freed)
 - **The story cast** — fixed-name targets, a horde that grows on defeat, the night raid
 - **Field features** — fog, mud, a narrow bridge, night, tate
 - **The chat bot and the pool window** — the write direction, 1-hour freshness, `!no` session lifetime
@@ -60,10 +60,11 @@ one thing only; both the number and the sweeps that found nothing are written do
 | ~~1~~ | ~~Remove `BattleOutcome.TimeLimit`~~ | **Done (2026-09-10)** — measured before and after, nothing moved. The record is in `docs/PROGRESS.md` |
 | ~~2~~ | ~~A stun drops the weapon~~ | **Done (2026-09-10)** — locked at 0.15 after a 0-0.45 sweep; the rule and the measurement are in GDD §7 |
 | ~~3~~ | ~~Fights grant stats~~ | **Done (2026-09-10)** — `Dojo/CombatSchooling.cs`, rate locked at 0.08; the rule and the measurement are in GDD §11 |
-| 4 | The class layer (`class × implement`) | Catching, poison and stunning hang off this product — three locked numbers are re-measured |
-| 5 | Facilities + staff | Classes unlock through facilities; the school screen widens over the existing model. **The infirmary trap is fixed here** — its output is rebound to lives or gold |
-| 6 | Morale + Will | Sake and scarcity (#14) hang off it |
-| 7 | The season skeleton | 180 days, a compulsory fight every 7, the 3-head gate, the 5-round final, losing ends the run |
+| ~~4~~ | ~~The class layer (`class × implement`)~~ | **Done (2026-09-10)** — three classes (torite / dokushi / kyūdō), catching zeroed without a class, poison and range scaled; the numbers and the measurement are in GDD §4 |
+| ~~5~~ | ~~Facilities + staff~~ | **Done (2026-09-10)** — the school tree became the facility tree (build time, posts, half efficiency), the eleven roles draw a daily wage, class halls unlock the classes, and the infirmary trap is closed by binding the branch to **death** rather than to time; GDD §10 and `docs/PROGRESS.md` carry the numbers |
+| ~~6~~ | ~~Morale + Will~~ | **Done (2026-09-10)** — the ninth stat, the morale band (×0.94/×1.03), the panic check (0.10), the meditation drill and sake/feasts; #14 closed with it. GDD §3 and `docs/PROGRESS.md` carry the numbers |
+| ~~7~~ | ~~The season skeleton~~ | **Done (2026-09-10)** — the 180-day clock, the weekly tick, the 3-head gate and the five bouts of the last night are in `Campaign/Season.cs` and `Campaign/FinalNight.cs`. The missed-week honour penalty was locked at **5** and the rule was changed by the measurement: a week is only charged when the dojo **had men standing** (GDD §10). The five bouts were then measured too (2026-09-10): powers **2.2-3.2** against **2/3/3/4/1** men, and a wound carried onto the field as health instead of barring the man. The night asks for a school **and** depth — a developed dojo with eight men wins it 38.5% of the time, with six 13.5%, and a dojo that built nothing 0% |
+| 7b | **Step 7's audit** — done 2026-09-10 | The gaps step 7 left: the seppuku tribunal wired into the day loop (`Dojo/Tribunal.cs` — until then honour was written and never read), the difficulty tiers (`Campaign/Difficulty.cs`), a starting roster drawn 3-5 instead of a fixed 4, releasing a man from the roster screen, the missed week and the verdict printed in the day's report, a save test for a night in progress, and the last night recalibrated against a dojo that actually builds its school. Then the roster ceiling was closed too: the story's six is a **starting** ceiling, and the **quarters** branch (barracks/long house, +2 beds each) buys the rest — measured, beds from day one are worth 30-35% of nights won against 10-11% for beds bought late, because a bed bought in the fifth month holds a raw recruit. **Still open:** the rival's settlement map |
 | 8 | Discrete day → pausable real time | The largest risk item, so last. The core stays on a fixed tick; the pausing, the speed and the flow of the day live in Godot |
 
 **Step 1 in detail** (done 2026-09-10 — `MaxBattleSeconds` became `StallGuardSeconds`, 900 s,
@@ -81,6 +82,42 @@ is a `while` with no other exit. So:
    it is an anomaly the sim counts and reports. A fight that reaches it is a bug to be looked
    at, not a draw to be balanced around.
 3. **Re-run and compare** the same scenarios against the step 1 numbers.
+
+**Step 4 in detail** (done 2026-09-10). The class list was settled before any code: **torite**
+(catching), **dokushi** (poison), **kyūdō** (range), plus the classless warrior — and no blunt class,
+because stunning stays open to everyone. Catching is the one mechanic a classless warrior cannot open
+at all; poison and range are scaled rather than zeroed, so nothing already measured in §7 was thrown
+away. The numbers (catch floor 0.10, classless dose 0.6, classless throw 0.85), the sweeps behind
+them and the finding that the catching implement is now dominated are in GDD §4 and
+`docs/PROGRESS.md`.
+
+⏳ **Left open by this step:** ~~how a class is bought~~ and ~~the market's rare ready-classed
+candidate~~ — both landed at step 5. The **yumi** is not written, so the kyūdō class carries a
+placeholder number until it is.
+
+**Step 5 in detail** (done 2026-09-10). The school tree **became** the facility tree rather than
+gaining a second system beside it: the tiers stayed as upgrades, every node gained a construction
+time, and the nodes GDD names a profession for gained a post. An empty building works at half; a
+gate (no medicine bill, a limb kept, a life pulled back) needs the person outright. The
+**infirmary trap** was fixed only on the second attempt — rebinding the branch to limbs measured as
+nothing, so it was bound to death instead ("turns a mortal wound around", 0.25). The wage turned out
+to move occupancy, not survival, which is the gearbox the design asked for.
+
+**Step 6 in detail** (done 2026-09-10). Will is the only stat that does no damage — it decides how
+long a man stays. Morale is the fast counter beside it, and the pair is bound both ways: Will brakes
+morale's falls, morale bends the checks that rest on Will. Two things were learned by measuring rather
+than by design: a flat daily morale gain pins every roster at 100 (so a quiet day now only **settles** a
+warrior toward the middle, and highs drift back), and the panic rule applies to the adversaries too, so
+it *raises* the player's victory rate. ⚠️ It also showed that a fight the enemy fled pays the same
+reward as one where he fell — an economy leak for step 7.
+
+⏳ **Left open by step 6:** the fled-enemy reward leak, morale on the screens, and whether a feast
+should touch honour as well.
+
+⏳ **Left open by step 5:** retired warriors as free staff (retirement is not written), the ō-yoroi
+gate and forged weapons, the four inert posts, a measurement of the classed candidate against a
+policy that trains classes, and the school screen's staff column (the model carries it, the scene
+does not).
 
 ⏳ **Left open by this step:** what the dojo layer does if a fight ever hits the guard. In the
 sim it is a counted anomaly; in the game it cannot simply hang. Decide when step 8 (real time)

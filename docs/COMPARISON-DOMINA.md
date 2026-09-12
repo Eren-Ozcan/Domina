@@ -303,8 +303,10 @@ written into the GDD.
 | Killing / selling | None ⚪ | **Only honourable exits**: seppuku, retirement, seeing him off | A student is not property — he is not sold or killed. The leak "a maimed warrior eats food forever" is closed by retirement. |
 
 ### The new work Section 2 brings
-- **The class system**: the class list, the unlock cost, the limb-class fitness matrix, its
-  interaction with the Path.
+- **The class system**: ~~the class list~~, ~~the limb-class fitness matrix~~, ~~its interaction with
+  the Path~~ — all in the core since 2026-09-10 (torite / dokushi / kyūdō; an arm closes the first
+  and the third, the path is untouched). What is left is **the unlock cost**, which arrives with the
+  facilities.
 - **The Will stat** and **the morale resource**: two new systems, tied to each other; they enter
   the seppuku and panic checks.
 - **Showing the three behavioural tendencies** on screen + the per-kind adversary profiles.
@@ -500,7 +502,7 @@ settled and will be revisited once the staff economy settles.
 |---|---|---|---|
 | 9.1 An engine-free deterministic core | An architecture rule, "critical not to break" in CLAUDE.md | ⏳ *not settled* | The item opened in Section 5's "Resolution" row stayed open. Three options are on the table: (a) the rule continues as it is, (b) the decision stays in the core but position/distance/animation timing are handed entirely to Godot, (c) resolution moves into the engine. Because 9.2 chose "measure as each system arrives", (c) conflicts with that decision — with no sim there is no measurement. The decision was not made in this pass. |
 | 9.2 A measured economy | Runs of 1000 dojos × 60 days, the prices justified by measurement | **The method stays; measurement happens as each system enters the code** | The decision pass invalidated all the existing measurements (real time, stat gain from fights, staff, classes). Instead of one big measurement pass, **incremental** measurement was chosen: every system gets its own sweep as soon as it lands. The price was accepted knowingly — a later system breaks an earlier measurement and some sweeps are repeated; in exchange a wrong number does not stay buried for months. The numbers now to be treated as void: the training rate 0.04, the effects of the school branches, `MaxPower` 2.2, the risk premium 0.25, the market ceiling 0.75. |
-| 9.3 Catching / poison / stunning | All three tied to **the weapon in hand** 🔵 | **Tied to both the class and the weapon — a product** | The class **opens** the mechanic, the weapon **multiplies** it: `chance = base × class × implement`. With the right implement, full strength (a catcher + a sai 30%, + a jitte 24%); with the wrong weapon or empty-handed, **weak but not zero** (10%); a warrior with no class catches **nothing** even holding a jitte (0%). The rationale: let the identity belong to the warrior and the efficiency to the equipment — a master who drops his weapon weakens but does not become someone else, and giving a recruit a jitte does not create a master. The price: the two multipliers have to be swept **together**; the old single-axis measurements (like jitte 78.00% / katana 75.02%) will be taken again under this rule. |
+| 9.3 Catching / poison / stunning | All three tied to **the weapon in hand** 🔵 | **Tied to both the class and the weapon — a product** | The class **opens** the mechanic, the weapon **multiplies** it: `chance = base × class × implement`. With the right implement, full strength (a catcher + a sai 30%, + a jitte 24%); with the wrong weapon or empty-handed, **weak but not zero** (10%); a warrior with no class catches **nothing** even holding a jitte (0%). The rationale: let the identity belong to the warrior and the efficiency to the equipment — a master who drops his weapon weakens but does not become someone else, and giving a recruit a jitte does not create a master. The price: the two multipliers have to be swept **together**; the old single-axis measurements (like jitte 78.00% / katana 75.02%) will be taken again under this rule. **Landed 2026-09-10** with one change of mind: only catching is zeroed. A zero dose drops the poisoned tantō to 6.18%, below the clean knife it is built from, so poison is scaled (0.6) and the range hand with it (0.85) — the classless warrior is weaker, not shut out. The retaken measurements exposed a second problem: the catching implement now loses to a sword in the same torite's hand everywhere, which is Open Decision #19's, not the class layer's. |
 | 9.4 Armour wear | A piece wears by the damage it stops, and when it breaks it is gone permanently 🔵 | **Stays exactly as it is; repair yes, a broken piece does not come back** | A keikogi ~7 fights, an ō-yoroi ~15. A worn piece can be repaired with gold, but once its pool is spent and it has broken it is gone. Armour thus stays a continuous expense — it works in the same direction as Section 4's daily consumption pressure. Repair pricing and the smith staff member's effect on it will be seen in the profession pass. |
 | 9.5 Limb loss continuing | The warrior lives on maimed, the penalties are sided 🔵 | **Stays exactly as it is** 🔵 | The sword arm ×0.65, the off arm ×0.85, a leg ×0.55 evasion / ×0.60 speed, an eye ×0.75 accuracy. A maimed warrior does not become unusable; the decision left to the player is **"retire him or keep using him"** and that decision is itself the mechanic's value. An honourable exit from the roster for a maimed warrior was **already closed in Section 2**: retirement (he becomes a master, a permanent bonus to training speed, the food load ends) and limb loss **reopening the class choice**. This row does not change those decisions, it confirms that the raw penalties are not softened. |
 | 9.6 The honour system | 0-100, with decay, tied to the reward multiplier and to seppuku ✅ | **Stays per warrior; no dojo honour is added** | Honour stays each warrior's own stat (starting 50, threshold 30, pardon 45 — the numbers left to playtesting). A second layer of "dojo honour" derived from the roster's average was **not** opened: the NPC relationship already carries its own five-tier number (Section 7), and a third abstract reputation number would muddy both the screen and the model. |
@@ -513,8 +515,10 @@ settled and will be revisited once the staff economy settles.
   phase 4 and beyond is undefined.
 - **The incremental measurement setup**: a control-run pattern per system, a record of which number
   came from which measurement, marking the void numbers in the GDD.
-- **Two-multiplier catching/poison/stunning**: the `class × implement` formula entering the core,
-  zeroing for a warrior with no class, sweeping the two multipliers together.
+- ~~**Two-multiplier catching/poison/stunning**~~: **done 2026-09-10.** The formula is in the core,
+  the zero applies to catching alone (poison and range are scaled instead: 0.6 and 0.85), and the
+  multipliers were swept together — the record is in GDD §4. Stunning was left out of the product
+  deliberately; it stays open to everyone.
 - **Armour repair pricing**: tying the repair cost and the breakage limit to the economy (together
   with the profession pass).
 - **The contract penalty's double effect**: measuring the honour loss + the relationship drop
@@ -568,21 +572,28 @@ system enters the code.
 | The final tournament | None | **5 consecutive rounds, no healing in between** | Domina runs a single championship at the end of the year with **15 well-equipped gladiators** (all 100+ in every stat). 15 does not work for us: the expedition party is at most 4. But a single fight cannot carry the weight of 180 days either. Five rounds with no healing in between: a new party can be built for each round, and the wounded and the tired accumulate — so the final tests **roster depth**, doing with a party limit of 4 what Domina tests with 15 opponents. It matches Section 1's rationale ("the season's goal is roster breadth and depth") exactly. ⚠️ **It replaces Section 6's line "the campaign's end is a single final fight"** — the end is not one fight but five rounds; that line's ruling **"losing the final = game over"** holds exactly, and being knocked out of the tournament ends the run. |
 | The market | 10 candidates, refreshed daily, a 150-gold base | **The same; a candidate with a class drops occasionally** | Because classes are unlocked with a facility (below), the market's main stock stays the **classless recruit**. On top of that a **ready, classed** and markedly expensive candidate appears rarely: a shortcut past the facility investment, but at a price. The frequency and the price multiplier will be measured — the shortcut must sit where it does not make the facility branch pointless. |
 | Warrior price | A 150-gold base, multiplied by talent | **The shape stays** | Base × talent, bitten by the ceiling that tracks the best warrior (0.75). The numbers will be measured again per 9.2; the market ceiling will be swept again now that training, facilities and the risk premium exist. |
-| Unlocking a class | Domina: 400-500 gold + 16-17 turns; we had none | **Unlocked with a facility: gold + build time** | Domina's research model is taken with a thematic adaptation. The class is the dojo's decision: once the relevant facility is built, that class can be trained. It sits directly on Section 7's facility tree and build-time rule; a dojo that is narrow at the start of the season widens over time. The gold and days per facility will be set by measurement. |
+| Unlocking a class | Domina: 400-500 gold + 16-17 turns; we had none | **Unlocked with a facility: gold + build time** — in the core since 2026-09-10 at **450 gold / 12 days** | Domina's research model is taken with a thematic adaptation. The class is the dojo's decision: once the relevant facility is built, that class can be trained. It sits directly on Section 7's facility tree and build-time rule; a dojo that is narrow at the start of the season widens over time. The gold and days per facility will be set by measurement. |
 | A school/facility node | Gold, no duration | **Gold + build time** (Section 7) | Domina's hourglass had been taken; this row is that decision's number side. |
 | Yield threshold | Domina: 10% (20% with an upgrade); ours the player's decision | **The player's decision stays** 🔵 | No automatic yield. Whether a warrior dies is the player's decision; the price of withdrawing already rises like a ladder (GDD §5). An automatic threshold would take away the **only** intervention the automatic fight leaves the player. The price was accepted knowingly: a forgotten warrior dies. |
 | Fight duration | Domina ~3-minute timer; ours `TimeLimit` | **No time limit** (Section 5) | `BattleOutcome.TimeLimit` comes out of the code. |
 | Event frequency | 15% a day | **The day stays the unit** | Time moved to real time, but the event die is rolled **at the turn of the day**; the player sees all the offers and events together in the morning. The rationale: events dropping suddenly within the flow raise the tempo but turn the pause-read-continue loop into constant interruption; reading them together daily is calmer both to write and to play. The 15% rate will be revisited by measurement. |
 
 ### The new work Section 10 brings
-- **The 180-day season**: the countdown screen, the season-end conditions, remeasuring the
-  difficulty ceiling at this length so the late-game threat does not run out.
-- **The compulsory fight counter**: the 7-day rhythm, the honour penalty for missing it, measuring
-  the penalty's cumulative effect with the seppuku threshold.
-- **The final tournament**: 5 rounds, no healing between rounds, a party selection screen for each
-  round, building the opponent rosters.
-- **The head gate**: showing the 3/3 counter on screen, the final staying locked while the gate is
-  closed.
+- ~~**The 180-day season**~~: **done 2026-09-10** (build-order step 7) — the countdown, the season-end
+  conditions, the closing screen's figures and the screens themselves (the season's line on the day
+  screen, `SeasonEndScreen`). What is left is remeasuring the difficulty ceiling at this length so the
+  late-game threat does not run out.
+- ~~**The compulsory fight counter**~~: **in the core since 2026-09-10**, and the measurement changed
+  the rule. The 7-day rhythm stands; the penalty is **5 honour** per living warrior, with the first
+  quiet week of a run free and **nothing charged to a dojo that had nobody fit to send** — an ordinary
+  dojo misses 13.4 of its 25 weeks because its party is in the infirmary, and every flat penalty big
+  enough to bite a hider put 41-59% of ordinary dojos below the seppuku threshold. Numbers in GDD §10.
+- ~~**The final tournament**~~: **done 2026-09-10** — 5 bouts, no healing between them, the opponent
+  rosters built from the season's own curve, the fifth being Kurogane, a party-selection screen per
+  bout (`FinalNightScreen`), and the night measured: a developed dojo with eight men wins it 38.5% of
+  the time, with six men 13.5%, and a dojo that built no school 0%.
+- ~~**The head gate**~~: **done 2026-09-10** — three heads read on the last day, the counter on the
+  day screen's season line, and the night is the only screen the hub will open once the gate is passed.
 - **Class facilities**: a facility for each class, the gold and build time; the frequency and price
   multiplier of the rare classed candidate in the market.
 - **The starting package**: 3 days of food and water entering the save and the new-game flow.
