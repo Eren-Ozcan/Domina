@@ -1,8 +1,10 @@
 # Story and Setting
 
-> **Draft, second pass (2026-09-10).** This replaces the earlier ward/yokai draft, which was
-> written when the opponent was assumed to be supernatural. The enemy is now human and the
-> premise is rebuilt around it.
+> **Draft, third pass (2026-09-11).** The second pass rebuilt the premise around a human enemy.
+> This pass makes the dead master the player's **father**, puts the player's **elder brother** inside
+> the rival school, and writes the prologue and the last night's final blow. The grounds are the
+> research file's appendix *Lawful killing, and who may strike*; the change exists because a
+> registered vendetta covers a parent and does not cover a master.
 >
 > Nothing here outranks a locked rule. Where the fiction and the GDD disagree, the GDD wins and
 > this file is rewritten. The historical grounds are in `STORY-RESEARCH.md`; the entries below
@@ -16,15 +18,42 @@ The province's official sword instructor is dead and his post is empty. The lord
 his return he will fill the post by a contest held in his presence, and the notice he left says
 **180 days**. The post is not an honour — its holder decides which schools in the province are
 licensed and which are not, and a school without a licence cannot teach, cannot take contracts
-and cannot exist. Your master was the strongest candidate. That is why he was killed. What he
-left you is his licence, a handful of men bound by contracts you now hold, and a name nobody
-in the province rates. The licence carries over to you — that is the one thing you inherit whole —
+and cannot exist. Your father, who was your master, was the strongest candidate. That is why he was
+killed, in a raid on his own dojo that nobody can pin on anyone. You were there. You came out of it
+alive and **without the use of your arms**. What he left you is his licence, a handful of men bound
+by contracts you now hold, and a name nobody in the province rates. The licence carries over to you — that is the one thing you inherit whole —
 but a licence without proven work behind it is a piece of paper, and the register is read at the
 appointment. While the lord is away the province is run by his deputy, and the deputy is the patron
 of the **Kurogane school** — the man who wants the post, and who has spent years buying the
 province one fee at a time. There is no magistrate to appeal to, no case to open, and no way to
 reach him except the one place he cannot buy: the ground in front of the lord. To stand there
 you must show the province three proven pieces of work. The season is the climb.
+
+---
+
+## The night, and what it left you
+
+The raid is the prologue. It is short, and it is not a fight you win.
+
+Men came over the wall before dawn. Your father was killed. The dojo was stripped. You were cut
+across both arms and left where you fell, and what the cuts took was not the arms themselves but
+the **grip** — the tendons are severed, the hands will not close. The arms hang there in every scene
+of the game. You can gesture with them, you can lean on them, you can be helped up by them. You
+cannot hold a sword, a brush, a bowl, or a man's collar.
+
+Everything the game is built on comes out of that one night:
+
+- **You never fight**, and it is not a design rule, it is your body.
+- **You buy men**, because a school with no hands needs hands.
+- **Everything you want done, someone else does** — and every one of them is on a term with an end
+  date, so the hands are rented.
+
+**Nobody can prove who came.** The raid was dressed as banditry, which is the same trick the racket
+runs on the settlements — rob one place, leave the blame at another's door. Everyone in the province
+knows who it was. The clerk's office cannot write down what everyone knows. This is also the season's
+first knot: **a vendetta must be filed against a named man**, and you cannot yet write the name.
+
+Your elder brother did not come out of the wall. He was already gone.
 
 ---
 
@@ -57,12 +86,30 @@ you find out, you will have been the muscle for it for weeks.
 
 ### Why he cannot simply kill you
 
-He killed your master once. Openly destroying a second licensed school in an appointment year
-would end his candidacy — the deputy shields him from complaints about fees, not from a murder
-the lord would have to answer for on his return. So he has a **budget of deniability**, and every
-move he makes must stay inside it. That budget is the only reason this is a season and not a
-single night. On the last night the budget is worthless, because after the appointment there is
-nothing left to protect.
+He killed your father once, and it cost him nothing, because the raid reads as banditry on paper.
+Doing it again now would not: a second licensed school destroyed in an appointment year, with the
+first one's heir still alive and filing work every week, is the one complaint the deputy cannot bury
+for him. The deputy shields him from grievances about fees, not from a murder the lord would have to
+answer for on his return. So he has a **budget of deniability**, and every move he makes must stay
+inside it. That budget is the only reason this is a season and not a single night. On the last night
+the budget is worthless, because after the appointment there is nothing left to protect.
+
+### Your brother
+
+The eldest son should have had the school. He did not get it — your father passed the licence over
+him, and whatever the reason was, it is not explained to you and your father is not available to ask.
+Your brother left. He is a senior man in Kurogane now, and he was on the ground somewhere the night
+the wall came down, though not necessarily over it.
+
+He is **not** the head of the rival school. That matters for a reason that is not sentiment: the head
+is an outsider, and an outsider is a man a vendetta can be **registered** against. Your brother is
+your senior relative, and there is no paper in the province that makes killing him anything other than
+the worst crime the law knows.
+
+His argument is shorter than his master's and harder to put down: *the school was mine.*
+
+He is the **fourth bout** of the last night. To reach the man you can lawfully kill, you have to go
+through the man you cannot.
 
 ---
 
@@ -144,6 +191,9 @@ The GDD's market follows the roster and cannot exceed your best warrior (`Roster
 > A good fighter does not sign with a school that has no name. As far as your name reaches, that
 > far do men look at your gate.
 
+And the stall is the one place the arms cannot be hidden. A man deciding whether to sign is looking at
+a master who cannot draw. Some of them sign anyway; that is worth more than the gold you paid.
+
 ---
 
 ## The season
@@ -221,10 +271,36 @@ The contest is held before the lord: **five bouts in one night, no healing betwe
 a depth test, not a champion test — a school that spent 180 days perfecting four warriors has no
 one left to send out for the fourth bout.
 
-**The fifth is Kurogane's head.** Four of his seniors first, then the man himself. He has to stand
-there for the same reason you do: the post is given to a person and not to a signboard, and a
-candidate who sends others in his place has conceded it. This is the one fixed point of the last
-night — the season ends in front of the man who had your master killed.
+**The fifth is Kurogane's head.** Three of his seniors first, then your brother, then the man himself.
+He has to stand there for the same reason you do: the post is given to a person and not to a signboard,
+and a candidate who sends others in his place has conceded it. This is the one fixed point of the last
+night — the season ends in front of the man who had your father killed.
+
+### The blow
+
+Somewhere in the 180 days you file the vendetta, once you have a name to write on it. What the filing
+buys is narrow and exact, and it is the law's own wording, not ours: **help is allowed, the blow is not
+delegated.** A second, a retainer, a better swordsman than you — all lawful, and the documented case
+says so plainly. What the assistant does is not kill the man. It is **put him where the avenger can
+reach him**.
+
+So the last bout is not a duel. Your fighters have already done the work; the man is on the ground,
+spent, and his long sword is out of his hand. His short blade is still in his sash — a hand's length of
+steel, the only thing on that floor that a man with no grip can use.
+
+And the game asks you, once, for the only time in 180 days:
+
+> **Tell your fighter to finish it.** You take the post. The register records that Kurogane's head
+> died. It does not record a vendetta, because the law does not care who won — it cares whose hand.
+>
+> **Or go out there yourself.** On your knees, across the floor, and take the blade in your teeth.
+
+Neither is the good ending. The first leaves the one debt in the game that money does not close: a man
+you rented for three years paid it for you. The second closes it, in front of the whole province, with
+the thing your body left you.
+
+The scene is played **cold** — no slow motion, no swelling music, no camera admiring it. Work gets done
+and the screen ends. A ceremony here would spend everything the 180 days saved up.
 
 The other shape of the same night: a Kurogane that knows it has lost does not wait for the
 appointment. It comes to the gate before dawn, in five waves, and the last wave is again him —
@@ -258,12 +334,17 @@ days survived, fights won, the dead, and the men who walked out free.
 | The post taken by a patron's back-stairs influence | **Real.** Yasui Sanchi, Meijin-godokoro 1668, "by a backstairs route, with influence exerted by the head of the Matsudaira clan" |
 | The same system applied to a **sword** school rather than a Go house | **[invented] — a transposition.** The Go houses are the documented case; no source was found for a domain sword post filled by contest. This is the fiction's one deliberate borrowing across disciplines |
 | Three-year service contracts, permanent bondage a capital offence for the seller | **Real.** *Nenki hoko*; the 1616 and 1619 edicts |
+| A registered vendetta covering a **parent or elder brother**, filed with a magistrate, with an unregistered killing treated as murder | **Real.** *Katakiuchi*; this is why the dead master is the player's father — revenge for a master fell outside the register |
+| Assistance in a vendetta lawful, but the killing blow reserved to the registered avenger | **Real.** The **Igagoe vendetta, 1630** — inside our window. Araki Mataemon, the better swordsman, "pushed Matagoro to Kazuma's side" rather than kill him, "as the law demanded" |
+| Killing a senior — one's master or parent — as the top of the punishment scale | **Real.** *Nokogibiki* then crucifixion, reserved for those two crimes. **But do not cite the code:** the *Kujikata Osadamegaki* is 1742/1747, a century late for this setting. It fixes the ranking of values, not the statute |
+| A short blade held in the teeth | **[invented] as a scene**, but the object is right: a *tanto* of 15-20 cm. A *wakizashi* (30-60 cm) could not be carried that way, and a *kunai* is a modern popular-culture import, not a sword school's weapon |
 | Training on a living person as a capital crime | **Real.** *Tsujigiri*, banned on pain of death from 1602 |
 | Armed gangs with an office-holding patron, taking fees and preying on a district | **Real.** *Kabukimono* and the *machi-yakko*; ronin confined to quarters and forbidden new masters |
 | Fire-rebuilding labour contracts fought over by gangs | **Real**, Edo's fire economy — but do not date a specific fire without checking |
 | A lord away in Edo with a published return date | **Real** in outline (*sankin-kotai*). **Do not claim a six-month rotation:** the half-year alternation is from **1684** and only for the Kanto *fudai* lords — an anachronism for the 1630s-40s. The 180 days are the notice period for the appointment, not a rotation |
 | Bushido as a written code the characters follow | **Rejected as anachronism.** Codified after the wars — Yamaga Soko, *Hagakure* 1710-16, Nitobe 1900. What drives a masterless man here is his **name**, which the honour system already models |
 | A dojo raiding a rival and smashing its signboard | **Rejected as later fiction.** The real forms are *taryu jiai* (a match between schools) and *musha shugyo* |
+| Killing a bad lord as the resolution | **Rejected.** Bad lords were punished from above — *kaieki* for misrule, and Matsukura Katsuie stripped and **beheaded in 1638**, the only daimyo beheaded in the period. The sword never settles it; the file does |
 
 ---
 
@@ -278,6 +359,8 @@ days survived, fights won, the dead, and the men who walked out free.
 | **Contract flags** | One boolean is enough for the staged work: a contract Kurogane arranged, revealed later |
 | **Market cards** | Show the holder of the claim, the sum and the term ("Village of Hanari — 150 gold — 3 years") |
 | **Expenses** | Burial and the reading of a name become a cuttable line on the books. **Still open** — §11 has no such line yet |
+| ~~**The final bout**~~ | **Written 2026-09-12** — GDD §10, "The final blow". One question after the fifth bout is won, once per run, no roll, no reward |
+| ~~**The vendetta filing**~~ | **Written 2026-09-12** — GDD §10, "The vendetta: naming the man". Two testimonies from freed settlements or named targets, a day to file, and the filing spends the rival's deniability |
 
 ---
 
@@ -293,12 +376,21 @@ days survived, fights won, the dead, and the men who walked out free.
 
 ## Still open
 
-- **Is the master a character or a frame?** A one-armed retired fighter explains why the player
-  never fights and sets the tone for free; a named master with a past invites a story the
-  management layer has nowhere to put.
+- ~~**Is the master a character or a frame?**~~ **Closed 2026-09-11.** He is the player's **father**,
+  and he is dead before the first day — a character in one scene and a frame thereafter. The maiming
+  that was going to belong to him belongs to the **player** instead, which is a better trade: it
+  explains why the player never fights without adding a second person to the management layer.
 - **Does the province have a face?** Three institutions and a rival school are all abstractions. One
   recurring person each — the clerk, the guild's factor, the priest who reads the dead, Kurogane's
   collector — would cost little and give 180 days somewhere to land.
-- **What the player does with the post if they win.** The ending question, and it is not written.
+- **What the player does with the post if they win.** The ending question, and it is not written —
+  but it now has a companion question that **is** written: whose hand ended it. The two should probably
+  be answered on the same screen.
+- ~~**Where the vendetta gets filed, and what it costs.**~~ **Closed 2026-09-12** — the province
+  produces the name. Two testimonies, from settlements that came over or from named targets beaten in
+  the season; a day at the clerk's office to file; the price is the rival's deniability, because the
+  register is public. GDD §10.
+- **Whether the brother can be spared.** He is the fourth bout, and combat is automatic. If a fight
+  can end in something other than a death, that is a mechanical change, not a story one.
 - **The name.** Candidates from this draft: *The Register*, *Kurogane*, *Three Proven Works*,
   *One Hundred and Eighty Days*, *The Fee*, *The Appointment*.
