@@ -23,7 +23,7 @@ public enum StaffRole
     /// <summary>Kata master — raises the ceiling a warrior can be trained towards.</summary>
     KataMaster,
 
-    /// <summary>Weapon master — permanent weapon mastery. <b>No effect in the code yet.</b></summary>
+    /// <summary>Weapon master — permanent mastery of the weapon a warrior carries (docs/GDD.md §10).</summary>
     WeaponMaster,
 
     /// <summary>Physician — the health branch's post: no medicine bill, and limbs he can still save.</summary>
@@ -38,16 +38,16 @@ public enum StaffRole
     /// <summary>Broker — changes what the market puts out, never its prices.</summary>
     Broker,
 
-    /// <summary>Bard — daily morale. <b>No effect in the code yet</b> (morale is step 6).</summary>
+    /// <summary>Bard — the day's morale gain in his hall.</summary>
     Bard,
 
-    /// <summary>Monk — omamori slots and the funeral rite. <b>No effect in the code yet.</b></summary>
+    /// <summary>Monk — the omamori slots and the funeral rite.</summary>
     Monk,
 
     /// <summary>Cook — does not produce, cuts consumption.</summary>
     Cook,
 
-    /// <summary>Diviner — reads the enemy in an offer. <b>No effect in the code yet.</b></summary>
+    /// <summary>Diviner — reads the enemy in the day's offer.</summary>
     Diviner,
 }
 
@@ -117,6 +117,40 @@ public sealed record StaffTuning
 
     /// <summary>How many extra candidates the broker puts in the stall.</summary>
     public int BrokerExtraCandidates { get; init; } = 2;
+
+    /// <summary>How many charms a warrior may wear with the shrine standing and nobody in it.</summary>
+    /// <remarks>
+    /// The shrine is a <b>building</b>, so the half-efficiency rule would say "half a slot" — and half
+    /// a slot is nothing. The rule is written in whole slots instead: the empty shrine keeps one open,
+    /// the monk opens the second. That is GDD §10's own wording for the post, "opens omamori slots",
+    /// and it is the one place in the staff economy where the person is worth a discrete thing rather
+    /// than a share.
+    /// </remarks>
+    public int OmamoriSlotsEmptyShrine { get; init; } = 1;
+
+    /// <summary>How many charms a warrior may wear with a monk in the shrine.</summary>
+    public int OmamoriSlotsWithMonk { get; init; } = 2;
+
+    /// <summary>The share of a charm's price the temple gives back for it.</summary>
+    /// <remarks>
+    /// Below 1, or a charm would be a savings account the player empties whenever a bill falls due.
+    /// What it must stay is a <b>decision that can be undone at a cost</b> — that is what makes fitting
+    /// one to a man who may die this week a real risk rather than a formality.
+    /// </remarks>
+    public double OmamoriResaleShare { get; init; } = 0.5;
+
+    /// <summary>The share of a comrade's death the funeral rite takes off the survivors.</summary>
+    /// <remarks>
+    /// This is the monk's second job (GDD §10) and the only one that touches the fight's aftermath. It
+    /// is a share of the blow rather than a flat number, so it keeps its meaning on the night a party
+    /// loses three men — which is the night a dojo actually spirals.
+    /// </remarks>
+    public double FuneralRelief { get; init; } = 0.5;
+
+    /// <summary>The charm slots a dojo with this shrine and this staff opens.</summary>
+    public int OmamoriSlots(bool shrine, bool monk) => !shrine
+        ? 0
+        : monk ? OmamoriSlotsWithMonk : OmamoriSlotsEmptyShrine;
 
     /// <summary>The wage of a role.</summary>
     public int WageOf(StaffRole role) => Facilities.IsBranchRole(role)
