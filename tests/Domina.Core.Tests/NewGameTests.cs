@@ -16,7 +16,7 @@ public class NewGameTests
         DojoState dojo = NewGame.Create(seed: 7);
 
         Assert.Equal(NewGame.StartingGold, dojo.Resources.Gold);
-        Assert.Equal(NewGame.StartingWarriors, dojo.Roster.Living.Count());
+        Assert.InRange(dojo.Roster.Living.Count(), NewGame.FewestWarriors, NewGame.MostWarriors);
         Assert.Equal(1, dojo.Day);
         Assert.All(dojo.Roster.Living, entry => Assert.Equal(0, entry.RecoveryDaysRemaining));
     }
@@ -57,7 +57,31 @@ public class NewGameTests
         IEnumerable<string> roster = dojo.Roster.Living.Select(e => e.Warrior.Name);
         IEnumerable<string> stock = dojo.Recruits.Select(o => o.Name);
 
-        Assert.NotEqual(roster.Take(NewGame.StartingWarriors), stock.Take(NewGame.StartingWarriors));
+        Assert.NotEqual(roster.Take(NewGame.FewestWarriors), stock.Take(NewGame.FewestWarriors));
+    }
+
+    /// <summary>
+    /// How many men the master left is drawn, not fixed — no two seasons open the same way (STORY.md).
+    /// </summary>
+    /// <remarks>
+    /// The size is drawn <b>before</b> the men are, so the same seed still opens the same dojo; what the
+    /// draw takes away is the fixed cushion every run used to start with.
+    /// </remarks>
+    [Fact]
+    public void TheMasterLeavesADifferentNumberOfMenFromSeasonToSeason()
+    {
+        HashSet<int> sizes = [];
+        for (ulong seed = 1; seed <= 40; seed++)
+        {
+            int men = NewGame.Create(seed).Roster.Living.Count();
+            Assert.InRange(men, NewGame.FewestWarriors, NewGame.MostWarriors);
+            sizes.Add(men);
+        }
+
+        Assert.True(sizes.Count > 1, "every seed left the same number of men behind");
+        Assert.Equal(
+            NewGame.Create(seed: 5).Roster.Living.Count(),
+            NewGame.Create(seed: 5).Roster.Living.Count());
     }
 
     /// <summary>A new game must be writable and readable back: the first day is saved too.</summary>

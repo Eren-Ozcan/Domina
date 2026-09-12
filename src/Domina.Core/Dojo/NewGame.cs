@@ -1,3 +1,4 @@
+using Domina.Core.Campaign;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -11,10 +12,12 @@ namespace Domina.Core.Dojo;
 /// whose balance is measured would quietly drift apart.
 /// </para>
 /// <para>
-/// The numbers are the same as the measured setup (GDD §11): <b>600 gold</b>, an empty store — the
-/// first day's food is bought by the day's closing — and a roster of four. The roster size is the same
-/// as the measurement's <c>RosterTarget</c>; another number would cut the measured economy loose from
-/// the game being played.
+/// The numbers are the same as the measured setup (GDD §11): <b>600 gold</b> and an empty store — the
+/// first day's food is bought by the day's closing. The roster is <b>drawn</b> rather than fixed:
+/// docs/STORY.md gives the dead master 3-5 men, and no two seasons should open the same way. The
+/// measurement's <c>RosterTarget</c> of four sits in the middle of that range, so the economy that was
+/// measured is still the economy being played — what changes is how much of a cushion the run starts
+/// with, which is one of the few things a fixed opening was quietly deciding for the player.
 /// </para>
 /// <para>
 /// The starting roster is drawn from the market's own generator rather than from hand-written warriors:
@@ -28,7 +31,13 @@ public static class NewGame
     /// <summary>The starting purse — GDD §11.</summary>
     public const int StartingGold = 600;
 
-    /// <summary>The size of the starting roster.</summary>
+    /// <summary>The smallest starting roster the master can have left behind.</summary>
+    public const int FewestWarriors = 3;
+
+    /// <summary>The largest — and the dojo's own ceiling in the story.</summary>
+    public const int MostWarriors = 5;
+
+    /// <summary>The middle of the range; it is what the economy was measured on.</summary>
     public const int StartingWarriors = 4;
 
     /// <summary>The mixer that separates the starting roster's stream from the day's market.</summary>
@@ -37,20 +46,39 @@ public static class NewGame
     /// <summary>Builds a new dojo from the given seed.</summary>
     /// <param name="seed">The expedition's seed; the same seed gives the same start.</param>
     /// <param name="tuning">The day-loop settings; the default if not given.</param>
-    public static DojoState Create(ulong seed, DojoTuning? tuning = null)
+    /// <param name="tier">
+    /// The difficulty tier. Master is the measured one and the default — every number in the docs is
+    /// literally the number the game runs at Master.
+    /// </param>
+    public static DojoState Create(
+        ulong seed,
+        DojoTuning? tuning = null,
+        DifficultyTier tier = DifficultyTier.Master)
     {
-        DojoState dojo = new(tuning, seed: seed)
+        Difficulty difficulty = Difficulty.Of(tier);
+
+        DojoState dojo = new(
+            tuning,
+            difficulty.Apply(new EconomyTuning()),
+            seed,
+            difficulty.Apply(new EncounterTuning()),
+            difficulty: tier)
         {
             Resources = new Resources(Gold: StartingGold),
         };
 
         SeededRandom random = new(seed ^ RosterSalt);
+
+        // How many the master left is the first thing the season decides, and it is decided before the
+        // men themselves are drawn: the same seed must always open the same dojo.
+        int men = FewestWarriors + random.NextInt(MostWarriors - FewestWarriors + 1);
+
         IReadOnlyList<RecruitOffer> stock = dojo.Market.Stock(
             random,
             WarriorStats.Recruit(),
             dojo.Economy.RecruitPrice);
 
-        for (int i = 0; i < StartingWarriors && i < stock.Count; i++)
+        for (int i = 0; i < men && i < stock.Count; i++)
         {
             RecruitOffer offer = stock[i];
             string name = offer.Name;
