@@ -52,6 +52,8 @@ internal static class Scenarios
         new("3v3-armored", "3v3, every enemy in full armour — disarming's team price", ThreeVsThreeArmored),
         new("thrown", "master with a throwing slot, no class — the control for the range class", ThrownControl),
         new("thrown-kyudo", "the same fight, the master of the range class — the throwing hand", ThrownKyudo),
+        new("yumi", "the range class with the bow — the class's own implement", YumiKyudo),
+        new("yumi-unclassed", "the same bow in an untrained hand — the implement's gate", YumiUnclassed),
         new("patrol", "the daily patrol (3v3) — the ordinary encounter the economy is measured on", Patrol),
     ];
 
@@ -426,9 +428,8 @@ internal static class Scenarios
     /// </summary>
     /// <remarks>
     /// The shuriken stays open to everyone (docs/COMPARISON-DOMINA.md §5), so what is measured here is
-    /// not access but the hand: <c>UnclassedRangeFactor</c> against a full one. The class's real payoff
-    /// is the yumi, which is not written yet — until it is, this pair is the only place the range half
-    /// of the product can be priced at all.
+    /// not access but the hand: <c>UnclassedRangeFactor</c> against a full one — worth +1.06 points.
+    /// The class's real payoff is the bow, and it is measured by the <c>yumi</c> pair below.
     /// </remarks>
     private static BattleSetup ThrownControl() =>
         Trade(Weapon.Katana(), thrown: ThrownWeapon.Shuriken());
@@ -436,6 +437,22 @@ internal static class Scenarios
     /// <inheritdoc cref="ThrownControl"/>
     private static BattleSetup ThrownKyudo() =>
         Trade(Weapon.Katana(), thrown: ThrownWeapon.Shuriken(), klass: WarriorClass.Kyudo);
+
+    /// <summary>
+    /// The range class carrying its own implement — the same fight as <see cref="ThrownKyudo"/> with
+    /// the bow in the slot instead of a handful of stars.
+    /// </summary>
+    /// <remarks>
+    /// This pair is what the class is finally priced on: <c>yumi</c> against <c>thrown-kyudo</c> says
+    /// what the implement adds to a trained hand, and <c>yumi-unclassed</c> against it says what the
+    /// training is worth on the same bow.
+    /// </remarks>
+    private static BattleSetup YumiKyudo() =>
+        Trade(Weapon.Katana(), thrown: ThrownWeapon.Yumi(), klass: WarriorClass.Kyudo);
+
+    /// <inheritdoc cref="YumiKyudo"/>
+    private static BattleSetup YumiUnclassed() =>
+        Trade(Weapon.Katana(), thrown: ThrownWeapon.Yumi());
 
     private static BattleSetup Ambush()
     {

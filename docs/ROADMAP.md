@@ -92,8 +92,13 @@ them and the finding that the catching implement is now dominated are in GDD §4
 `docs/PROGRESS.md`.
 
 ⏳ **Left open by this step:** ~~how a class is bought~~ and ~~the market's rare ready-classed
-candidate~~ — both landed at step 5. The **yumi** is not written, so the kyūdō class carries a
-placeholder number until it is.
+candidate~~ — both landed at step 5. ~~The **yumi** is not written, so the kyūdō class carries a
+placeholder number until it is.~~ **Written 2026-09-13** (`ThrownWeapon.Yumi()`): range 1200, damage
+26, 10 arrows, a 1.5 s draw, and the only thrown implement gated on the class (`UntrainedShare` 0.45).
+Measured over 20.000 fights a cell, the class is worth +1.06 points on a shuriken and **+5.04 on the
+yumi** — which is where §4 always said the range class's payoff belonged. ⏳ **What it leaves open:**
+nothing in the dojo sells a throwing implement at all, so the bow has no price and a kyūdō cannot buy
+his own weapon in a running season. A shop gap, listed with the Phase 4 work below.
 
 **Step 5 in detail** (done 2026-09-10). The school tree **became** the facility tree rather than
 gaining a second system beside it: the tiers stayed as upgrades, every node gained a construction

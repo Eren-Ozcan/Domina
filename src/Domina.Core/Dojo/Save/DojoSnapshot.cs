@@ -310,7 +310,8 @@ public sealed record ThrownWeaponSnapshot(
     double Speed,
     int Ammo,
     double ThrowSeconds,
-    double Poison = 0)
+    double Poison = 0,
+    double UntrainedShare = 1)
 {
     public static ThrownWeaponSnapshot From(ThrownWeapon thrown) => new(
         thrown.Name,
@@ -320,10 +321,15 @@ public sealed record ThrownWeaponSnapshot(
         thrown.Speed,
         thrown.Ammo,
         thrown.ThrowSeconds,
-        thrown.Poison);
+        thrown.Poison,
+        thrown.UntrainedShare);
 
     public ThrownWeapon ToThrownWeapon() =>
-        new(Name, Class, Damage, Range, Speed, Ammo, ThrowSeconds) { Poison = Poison };
+        new(Name, Class, Damage, Range, Speed, Ammo, ThrowSeconds)
+        {
+            Poison = Poison,
+            UntrainedShare = UntrainedShare,
+        };
 }
 
 /// <summary>The kit — the six slots are written separately (GDD §7 "armour is slot by slot").</summary>

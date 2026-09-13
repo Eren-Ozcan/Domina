@@ -316,6 +316,23 @@ public sealed record ThrownWeapon(
     /// <inheritdoc cref="Weapon.Poison"/>
     public double Poison { get; init; }
 
+    /// <summary>
+    /// How much of the untrained hand's penalty this implement adds on top of the shared one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 1 means the implement asks nothing beyond <see cref="Combat.CombatTuning.UnclassedRangeFactor"/>
+    /// — a shuriken is a thing anybody can throw, and the throwing slot every warrior carries must not
+    /// become a class tax (docs/GDD.md §4). Below 1 the implement is one a man has to be taught:
+    /// it is the yumi's whole design, because a bow in an untrained hand is not a slightly worse bow.
+    /// </para>
+    /// <para>
+    /// It is on the implement rather than in the tuning so that the class's payoff can be moved
+    /// without touching what every other thrown thing does.
+    /// </para>
+    /// </remarks>
+    public double UntrainedShare { get; init; } = 1;
+
     /// <inheritdoc cref="Weapon.IsPoisoned"/>
     public bool IsPoisoned => Poison > 0;
 
@@ -349,11 +366,32 @@ public sealed record ThrownWeapon(
     /// so the poisoned point is the catching implement's answer too; in exchange the ammo halves.
     /// </remarks>
     public static ThrownWeapon PoisonedShuriken() =>
-        Shuriken() with { Name = "Zehirli shuriken", Ammo = 2, Poison = 1.0 };
+        Shuriken() with { Name = "Poisoned shuriken", Ammo = 2, Poison = 1.0 };
 
     /// <summary>Slow and heavy; few of them but serious damage.</summary>
     public static ThrownWeapon ThrowingSpear() =>
         new("Throwing spear", WeaponClass.Piercing, 26, 520, 900, 2, 1.1);
+
+    /// <summary>
+    /// The asymmetric war bow — the range class's own implement (docs/GDD.md §4).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It is built as the shuriken's opposite on every axis: it reaches the far end of the arena
+    /// (1200 against 700), it carries a quiver rather than a handful (10 against 4), and each arrow is
+    /// worth more than twice a star (26 against 12) — but a shot takes twice as long (1.5 s against
+    /// 0.7) and the arrow flies slower than a thrown star leaves the hand. A yumi warrior who is left
+    /// to shoot wins the fight before it starts; one who is closed on has spent the fight drawing.
+    /// </para>
+    /// <para>
+    /// <b>It is the one thrown implement that is gated on the class</b>
+    /// (<see cref="UntrainedShare"/> 0.45): everything else in the slot stays open to everyone, and
+    /// the kyūdō class's payoff is here rather than in a deeper penalty on the shuriken every warrior
+    /// carries.
+    /// </para>
+    /// </remarks>
+    public static ThrownWeapon Yumi() =>
+        new("Yumi", WeaponClass.Piercing, 26, 1200, 1100, 10, 1.5) { UntrainedShare = 0.45 };
 }
 
 /// <summary>

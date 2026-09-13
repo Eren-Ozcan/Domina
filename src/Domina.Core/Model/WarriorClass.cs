@@ -26,7 +26,7 @@ public enum WarriorClass
     /// <summary>Dokushi — the poison class. He carries the dose the plate cannot read.</summary>
     Dokushi,
 
-    /// <summary>Kyūdō — the range class. His implement is the throwing slot, and later the yumi.</summary>
+    /// <summary>Kyūdō — the range class. His implement is the throwing slot, and above all the yumi.</summary>
     Kyudo,
 }
 

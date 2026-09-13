@@ -644,10 +644,11 @@ public sealed record CombatTuning
 
     /// <summary>The share of the throw hit chance a warrior who is not of the range class keeps.</summary>
     /// <remarks>
-    /// Shuriken and the tantō stay open to everyone (docs/COMPARISON-DOMINA.md §5); what the range
-    /// class buys today is the hand, and later the yumi, which is where its real payoff sits. The
-    /// number is deliberately shallow — a deep penalty would turn the throwing slot, which every
-    /// warrior carries, into a class tax.
+    /// Shuriken and the tantō stay open to everyone (docs/COMPARISON-DOMINA.md §5), so this number is
+    /// deliberately shallow — a deep penalty would turn the throwing slot, which every warrior carries,
+    /// into a class tax. The class's depth is on its own implement instead: the yumi multiplies this by
+    /// its <see cref="Model.ThrownWeapon.UntrainedShare"/> of 0.45, which is worth +5.04 points of
+    /// victory to a trained hand against +1.06 on a shuriken (2026-09-13, 20.000 fights a cell).
     /// </remarks>
     public double UnclassedRangeFactor { get; init; } = 0.85;
 

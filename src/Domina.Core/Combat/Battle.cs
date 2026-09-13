@@ -1373,13 +1373,14 @@ public sealed class Battle
         double reachedFraction =
             Math.Clamp(attacker.Position.DistanceTo(target.Position) / p.Weapon.Range, 0, 1);
         // The class half of the product (docs/GDD.md §4): the range class throws with a full hand,
-        // everyone else keeps a share of it. Shuriken and the tantō stay open to all — the class's
-        // real payoff is the yumi, which does not exist yet.
+        // everyone else keeps a share of it. Shuriken and the tantō stay open to all; the implement
+        // that is taught rather than picked up — the yumi — deepens the penalty itself.
         double hitChance = (_tuning.BaseThrowHitChance
                             + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
                            * (1 - (reachedFraction * _tuning.ThrowFalloffAtMaxRange))
                            * ClassAptitude.RangeFactor(
-                               attacker.Warrior.Class, _tuning.UnclassedRangeFactor);
+                               attacker.Warrior.Class,
+                               _tuning.UnclassedRangeFactor * p.Weapon.UntrainedShare);
 
         if (!target.CanDefend)
         {

@@ -541,7 +541,7 @@ chance = base × class multiplier × implement multiplier
 |---|---|---|---|
 | **Torite** | Catching | jitte (`CatchSkill` 1.0), sai (1.25) | losing an arm |
 | **Dokushi** | Poison | a poisoned blade or shuriken | nothing |
-| **Kyūdō** | Range | the throwing slot, and later the yumi | losing an arm |
+| **Kyūdō** | Range | the throwing slot, and the **yumi** (written 2026-09-13) | losing an arm |
 
 There is no blunt/stunning class: stunning and dropping a weapon stay open to **everyone** (§7), and
 a fourth class would only have widened the balance surface. The numbers of the product:
@@ -557,8 +557,39 @@ a fourth class would only have widened the balance surface. The numbers of the p
 **Catching is the only hard zero.** Poison and range are scaled instead: the dose is on the blade,
 and zeroing it would have made the poisoned tantō dead equipment until a facility stood — measured,
 a zero dose drops that knife to 6.18%, below the *clean* tantō it is built from (34.89%). The
-throwing slot every warrior carries is not turned into a class tax either; 0.85 is a placeholder
-until the yumi exists.
+throwing slot every warrior carries is not turned into a class tax either: 0.85 is the shared,
+deliberately shallow penalty, and **the class's depth sits on its own implement instead** — see the
+yumi below.
+
+#### The yumi (written 2026-09-13)
+
+The bow is the shuriken's opposite on every axis, and that shape is the whole design: **range 1200
+against 700, damage 26 against 12, a quiver of 10 against a handful of 4 — but a draw of 1.5 s against
+0.7 and a slower arrow.** A yumi warrior left to shoot settles the fight before it is joined; one who
+is closed on has spent it drawing. It is piercing, and it is two-handed, so an arm ends it exactly as
+the fitness matrix already said.
+
+**It is the one thrown implement gated on the class.** `ThrownWeapon.UntrainedShare` is 1 for
+everything else — a star is a thing anybody can throw — and **0.45** for the yumi, which multiplies the
+shared 0.85. A bow in an untrained hand is not a slightly worse bow.
+
+| Fight (20.000 each, the same master, only the slot and the class differ) | Victory |
+|---|---|
+| Shuriken, no class | 75.72% |
+| Shuriken, kyūdō | 76.78% |
+| **Yumi, no class** | **77.73%** |
+| **Yumi, kyūdō** | **82.77%** |
+
+Read down the table: the class on a shuriken is worth **+1.06** points, and on the yumi **+5.04**.
+That is the number the placeholder was standing in for — the range class is not paid by a deeper tax
+on everyone's throwing slot but by an implement that only it can draw. The bow is also worth
+**+2.01** to an untrained hand, which is intended: it is a real weapon anyone can loose badly, and its
+price in gold is what keeps that honest.
+
+⚠️ **The thrown slot is still not sold anywhere.** Nothing in the dojo — market, quartermaster or
+recruit — hands a warrior a throwing implement, so the yumi has no price yet and the kyūdō class has
+no way to buy its own weapon in a running season. That is a gap in the **shop**, not in the class, and
+it is written down in `docs/ROADMAP.md` with the rest of the Phase 4 work.
 
 > ⚠️ **What the measurement then found:** with both arms of the comparison carrying the same class,
 > the torite fights **better with a katana** than with his own implement — duel 81.07% against
