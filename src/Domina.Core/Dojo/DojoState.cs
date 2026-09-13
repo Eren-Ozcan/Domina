@@ -215,17 +215,25 @@ public sealed class DojoState
                 // Training writes the <b>raw</b> stat, not the effective one: a disability's multiplier
                 // is permanent and is not taken back by training (GDD §7). A warrior who loses an arm
                 // recovers by working, but he does not get the arm back.
+                // Will is read off the effective stats and not off the raw ones: the charm he wears
+                // and the spirits he is in are both part of how much of the day he can hold on to
+                // (TrainingTuning.WillFocus).
+                double will = entry.Warrior.EffectiveStats.Willpower;
+
                 entry.Warrior.BaseStats = TrainingGround.After(
                     entry.Warrior.BaseStats,
                     entry.Drill,
                     entry.Warrior.Talent,
-                    Tuning.Training);
+                    Tuning.Training,
+                    will);
 
                 // The weapon in his hand is learned on the same day, and only on a day he holds one:
-                // meditation is the drill that does not touch a sword (docs/GDD.md §10).
+                // meditation is the drill that does not touch a sword (docs/GDD.md §10). It is scaled
+                // by the same will factor — one day, one rate.
                 if (entry.Drill != Drill.Meditation && Tuning.Mastery.GainPerDay > 0)
                 {
-                    entry.Warrior.GainMastery(Tuning.Mastery.GainPerDay);
+                    entry.Warrior.GainMastery(
+                        Tuning.Mastery.GainPerDay * TrainingGround.WillFactor(will, Tuning.Training));
                 }
 
                 trained.Add(entry.Id);

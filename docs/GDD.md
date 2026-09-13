@@ -2709,6 +2709,16 @@ this:
   bite from the first day).
 - **Talent multiplies the gain directly** (`Talent`, 0.6-1.4). It was the only thing the market could
   sell at full strength; now it has a payoff.
+- **Willpower multiplies it too — that is Will's job outside the fight** (`TrainingTuning.WillFocus`,
+  **0.5**, locked 2026-09-12). The factor is `1 + 0.5 × (will − 50) / 100`, so a recruit's 35 learns at
+  0.93 and a drilled 90 at 1.20, and the weapon master's rate is scaled by the same number — one day,
+  one rate. Before this, will was trained by a drill and then read nowhere but the panic check, which
+  is why a blessing on it measured as nothing at any size: it had no job to be better at. The will
+  read is the **effective** one, so the charm he wears and the spirits he is in both reach the
+  training ground. Measured (800 dojos × 180 days, every system on): at 0 / 0.25 / 0.5 / 1.0 the best
+  man ends the season at a score of 298 / 300 / 307 / 338 and the last night is won 9.2 / 10.8 / 10.1
+  / 13.8% of the time. **0.5 over 1.0 on purpose** — at 1.0 meditation starts to be the answer to every
+  question, and Will would become the stat every dojo trains first.
 - **No randomness.** Training is the player's investment, not their gamble; had a die been rolled, the
   decision would hide behind the die.
 - **Raw stats are written, not effective stats.** The disability multiplier continues to be applied on

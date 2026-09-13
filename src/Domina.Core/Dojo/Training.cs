@@ -53,8 +53,7 @@ public enum Drill
 /// <para>
 /// The numbers are <b>not locked</b>. The measurement's question is clear (GDD §11): the market ceiling
 /// locked replacement into the recruit band, so the road to progress is now training alone — "buy the
-/// cheap raw candidate and train him" and "buy the best you can afford" have to be <b>rivals</b>
-/// olmak zorunda.
+/// cheap raw candidate and train him" and "buy the best you can afford" have to be <b>rivals</b>.
 /// </para>
 /// </remarks>
 public sealed record TrainingTuning
@@ -84,6 +83,32 @@ public sealed record TrainingTuning
 
     /// <summary>The share the secondary stat takes relative to the primary.</summary>
     public double SecondaryShare { get; init; } = 0.5;
+
+    /// <summary>How much of a drill day's gain willpower carries.</summary>
+    /// <remarks>
+    /// <para>
+    /// Willpower's job outside the fight (docs/GDD.md §10). Every other stat is bought by the drill that
+    /// trains it; will was bought by a drill and then read nowhere but the panic check, which is why a
+    /// blessing on it measured as nothing at any size. Here it buys the <b>rate</b> of every other drill:
+    /// the man who can sit still learns faster, and a day of meditation is an investment in every later
+    /// day rather than a day taken out of the week.
+    /// </para>
+    /// <para>
+    /// The factor is <c>1 + WillFocus × (will − <see cref="WillNeutral"/>) / 100</c>, so it is linear and
+    /// has no ceiling of its own: at 0.5 a recruit's 35 learns at 0.93 and a drilled 90 at 1.20. It is
+    /// read off the warrior's <b>effective</b> will, which is where the charm he wears and the spirits he
+    /// is in both live — so morale reaches the training ground through this one number. That is a second
+    /// compounding path and it is deliberately narrow: one stat, one multiplier, one day's gain.
+    /// </para>
+    /// </remarks>
+    public double WillFocus { get; init; } = 0.5;
+
+    /// <summary>The willpower at which a day's gain is neither helped nor hurt.</summary>
+    /// <remarks>
+    /// Set at the middle of the scale rather than at the recruit band, so that will is a stat a dojo can
+    /// be <b>behind</b> on and not only ahead on.
+    /// </remarks>
+    public double WillNeutral { get; init; } = 50;
 
     /// <summary>The ceiling the percentage stats (Accuracy, Defence, ...) can approach.</summary>
     /// <remarks>
@@ -157,14 +182,22 @@ public static class TrainingGround
     /// The warrior's <see cref="Warrior.Talent"/> share; it multiplies the gain directly.
     /// </param>
     /// <param name="tuning">The training numbers.</param>
+    /// <param name="willpower">
+    /// The will the day is drilled with — the warrior's <b>effective</b> will, charm and spirits
+    /// included. Left out, the will written in <paramref name="stats"/> is used, which is what a test
+    /// bed wants and what a caller holding nothing but raw stats has.
+    /// </param>
     public static WarriorStats After(
         WarriorStats stats,
         Drill drill,
         double talent,
-        TrainingTuning? tuning = null)
+        TrainingTuning? tuning = null,
+        double? willpower = null)
     {
         TrainingTuning t = tuning ?? new TrainingTuning();
-        double primary = Math.Max(0, t.GapClosedPerDay * Math.Max(0, talent));
+        double primary = Math.Max(
+            0,
+            t.GapClosedPerDay * Math.Max(0, talent) * WillFactor(willpower ?? stats.Willpower, t));
         double secondary = primary * Math.Max(0, t.SecondaryShare);
 
         return drill switch
@@ -234,6 +267,18 @@ public static class TrainingGround
         }
 
         return pick;
+    }
+
+    /// <summary>What this much willpower does to a day's gain.</summary>
+    /// <remarks>
+    /// Public because the weapon master's rate is scaled by the same number
+    /// (<see cref="MasteryTuning.GainPerDay"/>): the day is one day, and will buys the whole of it.
+    /// Floored at zero — a negative factor would make a drill day <b>take</b> a stat back.
+    /// </remarks>
+    public static double WillFactor(double willpower, TrainingTuning? tuning = null)
+    {
+        TrainingTuning t = tuning ?? new TrainingTuning();
+        return Math.Max(0, 1 + (t.WillFocus * ((willpower - t.WillNeutral) / 100)));
     }
 
     /// <summary>Moves a stat a share of the remaining distance closer to the ceiling.</summary>

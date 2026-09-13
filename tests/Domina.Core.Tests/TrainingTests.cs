@@ -188,4 +188,54 @@ public class TrainingTests
         Assert.True(entry.Train());
         Assert.Equal(Drill.Conditioning, entry.Drill);
     }
+
+    /// <summary>
+    /// Willpower's job outside the fight: it buys the <b>rate</b> of every other drill. Before the tenth
+    /// round will was trained by a drill and then read nowhere but the panic check, which is why a
+    /// blessing on it measured as nothing at any size.
+    /// </summary>
+    [Fact]
+    public void WillpowerBuysTheRateOfEveryOtherDrill()
+    {
+        WarriorStats weak = WarriorStats.Recruit() with { Willpower = 20, Accuracy = 40 };
+        WarriorStats strong = WarriorStats.Recruit() with { Willpower = 90, Accuracy = 40 };
+
+        double weakGain = TrainingGround.After(weak, Drill.Strikes, talent: 1, _fast).Accuracy - 40;
+        double strongGain = TrainingGround.After(strong, Drill.Strikes, talent: 1, _fast).Accuracy - 40;
+
+        Assert.True(strongGain > weakGain);
+
+        // The neutral point is the middle of the scale, so a dojo can be behind on will and not only
+        // ahead on it.
+        Assert.Equal(1, TrainingGround.WillFactor(50, _fast), 6);
+        Assert.True(TrainingGround.WillFactor(20, _fast) < 1);
+    }
+
+    /// <summary>
+    /// The will the day is drilled with is the <b>effective</b> one — the charm he wears counts, which
+    /// is what gives the temple's quiet mind something to sell.
+    /// </summary>
+    [Fact]
+    public void TheCharmHeWearsCountsTowardsTheDaysGain()
+    {
+        static double AccuracyAfterADay(bool blessed)
+        {
+            DojoState state = new(new DojoTuning { Training = _fast });
+            state.Resources = new Resources(Gold: 500);
+            RosterEntry entry = state.Roster.Recruit("Kenji");
+            entry.Warrior.BaseStats = entry.Warrior.BaseStats with { Willpower = 60, Accuracy = 40 };
+
+            if (blessed)
+            {
+                entry.Warrior.Wear(OmamoriKind.QuietMind);
+            }
+
+            entry.Train(Drill.Strikes);
+            state.AdvanceDay();
+
+            return entry.Warrior.BaseStats.Accuracy;
+        }
+
+        Assert.True(AccuracyAfterADay(blessed: true) > AccuracyAfterADay(blessed: false));
+    }
 }
