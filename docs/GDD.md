@@ -1980,8 +1980,35 @@ relations with him. The "relationships spoil one another" model that #17 previou
 back **only on his axis**: taking a settlement lowers what he holds and raises what the player holds,
 and nothing propagates to the other three.
 
-**Numbers to measure before locking:** 12 settlements; the 2/3-contract thresholds; the 2-day delay; and whether the map pressure adds anything on top of the
-compulsory-fight honour penalty, which is the rule that actually closes the endless-training exploit.
+**In the core since 2026-09-12 (`Dojo/Province.cs`), and measured.** The twelve settlements, the
+warning ladder, the contracts, the rival's one stored number and the raid all advance inside
+`AdvanceDay()` and go into the save. The move is deterministic — his target is the player's
+settlements first and the most pressed among them — so a season replays identically and the map can be
+run tens of thousands of times.
+
+| Number | Value | How it was settled |
+|---|---|---|
+| Whether the map adds pressure at all | **it does, and it is the biggest single number this project has measured** | The hiding dojo — the exploit written as a policy — closed **7.5%** of the time with the map off and **72.8%** with it on (400 dojos × 180 days). Days survived 176 → 159, training days 48.3 → 24.0. A dojo that never fights hands him the province, and a province run out is him at the gate |
+| What it costs a dojo that does fight | **~1 point** | The same bed with an ordinary fighting policy: 89.0% → 90.2% closed. The map presses the player who ignores it and barely touches the one who answers — which is the shape the season wanted |
+| Warning levels before a settlement falls | **2** (three uncontested moves) | Swept: at 1 the map is gone almost at once and 97.2% of dojos close; at 2, 91.5%; at 3, 89.2%. The cliff sits between 1 and 2, and 2 is the first value on the safe side of it |
+| Deniability | **8** | Swept 4 / 8 / 12 / 20: raids per dojo 1.07 / 0.30 / 0.26 / 0.26. Above 8 the bound stops binding — every raid left is the map running out, not his patience |
+| What a held settlement adds to the day's pay | **0.03** | Swept 0 / 0.03 / 0.06 / 0.10: net per fight −3.6 / −3.6 / −3.1 / −2.6, linear. ⚠️ **The return side is effectively unmeasured**: the measuring policy holds 0.56 settlements on average because it rarely files contracts, so the share has never been read at a real holding. Revisit with a policy that chases the map |
+
+**The rule the measurement changed.** The ladder originally had a step where he held the whole province
+and there was simply nothing to press. Measured, that step made the map ignorable by the one player it
+was written for: a dojo that never fights never kills his men, never spends his bound, and so was never
+raided. Now, **when there is nothing left to press, the next thing to take is the school** — the
+fiction carries it (nobody files a complaint on behalf of a school the province has already written
+off), and it is what turns 7.5% into 72.8%.
+
+**What a raid costs if it is not met.** The raid is the day's offer and cannot be declined like one.
+A day that closes with him still standing in the yard is a **sack**: a third of the treasury and a
+third of the store, and **10 honour off every man** — heavier than the missed week's 5, because a
+missed week is a school that did nothing and a sack is a school seen doing nothing while its own gate
+was forced.
+
+**Still open:** the 2/3-contract thresholds and the 2-day delay were not swept — the measuring policy
+files too few contracts for either to move anything, which is itself the finding.
 
 **What was deliberately left out (2026-09-10):**
 

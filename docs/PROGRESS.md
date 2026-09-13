@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-12 (the last three posts: weapon mastery, the omamori and the funeral rite, the diviner's reading)
+Last updated: 2026-09-12 (the last three posts, and the province — the settlement map that closes the endless-training exploit)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1694,6 +1694,60 @@ roster ≠ day one's stall, save round trip).
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
+
+## 2026-09-12 (second round) — The province, and the exploit it closes
+
+`Dojo/Province.cs`: twelve settlements, a three-state allegiance, a 0-2 warning ladder, the rival's
+weekly move on the compulsory fight's own clock, the contracts that win a village, the one number he
+stores (deniability) and the raid it opens. It advances inside `AdvanceDay()`, it goes into the save,
+and the move itself rolls no die — his target is the player's settlements first and the most pressed
+among them — so a season replays identically.
+
+Wiring: a won fight answers him (the pressed village eases, his next move is two days late, his bound
+is spent a point) and it counts **once per move cycle**, or a dojo that fought three times in a week
+would push his clock out of the season. A claimed bounty files a contract **for a settlement** — the
+contract carries the village its road runs through — and two of them win a free village, three one of
+his after his grip is broken. A village that comes over gives **one thing, once**: rice, medicine,
+sake, or the name of his next target, good for one turn.
+
+**The finding the round exists for.** GDD §10 asked whether the map adds any pressure on top of the
+missed-week honour penalty. Against the hiding dojo — the endless-training exploit written as a
+policy — 400 dojos × 180 days:
+
+| | Map off | Map on |
+|---|---|---|
+| Dojos closed | **7.5%** | **72.8%** |
+| Days survived | 176 (median 180) | 159 (median 165) |
+| Training days | 48.3 | 24.0 |
+| Raids / sacks per dojo | 0.00 | 4.44 / 4.43 |
+
+Against an ordinary fighting policy the same map costs **one point** (89.0% → 90.2%). It presses the
+player who ignores it and barely touches the one who answers.
+
+**A rule the measurement changed.** The ladder first had a quiet step — he holds the whole province,
+there is nothing left to press. That step made the map ignorable by exactly the player it was written
+for: a dojo that never fights never kills his men, never spends his bound, and so was never raided.
+Now, with nothing left to press, **the next thing to take is the school**. That single change is the
+difference between 7.5% and 72.8%.
+
+Swept: the warning ladder (1 → 97.2% closed, 2 → 91.5%, 3 → 89.2% — a cliff between 1 and 2, and 2 is
+the first value past it), deniability (4 / 8 / 12 / 20 → 1.07 / 0.30 / 0.26 / 0.26 raids; above 8 the
+bound stops binding), and the held-settlement reward share (0 / 0.03 / 0.06 / 0.10 → net −3.6 / −3.6 /
+−3.1 / −2.6, linear). ⚠️ The **return** side of the map is effectively unmeasured: the measuring
+policy holds 0.56 settlements on average because it files so few contracts, so the share has never
+been read at a real holding, and the 2/3-contract thresholds and the 2-day delay could not move
+anything either. That is the next policy to write, not the next number to guess.
+
+A raid is the day's offer and cannot be declined like one: a day that closes with him still in the
+yard is a **sack** — a third of the treasury, a third of the store, and 10 honour off every man,
+against the missed week's 5.
+
+New sim knobs: `--province on|off`, `--province-warning`, `--province-pushback`, `--deniability`,
+`--settlement-reward`; the report grew a province line (settlements held, raids, sacks). The day
+screen's season banner now prints the map and his next move, and never his bound — a visible bar
+would turn the season's one hidden pressure into arithmetic.
+
+637 tests green under Release (475 core + 114 presentation + 52 sim).
 
 ## 2026-09-12 — The last three posts: mastery, the omamori, the reading
 
