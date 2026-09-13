@@ -516,6 +516,20 @@ internal static class SimArgs
                     provinceTuning = provinceTuning with { WarningToFall = warning };
                     break;
 
+                case "--province-contracts":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int freeContracts)
+                        || freeContracts < 1)
+                    {
+                        return ParsedArgs.Fail($"--province-contracts must be a positive integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with
+                    {
+                        ContractsForNeutral = freeContracts,
+                        ContractsForHis = freeContracts + 1,
+                    };
+                    break;
+
                 case "--province-pushback":
                     if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int pushBack)
                         || pushBack < 0)
@@ -1637,6 +1651,7 @@ internal static class SimArgs
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --province-warning How many moves a settlement takes before it falls");
         writer.WriteLine("  --province-pushback The days an answered move is put back");
+        writer.WriteLine("  --province-contracts Contracts that win a free village (his costs one more)");
         writer.WriteLine("  --deniability      How far the rival can go before the raid opens");
         writer.WriteLine("  --settlement-reward What one held settlement adds to the day's pay");
         writer.WriteLine("  --build-days       Multiplier on every building's construction time (0 = instant)");

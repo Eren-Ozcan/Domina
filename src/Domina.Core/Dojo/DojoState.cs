@@ -551,11 +551,12 @@ public sealed class DojoState
         Season.RecordHead();
 
         // A contract is always filed <b>for</b> a settlement: that is how a village changes hands
-        // (GDD §10). Which one is read off the contract's own day, so the same season files the same
-        // village and a reload cannot shop for a better one.
-        if (Bounty is BountyContract contract)
+        // (GDD §10). Which one is decided by the province rather than by the contract — the work
+        // already begun, then the village he is pressing — because a village drawn at random per
+        // contract made the thresholds unreachable (see <see cref="Province.ContractTarget"/>).
+        if (Province.ContractTarget is Settlement village)
         {
-            LastGift = Province.FileContract(contract.Settlement, Day);
+            LastGift = Province.FileContract(village.Index, Day);
             if (LastGift is SettlementGift gift)
             {
                 ReceiveGift(gift);

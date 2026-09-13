@@ -153,4 +153,34 @@ public class ProvinceTests
             second.Settlements.Select(s => s.Held));
         Assert.Equal(6, first.HisHoldings);
     }
+
+    /// <summary>A contract answers the work already begun before it answers new pressure.</summary>
+    /// <remarks>
+    /// The rule the measurement forced: drawn at random per contract, two contracts landing on the same
+    /// village in a season was a coincidence and the map was unwinnable.
+    /// </remarks>
+    [Fact]
+    public void AContractAnswersTheVillageAlreadyBegun()
+    {
+        Province province = Empty();
+        province.Advance(7);
+
+        Settlement pressed = province.Target!;
+        Settlement begun = province.Settlements.First(s => s.Index != pressed.Index);
+
+        province.FileContract(begun.Index, 8);
+
+        Assert.Equal(1, begun.Contracts);
+        Assert.Equal(begun.Index, province.ContractTarget!.Index);
+    }
+
+    /// <summary>With nothing begun, it answers the village he is pressing.</summary>
+    [Fact]
+    public void WithNothingBegunItAnswersThePressedVillage()
+    {
+        Province province = Empty();
+        province.Advance(7);
+
+        Assert.Equal(province.Target!.Index, province.ContractTarget!.Index);
+    }
 }

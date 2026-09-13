@@ -226,6 +226,32 @@ public sealed class Province
             .ThenBy(s => s.Index)
             .FirstOrDefault();
 
+    /// <summary>
+    /// The settlement a contract finished today is filed for.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The work already begun first, then the village he is pressing. The order is what makes the
+    /// thresholds reachable at all: with the village drawn at random per contract — which is how this
+    /// was first written — two contracts landing on the <b>same</b> village inside one season was a
+    /// coincidence, and the map measured as unwinnable (0.56 villages held over 180 days). The design's
+    /// own words are "take that settlement's contract": a contract is the answer to a village under
+    /// pressure, not a lottery ticket.
+    /// </para>
+    /// <para>
+    /// Finishing what was started comes before answering the new pressure, because a village half won
+    /// and then abandoned is the one outcome that pays nothing at all.
+    /// </para>
+    /// </remarks>
+    public Settlement? ContractTarget =>
+        _settlements
+            .Where(s => s.Held != Allegiance.Yours)
+            .OrderByDescending(s => s.Contracts)
+            .ThenBy(s => s.Held == Allegiance.None ? 0 : 1)
+            .ThenByDescending(s => s.Warning)
+            .ThenBy(s => s.Index)
+            .FirstOrDefault();
+
     /// <summary>What the day's work pays with these settlements speaking for the dojo.</summary>
     public int Sweeten(int reward) => reward <= 0
         ? reward

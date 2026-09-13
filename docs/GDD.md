@@ -2009,7 +2009,9 @@ run tens of thousands of times.
 | What it costs a dojo that does fight | **~1 point** | The same bed with an ordinary fighting policy: 89.0% → 90.2% closed. The map presses the player who ignores it and barely touches the one who answers — which is the shape the season wanted |
 | Warning levels before a settlement falls | **2** (three uncontested moves) | Swept: at 1 the map is gone almost at once and 97.2% of dojos close; at 2, 91.5%; at 3, 89.2%. The cliff sits between 1 and 2, and 2 is the first value on the safe side of it |
 | Deniability | **8** | Swept 4 / 8 / 12 / 20: raids per dojo 1.07 / 0.30 / 0.26 / 0.26. Above 8 the bound stops binding — every raid left is the map running out, not his patience |
-| What a held settlement adds to the day's pay | **0.03** | Swept 0 / 0.03 / 0.06 / 0.10: net per fight −3.6 / −3.6 / −3.1 / −2.6, linear. ⚠️ **The return side is effectively unmeasured**: the measuring policy holds 0.56 settlements on average because it rarely files contracts, so the share has never been read at a real holding. Revisit with a policy that chases the map |
+| Contracts that win a village | **2 free / 3 of his** | Swept once the map was winnable at all: 1 → **4.07** villages held on an average day, 2 → **1.85**, 3 → **1.03**. Closure barely moves (93.8 / 91.8 / 91.0%), so the threshold does not decide survival — it decides how much of the map a season can hold, and 2 is the value that keeps it genuinely contested (~15% of the province) instead of collectable |
+| The days an answered move is put back | **2** | Swept 0 / 2 / 4 / 7: raids per dojo 0.53 / 0.46 / 0.45 / 0.38, closure 91.8 / 91.8 / 88.8 / 88.8%. Above 2 the map starts **buying survival** — the player is paid for fighting by the pressure that exists to make him fight, which is the one thing this rule must not do |
+| What a held settlement adds to the day's pay | **0.03** | Swept 0 / 0.03 / 0.06 / 0.10 at ~1.85 villages held: income per fight 71.4 / 75.9 / 80.7 / 87.2 gold, net −13.5 / −12.2 / −11.1 / −9.6. Real income, and no effect on closure at any value — which is the economy's own old finding restated: what closes a dojo is the roster, not the purse |
 
 **The rule the measurement changed.** The ladder originally had a step where he held the whole province
 and there was simply nothing to press. Measured, that step made the map ignorable by the one player it
@@ -2024,8 +2026,14 @@ third of the store, and **10 honour off every man** — heavier than the missed 
 missed week is a school that did nothing and a sack is a school seen doing nothing while its own gate
 was forced.
 
-**Still open:** the 2/3-contract thresholds and the 2-day delay were not swept — the measuring policy
-files too few contracts for either to move anything, which is itself the finding.
+**A rule the measurement changed, twice.** The first was the ladder's quiet step (above). The second
+was **which village a contract answers for**. Written as a draw from the twelve per contract, two
+contracts landing on the same village inside one season was a coincidence and the map measured as
+unwinnable — 0.56 villages held over 180 days, with the thresholds, the delay and the settlement share
+all unable to move anything. The province now decides it instead of the board: **the work already
+begun first, then the village he is pressing** (`Province.ContractTarget`), which is what GDD's own
+"take that settlement's contract" always meant. Same bed, same policy: **0.56 → 1.85** villages held,
+and all three numbers became measurable.
 
 **What was deliberately left out (2026-09-10):**
 
