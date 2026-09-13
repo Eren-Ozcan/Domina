@@ -20,6 +20,9 @@ public enum DojoTab
 
     /// <summary>The school tree.</summary>
     School,
+
+    /// <summary>The province board — a picture of the season, with nothing to press.</summary>
+    Province,
 }
 
 /// <summary>
@@ -183,6 +186,7 @@ public sealed partial class DojoHub : Node
             DojoTab.Roster => new RosterScreen(),
             DojoTab.Market => new MarketScreen(),
             DojoTab.School => new SchoolScreen(),
+            DojoTab.Province => new ProvinceScreen(),
             _ => new DayScreen(),
         };
 
@@ -349,6 +353,7 @@ public sealed partial class DojoHub : Node
         DojoTab.Roster => "Roster",
         DojoTab.Market => "Market",
         DojoTab.School => "School",
+        DojoTab.Province => "Province",
         _ => "Day",
     };
 }
