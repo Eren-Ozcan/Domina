@@ -22,6 +22,12 @@ namespace Domina.Presentation;
 /// <param name="WeaponName">The weapon he can use — fists if he has lost a limb.</param>
 /// <param name="ArmorName">The kit's name.</param>
 /// <param name="ArmorWear">The total wear on the kit.</param>
+/// <param name="WeaponSkill">
+/// What he has learned of the weapon in his hand, 0-1 (docs/GDD.md §10). It belongs to the pairing of
+/// the man and that weapon, so the screen prints it beside the weapon's name and not beside his stats.
+/// </param>
+/// <param name="Charms">The temple charms he is wearing.</param>
+/// <param name="CharmSlots">How many he may wear today — the shrine opens them, the monk the second.</param>
 /// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
 /// <param name="CanBeReleased">
 /// Can his term be ended today? A dead man, a man already gone and a man in the infirmary cannot —
@@ -47,7 +53,10 @@ public readonly record struct RosterRow(
     string ArmorName,
     double ArmorWear,
     bool IsFitForCampaign,
-    bool CanBeReleased = false);
+    bool CanBeReleased = false,
+    double WeaponSkill = 0,
+    IReadOnlyList<OmamoriKind>? Charms = null,
+    int CharmSlots = 0);
 
 /// <summary>The row's badge — it also sets the ordering.</summary>
 public enum RosterStatus
@@ -125,14 +134,14 @@ public static class RosterModel
         ArgumentNullException.ThrowIfNull(dojo);
 
         return dojo.Roster.Entries
-            .Select(entry => Describe(entry, dojo.Tuning))
+            .Select(entry => Describe(entry, dojo.Tuning, dojo.OmamoriSlots))
             .OrderBy(row => (int)row.Status)
             .ThenBy(row => row.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
 
     /// <summary>A single warrior's row.</summary>
-    public static RosterRow Describe(RosterEntry entry, DojoTuning tuning)
+    public static RosterRow Describe(RosterEntry entry, DojoTuning tuning, int charmSlots = 0)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(tuning);
@@ -161,7 +170,10 @@ public static class RosterModel
             ArmorName: warrior.Armor.Name,
             ArmorWear: warrior.ArmorWear.Total,
             IsFitForCampaign: entry.IsFitForCampaign,
-            CanBeReleased: warrior.IsAlive && !entry.Released && entry.RecoveryDaysRemaining == 0);
+            CanBeReleased: warrior.IsAlive && !entry.Released && entry.RecoveryDaysRemaining == 0,
+            WeaponSkill: warrior.WeaponSkill,
+            Charms: warrior.Charms,
+            CharmSlots: charmSlots);
     }
 
     /// <summary>The numbers at the top of the roster.</summary>

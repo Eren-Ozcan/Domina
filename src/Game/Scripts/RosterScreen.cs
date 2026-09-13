@@ -40,6 +40,8 @@ public sealed partial class RosterScreen : DojoScreen
     private Label _renameNotice = null!;
     private OptionButton _drillPicker = null!;
     private HBoxContainer _pathRow = null!;
+    private Label _charmLabel = null!;
+    private VBoxContainer _charmRows = null!;
     private WarriorId? _selected;
 
     /// <summary>Builds the screen and prints the roster.</summary>
@@ -111,6 +113,15 @@ public sealed partial class RosterScreen : DojoScreen
 
         _pathRow = new HBoxContainer();
         panel.AddChild(_pathRow);
+
+        // The charms sit under the path because they are the other thing carried onto the field, and
+        // unlike the path they can be moved from one man to another on any day (docs/GDD.md §10).
+        _charmLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_charmLabel);
+
+        _charmRows = new VBoxContainer();
+        _charmRows.AddThemeConstantOverride("separation", 4);
+        panel.AddChild(_charmRows);
 
         // Releasing a man is the one thing on this screen that cannot be undone and costs nothing to
         // press, so it asks twice — the same courtesy the rest of the dojo owes an irreversible move.
@@ -202,7 +213,10 @@ public sealed partial class RosterScreen : DojoScreen
             $"Stamina     {Pair(raw.MaxStamina, live.MaxStamina)}",
             $"Speed       {Pair(raw.Speed, live.Speed)}",
             string.Empty,
-            $"Weapon: {row.WeaponName}   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})",
+            row.WeaponSkill > 0
+                ? $"Weapon: {row.WeaponName} (mastery {row.WeaponSkill * 100:0}%)"
+                  + $"   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})"
+                : $"Weapon: {row.WeaponName}   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})",
             $"Limb loss: {LostText(row.Lost)}",
             $"Path: {PathName(row.Path)}");
 
@@ -212,7 +226,96 @@ public sealed partial class RosterScreen : DojoScreen
         _drillPicker.Select(_drillPicker.GetItemIndex((int)row.Drill));
 
         BuildPathButtons(row);
+        BuildCharmRows(row);
         UpdateRenameControls();
+    }
+
+    /// <summary>
+    /// The charms he wears, the slots he has left, and the temple's stall.
+    /// </summary>
+    /// <remarks>
+    /// A dojo with no shrine sees one line saying so rather than an empty panel: the omamori is the
+    /// temple's supply, and a screen that showed five buyable charms with nowhere to put them would be
+    /// advertising a system the dojo has not bought.
+    /// </remarks>
+    private void BuildCharmRows(RosterRow row)
+    {
+        Clear(_charmRows);
+
+        if (row.CharmSlots <= 0)
+        {
+            _charmLabel.Text = "Charms: the shrine is not standing.";
+            return;
+        }
+
+        IReadOnlyList<OmamoriKind> worn = row.Charms ?? [];
+        _charmLabel.Text = $"Charms {worn.Count}/{row.CharmSlots}";
+
+        foreach (OmamoriKind charm in worn)
+        {
+            OmamoriKind kind = charm;
+            Button off = new() { Text = $"Take off — {Omamori.Find(kind).Name}" };
+            off.Pressed += () =>
+            {
+                _dojo.UnfitCharm(row.Id, kind);
+                Persist();
+                Refresh();
+            };
+
+            _charmRows.AddChild(off);
+        }
+
+        bool room = worn.Count < row.CharmSlots && row.IsAlive && row.Status != RosterStatus.Freed;
+
+        foreach (OmamoriCharm charm in Omamori.All)
+        {
+            int held = _dojo.CharmStore.GetValueOrDefault(charm.Kind);
+            HBoxContainer line = new();
+            line.AddThemeConstantOverride("separation", 6);
+
+            Label name = new()
+            {
+                Text = $"{charm.Name}  ·  in store {held}",
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            };
+            name.AddThemeColorOverride("font_color", held > 0 ? InkColor : MutedColor);
+            line.AddChild(name);
+
+            OmamoriKind kind = charm.Kind;
+
+            Button buy = new()
+            {
+                Text = $"Buy ({charm.Price})",
+                Disabled = _dojo.Resources.Gold < charm.Price,
+            };
+            buy.Pressed += () =>
+            {
+                _dojo.BuyCharm(kind);
+                Persist();
+                Refresh();
+            };
+            line.AddChild(buy);
+
+            Button fit = new() { Text = "Fit", Disabled = !room || held == 0 };
+            fit.Pressed += () =>
+            {
+                _dojo.FitCharm(row.Id, kind);
+                Persist();
+                Refresh();
+            };
+            line.AddChild(fit);
+
+            Button sell = new() { Text = "Sell back", Disabled = held == 0 };
+            sell.Pressed += () =>
+            {
+                _dojo.SellCharm(kind);
+                Persist();
+                Refresh();
+            };
+            line.AddChild(sell);
+
+            _charmRows.AddChild(line);
+        }
     }
 
     private void BuildPathButtons(RosterRow row)

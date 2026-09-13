@@ -146,4 +146,37 @@ public class RosterModelTests
 
         Assert.Equal(RenameVerdict.Ok, RosterModel.JudgeRename(dojo.Roster, kenji.Id, "Botan"));
     }
+
+    /// <summary>The row carries what he knows of the weapon in his hand.</summary>
+    [Fact]
+    public void TheRowCarriesTheMasteryOfTheWeaponInHand()
+    {
+        DojoState dojo = new();
+        RosterEntry entry = dojo.Roster.Recruit("Kenji");
+        entry.Warrior.GainMastery(0.4);
+
+        RosterRow row = RosterModel.Describe(dojo).Single(r => r.Id == entry.Id);
+
+        Assert.Equal(0.4, row.WeaponSkill, 6);
+    }
+
+    /// <summary>And the charms he wears, against the slots the dojo has opened.</summary>
+    [Fact]
+    public void TheRowCarriesTheCharmsAndTheSlots()
+    {
+        DojoState dojo = new(school: new SchoolTuning { BuildDaysFactor = 0 })
+        {
+            Resources = new Resources(Gold: 2000),
+        };
+
+        RosterEntry entry = dojo.Roster.Recruit("Kenji");
+        dojo.BuySchoolNode(SchoolNodeId.Shrine);
+        dojo.BuyCharm(OmamoriKind.IronGate);
+        dojo.FitCharm(entry.Id, OmamoriKind.IronGate);
+
+        RosterRow row = RosterModel.Describe(dojo).Single(r => r.Id == entry.Id);
+
+        Assert.Equal(dojo.OmamoriSlots, row.CharmSlots);
+        Assert.Equal([OmamoriKind.IronGate], row.Charms!);
+    }
 }
