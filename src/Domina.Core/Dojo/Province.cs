@@ -119,6 +119,21 @@ public sealed record ProvinceTuning
     /// <summary>What one won fight against his men costs that bound.</summary>
     public int DeniabilityPerVictory { get; init; } = 1;
 
+    /// <summary>The men he brings to the gate before his holdings are counted.</summary>
+    public int RaidBase { get; init; } = 2;
+
+    /// <summary>How many settlements he needs to hold to bring one more man.</summary>
+    /// <remarks>
+    /// The raid has to be answerable or it is not a decision, only a bill: the dojo defends its own
+    /// ground with everyone who can stand, and what it faces has to sit inside that. The size is the
+    /// dial the measurement uses, not the power — power is the day's own curve, so a raid is always
+    /// "his men, more of them" and never a second difficulty system.
+    /// </remarks>
+    public int RaidPerHoldings { get; init; } = 4;
+
+    /// <summary>The most men he ever brings.</summary>
+    public int RaidMost { get; init; } = 5;
+
     /// <summary>The share a held settlement adds to what the day's work pays.</summary>
     /// <remarks>
     /// The only return a settlement gives after its one gift, and it is <b>not</b> its money: with the
@@ -208,6 +223,12 @@ public sealed class Province
 
     /// <summary>What the player holds.</summary>
     public int YourHoldings => _settlements.Count(s => s.Held == Allegiance.Yours);
+
+    /// <summary>How many men he brings to the gate today.</summary>
+    public int RaidSize => Math.Clamp(
+        Tuning.RaidBase + (Tuning.RaidPerHoldings <= 0 ? 0 : HisHoldings / Tuning.RaidPerHoldings),
+        1,
+        Math.Max(1, Tuning.RaidMost));
 
     /// <summary>The days to his next move, today included.</summary>
     public int DaysToMove(int day) => Math.Max(0, NextMoveDay - day);

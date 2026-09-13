@@ -202,6 +202,7 @@ internal static class CampaignSummaryReport
         writer.WriteLine(
             $"  The province           {report.AverageSettlements:F2} settlements held"
             + $"  raids {report.AverageRaids:F2}"
+            + $"  met {report.AverageRaidsMet:F2} (won {report.RaidWinRate * 100:F1}%)"
             + $"  sacked {report.AverageSacks:F2}");
         writer.WriteLine();
 

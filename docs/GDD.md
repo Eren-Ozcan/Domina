@@ -2020,6 +2020,23 @@ raided. Now, **when there is nothing left to press, the next thing to take is th
 fiction carries it (nobody files a complaint on behalf of a school the province has already written
 off), and it is what turns 7.5% into 72.8%.
 
+**Is a raid winnable? Only if it comes early (measured 2026-09-12).** The sim learned to go out and
+meet him (`--meet-raids`), and the answer is that the raid's difficulty is a question of **when**, not
+of how many men he brings:
+
+| The dojo that meets him | Raids met / season | Won |
+|---|---|---|
+| Fighting dojo, bound spent early (deniability 2) | 1.52 | **50.2%** |
+| The same at deniability 3 | 0.93 | 37.8% |
+| The same at deniability 5 | 0.32 | 1.6% |
+| Hiding dojo, raided after the map fell (~day 90) | 0.40 | 0.0% (17.1% if he brings only two) |
+
+At the locked bound of 8 he arrives late, against the curve's top end, and is usually lost or ignored —
+which is the intended shape: the raid is what a dojo that has already lost the province pays, and an
+answerable fight for one that took the field early and often. The size dial (`RaidBase` 2,
+`RaidPerHoldings` 4, `RaidMost` 5) barely moves it: two men instead of five only lifts a hiding dojo
+from 0.0% to 17.1%, because what beats it is the day's power curve, not the headcount.
+
 **What a raid costs if it is not met.** The raid is the day's offer and cannot be declined like one.
 A day that closes with him still standing in the yard is a **sack**: a third of the treasury and a
 third of the store, and **10 honour off every man** — heavier than the missed week's 5, because a

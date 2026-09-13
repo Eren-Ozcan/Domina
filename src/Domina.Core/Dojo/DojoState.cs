@@ -421,7 +421,7 @@ public sealed class DojoState
     /// does not work.
     /// </remarks>
     public EncounterOffer Offer => _offer ??= Province.RaidPending
-        ? Encounters.Raid(Day, new SeededRandom(Seed + ((ulong)Day * 6_364_136_223_846_793_005UL)), Province.HisHoldings)
+        ? Encounters.Raid(Day, new SeededRandom(Seed + ((ulong)Day * 6_364_136_223_846_793_005UL)), Province.RaidSize)
         : Encounters.Offer(Day, Seed);
 
     /// <summary>Is today's offer him at the gate rather than work on the road?</summary>

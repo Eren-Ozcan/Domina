@@ -95,6 +95,7 @@ internal static class SimArgs
         MasteryBand masteryBand = MasteryBand.Default;
         bool useCharms = false;
         ProvinceTuning provinceTuning = new();
+        bool meetRaids = true;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
         SchoolTuning schoolTuning = new();
@@ -557,6 +558,36 @@ internal static class SimArgs
                     }
 
                     provinceTuning = provinceTuning with { RewardSharePerSettlement = settlementReward };
+                    break;
+
+                case "--raid-size":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int raidBase)
+                        || raidBase < 1)
+                    {
+                        return ParsedArgs.Fail($"--raid-size must be a positive integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { RaidBase = raidBase };
+                    break;
+
+                case "--raid-most":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int raidMost)
+                        || raidMost < 1)
+                    {
+                        return ParsedArgs.Fail($"--raid-most must be a positive integer: {value}");
+                    }
+
+                    provinceTuning = provinceTuning with { RaidMost = raidMost };
+                    break;
+
+                case "--meet-raids":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--meet-raids must be on or off: {value}");
+                    }
+
+                    meetRaids = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
                 case "--charms":
@@ -1452,7 +1483,8 @@ internal static class SimArgs
                 finalRest,
                 masteryBand,
                 useCharms,
-                provinceTuning)
+                provinceTuning,
+                meetRaids)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1649,6 +1681,9 @@ internal static class SimArgs
         writer.WriteLine("  --funeral-relief   The share of a comrade's death the rite takes off");
         writer.WriteLine("  --charms on|off    The policy buys temple charms and fits them (campaign)");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
+        writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
+        writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");
+        writer.WriteLine("  --raid-most        The most men he ever brings");
         writer.WriteLine("  --province-warning How many moves a settlement takes before it falls");
         writer.WriteLine("  --province-pushback The days an answered move is put back");
         writer.WriteLine("  --province-contracts Contracts that win a free village (his costs one more)");

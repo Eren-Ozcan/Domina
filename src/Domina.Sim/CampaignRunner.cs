@@ -57,7 +57,8 @@ internal sealed record CampaignOptions(
     int FinalRest = 0,
     MasteryBand MasteryBand = default,
     bool UseCharms = false,
-    ProvinceTuning? Province = null)
+    ProvinceTuning? Province = null,
+    bool MeetRaids = true)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -206,7 +207,9 @@ internal sealed class CampaignRunner(CampaignOptions options)
             // and what that measures is the calendar, not the night.
             bool resting = _options.FinalRest > 0 && _options.Days - day <= _options.FinalRest;
 
-            DayReport closed = _options.Hide || resting
+            DayReport closed = MeetTheRaid(state, seed + (ulong)day, row) is DayReport met
+                ? met
+                : _options.Hide || resting
                 ? Rest(state, row, declined: true)
                 : _options.UseOffers
                     ? TakeOfferOrRest(state, seed + (ulong)day, row)
@@ -344,6 +347,69 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         row.Triumph = state.Season.Phase == SeasonPhase.Triumph;
+    }
+
+    /// <summary>
+    /// Meets him in the yard when he is at the gate.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It runs <b>before</b> everything else the day would do, hiding included: a raid is not an offer
+    /// that can be declined, and a player who is sitting out the season still picks up a sword when the
+    /// gate goes. Everyone fit goes out, up to the party ceiling — the dojo is defending its own ground,
+    /// so nobody is kept back.
+    /// </para>
+    /// <para>
+    /// Switchable, because the question needs both halves: what a raid costs when it is ignored is the
+    /// sack, and what it costs when it is met can only be read off a policy that meets it.
+    /// </para>
+    /// </remarks>
+    private DayReport? MeetTheRaid(DojoState state, ulong seed, CampaignRow row)
+    {
+        if (!_options.MeetRaids || !state.UnderRaid)
+        {
+            return null;
+        }
+
+        List<RosterEntry> party = [.. state.Roster.FitForCampaign.Take(EncounterOffer.MaxPartySize)];
+        if (party.Count == 0)
+        {
+            return null;
+        }
+
+        EncounterOffer raid = state.Offer;
+        if (Expedition.Refuse(state, raid, party) is not null)
+        {
+            return null;
+        }
+
+        ExpeditionResult result = new Expedition().Send(
+            state,
+            raid,
+            party,
+
+            // The raid is fought out: there is no pulling back from a fight in your own yard, and a
+            // policy that withdrew would be measuring the key rather than the raid.
+            new SeededRandom(seed),
+            _options.Tuning,
+            retreat: null);
+
+        row.Battles++;
+        row.RaidsMet++;
+        row.GoldEarned += result.Reward;
+        if (result.Battle.Outcome == BattleOutcome.PlayerVictory)
+        {
+            row.Victories++;
+            row.RaidsWon++;
+        }
+
+        row.Deaths += result.Aftermath.Dead.Count();
+        row.RecoveryDays += result.Aftermath.Warriors.Sum(w => w.RecoveryDays);
+        row.ArmorPiecesLost += result.Aftermath.Warriors.Sum(w => w.ShatteredArmor.Count);
+        row.WarriorBattles += party.Count;
+        row.PowerSum += raid.EnemyHealth;
+
+        return result.Day;
     }
 
     /// <summary>Fixed-scenario mode: fight if the roster is enough, train if it is not.</summary>
@@ -987,6 +1053,12 @@ internal sealed class CampaignRow
     /// <summary>The raids he brought to the gate.</summary>
     public int Raids { get; set; }
 
+    /// <summary>The raids the dojo went out and met.</summary>
+    public int RaidsMet { get; set; }
+
+    /// <summary>The raids it won.</summary>
+    public int RaidsWon { get; set; }
+
     /// <summary>The raids nobody answered — the store emptied and the name lost.</summary>
     public int Sacks { get; set; }
 
@@ -1140,6 +1212,19 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>Raids nobody answered, per dojo.</summary>
     public double AverageSacks => Average(r => r.Sacks);
+
+    /// <summary>Raids met in the yard, per dojo.</summary>
+    public double AverageRaidsMet => Average(r => r.RaidsMet);
+
+    /// <summary>The share of met raids that were won.</summary>
+    public double RaidWinRate
+    {
+        get
+        {
+            int met = _rows.Sum(r => r.RaidsMet);
+            return met == 0 ? 0 : (double)_rows.Sum(r => r.RaidsWon) / met;
+        }
+    }
 
     /// <summary>The missed weeks that were paid for, per dojo.</summary>
     public double AverageChargedWeeks => Average(r => r.ChargedWeeks);

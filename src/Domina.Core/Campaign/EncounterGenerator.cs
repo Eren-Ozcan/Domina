@@ -133,14 +133,14 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
     /// </remarks>
     /// <param name="day">The day it falls on.</param>
     /// <param name="random">The dojo's own seeded source.</param>
-    /// <param name="holdings">The settlements he holds — what he can afford to send.</param>
-    public EncounterOffer Raid(int day, IRandomSource random, int holdings)
+    /// <param name="size">How many men he brings — the province's own dial.</param>
+    public EncounterOffer Raid(int day, IRandomSource random, int size)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
         ArgumentNullException.ThrowIfNull(random);
 
         double power = Math.Min(Tuning.MaxPower, PowerFor(day, random));
-        int count = Math.Clamp(2 + (holdings / 4), 2, 5);
+        int count = Math.Max(1, size);
 
         List<Warrior> enemies = [];
         for (int i = 0; i < count; i++)
