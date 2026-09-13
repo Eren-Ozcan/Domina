@@ -111,7 +111,9 @@ warrior toward the middle, and highs drift back), and the panic rule applies to 
 it *raises* the player's victory rate. ⚠️ It also showed that a fight the enemy fled pays the same
 reward as one where he fell — an economy leak for step 7.
 
-⏳ **Left open by step 6:** morale on the screens. **Closed 2026-09-12:** a feast **never** touches
+⏳ ~~**Left open by step 6:** morale on the screens.~~ **Closed 2026-09-12** — the roster prints the
+dojo's spirits and each man's, and the feast has its button.
+ **Closed 2026-09-12:** a feast **never** touches
 honour (GDD §3 — morale is the inside counter, honour the outside one), and the fled-enemy reward
 leak went with the rule that an adversary no longer flees at all — he stands on the road and
 **yields** in a match (GDD §5). It cost the player nine points of victory on `3v3` (69.64% → 60.63%)
@@ -119,9 +121,10 @@ leak went with the rule that an adversary no longer flees at all — he stands o
 season: on the corrected slope the documented policy loses 4.1% of its warriors per fight and closes
 25% of the time, against 10.4% and 52.5% before. The fight bed is harder; the season is not.
 
-⏳ **Left open by step 5:** retired warriors as free staff (retirement is not written), the ō-yoroi
-gate and forged weapons, a measurement of the classed candidate against a policy that trains classes,
-and the school screen's staff column (the model carries it, the scene does not). **Closed
+⏳ ~~**Left open by step 5**~~ — **all closed 2026-09-12**: retirement and the master of the house who
+holds a post for no wage; the ō-yoroi gate and the sword forge (the equipment branch's two upper
+tiers); the classed candidate measured against a policy that trains its own (0.05 stands); and the
+school screen's payroll column. **Closed
 2026-09-12:** the four inert posts — the bard landed with morale at step 6, and the weapon master, the
 monk and the diviner with weapon mastery, the omamori and the reading of the day's offer (GDD §10).
 Measured with them: mastery is worth +2.58 points of victory at full but the hall that teaches it
