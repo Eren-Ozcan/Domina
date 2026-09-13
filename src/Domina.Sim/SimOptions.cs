@@ -1226,6 +1226,22 @@ internal static class SimArgs
                         break;
                     }
 
+                case "--night-power":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double nightPower)
+                        || nightPower <= 0)
+                    {
+                        return ParsedArgs.Fail($"--night-power must be a positive number: {value}");
+                    }
+
+                    // The five bouts keep their shape and move together: the question is whether the
+                    // night as a whole is priced right, not which bout is.
+                    seasonTuning = seasonTuning with
+                    {
+                        FinalRoundPowers = [.. seasonTuning.FinalRoundPowers.Select(p => p * nightPower)],
+                    };
+                    break;
+
                 case "--night-wound-day":
                     if (!TryFraction(value, out double woundDay))
                     {
@@ -1710,6 +1726,7 @@ internal static class SimArgs
         writer.WriteLine("  --week-fit-days    Days with somebody fit before a quiet week counts as hiding");
         writer.WriteLine("  --grace-weeks      Consecutive hidden weeks that cost nothing");
         writer.WriteLine("  --night-wound-day  Health a warrior loses per infirmary day he carries into a bout");
+        writer.WriteLine("  --night-power      A multiplier over all five bouts' powers");
         writer.WriteLine("  --night-wound-floor  The least health an accumulated wound can leave him");
         writer.WriteLine("  --night-max-wound  The infirmary days past which he cannot answer the bell");
         writer.WriteLine("  --final-powers     The five bouts' powers, comma separated");

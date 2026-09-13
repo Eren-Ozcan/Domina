@@ -273,6 +273,9 @@ internal sealed class CampaignRunner(CampaignOptions options)
         row.HeadsTaken = state.Season.HeadsTaken;
         row.GateOpen = state.Season.GateOpen;
         row.EndingGold = state.Resources.Gold;
+        row.BestMastery = state.Roster.Living.Any()
+            ? state.Roster.Living.Max(e => e.Warrior.WeaponSkill)
+            : 0;
         row.SurvivingWarriors = state.Roster.Living.Count();
         row.EndScore = BestScore(state);
         row.SchoolNodes = state.School.Owned.Count;
@@ -1042,6 +1045,13 @@ internal sealed class CampaignRow
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
 
+    /// <summary>The best mastery on the roster when the season ended (0-1).</summary>
+    /// <remarks>
+    /// Without it a sweep of the mastery rates reads as "nothing moved" and cannot tell apart the two
+    /// reasons for that: the building never bought, or the bonus too small to matter.
+    /// </remarks>
+    public double BestMastery { get; set; }
+
     /// <summary>Settlement-days held over the season — what the map was actually worth to the dojo.</summary>
     /// <remarks>
     /// Counted per day rather than at the end, for the same reason post-days are: a map won in the last
@@ -1212,6 +1222,10 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>Raids nobody answered, per dojo.</summary>
     public double AverageSacks => Average(r => r.Sacks);
+
+    /// <summary>The best mastery reached, averaged over the dojos.</summary>
+    public double AverageBestMastery =>
+        Campaigns == 0 ? 0 : _rows.Sum(r => r.BestMastery) / Campaigns;
 
     /// <summary>Raids met in the yard, per dojo.</summary>
     public double AverageRaidsMet => Average(r => r.RaidsMet);

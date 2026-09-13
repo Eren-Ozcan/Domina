@@ -16,7 +16,7 @@ public sealed record EncounterTuning
     public double StartingPower { get; init; } = 0.9;
 
     /// <summary>The power each day adds.</summary>
-    public double PowerPerDay { get; init; } = 0.02;
+    public double PowerPerDay { get; init; } = 0.0072;
 
     /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>

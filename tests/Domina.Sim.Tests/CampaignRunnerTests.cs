@@ -204,7 +204,15 @@ public class CampaignRunnerTests
     [Fact]
     public void DecliningTradesDaysForWarriors()
     {
-        CampaignOptions reckless = Options(campaigns: 40, days: 90) with { UseOffers = true };
+        // A steep curve on purpose: the difficulty slope was re-derived for a 180-day season
+        // (0.0072), and on a 90-day bed at that slope neither policy loses a roster — there is then no
+        // difference to measure. What this test is about is the policy, so the bed has to be one where
+        // dying is possible.
+        CampaignOptions reckless = Options(campaigns: 40, days: 90) with
+        {
+            UseOffers = true,
+            Encounters = new EncounterTuning { PowerPerDay = 0.02 },
+        };
         CampaignOptions careful = reckless with { AcceptUpTo = ThreatBand.Rising, CautiousWhenThin = true };
 
         CampaignReport hot = new CampaignRunner(reckless).Run(firstSeed: 8);

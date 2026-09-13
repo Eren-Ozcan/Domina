@@ -1634,6 +1634,18 @@ defence and evasion are capped at 95 — and a developed party answers that with
 | the same dojo with **six** men | **13.5%** |
 | built none of it — six or eight men | **0%** (never past the fourth bout) |
 
+> **Re-derived 2026-09-12: the powers are now `1.8 / 2.0 / 2.2 / 2.4 / 2.8`.** Two rules landed after
+> the calibration above and both hit the night hardest. The adversaries stopped breaking and running
+> (§5), which took away an advantage the player never knew he had; and the same round made a match's
+> panic a **yield on both sides**, because with the rival's men standing and the dojo's running the
+> asymmetry fell on the player exactly where he is outnumbered — which is every bout of the night
+> after the first. The outnumbered trigger itself was then taken out of matches altogether: the
+> numbers of a bout are agreed in front of witnesses, so walking into three men is not a line
+> breaking. Even with all that, the old powers left the night won by **3.8%** of the dojos that
+> reached it. Swept ×1.0 / 0.9 / 0.8 / 0.7 → **3.8 / 7.2 / 13.2 / 18.0%**, and the ladder settled on
+> the ×0.8 rung rounded to a clean line. The night now runs at **11.2%** on the documented policy —
+> back on the 10-11% the quarters branch left it at, and the fourth bout is still the gate.
+
 So the night asks for two things at once: **a school and the depth to use it**. Bodies alone do not
 buy it and neither does a school with nobody left to send. The fourth bout — four of his seniors at
 once — is the gate (29% survival at six men, 51% at eight); raising the crowd one further step
@@ -2143,7 +2155,15 @@ seed are in the file, and the offer is recomputed on load. Nor can you change an
 like by reloading the save.
 
 - **Power** is a single curve: on day 1 `StartingPower`, rising by `PowerPerDay` each day, with a
-  fluctuation for that day on top. The fluctuation is essential — had the curve been a straight line,
+  fluctuation for that day on top. **The slope was re-derived on 2026-09-12: 0.02 → `0.0072`.** The old
+  value was calibrated on a **60-day** campaign and was never revisited when the season became 180
+  days: at 0.02 the curve reaches its ceiling of 2.2 on about **day 65** and the remaining 115 days are
+  all fought at the top of it. Measured, that is what the "the campaign bed is brutal" figure always
+  was — 400 dojos × 180 days on the documented policy: **hungry days 65.0%, net −12.1 gold a fight,
+  52.5% of dojos closed, and the last night won by nobody**. At 0.0072 — which is `(2.2 − 0.9) ÷ 180`,
+  the ceiling arriving at the end of the season rather than a third of the way through — the same bed
+  gives **hungry days 23.7%, net +42.7, 25.0% closed, and the night won by 11.2%**. Nothing else was
+  touched to get it. The fluctuation is essential — had the curve been a straight line,
   the same offer would come every day and the "leave it" decision would mean nothing; the meaning of
   leaving it is that tomorrow can be different.
 - **Roster size** is unlocked by power (a second enemy, then a third) but does not stick to the upper

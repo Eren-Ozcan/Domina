@@ -121,7 +121,7 @@ public sealed record TrainingTuning
 /// </para>
 /// <para>
 /// Both rates are <b>zero without the weapon master's building</b>: the whole system is the post's
-/// output (<see cref="SchoolNodeId.InnerDojo"/>), scaled by the half-efficiency rule like every other
+/// output (<see cref="SchoolNodeId.Armoury"/>), scaled by the half-efficiency rule like every other
 /// facility. A dojo that never builds it never sees mastery at all.
 /// </para>
 /// </remarks>

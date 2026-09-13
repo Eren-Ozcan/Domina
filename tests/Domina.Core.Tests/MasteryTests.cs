@@ -10,7 +10,7 @@ namespace Domina.Core.Tests;
 /// </summary>
 public class MasteryTests
 {
-    private static DojoState Dojo(bool innerDojo, bool master)
+    private static DojoState Dojo(bool armoury, bool master)
     {
         DojoState state = new(
             events: new EventTuning { ChancePerDay = 0 },
@@ -19,11 +19,9 @@ public class MasteryTests
             Resources = new Resources(Gold: 5000, Food: 200, Water: 200),
         };
 
-        if (innerDojo)
+        if (armoury)
         {
-            state.BuySchoolNode(SchoolNodeId.TrainingGround);
-            state.BuySchoolNode(SchoolNodeId.FormsMaster);
-            state.BuySchoolNode(SchoolNodeId.InnerDojo);
+            state.BuySchoolNode(SchoolNodeId.Armoury);
         }
 
         if (master)
@@ -34,11 +32,11 @@ public class MasteryTests
         return state;
     }
 
-    /// <summary>The whole system is the post's output: no hall, no mastery.</summary>
+    /// <summary>The whole system is the post's output: no armoury, no mastery.</summary>
     [Fact]
-    public void WithoutTheHallADrillDayTeachesNoMastery()
+    public void WithoutTheArmouryADrillDayTeachesNoMastery()
     {
-        DojoState state = Dojo(innerDojo: false, master: false);
+        DojoState state = Dojo(armoury: false, master: false);
         RosterEntry entry = state.Roster.Recruit("Kenji");
         entry.Train();
 
@@ -47,13 +45,13 @@ public class MasteryTests
         Assert.Equal(0, entry.Warrior.WeaponSkill);
     }
 
-    /// <summary>An empty hall teaches at half, the master at full.</summary>
+    /// <summary>An empty armoury teaches at half, the master at full.</summary>
     [Fact]
-    public void AnEmptyHallTeachesHalfOfWhatTheMasterDoes()
+    public void AnEmptyArmouryTeachesHalfOfWhatTheMasterDoes()
     {
         double SkillAfterADay(bool master)
         {
-            DojoState state = Dojo(innerDojo: true, master);
+            DojoState state = Dojo(armoury: true, master);
             RosterEntry entry = state.Roster.Recruit("Kenji");
             entry.Train();
 
@@ -72,7 +70,7 @@ public class MasteryTests
     [Fact]
     public void MeditationBuysNoMastery()
     {
-        DojoState state = Dojo(innerDojo: true, master: true);
+        DojoState state = Dojo(armoury: true, master: true);
         RosterEntry entry = state.Roster.Recruit("Kenji");
         entry.Train(Drill.Meditation);
 

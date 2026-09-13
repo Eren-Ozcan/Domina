@@ -39,7 +39,7 @@ public enum SchoolNodeId
     /// <summary>Kata master: the ceiling a warrior can approach rises.</summary>
     FormsMaster,
 
-    /// <summary>Inner dojo: training speeds up a second time, and the weapon master teaches mastery.</summary>
+    /// <summary>Inner dojo: training speeds up a second time.</summary>
     InnerDojo,
 
     /// <summary>Infirmary: natural recovery burns two days a day.</summary>
@@ -65,6 +65,15 @@ public enum SchoolNodeId
 
     /// <summary>Kitchen: the cook's post — the day's food need falls.</summary>
     Kitchen,
+
+    /// <summary>Armoury: the weapon master's post — where mastery of a weapon is taught.</summary>
+    /// <remarks>
+    /// It was the inner dojo's post until 2026-09-12, and measured as <b>nothing</b> there: the third
+    /// tier of the training branch costs 700 gold, and a dojo that lives to buy it has about a month
+    /// left to use what it teaches. Mastery is slow by construction, so its building has to be early
+    /// or the system does not exist.
+    /// </remarks>
+    Armoury,
 
     /// <summary>Shrine: the monk's post — the omamori slots and the funeral rite.</summary>
     Shrine,
@@ -201,7 +210,7 @@ public static class SchoolTree
     [
         new(SchoolNodeId.TrainingGround, SchoolBranch.Training, "Training ground", 200, null, 6, StaffRole.DrillMaster),
         new(SchoolNodeId.FormsMaster, SchoolBranch.Training, "Kata hall", 400, SchoolNodeId.TrainingGround, 10, StaffRole.KataMaster),
-        new(SchoolNodeId.InnerDojo, SchoolBranch.Training, "Inner dojo", 700, SchoolNodeId.FormsMaster, 14, StaffRole.WeaponMaster),
+        new(SchoolNodeId.InnerDojo, SchoolBranch.Training, "Inner dojo", 700, SchoolNodeId.FormsMaster, 14),
 
         new(SchoolNodeId.Infirmary, SchoolBranch.Infirmary, "Infirmary", 200, null, 6, StaffRole.Physician),
         new(SchoolNodeId.Herbalist, SchoolBranch.Infirmary, "Herbalist", 400, SchoolNodeId.Infirmary, 10),
@@ -214,6 +223,7 @@ public static class SchoolTree
         new(SchoolNodeId.Forge, SchoolBranch.Equipment, "Forge", 250, null, 8, StaffRole.Smith),
 
         new(SchoolNodeId.Kitchen, SchoolBranch.Support, "Kitchen", 150, null, 5, StaffRole.Cook),
+        new(SchoolNodeId.Armoury, SchoolBranch.Support, "Armoury", 200, null, 6, StaffRole.WeaponMaster),
         new(SchoolNodeId.Shrine, SchoolBranch.Support, "Shrine", 150, null, 5, StaffRole.Monk),
         new(SchoolNodeId.BardHall, SchoolBranch.Support, "Bard's hall", 150, null, 5, StaffRole.Bard),
         new(SchoolNodeId.DivinerHut, SchoolBranch.Support, "Diviner's hut", 150, null, 5, StaffRole.Diviner),
@@ -459,8 +469,8 @@ public sealed class School
         double Stepped(double step, SchoolNodeId id) => 1 + ((step - 1) * Share(id));
 
         // Mastery is the weapon master's whole output, so it is gated outright rather than stepped:
-        // without the inner dojo there is no mastery at all, and an empty hall teaches at half.
-        double masteryShare = Share(SchoolNodeId.InnerDojo);
+        // without the armoury there is no mastery at all, and an empty one teaches at half.
+        double masteryShare = Share(SchoolNodeId.Armoury);
 
         return tuning with
         {

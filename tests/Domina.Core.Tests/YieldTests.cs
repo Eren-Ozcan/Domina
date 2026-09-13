@@ -31,7 +31,7 @@ public class YieldTests
 
     private static BattleResult Run(BattleSetup setup) => new Battle(setup, new SeededRandom(7)).Run();
 
-    /// <summary>On the road his nerve buys him nothing: nobody escapes.</summary>
+    /// <summary>Off a match his nerve buys him nothing: nobody escapes and nobody kneels.</summary>
     [Fact]
     public void AnAdversaryNeverLeavesTheField()
     {
@@ -69,9 +69,16 @@ public class YieldTests
         Assert.Equal(BattleOutcome.PlayerVictory, result.Outcome);
     }
 
-    /// <summary>The player's side is not touched by the rule: his men still run.</summary>
+    /// <summary>
+    /// In a match nobody runs: the player's man yields too, and that symmetry is the point.
+    /// </summary>
+    /// <remarks>
+    /// Measured the other way first and it broke the last night: with the rival's men standing and the
+    /// player's running, the rule fell on the player alone and hardest exactly where he is outnumbered
+    /// — which is every bout of the night after the first.
+    /// </remarks>
     [Fact]
-    public void AWarriorOfTheDojoStillRuns()
+    public void InAMatchTheDojosOwnManYieldsToo()
     {
         BattleSetup setup = new(
             [TestBuilders.Warrior(1, health: 30, aggression: 20)],
@@ -84,6 +91,30 @@ public class YieldTests
                 WillPanicResistance = 0,
             },
             Match = true,
+        };
+
+        WarriorBattleSummary mine = Run(setup).SummaryFor(new WarriorId(1));
+
+        Assert.Equal(CombatState.Yielded, mine.FinalState);
+        Assert.False(mine.Died);
+        Assert.True(mine.Panicked);
+    }
+
+    /// <summary>Off a match the player's man still runs — his key, and his nerve, are his own.</summary>
+    [Fact]
+    public void OnTheRoadAWarriorOfTheDojoStillRuns()
+    {
+        BattleSetup setup = new(
+            [TestBuilders.Warrior(1, health: 30, aggression: 20)],
+            [TestBuilders.Warrior(101, health: 400, accuracy: 90, strength: 60)])
+        {
+            Tuning = TestBuilders.PointBlank with
+            {
+                BasePanicChance = 1,
+                PanicHealthShare = 1,
+                WillPanicResistance = 0,
+            },
+            Match = false,
         };
 
         WarriorBattleSummary mine = Run(setup).SummaryFor(new WarriorId(1));

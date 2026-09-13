@@ -121,7 +121,7 @@ public sealed record SeasonTuning
     /// three points (78% → 75%); between two men in a bout and four it moves by forty.
     /// </para>
     /// </remarks>
-    public IReadOnlyList<double> FinalRoundPowers { get; init; } = [2.2, 2.4, 2.6, 2.8, 3.2];
+    public IReadOnlyList<double> FinalRoundPowers { get; init; } = [1.8, 2.0, 2.2, 2.4, 2.8];
 
     /// <summary>How many men each bout puts on the field.</summary>
     /// <remarks>

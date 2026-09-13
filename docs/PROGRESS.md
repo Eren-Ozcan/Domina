@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-12 (the last three posts, the province, and the enemy who no longer runs)
+Last updated: 2026-09-12 (the last three posts, the province, the enemy who no longer runs, and the curve re-derived for a 180-day season)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1694,6 +1694,50 @@ roster ≠ day one's stall, save round trip).
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
+
+## 2026-09-12 (fourth round) — The curve was calibrated for a season a third as long
+
+The "campaign bed is brutal" figure — 90%+ of dojos closing, which had been shrugged at for two
+rounds as "the bed has always been pessimistic" — turned out to be one number written for a
+**60-day** campaign and never revisited when the season became 180 days.
+
+`EncounterTuning.PowerPerDay` was **0.02**. The curve starts at 0.9 and is capped at 2.2, so at that
+slope it reaches its ceiling on about **day 65** and the remaining 115 days are fought at the top of
+it. Re-derived as `(2.2 − 0.9) ÷ 180` = **0.0072**, the ceiling now arrives at the end of the season.
+Same bed, same policy (400 dojos × 180 days, `--accept-ratio 2.0`), nothing else touched:
+
+| | 0.02 (locked) | **0.0072** |
+|---|---|---|
+| Hungry days | 65.0% | **23.7%** |
+| Net per fight | −12.1 gold | **+42.7** |
+| Fights per dojo | 24.7 | **85.2** |
+| Deaths per warrior-fight | 10.4% | **4.1%** |
+| Dojos closed | 52.5% | **25.0%** |
+| Won the last night | **0.0%** | **11.2%** |
+
+The other half of the same finding: **the blunt policy was never the right instrument**. A dojo that
+accepts every offer still closes 88% of the time on the new curve, while the documented policy — the
+one that declines a fight its party is too weak for — closes 25%. Every closure figure in this file
+should be read with the policy beside it.
+
+**The last night was re-derived with it (powers 1.8 / 2.0 / 2.2 / 2.4 / 2.8).** Two rules had landed
+since its calibration, both hitting it hardest: the adversaries stopped breaking and running, and a
+match's panic became a **yield on both sides** — because with his men standing and the dojo's running,
+the asymmetry fell on the player exactly where he is outnumbered, which is every bout after the
+first. The outnumbered trigger was then dropped from matches entirely: the numbers of a bout are
+agreed in front of witnesses, so walking into three men is not a line breaking. Even so the old
+powers left the night won by 3.8%. Swept ×1.0 / 0.9 / 0.8 / 0.7 → 3.8 / 7.2 / 13.2 / 18.0%, and the
+ladder settled on the ×0.8 rung rounded clean. **11.2%** now, which is where the quarters branch left
+it (10-11%).
+
+**And the weapon master's hall was repriced, which finally made mastery real.** It had been the
+training branch's third tier (700 gold, 14 days) and measured as nothing there — a dojo that lives to
+buy it has a month left to use it. It is now the **armoury**: a support building, 200 gold, 6 days.
+On the new curve the best man ends the season at **24.8% mastery** instead of 0.0%, and switching
+mastery off costs the run 2.7 points of last-night wins (11.2% → 8.5%) and 2.7 gold a fight.
+
+⚠️ Invalidated by this round: every closure, net-per-fight and hungry-day figure measured before it,
+and the difficulty-tier table. They were all read off the old slope.
 
 ## 2026-09-12 (third round) — The enemy stops running, and learns to yield
 

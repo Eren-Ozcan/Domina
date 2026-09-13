@@ -2240,7 +2240,15 @@ public sealed class Battle
 
         WarriorStats stats = c.Warrior.EffectiveStats;
         bool hurt = c.Health / Math.Max(1, stats.MaxHealth) <= _tuning.PanicHealthShare;
-        bool alone = _tuning.PanicOnComradeDown && CountActive(c.Team) < CountActive(Other(c.Team));
+
+        // Being outnumbered is what breaks a line on the road, and it is <b>not</b> what happens in a
+        // match: the numbers of a bout are agreed in front of witnesses before it starts, so a man who
+        // walks into three of them has already accepted that. Left in, this trigger fired on every
+        // bout of the last night — where the crowd is 2/3/3/4 against a party of four — and the night
+        // became unwinnable the moment the adversaries stopped breaking with him.
+        bool alone = !_setup.Match
+            && _tuning.PanicOnComradeDown
+            && CountActive(c.Team) < CountActive(Other(c.Team));
 
         if (!hurt && !alone)
         {
@@ -2265,18 +2273,24 @@ public sealed class Battle
         c.Panicked = true;
         Emit(new WarriorPanicked(ElapsedSeconds, c.Id, c.Warrior.Morale));
 
-        if (c.Team == PlayerTeam)
+        // In a match nobody runs — there is nowhere to run to in front of witnesses, and the form has
+        // its own ending. <b>Both</b> sides yield, and that symmetry is the point: the rule that keeps
+        // the rival's men on the road would otherwise fall on the player alone, and hardest exactly
+        // where he is outnumbered (docs/GDD.md §5).
+        if (_setup.Match)
         {
-            CommandRetreat(c);
+            c.BeginState(CombatState.Yielded, 0);
+            Emit(new WarriorYielded(ElapsedSeconds, c.Id));
             return;
         }
 
-        // An adversary never leaves the field (docs/GDD.md §5): his school sent him, his school is
-        // watching, and a collector who runs answers for it afterwards — which is also what closed the
-        // reward leak, a fled enemy paying as much as a fallen one. In a <b>match</b> the break has
-        // somewhere to go: he yields, and a man who has yielded is not struck again.
-        c.BeginState(CombatState.Yielded, 0);
-        Emit(new WarriorYielded(ElapsedSeconds, c.Id));
+        // Off a match the two sides are not alike: the player's key is his, so his man runs, while an
+        // adversary never leaves the field at all — his school sent him and is watching, which is also
+        // what closed the reward leak of a fled enemy paying as much as a fallen one.
+        if (c.Team == PlayerTeam)
+        {
+            CommandRetreat(c);
+        }
     }
 
     /// <summary>The other side.</summary>
