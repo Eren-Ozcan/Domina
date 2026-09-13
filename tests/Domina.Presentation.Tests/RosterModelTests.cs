@@ -179,4 +179,46 @@ public class RosterModelTests
         Assert.Equal(dojo.OmamoriSlots, row.CharmSlots);
         Assert.Equal([OmamoriKind.IronGate], row.Charms!);
     }
+
+    /// <summary>The summary carries the roster's condition and what a feast would cost today.</summary>
+    [Fact]
+    public void TheSummaryCarriesTheSpiritsAndTheFeast()
+    {
+        DojoState dojo = new() { Resources = new Resources(Gold: 100, Sake: 2) };
+        RosterEntry first = dojo.Roster.Recruit("Kenji");
+        RosterEntry second = dojo.Roster.Recruit("Goro");
+        first.Warrior.Morale = 30;
+        second.Warrior.Morale = 70;
+
+        RosterSummary summary = RosterModel.Summarize(dojo);
+
+        Assert.Equal(50, summary.Morale, 6);
+        Assert.Equal(2, summary.FeastSake);
+        Assert.True(summary.CanFeast);
+        Assert.Equal(0, summary.DaysToFeast);
+    }
+
+    /// <summary>A feast just held reads as the cooldown, not as missing sake.</summary>
+    [Fact]
+    public void AFeastJustHeldReadsAsTheCooldown()
+    {
+        DojoState dojo = new() { Resources = new Resources(Gold: 100, Sake: 10) };
+        dojo.Roster.Recruit("Kenji");
+
+        Assert.True(dojo.Feast());
+
+        RosterSummary summary = RosterModel.Summarize(dojo);
+
+        Assert.False(summary.CanFeast);
+        Assert.True(summary.DaysToFeast > 0);
+    }
+
+    /// <summary>The band is a word, and the middle of the scale is steady.</summary>
+    [Fact]
+    public void TheMiddleOfTheScaleIsSteady()
+    {
+        Assert.Equal(MoraleBandName.Steady, RosterModel.Band(MoraleScale.Starting));
+        Assert.Equal(MoraleBandName.Broken, RosterModel.Band(0));
+        Assert.Equal(MoraleBandName.High, RosterModel.Band(100));
+    }
 }

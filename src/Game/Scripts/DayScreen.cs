@@ -142,7 +142,8 @@ public sealed partial class DayScreen : DojoScreen
         _offerLabel.Text = string.Join(
             '\n',
             $"Day {_dojo.Day}  ·  Purse {purse.Gold} gold  ·  Food {purse.Food}" +
-            $"  ·  Water {purse.Water}  ·  Medicine {purse.Medicine}",
+            $"  ·  Water {purse.Water}  ·  Medicine {purse.Medicine}  ·  Sake {purse.Sake}" +
+            $"  ·  Spirits {RosterModel.Band(RosterModel.Summarize(_dojo).Morale).ToString().ToLowerInvariant()}",
             $"Offer: {offer.Sighting}",
             $"Threat: {ThreatName(offer.Threat)}  ·  Promised reward {offer.PromisedReward} gold",
             offer.RequiredPartySize is int size

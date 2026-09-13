@@ -28,6 +28,7 @@ public sealed partial class MarketScreen : DojoScreen
     private Label _detail = null!;
     private Button _buyButton = null!;
     private Label _notice = null!;
+    private Label _sakeLabel = null!;
     private int? _selected;
 
     /// <summary>Builds the screen and prints the stall.</summary>
@@ -75,7 +76,39 @@ public sealed partial class MarketScreen : DojoScreen
         _notice.AddThemeColorOverride("font_color", WarningColor);
         panel.AddChild(_notice);
 
+        // Sake is the one stock the day's bill never buys for the dojo (docs/GDD.md §3, #14), so it is
+        // the one stock that needs a button: it sits in the store until the player calls a feast.
+        panel.AddChild(BuildSakeRow());
+
         return panel;
+    }
+
+    private Control BuildSakeRow()
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 6);
+
+        _sakeLabel = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        row.AddChild(_sakeLabel);
+
+        foreach (int measures in (int[])[1, 5])
+        {
+            int wanted = measures;
+            Button button = new() { Text = $"Buy {wanted} sake" };
+            button.Pressed += () =>
+            {
+                if (_dojo.BuySake(wanted) > 0)
+                {
+                    Persist();
+                }
+
+                Refresh();
+            };
+
+            row.AddChild(button);
+        }
+
+        return row;
     }
 
     /// <summary>Reprints the stall and the selected candidate's detail.</summary>
@@ -119,6 +152,9 @@ public sealed partial class MarketScreen : DojoScreen
             (summary.HasRoom
                 ? string.Empty
                 : "\nThe quarters are full — build at the school before hiring.");
+
+        _sakeLabel.Text =
+            $"Sake in store {_dojo.Resources.Sake}  ·  {_dojo.Economy.SakePrice} gold a measure";
 
         ShowDetail(rows.FirstOrDefault(r => r.Index == _selected));
     }

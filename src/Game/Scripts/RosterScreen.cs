@@ -40,6 +40,8 @@ public sealed partial class RosterScreen : DojoScreen
     private Label _renameNotice = null!;
     private OptionButton _drillPicker = null!;
     private HBoxContainer _pathRow = null!;
+    private Button _feastButton = null!;
+    private Label _feastNotice = null!;
     private Label _charmLabel = null!;
     private VBoxContainer _charmRows = null!;
     private WarriorId? _selected;
@@ -114,6 +116,15 @@ public sealed partial class RosterScreen : DojoScreen
         _pathRow = new HBoxContainer();
         panel.AddChild(_pathRow);
 
+        // The feast is the roster's lever, not one warrior's, so it sits with the summary's business
+        // rather than in a man's detail: one measure of sake per living head, and then a week's wait.
+        _feastButton = new Button { Text = "Hold a feast" };
+        _feastButton.Pressed += Feast;
+        panel.AddChild(_feastButton);
+
+        _feastNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_feastNotice);
+
         // The charms sit under the path because they are the other thing carried onto the field, and
         // unlike the path they can be moved from one man to another on any day (docs/GDD.md §10).
         _charmLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -172,7 +183,10 @@ public sealed partial class RosterScreen : DojoScreen
             $"Day {_dojo.Day}  ·  Roster {summary.Living}/{summary.Beds}  ·  Ready {summary.Fit}" +
             $"  ·  Infirmary {summary.Recovering}  ·  Dead {summary.Fallen}" +
             (summary.Freed > 0 ? $"  ·  Walked out {summary.Freed}" : string.Empty) +
-            $"  ·  Party of at most {summary.PartyCapacity}";
+            $"  ·  Party of at most {summary.PartyCapacity}" +
+            $"  ·  Spirits {BandName(RosterModel.Band(summary.Morale))} ({summary.Morale:0})";
+
+        UpdateFeastControls(summary);
 
         ShowDetail(rows.FirstOrDefault(r => r.Id == _selected));
     }
@@ -198,7 +212,8 @@ public sealed partial class RosterScreen : DojoScreen
             '\n',
             $"{row.Name}  ({StatusName(row.Status)})",
             row.IsAlive
-                ? $"Honour {row.Honor:0}  ·  Training days {row.TrainingDays}"
+                ? $"Honour {row.Honor:0}  ·  Spirits {BandName(RosterModel.Band(row.Morale))}"
+                  + $" ({row.Morale:0})  ·  Training days {row.TrainingDays}"
                 : "This warrior died — the record stays on the roster.",
             row.RecoveryDaysRemaining > 0
                 ? $"Infirmary: {row.RecoveryDaysRemaining} days"
@@ -317,6 +332,46 @@ public sealed partial class RosterScreen : DojoScreen
             _charmRows.AddChild(line);
         }
     }
+
+    /// <summary>
+    /// What the feast would cost today, and why it cannot be held if it cannot.
+    /// </summary>
+    /// <remarks>
+    /// The two refusals are different and must read differently: no sake is something the player can
+    /// go and buy, the cooldown is something only the calendar answers (docs/GDD.md §3).
+    /// </remarks>
+    private void UpdateFeastControls(RosterSummary summary)
+    {
+        _feastButton.Disabled = !summary.CanFeast;
+        _feastButton.Text = $"Hold a feast ({summary.FeastSake} sake)";
+
+        _feastNotice.Text = summary.CanFeast
+            ? $"Sake in store: {summary.Sake}"
+            : summary.DaysToFeast > 0
+                ? $"The last feast was too recent — {summary.DaysToFeast} days."
+                : $"Sake in store: {summary.Sake}; a feast wants {summary.FeastSake}.";
+
+        _feastNotice.AddThemeColorOverride("font_color", summary.CanFeast ? InkColor : MutedColor);
+    }
+
+    private void Feast()
+    {
+        if (_dojo.Feast())
+        {
+            Persist();
+        }
+
+        Refresh();
+    }
+
+    private static string BandName(MoraleBandName band) => band switch
+    {
+        MoraleBandName.Broken => "broken",
+        MoraleBandName.Low => "low",
+        MoraleBandName.Good => "good",
+        MoraleBandName.High => "high",
+        _ => "steady",
+    };
 
     private void BuildPathButtons(RosterRow row)
     {

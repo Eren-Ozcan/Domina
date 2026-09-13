@@ -26,6 +26,7 @@ namespace Domina.Presentation;
 /// What he has learned of the weapon in his hand, 0-1 (docs/GDD.md §10). It belongs to the pairing of
 /// the man and that weapon, so the screen prints it beside the weapon's name and not beside his stats.
 /// </param>
+/// <param name="Morale">His own condition today, 0-100.</param>
 /// <param name="Charms">The temple charms he is wearing.</param>
 /// <param name="CharmSlots">How many he may wear today — the shrine opens them, the monk the second.</param>
 /// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
@@ -55,6 +56,7 @@ public readonly record struct RosterRow(
     bool IsFitForCampaign,
     bool CanBeReleased = false,
     double WeaponSkill = 0,
+    double Morale = MoraleScale.Starting,
     IReadOnlyList<OmamoriKind>? Charms = null,
     int CharmSlots = 0);
 
@@ -85,6 +87,11 @@ public enum RosterStatus
 /// <param name="PartyCapacity">The maximum warriors who can go on one expedition (GDD §1).</param>
 /// <param name="Freed">The men whose term ended — they walked out and are on the closing screen.</param>
 /// <param name="Beds">How many men the dojo can house at all — the quarters branch raises it.</param>
+/// <param name="Morale">The roster's average condition today, 0-100 (docs/GDD.md §3).</param>
+/// <param name="Sake">The measures in the store — a feast drinks one per living man.</param>
+/// <param name="FeastSake">What a feast would drink today.</param>
+/// <param name="CanFeast">Is there sake, and has the cooldown passed?</param>
+/// <param name="DaysToFeast">The days left on the cooldown; 0 when it is clear.</param>
 public readonly record struct RosterSummary(
     int Living,
     int Fit,
@@ -92,7 +99,36 @@ public readonly record struct RosterSummary(
     int Fallen,
     int PartyCapacity,
     int Freed = 0,
-    int Beds = 0);
+    int Beds = 0,
+    double Morale = MoraleScale.Starting,
+    int Sake = 0,
+    int FeastSake = 0,
+    bool CanFeast = false,
+    int DaysToFeast = 0);
+
+/// <summary>Where a warrior's condition sits on the scale — the word the screen prints.</summary>
+/// <remarks>
+/// A band rather than a number on the row itself: morale is a condition, not a stat, and printing
+/// "63" beside eight real stats would invite the player to train it. The number is still there for
+/// anyone who wants it, in the detail panel.
+/// </remarks>
+public enum MoraleBandName
+{
+    /// <summary>Broken — the bottom of the scale, where the panic check bites hardest.</summary>
+    Broken,
+
+    /// <summary>Low.</summary>
+    Low,
+
+    /// <summary>Steady — the middle, where the multiplier is exactly 1.</summary>
+    Steady,
+
+    /// <summary>Good.</summary>
+    Good,
+
+    /// <summary>High — bought with a victory, a feast or the bard, and it drifts back down.</summary>
+    High,
+}
 
 /// <summary>The result of a rename attempt.</summary>
 public enum RenameVerdict
@@ -172,6 +208,7 @@ public static class RosterModel
             IsFitForCampaign: entry.IsFitForCampaign,
             CanBeReleased: warrior.IsAlive && !entry.Released && entry.RecoveryDaysRemaining == 0,
             WeaponSkill: warrior.WeaponSkill,
+            Morale: warrior.Morale,
             Charms: warrior.Charms,
             CharmSlots: charmSlots);
     }
@@ -214,8 +251,32 @@ public static class RosterModel
             }
         }
 
-        return new RosterSummary(living, fit, recovering, fallen, PartyCapacity, freed, dojo.Capacity);
+        return new RosterSummary(
+            living,
+            fit,
+            recovering,
+            fallen,
+            PartyCapacity,
+            freed,
+            dojo.Capacity,
+            living == 0 ? MoraleScale.Starting : dojo.Roster.Living.Average(e => e.Warrior.Morale),
+            dojo.Resources.Sake,
+            dojo.FeastSake,
+            dojo.CanFeast,
+            dojo.LastFeastDay is int last
+                ? Math.Max(0, dojo.Tuning.Morale.FeastCooldownDays - (dojo.Day - last))
+                : 0);
     }
+
+    /// <summary>The band a morale value falls in.</summary>
+    public static MoraleBandName Band(double morale) => morale switch
+    {
+        < 20 => MoraleBandName.Broken,
+        < 40 => MoraleBandName.Low,
+        < 60 => MoraleBandName.Steady,
+        < 80 => MoraleBandName.Good,
+        _ => MoraleBandName.High,
+    };
 
     /// <summary>
     /// Is the rename accepted? The screen asks this <b>while typing</b>, before
