@@ -128,6 +128,12 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// </remarks>
     public WarriorStats Stats { get; } = warrior.EffectiveStats;
 
+    /// <summary>
+    /// How he weighs the field when he chooses a target — read once, for the same reason
+    /// <see cref="Stats"/> is: nothing can move it while the fight runs.
+    /// </summary>
+    public TargetProfile Targeting { get; } = warrior.Targeting;
+
     public int Team { get; } = team;
 
     public WarriorId Id => Warrior.Id;

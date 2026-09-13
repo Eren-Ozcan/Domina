@@ -444,10 +444,17 @@ closed and reopened everything is in place.
 - [x] **Party selection: 1-4 warriors** — `EncounterOffer.Accepts`; a duel offer imposes exactly
       one warrior, and `Expedition.Refuse` declines an unfit party with its reason
 - [ ] ~~The map/progress screen~~ — **dropped** (Open Decision #2 closed: there is no map screen)
-- [ ] Adversary behaviour/AI profiles — a different combat pattern for each kind (the open half of
-      Open Decision #3; the number side was written with `Adversaries`). The axis is **discipline**:
-      a street man takes the nearest target, a school man finishes the wounded and then turns to the
-      most dangerous
+- [ ] **The throwing slot has no shop** — the market, the quartermaster and the recruit screen all
+      ignore `Warrior.Thrown`, so a shuriken or a yumi can be fought with, saved and loaded but never
+      bought. Found on 2026-09-13 while writing the yumi; it is the one thing standing between the
+      kyūdō class and a season that can actually field it
+- [x] **Adversary behaviour/AI profiles** — done 2026-09-13 (`Combat/TargetProfile.cs`). Not a combat
+      pattern per kind but five multipliers over the shared target-selection weights, along the
+      **discipline** axis the decision named: the collector gangs up, the cutthroat finishes the
+      wounded, the duelist wants his own opponent, the kabukimono will not walk for an opportunity,
+      the senior student is taught to pick. Measured against its own absence over six seeds × 1600
+      dojos and it moves the season by nothing (last nights +0.07 ±0.84) — which is what a manner
+      should cost; the lever is there if a kind must later become a threat
 - [ ] ~~Boss encounters~~ — **not being built** (GDD §10: difficulty rises along a single curve)
 
 ### The adversaries (rewritten 2026-09-10 — Open Decision #16: the enemy is human)

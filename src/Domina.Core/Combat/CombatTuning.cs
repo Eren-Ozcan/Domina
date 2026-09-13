@@ -305,6 +305,17 @@ public sealed record CombatTuning
     /// <summary>Score advantage of the current target — the cost of switching.</summary>
     public double TargetStickiness { get; init; } = 80;
 
+    /// <summary>
+    /// Whether a warrior's <see cref="TargetProfile"/> is read at all.
+    /// </summary>
+    /// <remarks>
+    /// It exists so the enemy kinds' character can be measured against its own absence: with this off
+    /// every man on the field weighs the five terms alike, which is how every fight before the
+    /// profiles existed was fought. It is a measuring switch, not a difficulty setting — the game
+    /// never turns it off.
+    /// </remarks>
+    public bool TargetProfiles { get; init; } = true;
+
     // ---- Block ----
 
     /// <summary>Probability that a warrior in reach goes into a block stance at Defence 100.</summary>

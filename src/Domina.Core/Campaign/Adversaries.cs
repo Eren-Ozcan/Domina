@@ -1,3 +1,4 @@
+using Domina.Core.Combat;
 using Domina.Core.Model;
 
 namespace Domina.Core.Campaign;
@@ -5,10 +6,11 @@ namespace Domina.Core.Campaign;
 /// <summary>A scalable template for a kind of enemy.</summary>
 /// <remarks>
 /// <para>
-/// There are only <b>numbers</b> here: each kind's own combat behaviour (Open Decision #3) has not
-/// been written. GDD §4's note is this: the behavioural difference will not be a separate code path but
-/// the target-selection weights tuned per kind. When that tuning arrives a field is added to this
-/// template — encounter generation does not change.
+/// A kind is <b>numbers plus an appetite</b>. Its combat behaviour (Open Decision #3) is not a code
+/// path of its own: it is <see cref="TargetProfile"/>, a set of multipliers over the target-selection
+/// weights every warrior already runs, so a cutthroat and a duelist take the same decision with
+/// different tastes. Encounter generation does not change, and a kind that names no profile fights
+/// exactly as every kind did before profiles existed.
 /// </para>
 /// <para>
 /// The template scales with <b>power</b>: the same collector is a collector on day 1 and on day 40, but
@@ -21,12 +23,16 @@ namespace Domina.Core.Campaign;
 /// <param name="Weapon">The weapon it carries.</param>
 /// <param name="Weight">Its weight for being drawn from the pool.</param>
 /// <param name="MinPower">The power at which this kind first appears on the curve.</param>
+/// <param name="Targeting">
+/// How a man of this kind reads the field. <c>null</c> means <see cref="TargetProfile.Default"/>.
+/// </param>
 public sealed record EnemyKind(
     string Name,
     WarriorStats Base,
     Weapon Weapon,
     double Weight = 1,
-    double MinPower = 0)
+    double MinPower = 0,
+    TargetProfile? Targeting = null)
 {
     /// <summary>
     /// Produces an instance at the given power.
@@ -52,7 +58,7 @@ public sealed record EnemyKind(
             Evasion = Cap(Base.Evasion * soft),
         };
 
-        return new Warrior(id, Name, stats, Weapon);
+        return new Warrior(id, Name, stats, Weapon) { Targeting = Targeting ?? TargetProfile.Default };
     }
 
     /// <summary>The stats are on a 0-100 scale; they must not overflow as the curve grows.</summary>
@@ -75,42 +81,70 @@ public sealed record EnemyKind(
 public static class Adversaries
 {
     /// <summary>A rival school's fee collector: small, quick, and rarely alone.</summary>
+    /// <remarks>
+    /// <b>He collects in numbers.</b> The crowd penalty is halved, so two collectors will stand on the
+    /// same man rather than take one each — the whole threat of the kind is that it does not fight fair.
+    /// </remarks>
     public static EnemyKind Collector { get; } = new(
         "Collector",
         new WarriorStats(MaxHealth: 70, Aggression: 58, Defense: 14, Evasion: 30, Strength: 30, Accuracy: 52, MaxStamina: 100, Speed: 55),
         Weapon.Katana(),
-        Weight: 3);
+        Weight: 3,
+        Targeting: new TargetProfile(Crowd: 0.5, Wounded: 1.2));
 
     /// <summary>A back-alley knife: fast, hard to hit, no armour worth the name.</summary>
+    /// <remarks>
+    /// <b>He finishes, he does not duel.</b> A wounded man and a bare region are worth far more to him
+    /// than to anyone else, and he holds no loyalty to the fight he is in — the knife goes where the
+    /// blood already is.
+    /// </remarks>
     public static EnemyKind Cutthroat { get; } = new(
         "Cutthroat",
         new WarriorStats(MaxHealth: 62, Aggression: 62, Defense: 12, Evasion: 42, Strength: 28, Accuracy: 58, MaxStamina: 100, Speed: 72),
         Weapon.Tanto(),
-        Weight: 2);
+        Weight: 2,
+        Targeting: new TargetProfile(Wounded: 1.8, Exposed: 1.5, Stickiness: 0.6));
 
     /// <summary>A wandering swordsman on his own trial: fast, hit-and-run.</summary>
+    /// <remarks>
+    /// <b>He wants his own opponent.</b> He will not share a target and he will not leave the man he
+    /// picked, and a wound in someone else's enemy is no argument to him — the trial is the point,
+    /// not the kill.
+    /// </remarks>
     public static EnemyKind Duelist { get; } = new(
         "Duelist",
         new WarriorStats(MaxHealth: 75, Aggression: 68, Defense: 12, Evasion: 45, Strength: 34, Accuracy: 60, MaxStamina: 100, Speed: 80),
         Weapon.Katana(),
         Weight: 2,
-        MinPower: 1.2);
+        MinPower: 1.2,
+        Targeting: new TargetProfile(Wounded: 0.4, Crowd: 1.8, Stickiness: 1.6));
 
     /// <summary>A street bravo with an absurdly heavy weapon: high damage, slow.</summary>
+    /// <remarks>
+    /// <b>He swings at whoever is in front of him.</b> The road counts double to a man carrying a
+    /// tetsubo at Speed 28 — walking the arena for an opportunity is how he spends a fight without
+    /// landing a blow.
+    /// </remarks>
     public static EnemyKind Kabukimono { get; } = new(
         "Kabukimono",
         new WarriorStats(MaxHealth: 130, Aggression: 55, Defense: 28, Evasion: 14, Strength: 52, Accuracy: 55, MaxStamina: 100, Speed: 28),
         Weapon.Tetsubo(),
         Weight: 2,
-        MinPower: 1.5);
+        MinPower: 1.5,
+        Targeting: new TargetProfile(Distance: 2.0, Wounded: 0.6, Stickiness: 1.3));
 
     /// <summary>A rival school's senior: long-hafted, and his reach tells in a crowd.</summary>
+    /// <remarks>
+    /// <b>He is taught to pick.</b> The yari's reach makes the road cheap to him, so he takes the
+    /// opening — the bare region, the man already bleeding — instead of the man nearest his feet.
+    /// </remarks>
     public static EnemyKind SeniorStudent { get; } = new(
         "Senior Student",
         new WarriorStats(MaxHealth: 95, Aggression: 60, Defense: 20, Evasion: 30, Strength: 40, Accuracy: 58, MaxStamina: 100, Speed: 48),
         Weapon.Yari(),
         Weight: 1,
-        MinPower: 1.8);
+        MinPower: 1.8,
+        Targeting: new TargetProfile(Distance: 0.8, Exposed: 1.4, Crowd: 0.8));
 
     /// <summary>The head of the Kurogane school — the fifth bout of the last night.</summary>
     /// <remarks>
@@ -124,7 +158,8 @@ public static class Adversaries
         new WarriorStats(MaxHealth: 120, Aggression: 66, Defense: 30, Evasion: 38, Strength: 46, Accuracy: 66, MaxStamina: 100, Speed: 62),
         Weapon.Katana(),
         Weight: 0,
-        MinPower: 2.2);
+        MinPower: 2.2,
+        Targeting: new TargetProfile(Wounded: 1.5, Exposed: 1.6, Stickiness: 0.8));
 
     public static IReadOnlyList<EnemyKind> All { get; } = [Collector, Cutthroat, Duelist, Kabukimono, SeniorStudent];
 

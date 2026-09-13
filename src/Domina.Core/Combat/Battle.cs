@@ -2424,10 +2424,15 @@ public sealed class Battle
     {
         WarriorStats stats = enemy.Stats;
 
+        // The attacker's appetites. Every term below is the tuning's weight through this man's own
+        // profile, so a kind's character (docs/GDD.md §4) bends the same decision instead of forking
+        // it; the dojo's men carry TargetProfile.Default and read exactly as they did before.
+        TargetProfile profile = _tuning.TargetProfiles ? attacker.Targeting : TargetProfile.Default;
+
         // 1) Distance — on its own, the old rule itself. An enemy within reach takes no penalty;
         // the penalty is paid only for the road to be walked.
         double gap = Math.Max(0, attacker.Position.DistanceTo(enemy.Position) - attacker.Weapon.Reach);
-        double score = -gap * _tuning.TargetDistanceWeight;
+        double score = -gap * _tuning.TargetDistanceWeight * profile.Distance;
 
         // An opportunity is only an opportunity as far as it can be reached: a wound and an exposed
         // region count while they are in front of the warrior, not at the far end of the arena.
@@ -2440,11 +2445,11 @@ public sealed class Battle
         // 2) Wound — an enemy close to being finished is finished first. A numbers advantage settles
         // the fight itself: felling one enemy is better than wounding three.
         double missing = stats.MaxHealth <= 0 ? 0 : 1 - Math.Clamp(enemy.Health / stats.MaxHealth, 0, 1);
-        score += missing * opportunity * _tuning.TargetWoundedWeight;
+        score += missing * opportunity * _tuning.TargetWoundedWeight * profile.Wounded;
 
         // 3) Exposed region — an enemy whose armour has broken is softer and the warrior sees it.
         // Armour wear's in-combat meaning closes here (docs/GDD.md §7).
-        score += enemy.DestroyedArmor.Count() / 6.0 * opportunity * _tuning.TargetExposedWeight;
+        score += enemy.DestroyedArmor.Count() / 6.0 * opportunity * _tuning.TargetExposedWeight * profile.Exposed;
 
         // 4) Crowd — piling onto the same target is the natural result of the first three items, but
         // left unbounded, the team chases one enemy while the other two strike for free.
@@ -2458,12 +2463,12 @@ public sealed class Battle
             }
         }
 
-        score -= engaged * _tuning.TargetCrowdPenalty;
+        score -= engaged * _tuning.TargetCrowdPenalty * profile.Crowd;
 
         // 5) Stickiness — the price of changing direction.
         if (attacker.Target == enemy)
         {
-            score += _tuning.TargetStickiness;
+            score += _tuning.TargetStickiness * profile.Stickiness;
         }
 
         return score;

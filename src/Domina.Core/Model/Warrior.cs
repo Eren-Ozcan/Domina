@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Domina.Core.Combat;
 
 namespace Domina.Core.Model;
 
@@ -42,6 +43,18 @@ public sealed class Warrior
 
     /// <summary>A name drawn from chat or generated. The player can always change it.</summary>
     public string Name { get; set; }
+
+    /// <summary>
+    /// How this warrior weighs the field when he picks whom to strike (docs/GDD.md §4).
+    /// </summary>
+    /// <remarks>
+    /// It is the enemy kinds' character (Open Decision #3) and nothing else sets it: the dojo's own
+    /// men all carry <see cref="TargetProfile.Default"/>, because the player's side is directed by the
+    /// player and a warrior who chose his own opponent by temperament would be reading the field
+    /// against him. It is not saved — a profile belongs to the kind that spawned the man, and the
+    /// roster's men do not have one.
+    /// </remarks>
+    public TargetProfile Targeting { get; set; } = TargetProfile.Default;
 
     /// <summary>The raw stats with no disability applied.</summary>
     public WarriorStats BaseStats { get; set; }
