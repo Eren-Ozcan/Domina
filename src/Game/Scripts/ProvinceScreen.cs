@@ -51,7 +51,7 @@ public sealed partial class ProvinceScreen : DojoScreen
         Refresh();
     }
 
-    private void Refresh()
+    public override void Refresh()
     {
         Clear(_tiles);
 

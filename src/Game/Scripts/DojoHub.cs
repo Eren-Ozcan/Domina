@@ -59,6 +59,21 @@ public enum DojoTab
 /// </remarks>
 public sealed partial class DojoHub : Node
 {
+    /// <summary>The clock's hold while a fight is being watched.</summary>
+    private const string ArenaHold = "arena";
+
+    /// <summary>The clock's hold while the window is not the one being looked at.</summary>
+    private const string FocusHold = "focus";
+
+    /// <summary>The speed control, in the order it is printed.</summary>
+    private static readonly (string Text, ClockSpeed Speed)[] Speeds =
+    [
+        ("||", ClockSpeed.Paused),
+        ("1x", ClockSpeed.Normal),
+        ("2x", ClockSpeed.Fast),
+        ("4x", ClockSpeed.Fastest),
+    ];
+
     private DojoState? _dojo;
     private TitleScreen? _title;
     private DojoScreen? _screen;
@@ -67,9 +82,90 @@ public sealed partial class DojoHub : Node
     private DojoTab _tab = DojoTab.Day;
     private string? _report;
 
+    /// <summary>
+    /// The season's clock. It belongs to the hub because the hub is the only node that outlives a
+    /// screen change: a clock owned by a screen would restart every time the player looked at the
+    /// market (build step 8).
+    /// </summary>
+    private readonly DayClock _clock = new();
+
+    private Label? _clockLabel;
+    private ProgressBar? _clockBar;
+
     public override void _Ready()
     {
         ShowTitle(null);
+    }
+
+    /// <summary>
+    /// Turns real time into the dojo's days.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The whole of build step 8 lands here: the frame's delta goes into <see cref="DayClock"/>, and
+    /// every day it hands back is closed by the core's own <see cref="DojoState.Decline"/>. Nothing
+    /// about a day changes — what changes is that the player no longer presses a button for it.
+    /// </para>
+    /// <para>
+    /// The flow stops for what the player has to answer (<see cref="DayInterrupt"/>) and the rest of
+    /// the rollovers in that frame are dropped: a happening must not be run past by the two days that
+    /// were queued behind it. The save is written on every day that turns, because a season is now
+    /// spent by sitting still and the game can be closed at any second of it.
+    /// </para>
+    /// </remarks>
+    public override void _Process(double delta)
+    {
+        UpdateClockBar();
+
+        // Neither the last night nor the closing screen has a day to spend: the season's clock stops
+        // being a clock the moment the run leaves its running phase.
+        if (_dojo is not DojoState dojo || _arena is not null || dojo.Season.Phase != SeasonPhase.Running)
+        {
+            return;
+        }
+
+        int rollovers = _clock.Advance(delta);
+        if (rollovers == 0)
+        {
+            return;
+        }
+
+        List<string> log = [];
+        bool phaseChanged = false;
+
+        for (int i = 0; i < rollovers; i++)
+        {
+            DayReport report = dojo.Decline();
+            log.Add(DayLog.Line(report));
+
+            if (report.Phase != SeasonPhase.Running)
+            {
+                phaseChanged = true;
+            }
+
+            if (DayInterrupt.Demands(report))
+            {
+                // Said out loud: the player has to know the flow stopped on purpose rather than
+                // wonder whether he paused it himself somewhere.
+                _clock.Pause();
+                log.Add("The clock stopped here.");
+                break;
+            }
+        }
+
+        Save();
+
+        if (phaseChanged)
+        {
+            // The last night and the closing screen take the hub over; the days that turned into them
+            // are printed on the screen that opens.
+            _report = string.Join(System.Environment.NewLine, log);
+            Show(_tab);
+            return;
+        }
+
+        _screen?.Refresh();
+        (_screen as DayScreen)?.Note(string.Join(System.Environment.NewLine, log));
     }
 
     /// <summary>
@@ -84,6 +180,18 @@ public sealed partial class DojoHub : Node
         if (what == NotificationWMCloseRequest)
         {
             Save();
+        }
+
+        // A window the player has clicked away from does not spend his season. It is a hold rather
+        // than a pause, so he comes back to the speed he left running (build step 8).
+        if (what == NotificationApplicationFocusOut)
+        {
+            _clock.Hold(FocusHold);
+        }
+
+        if (what == NotificationApplicationFocusIn)
+        {
+            _clock.Release(FocusHold);
         }
     }
 
@@ -190,6 +298,8 @@ public sealed partial class DojoHub : Node
             _ => new DayScreen(),
         };
 
+        screen.Clock = _clock;
+
         if (screen is DayScreen day)
         {
             day.Watcher = Fight;
@@ -243,6 +353,27 @@ public sealed partial class DojoHub : Node
         end.Build(dojo);
     }
 
+    /// <summary>The pause key. Speed is chosen with the bar's own buttons; this is the one shortcut.</summary>
+    /// <remarks>
+    /// It is bound to the space bar because that is what a pausable-real-time game is expected to be
+    /// paused with, and because the clock has to be stoppable from any of the screens without going
+    /// back to the bar (docs/REFERENCE-DOMINA.md: every guide for the reference game begins with
+    /// "pause as soon as you can").
+    /// </remarks>
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (_dojo is null || _arena is not null)
+        {
+            return;
+        }
+
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Space })
+        {
+            _clock.Toggle();
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
     private void CloseScreen()
     {
         if (_screen is not null)
@@ -282,6 +413,10 @@ public sealed partial class DojoHub : Node
             ShowReturnButton();
         };
 
+        // The dojo's day does not run underneath a fight: the expedition already paid for it, and a
+        // player watching the arena cannot answer anything the morning would bring (build step 8).
+        _clock.Hold(ArenaHold);
+
         _arena = arena;
         AddChild(arena);
         return true;
@@ -310,6 +445,9 @@ public sealed partial class DojoHub : Node
 
     private void CloseArena()
     {
+        _clock.Release(ArenaHold);
+        _clock.Restart();
+
         if (_arenaChrome is not null)
         {
             RemoveChild(_arenaChrome);
@@ -325,10 +463,23 @@ public sealed partial class DojoHub : Node
         }
     }
 
+    /// <summary>
+    /// The navigation bar, with the season's clock on the end of it.
+    /// </summary>
+    /// <remarks>
+    /// The clock sits in the chrome rather than on a layer of its own for the reason the tabs do
+    /// (<see cref="DojoScreen"/>): a bar laid over the screens would cover the top row of every one of
+    /// them. It is rebuilt with the bar on every screen change, so the labels are re-found each time
+    /// rather than kept across a screen that has been freed.
+    /// </remarks>
     private Control BuildNav()
     {
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 6);
+
         HBoxContainer nav = new();
         nav.AddThemeConstantOverride("separation", 8);
+        column.AddChild(nav);
 
         foreach (DojoTab tab in Enum.GetValues<DojoTab>())
         {
@@ -345,7 +496,67 @@ public sealed partial class DojoHub : Node
             nav.AddChild(button);
         }
 
-        return nav;
+        column.AddChild(BuildClockBar());
+        return column;
+    }
+
+    /// <summary>The clock's own row: what day it is, how far into it, and the speed control.</summary>
+    private Control BuildClockBar()
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 8);
+
+        _clockLabel = new Label();
+        row.AddChild(_clockLabel);
+
+        _clockBar = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1,
+            Step = 0.001,
+            ShowPercentage = false,
+            CustomMinimumSize = new Vector2(140, 0),
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+        };
+        row.AddChild(_clockBar);
+
+        foreach ((string text, ClockSpeed speed) in Speeds)
+        {
+            Button button = new() { Text = text };
+            ClockSpeed chosen = speed;
+            button.Pressed += () => _clock.Set(chosen);
+            row.AddChild(button);
+        }
+
+        UpdateClockBar();
+        return row;
+    }
+
+    /// <summary>Reprints the clock's row. Called every frame, so it touches nothing it need not.</summary>
+    private void UpdateClockBar()
+    {
+        if (_clockLabel is null || !IsInstanceValid(_clockLabel) || _dojo is not DojoState dojo)
+        {
+            return;
+        }
+
+        int left = Math.Max(0, dojo.Season.Tuning.Days - dojo.Day + 1);
+        string state = _clock.IsHeld
+            ? "held"
+            : _clock.Speed switch
+            {
+                ClockSpeed.Normal => "1x",
+                ClockSpeed.Fast => "2x",
+                ClockSpeed.Fastest => "4x",
+                _ => "paused",
+            };
+
+        _clockLabel.Text = $"Day {dojo.Day}  ·  {left} days left  ·  {state}";
+
+        if (_clockBar is not null && IsInstanceValid(_clockBar))
+        {
+            _clockBar.Value = _clock.Progress;
+        }
     }
 
     private static string TabName(DojoTab tab) => tab switch

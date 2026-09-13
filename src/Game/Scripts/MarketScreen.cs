@@ -112,7 +112,7 @@ public sealed partial class MarketScreen : DojoScreen
     }
 
     /// <summary>Reprints the stall and the selected candidate's detail.</summary>
-    public void Refresh()
+    public override void Refresh()
     {
         Clear(_list);
 

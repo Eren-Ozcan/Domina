@@ -165,7 +165,7 @@ public sealed partial class RosterScreen : DojoScreen
     }
 
     /// <summary>Reprints the roster and the selected warrior's detail.</summary>
-    public void Refresh()
+    public override void Refresh()
     {
         Clear(_list);
 

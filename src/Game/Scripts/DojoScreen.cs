@@ -1,4 +1,5 @@
 using Domina.Core.Dojo;
+using Domina.Presentation;
 using Godot;
 
 namespace Domina.Game;
@@ -51,6 +52,28 @@ public abstract partial class DojoScreen : CanvasLayer
     /// slot is the hub. If every screen wrote its own, when the save is written would be spread over four files.
     /// </remarks>
     public Action? Changed { get; set; }
+
+    /// <summary>
+    /// The dojo's clock, so the screen can stop it while a decision is being made; <c>null</c> in a
+    /// scene opened on its own.
+    /// </summary>
+    /// <remarks>
+    /// The screen never turns the day itself — the hub owns the clock and the core owns the day. What a
+    /// screen is allowed to do is <b>hold</b> it: the moment the player is halfway through choosing a
+    /// party is not the moment to let the morning arrive underneath him (build step 8).
+    /// </remarks>
+    public DayClock? Clock { get; set; }
+
+    /// <summary>
+    /// Reprints what the screen shows.
+    /// </summary>
+    /// <remarks>
+    /// With the clock running the day can turn while the player is standing on any of the screens, so
+    /// the hub calls this on every rollover. A screen with nothing to reprint leaves it empty.
+    /// </remarks>
+    public virtual void Refresh()
+    {
+    }
 
     /// <summary>Builds the screen and prints the content.</summary>
     /// <param name="dojo">The dojo to show — the screen reads it and gives its commands to it.</param>

@@ -35,6 +35,9 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class DayScreen : DojoScreen
 {
+    /// <summary>The clock's hold while a party is being picked.</summary>
+    private const string PartyHold = "party";
+
     private readonly HashSet<WarriorId> _party = [];
     private readonly Expedition _expedition = new();
 
@@ -123,7 +126,9 @@ public sealed partial class DayScreen : DojoScreen
         _bountyButton.Pressed += SendToBounty;
         buttons.AddChild(_bountyButton);
 
-        _restButton = new Button { Text = "Spend the day in the dojo" };
+        // With the clock running this is no longer how a day is spent — it is how a day is skipped.
+        // The dojo works through the day either way; this only refuses to wait for it.
+        _restButton = new Button { Text = "Skip to tomorrow" };
         _restButton.Pressed += Rest;
         buttons.AddChild(_restButton);
 
@@ -135,7 +140,7 @@ public sealed partial class DayScreen : DojoScreen
     }
 
     /// <summary>Reprints the day, the party and the buttons.</summary>
-    public void Refresh()
+    public override void Refresh()
     {
         OfferCard offer = OfferModel.Describe(_dojo);
         Resources purse = _dojo.Resources;
@@ -276,6 +281,18 @@ public sealed partial class DayScreen : DojoScreen
                 else
                 {
                     _party.Remove(id);
+                }
+
+                // A man picked is a decision half made: the clock waits rather than letting the
+                // morning arrive on top of it. It runs again the moment the selection is empty
+                // (build step 8).
+                if (_party.Count > 0)
+                {
+                    Clock?.Hold(PartyHold);
+                }
+                else
+                {
+                    Clock?.Release(PartyHold);
                 }
 
                 UpdateButtons();
@@ -424,12 +441,39 @@ public sealed partial class DayScreen : DojoScreen
     {
         DayReport report = _dojo.Decline();
         _log.Text = $"The day passed in the dojo.\n{DayText(report)}";
+
+        // The clock did not turn this day, the button did: the next morning starts at the morning
+        // rather than at whatever fraction of the skipped day was left on it.
+        Clock?.Restart();
         AfterDay();
+    }
+
+    /// <summary>
+    /// Lets the clock go as the screen is taken down.
+    /// </summary>
+    /// <remarks>
+    /// The party hold outlives this node otherwise: the screen is freed on a tab change and when the
+    /// arena opens, and a hold nobody owns any more would stop the season for the rest of the run.
+    /// </remarks>
+    public override void _ExitTree() => Clock?.Release(PartyHold);
+
+    /// <summary>Prints a day the clock closed while the player was standing on this screen.</summary>
+    /// <remarks>
+    /// The hub is the side that turns those days — this screen only shows what they said. An empty
+    /// text is ignored so that a quiet frame does not wipe the report the player is reading.
+    /// </remarks>
+    public void Note(string text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            _log.Text = text;
+        }
     }
 
     private void AfterDay()
     {
         _party.Clear();
+        Clock?.Release(PartyHold);
         Persist();
         Refresh();
     }
@@ -444,35 +488,15 @@ public sealed partial class DayScreen : DojoScreen
     /// </remarks>
     private ulong BattleSeed() => _dojo.Seed ^ ((ulong)_dojo.Day * 0x9E3779B97F4A7C15);
 
-    private static string DayText(DayReport report)
-    {
-        List<string> lines =
-        [
-            $"Day {report.Day} closed. {report.Upkeep.GoldSpent} gold paid for supplies.",
-        ];
-
-        if (report.Event is DayEvent happening)
-        {
-            lines.Add($"Setback: {happening.Description}");
-        }
-
-        if (report.Upkeep.Hungry.Count > 0)
-        {
-            lines.Add($"{report.Upkeep.Hungry.Count} warriors went hungry — they did not advance that day.");
-        }
-
-        if (report.Recovered.Count > 0)
-        {
-            lines.Add($"{report.Recovered.Count} warriors left the infirmary.");
-        }
-
-        if (report.BountyBroken)
-        {
-            lines.Add("The promise was broken: the roster lost honour.");
-        }
-
-        return string.Join('\n', lines);
-    }
+    /// <summary>
+    /// The day's own news.
+    /// </summary>
+    /// <remarks>
+    /// The text itself lives in <see cref="DayLog"/>: with the clock running, days also turn while the
+    /// player is standing on another screen, and the hub prints those. One formatter, so a day reads
+    /// the same wherever it was spent.
+    /// </remarks>
+    private static string DayText(DayReport report) => DayLog.Line(report);
 
     private static string AftermathText(AftermathReport aftermath, DojoState dojo)
     {

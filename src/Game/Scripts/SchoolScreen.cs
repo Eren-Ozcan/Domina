@@ -149,7 +149,7 @@ public sealed partial class SchoolScreen : DojoScreen
     }
 
     /// <summary>Reprints the tree and the selected node's detail.</summary>
-    public void Refresh()
+    public override void Refresh()
     {
         Clear(_columns);
 

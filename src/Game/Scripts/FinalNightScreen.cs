@@ -84,7 +84,7 @@ public sealed partial class FinalNightScreen : DojoScreen
     }
 
     /// <summary>Reprints the bout, the men and the button.</summary>
-    public void Refresh()
+    public override void Refresh()
     {
         if (SeasonModel.DescribeNight(_dojo) is not FinalNightCard card)
         {
