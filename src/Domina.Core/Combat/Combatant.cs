@@ -84,6 +84,17 @@ public enum CombatState
     /// <summary>Left the arena alive.</summary>
     Escaped,
 
+    /// <summary>
+    /// Gave the bout up — beaten, alive, and not to be struck again.
+    /// </summary>
+    /// <remarks>
+    /// It exists only inside a <see cref="BattleSetup.Match"/>: a bout fought before witnesses under an
+    /// agreed form has a way to end that a fight on the road does not. Off the field of a match the
+    /// rival's men do not break and run — they are paid, pressed, and watched by the school that sent
+    /// them (docs/GDD.md §5).
+    /// </remarks>
+    Yielded,
+
     /// <summary>Dead.</summary>
     Dead,
 }
@@ -310,7 +321,7 @@ internal sealed class Combatant(Warrior warrior, int team)
     public DeathCause? DeathCause { get; set; }
 
     /// <summary>Is he still taking part in the fight?</summary>
-    public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped);
+    public bool IsActive => State is not (CombatState.Dead or CombatState.Escaped or CombatState.Yielded);
 
     /// <summary>
     /// Can an evasion/block die be rolled?

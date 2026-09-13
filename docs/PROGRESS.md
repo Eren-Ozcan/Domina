@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-12 (the last three posts, and the province — the settlement map that closes the endless-training exploit)
+Last updated: 2026-09-12 (the last three posts, the province, and the enemy who no longer runs)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1694,6 +1694,40 @@ roster ≠ day one's stall, save round trip).
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
+
+## 2026-09-12 (third round) — The enemy stops running, and learns to yield
+
+Two rules in one sitting, both the design's call.
+
+**An adversary never leaves the field.** The rival's men are paid, pressed and watched by the school
+that sent them, so the panic check no longer ends in flight for them — outside a match it is not even
+rolled, because a die with no outcome still costs every fight the time to roll it. This closes the
+**reward leak** step 6 found: a fled enemy used to pay exactly what a fallen one did, since the reward
+comes from the encounter's enemy health.
+
+**In a match he yields.** `BattleSetup.Match` marks a bout fought before witnesses under an agreed
+form — the last night's five, in front of the lord — and there a broken adversary goes to
+`CombatState.Yielded`: out of the bout, alive, not struck again. The player's side is untouched: his
+key is still a team order, and a warrior of his who breaks runs rather than kneels.
+
+**What it costs.** Panic used to fire on both sides, which is why it *raised* the player's victory
+rate. Firing on his side alone is worse than switching it off:
+
+| `3v3`, 20.000 fights | Both sides panic | Player side only |
+|---|---|---|
+| Victory | 69.64% | **60.63%** |
+| Warrior deaths | 37.64% | **48.58%** |
+
+Over a season (400 dojos × 180 days, map on): deaths per warrior-fight 6.3% → 10.2%, fights per dojo
+35.1 → 26.6, dojos closed 90.2% → 92.8%. The other beds moved the same way — `duel` 60.59% → 58.15%,
+`patrol` 96.96% → 95.64%.
+
+Written down, **not patched**: the rule is what the design asked for and the numbers around it belong
+to Phase 9. What this round does owe is a note that the campaign bed has been pessimistic all along —
+a 90% closure rate was true before this rule and is not its doing.
+
+The HUD names the new state, and a man who yielded is drawn where he stopped rather than removed from
+the field: he is beaten, not gone.
 
 ## 2026-09-12 (second round) — The province, and the exploit it closes
 

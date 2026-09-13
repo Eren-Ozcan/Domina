@@ -2230,6 +2230,14 @@ public sealed class Battle
             return;
         }
 
+        // An adversary on the road is not put to the check at all: there is nothing the roll could do
+        // to him, since he neither runs nor yields outside a match, and a die with no outcome would
+        // still cost every fight the time to roll it.
+        if (c.Team != PlayerTeam && !_setup.Match)
+        {
+            return;
+        }
+
         WarriorStats stats = c.Warrior.EffectiveStats;
         bool hurt = c.Health / Math.Max(1, stats.MaxHealth) <= _tuning.PanicHealthShare;
         bool alone = _tuning.PanicOnComradeDown && CountActive(c.Team) < CountActive(Other(c.Team));
@@ -2256,7 +2264,19 @@ public sealed class Battle
 
         c.Panicked = true;
         Emit(new WarriorPanicked(ElapsedSeconds, c.Id, c.Warrior.Morale));
-        CommandRetreat(c);
+
+        if (c.Team == PlayerTeam)
+        {
+            CommandRetreat(c);
+            return;
+        }
+
+        // An adversary never leaves the field (docs/GDD.md §5): his school sent him, his school is
+        // watching, and a collector who runs answers for it afterwards — which is also what closed the
+        // reward leak, a fled enemy paying as much as a fallen one. In a <b>match</b> the break has
+        // somewhere to go: he yields, and a man who has yielded is not struck again.
+        c.BeginState(CombatState.Yielded, 0);
+        Emit(new WarriorYielded(ElapsedSeconds, c.Id));
     }
 
     /// <summary>The other side.</summary>

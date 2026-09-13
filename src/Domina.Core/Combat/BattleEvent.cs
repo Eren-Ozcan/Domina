@@ -311,6 +311,16 @@ public enum DeathCause
 public sealed record WarriorPanicked(double AtSeconds, WarriorId Warrior, double Morale)
     : BattleEvent(AtSeconds);
 
+/// <summary>A man in a match gave the bout up.</summary>
+/// <remarks>
+/// The counterpart of <see cref="WarriorPanicked"/> for a fight with witnesses: the same nerve giving
+/// out, but a bout under an agreed form has somewhere for it to go that the road does not. He is out
+/// of the fight, alive, and is not struck again.
+/// </remarks>
+/// <param name="Warrior">The man who yielded.</param>
+public sealed record WarriorYielded(double AtSeconds, WarriorId Warrior)
+    : BattleEvent(AtSeconds);
+
 public enum BattleOutcome
 {
     /// <summary>The dojo side is still standing.</summary>

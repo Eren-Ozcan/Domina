@@ -163,12 +163,29 @@ scaling them would take back wounds the warrior already had.
 **The panic check (in the core since 2026-09-10).** A warrior under 30% health, or on a side that is
 outnumbered, is put to a check every second: `0.10 × (1 − Will/100 × 0.80) × the morale swing`. If it
 holds he leaves the field **alone** — the player's key stays a team order, and the two are separate
-events. The rule applies to the **adversaries too**, which is why it raises the player's victory rate
-(67.16% → 69.64% on `3v3`) and cuts warrior deaths (44.57% → 37.64%).
+events.
 
-> ⚠️ **A leak the rule exposed:** a fight the enemy fled pays the **same** reward as one where he was
-> cut down, because the reward is computed from the encounter's enemy health. It is written down here
-> and left for the season's economy (build-order step 7).
+**What a broken adversary does (decided 2026-09-12).** **He never leaves the field.** The rival's men
+are paid, pressed and watched by the school that sent them; a collector who runs from the road answers
+for it afterwards, and on the road there is nowhere for his nerve to go. So the check is not even
+rolled for an adversary outside a match — a die with no outcome would still cost every fight the time
+to roll it.
+
+**In a match he may yield.** A bout fought before witnesses under an agreed form — the last night's
+five, in front of the lord — has an ending the road does not: `CombatState.Yielded`. He is out of the
+bout, **alive**, and is not struck again. The player's own side is untouched by the rule: his key is
+still his, and a warrior of his who breaks still runs rather than kneels.
+
+> **This closes the reward leak** that morale's round exposed: a fight the enemy fled used to pay the
+> **same** reward as one where he was cut down, because the reward is computed from the encounter's
+> enemy health. With no fleeing enemy there is nothing to leak.
+
+> ⚠️ **And it costs the player nine points.** Measured on `3v3`, 20.000 fights: victory **69.64% →
+> 60.63%**, warrior deaths 37.64% → 48.58%. The earlier gain — panic raising the player's victory rate
+> from 67.16% to 69.64% — came from the rule firing on **both** sides; now it fires on his side alone,
+> which is worse than switching it off entirely. Over a season (400 dojos × 180 days) deaths per
+> warrior-fight go 6.3% → 10.2% and dojos closed 90.2% → 92.8%. The rule is the design's; the numbers
+> around it are Phase 9's, and they are written down rather than patched here.
 
 > **Why honour and morale are separate:** honour is what the outside thinks about the
 > warrior, morale is the warrior's own condition. Collapsing them into a single counter

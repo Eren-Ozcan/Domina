@@ -157,6 +157,13 @@ public sealed class RigAnimator
             return default;
         }
 
+        // A man who has yielded is still on the ground the bout was fought on — he is beaten, not gone
+        // — so he is drawn where he stopped rather than removed from the field.
+        if (state == CombatState.Yielded)
+        {
+            return Death();
+        }
+
         if (state == CombatState.Dead)
         {
             return Death();

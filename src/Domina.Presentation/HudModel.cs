@@ -150,6 +150,7 @@ public static class HudModel
             CombatState.WeaponBound => "weapon caught",
             CombatState.Retreating => "pulling out",
             CombatState.Escaped => "escaped",
+            CombatState.Yielded => "yielded",
             CombatState.Dead => "dead",
             _ => string.Empty,
         };

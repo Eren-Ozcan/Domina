@@ -25,6 +25,23 @@ public sealed record BattleSetup(
     public IRetreatPolicy? RetreatPolicy { get; init; }
 
     /// <summary>
+    /// Is this a <b>match</b> — a bout fought before witnesses under an agreed form?
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It changes one rule, and only for the side that did not choose to be there: an adversary who
+    /// breaks in a match <b>yields</b> instead of standing. Off a match he does neither — the rival's
+    /// men do not run from the road (docs/GDD.md §5), because a collector who runs is a collector who
+    /// answers to his school afterwards.
+    /// </para>
+    /// <para>
+    /// The player's own key is untouched by this: pulling his men out is his decision in a match as
+    /// anywhere else, and a warrior of his who breaks still runs rather than kneels.
+    /// </para>
+    /// </remarks>
+    public bool Match { get; init; }
+
+    /// <summary>
     /// The share of his health a warrior walks onto the field with, when it is not all of it.
     /// </summary>
     /// <remarks>

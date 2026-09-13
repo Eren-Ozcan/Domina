@@ -135,6 +135,11 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
             RetreatPolicy = retreat,
             CollectEvents = collectEvents,
             StartingHealthShare = WoundedShares(state, party),
+
+            // The night is fought in front of the lord under an agreed form, so it is the one place a
+            // beaten adversary has somewhere to put his nerve: he yields rather than dies (docs/GDD.md
+            // §5). On the road the same man would stand — the rival's men do not run.
+            Match = true,
         };
     }
 
