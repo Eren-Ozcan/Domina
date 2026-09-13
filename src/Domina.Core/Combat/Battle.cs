@@ -168,8 +168,8 @@ public sealed class Battle
         c.State,
         Math.Max(0, c.Health),
         c.Stamina,
-        c.Warrior.EffectiveStats.MaxHealth,
-        c.Warrior.EffectiveStats.MaxStamina,
+        c.Stats.MaxHealth,
+        c.Stats.MaxStamina,
         c.RetreatRequested,
         c.StateProgress,
         c.IsCancellable,
@@ -883,7 +883,7 @@ public sealed class Battle
 
     /// <summary>This warrior's probability of taking a block stance — it comes out of his identity.</summary>
     private double BlockChanceFor(Combatant c) =>
-        Math.Clamp(c.Warrior.EffectiveStats.Defense / 100.0, 0, 1) * _tuning.MaxBlockChance;
+        Math.Clamp(c.Stats.Defense / 100.0, 0, 1) * _tuning.MaxBlockChance;
 
     private void ResolveWindupEnd(Combatant attacker)
     {
@@ -999,7 +999,7 @@ public sealed class Battle
     private double BaseMoveSpeed(Combatant c) => Lerp(
         _tuning.MoveSpeedAtZeroSpeed,
         _tuning.MoveSpeedAtMaxSpeed,
-        Math.Clamp(c.Warrior.EffectiveStats.Speed / 100.0, 0, 1));
+        Math.Clamp(c.Stats.Speed / 100.0, 0, 1));
 
     /// <summary>The attack cycle stretched by the weight of the armour.</summary>
     private double AttackCycleSeconds(Combatant c) => c.Weapon.AttackSeconds
@@ -1014,7 +1014,7 @@ public sealed class Battle
     private double ChargeChanceFor(Combatant c) => Lerp(
         _tuning.ChargeChanceAtZeroAggression,
         _tuning.ChargeChanceAtMaxAggression,
-        Math.Clamp(c.Warrior.EffectiveStats.Aggression / 100.0, 0, 1));
+        Math.Clamp(c.Stats.Aggression / 100.0, 0, 1));
 
     private void BeginCharge(Combatant c, Combatant target)
     {
@@ -1369,7 +1369,7 @@ public sealed class Battle
             return;
         }
 
-        WarriorStats atkStats = attacker.Warrior.EffectiveStats;
+        WarriorStats atkStats = attacker.Stats;
         double reachedFraction =
             Math.Clamp(attacker.Position.DistanceTo(target.Position) / p.Weapon.Range, 0, 1);
         // The class half of the product (docs/GDD.md §4): the range class throws with a full hand,
@@ -1412,8 +1412,8 @@ public sealed class Battle
             return;
         }
 
-        WarriorStats atkStats = attacker.Warrior.EffectiveStats;
-        WarriorStats defStats = defender.Warrior.EffectiveStats;
+        WarriorStats atkStats = attacker.Stats;
+        WarriorStats defStats = defender.Stats;
         double staminaFactor = StaminaFactor(attacker);
 
         // The charge bonus is spent even on a miss: momentum is used once. It is never applied to
@@ -1559,7 +1559,7 @@ public sealed class Battle
 
         Weapon caught = attacker.Weapon;
         double accuracyBonus =
-            defender.Warrior.EffectiveStats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
+            defender.Stats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
 
         double chance = _tuning.BaseCatchChance
                         * implementFactor
@@ -1623,7 +1623,7 @@ public sealed class Battle
         BlowSource source,
         bool blocked = false)
     {
-        WarriorStats defStats = defender.Warrior.EffectiveStats;
+        WarriorStats defStats = defender.Stats;
         HitLocation location = RollHitLocation();
         ArmorPiece struckPiece = defender.ArmorAt(location);
 
@@ -2200,7 +2200,7 @@ public sealed class Battle
 
     private void RegenerateStamina(Combatant c)
     {
-        double max = c.Warrior.EffectiveStats.MaxStamina;
+        double max = c.Stats.MaxStamina;
         c.Stamina = Math.Min(max, c.Stamina + (_tuning.StaminaRegenPerSecond * _tuning.TickSeconds));
     }
 
@@ -2238,7 +2238,7 @@ public sealed class Battle
             return;
         }
 
-        WarriorStats stats = c.Warrior.EffectiveStats;
+        WarriorStats stats = c.Stats;
         bool hurt = c.Health / Math.Max(1, stats.MaxHealth) <= _tuning.PanicHealthShare;
 
         // Being outnumbered is what breaks a line on the road, and it is <b>not</b> what happens in a
@@ -2310,7 +2310,7 @@ public sealed class Battle
             return;
         }
 
-        WarriorStats stats = c.Warrior.EffectiveStats;
+        WarriorStats stats = c.Stats;
         var context = new RetreatContext(
             c.Id,
             c.Health / stats.MaxHealth,
@@ -2329,13 +2329,13 @@ public sealed class Battle
 
     private double StaminaFactor(Combatant c)
     {
-        double fraction = c.Stamina / c.Warrior.EffectiveStats.MaxStamina;
+        double fraction = c.Stamina / c.Stats.MaxStamina;
         return fraction < _tuning.LowStaminaThreshold ? _tuning.LowStaminaPenalty : 1.0;
     }
 
     private double SpacingSeconds(Combatant c)
     {
-        double t = Math.Clamp(c.Warrior.EffectiveStats.Aggression / 100.0, 0, 1);
+        double t = Math.Clamp(c.Stats.Aggression / 100.0, 0, 1);
         return _tuning.SpacingSecondsAtZeroAggression
                + ((_tuning.SpacingSecondsAtMaxAggression - _tuning.SpacingSecondsAtZeroAggression) * t);
     }
@@ -2421,7 +2421,7 @@ public sealed class Battle
     /// </remarks>
     private double TargetScore(Combatant attacker, Combatant enemy)
     {
-        WarriorStats stats = enemy.Warrior.EffectiveStats;
+        WarriorStats stats = enemy.Stats;
 
         // 1) Distance — on its own, the old rule itself. An enemy within reach takes no penalty;
         // the penalty is paid only for the road to be walked.

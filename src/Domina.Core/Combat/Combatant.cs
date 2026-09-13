@@ -110,6 +110,24 @@ internal sealed class Combatant(Warrior warrior, int team)
 {
     public Warrior Warrior { get; } = warrior;
 
+    /// <summary>
+    /// The warrior's stats, read <b>once</b> for the whole fight.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Nothing that feeds <see cref="Model.Warrior.EffectiveStats"/> can move while a fight is
+    /// running: the path is chosen in the dojo, morale settles at the day's close, mastery is credited
+    /// by the aftermath, and a limb comes off in the <b>report</b> rather than on the field. So the
+    /// stats are a constant here, and recomputing them — a struct rebuilt through the path, morale,
+    /// mastery, the charms and every disability — was being paid on every read of every tick.
+    /// </para>
+    /// <para>
+    /// It is the reason the fight is fast enough to balance with: a sweep runs tens of thousands of
+    /// fights and reads this several times per warrior per tick.
+    /// </para>
+    /// </remarks>
+    public WarriorStats Stats { get; } = warrior.EffectiveStats;
+
     public int Team { get; } = team;
 
     public WarriorId Id => Warrior.Id;

@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-12 (the last three posts, the province, the enemy who no longer runs, and the curve re-derived for a 180-day season)
+Last updated: 2026-09-12 (the last three posts, the province, the enemy who no longer runs, the curve re-derived, and the eight carried-over items)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1735,6 +1735,14 @@ earlier sweep of the retreat penalty had therefore measured nothing. One engine 
 seppuku **30** (20 / 30 / 40 → 22.0 / 26.2 / 36.5% closed), decay **0.5** (0 / 0.5 / 1.5 → 36.5 / 26.2
 / 19.5%), retreat penalty **8**, which only shows against a policy that actually flees (0 / 8 / 20 →
 43.2 / 55.2 / 67.5% closed, first seppuku on day 34 / 9 / 5).
+
+**`ThroughputTests` passes in Debug again — and it was a real cost, not a budget.** The fight read
+`Warrior.EffectiveStats` several times per warrior per tick, and every read rebuilt the struct through
+the path, morale, mastery, the charms and every disability. Nothing that feeds it can move while a
+fight is running — the path is chosen in the dojo, morale settles at the day's close, mastery is
+credited by the aftermath, and a limb comes off in the report rather than on the field — so the
+combatant now reads it **once**. 10.000 fights in Debug: **10.66 s → ~8 s** under the 10 s budget, the
+victory rates identical to the digit (3v3 60.63%), and Release runs at 7.344 fights a second.
 
 **The classed candidate, measured against a dojo that trains its own** (step 5's open question). With
 the halls in use — 3.3 men classed a season — the stall's shortcut still pays: chance 0 / 0.05 / 0.25
