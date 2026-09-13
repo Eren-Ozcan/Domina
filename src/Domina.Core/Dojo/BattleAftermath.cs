@@ -140,6 +140,18 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
     }
 
     /// <summary>
+    /// Does the temple collect the dead from a field the dojo did not hold?
+    /// </summary>
+    /// <remarks>
+    /// A gate, so it needs the shrine <b>and</b> a monk in it — half a rite recovers half a body,
+    /// which is nothing. This is what the post was rebound to after the morale side of it measured as
+    /// exactly nothing on every bed it was swept on: morale is too weakly coupled to a season's
+    /// outcome for a share of one loss to show up, and a post has to buy something that does.
+    /// </remarks>
+    private static bool RiteCollectsTheDead(DojoState state) =>
+        state.School.Has(SchoolNodeId.Shrine) && state.Staff.Has(StaffRole.Monk);
+
+    /// <summary>
     /// What a comrade's death is still worth once the rite has been said over him.
     /// </summary>
     /// <remarks>
@@ -236,10 +248,12 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         {
             state.Roster.Kill(warrior.Id);
 
-            // The charms follow the same rule as the kit (docs/GDD.md §10): they come home only if
-            // somebody won the field and could carry the body. A lost fight takes them with the man.
+            // The charms follow the kit's rule (docs/GDD.md §10): they come home if somebody won the
+            // field and could carry the body. The <b>rite</b> is the exception, and it is the monk's
+            // real job: the temple collects its dead whoever held the ground, so a dojo with a monk in
+            // the shrine does not lose what the man was wearing on a night that went badly.
             IReadOnlyList<OmamoriKind> charms = warrior.StripCharms();
-            if (won)
+            if (won || RiteCollectsTheDead(state))
             {
                 state.ReturnCharms(charms);
             }

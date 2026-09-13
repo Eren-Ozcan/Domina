@@ -861,7 +861,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 if (state.CharmStore.Count == 0)
                 {
                     OmamoriCharm wanted = Omamori.All[0];
-                    if (!Affordable(state, wanted.Price, reserve) || !state.BuyCharm(wanted.Kind))
+                    if (!Affordable(state, state.PriceOf(wanted.Kind), reserve) || !state.BuyCharm(wanted.Kind))
                     {
                         return before - state.Resources.Gold;
                     }

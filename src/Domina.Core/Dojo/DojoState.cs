@@ -963,13 +963,13 @@ public sealed class DojoState
     /// <returns><c>true</c> if the charm went into the store.</returns>
     public bool BuyCharm(OmamoriKind kind)
     {
-        OmamoriCharm charm = Omamori.Find(kind);
-        if (!School.Has(SchoolNodeId.Shrine) || Resources.Gold < charm.Price)
+        int price = PriceOf(kind);
+        if (!School.Has(SchoolNodeId.Shrine) || Resources.Gold < price)
         {
             return false;
         }
 
-        Resources = Resources with { Gold = Resources.Gold - charm.Price };
+        Resources = Resources with { Gold = Resources.Gold - price };
         _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
         return true;
     }
@@ -991,7 +991,7 @@ public sealed class DojoState
         }
 
         Take(kind);
-        int gold = (int)Math.Floor(Omamori.Find(kind).Price * Math.Clamp(StaffTuning.OmamoriResaleShare, 0, 1));
+        int gold = (int)Math.Floor(PriceOf(kind) * Math.Clamp(StaffTuning.OmamoriResaleShare, 0, 1));
         Resources = Resources with { Gold = Resources.Gold + gold };
         return gold;
     }
@@ -1048,6 +1048,11 @@ public sealed class DojoState
             }
         }
     }
+
+    /// <summary>What the temple asks for this charm today.</summary>
+    public int PriceOf(OmamoriKind kind) => Math.Max(
+        1,
+        (int)Math.Round(Omamori.Find(kind).Price * Math.Max(0, Economy.CharmPriceFactor)));
 
     private void Take(OmamoriKind kind)
     {

@@ -50,6 +50,16 @@ public sealed record EconomyTuning
     /// </remarks>
     public int SakePrice { get; init; } = 6;
 
+    /// <summary>
+    /// The multiplier over what the temple asks for a charm.
+    /// </summary>
+    /// <remarks>
+    /// The catalogue carries the price and this carries the balance, because the charm is the one
+    /// piece of kit that competes directly with the <b>school</b>: 120 gold against a 200-gold building
+    /// that compounds for the rest of the season. That trade is what the number has to get right.
+    /// </remarks>
+    public double CharmPriceFactor { get; init; } = 1.0;
+
     /// <summary>The purchase price of a new warrior.</summary>
     public int RecruitPrice { get; init; } = 150;
 

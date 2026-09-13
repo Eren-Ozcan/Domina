@@ -1795,7 +1795,7 @@ Until then the weapon master, the monk and the diviner drew a wage against nothi
 closed with morale at build-order step 6). All three are now in the core, and `Facilities.IsInert`
 lists nobody.
 
-**Weapon master — mastery (`Model/WeaponMastery.cs`).** Mastery belongs to the **pairing** of one
+**Weapon master — mastery (`Model/WeaponMastery.cs`), taught in the armoury.** Mastery belongs to the **pairing** of one
 warrior and one weapon, not to the man: put a katana man behind a yari and he starts at nothing, while
 the katana keeps what he had. It grows as a share of the gap to full (0.03 a drill day, 0.06 a fight),
 it is **zero without the inner dojo** (the hall is the whole system; an empty hall teaches at half),
@@ -1808,11 +1808,12 @@ buys is **Accuracy alone**, ×(1 + 0.10 × mastery).
 | Where it is worth most | the **armoured** enemy | `jitte-armored` +3.20 points against `duel` +2.50 and `patrol` +0.56 — accuracy is scarcest where the plate is thickest, which is the lean the design asked for |
 | The drill day / the fight | **0.03 / 0.06** | The same shape as training's two roads: the risky one pays double |
 
-> ⚠️ **Measured and left alone: over a season the hall arrives too late to matter.** With the school
-> and the payroll running (400 dojos × 180 days), turning mastery off entirely changed **nothing** —
-> 93.2% of dojos closed either way, the same deaths, the same best warrior. The inner dojo is the
-> training branch's third tier (700 gold), and a dojo that survives to buy it has ~30 days left to use
-> it. The same family of finding as the forge's, and it is written down rather than repriced blind.
+> **Measured, then repriced (2026-09-12).** As the inner dojo's post — the training branch's third
+> tier, 700 gold — mastery changed **nothing** over a season: 93.2% of dojos closed with it on or off.
+> A dojo that survives to buy the third tier has about a month left to use what it teaches. The post
+> moved to its own building, the **armoury** (support branch, 200 gold, 6 days), and on the corrected
+> difficulty curve the best man now ends the season at **24.8%** mastery instead of 0.0%. Switching it
+> off costs the run **2.7 points of last-night wins** (11.2% → 8.5%) and 2.7 gold a fight.
 
 **Monk — the omamori and the funeral rite (`Model/Omamori.cs`).** Five charms (steady hand, iron gate,
 long breath, quiet mind, swift foot), 120 gold each from the temple, **+6 points to one stat** (+15 to
@@ -1825,8 +1826,8 @@ survivors' morale.
 
 | Number | Value | How it was settled |
 |---|---|---|
-| The charms as a whole | worth buying | Support branch, 400 dojos × 180 days: deaths per dojo **9.26 → 6.84**, dojos closed **89.8% → 86.8%**, days survived 71 → 75 |
-| The funeral rite | **0.5**, and it measured as **nothing** | Swept 0 / 0.25 / 0.5 / 0.75 / 1: closure 89.8 / 89.8 / 89.8 / 89.2 / 89.5%. A quiet day already pulls morale back toward the middle, so the relief lands on a hole that was closing anyway. It is kept at half as the post's colour, with the sweep written down |
+| The charms as a whole | ⚠️ **a net loss against a school-first policy** | First measured on the old difficulty curve and read as a gain; re-measured 2026-09-12 on the corrected curve, 400 dojos × 180 days with the documented policy: buying charms takes dojos closed from **25.0% → 31.0%** and last nights won from **11.2% → 6.5%**. A charm is 120 gold against a 200-gold building that compounds for the rest of the season, and it loses that trade. **The price is not the problem:** at ×0.5 and ×0.25 it is still behind buying nothing (25.5% and 26.8%). The blessing itself — +6 points on one stat — is the number to revisit, and it is left alone rather than guessed at |
+| The funeral rite — **rebound 2026-09-12** | the **temple collects its dead** | The morale side of it measured as exactly nothing, twice: swept 0 / 0.25 / 0.5 / 0.75 / 1 on the old bed (89.8 / 89.8 / 89.8 / 89.2 / 89.5% closed) and again on the corrected curve (26.8 / 25.0 / 25.5%). Morale is too weakly coupled to a season's outcome for a share of one loss to show up. So the post was rebound the way the infirmary was: with the shrine standing **and** a monk in it, a dead man's charms come home **even from a field that was lost** — the temple collects its dead whoever held the ground. The morale share stays at 0.5 as the rite's colour, with both sweeps on the record |
 
 **Diviner — the reading (`Campaign/Divination.cs`).** The post sells **information** and nothing else,
 and it never lies: an empty hut names each enemy and his weapon, a diviner in it prints the stat block

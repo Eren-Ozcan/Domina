@@ -590,6 +590,17 @@ internal static class SimArgs
                     meetRaids = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
+                case "--charm-price":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double charmPrice)
+                        || charmPrice < 0)
+                    {
+                        return ParsedArgs.Fail($"--charm-price must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { CharmPriceFactor = charmPrice };
+                    break;
+
                 case "--charms":
                     if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
                         && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
@@ -1696,6 +1707,7 @@ internal static class SimArgs
         writer.WriteLine("  --mastery-fight    The share a fight closes (campaign)");
         writer.WriteLine("  --funeral-relief   The share of a comrade's death the rite takes off");
         writer.WriteLine("  --charms on|off    The policy buys temple charms and fits them (campaign)");
+        writer.WriteLine("  --charm-price      A multiplier over what the temple asks for a charm");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
         writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");
