@@ -138,6 +138,52 @@ public static class DojoSaveFile
             : Restore(snapshot, tuning);
     }
 
+    /// <summary>
+    /// Reads the save, falling back to yesterday's copy if today's cannot be read at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Open Decision #15, closed 2026-09-12: the backup exists for a <b>corrupted file</b> and for
+    /// nothing else. It is never offered as a choice, there is no "go back to the previous day" in the
+    /// game, and the fallback happens only when the current save cannot be read — a save that loads
+    /// with warnings is a save that loaded, and merge-on-load has already done its work on it.
+    /// </para>
+    /// <para>
+    /// In a game with permadeath an undo door is the one thing that would empty every other rule of
+    /// its cost, so the door is not built at all rather than built and hidden behind a confirmation.
+    /// The player who really wants it can copy a file on disk — that is a deliberate line, and it is
+    /// outside the game.
+    /// </para>
+    /// <para>
+    /// When the fallback does fire it says so: the warning is the same honesty merge-on-load owes,
+    /// because a player who has lost a day must be told rather than left to notice.
+    /// </para>
+    /// </remarks>
+    /// <param name="json">The current save's text.</param>
+    /// <param name="backup">Yesterday's text, if there is one.</param>
+    /// <param name="tuning">The day-loop settings the restored dojo runs on.</param>
+    public static LoadResult LoadWithBackup(string? json, string? backup, DojoTuning? tuning = null)
+    {
+        LoadResult current = Load(json, tuning);
+        if (current.Succeeded || string.IsNullOrWhiteSpace(backup))
+        {
+            return current;
+        }
+
+        LoadResult older = Load(backup, tuning);
+        if (!older.Succeeded)
+        {
+            return current;
+        }
+
+        return new LoadResult(
+            older.State,
+            [
+                "The last save could not be read; the day before it was loaded instead.",
+                .. older.Warnings,
+            ]);
+    }
+
     /// <summary>Turns the save object into live state, writing what it could not rescue as warnings.</summary>
     public static LoadResult Restore(DojoSnapshot snapshot, DojoTuning? tuning = null)
     {

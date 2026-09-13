@@ -22,7 +22,7 @@ namespace Domina.Core.Dojo;
 /// </remarks>
 public sealed class BattleAftermath(HonorEngine? honor = null)
 {
-    private readonly HonorEngine _honor = honor ?? new HonorEngine();
+    private readonly HonorEngine? _honor = honor;
 
     /// <summary>Applies the fight result to the roster and returns what changed.</summary>
     public AftermathReport Apply(DojoState state, BattleResult result)
@@ -297,7 +297,10 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             state.Roster.Credit(entry.Id);
         }
 
-        double honorDelta = _honor.PerformanceDelta(summary) + _honor.RetreatDelta(summary);
+        // The dojo's own engine unless one was handed in: the fight's honour and the tribunal's have
+        // to be the same numbers, or a sweep moves one of them and not the other.
+        HonorEngine honor = _honor ?? state.Honor;
+        double honorDelta = honor.PerformanceDelta(summary) + honor.RetreatDelta(summary);
         warrior.Honor = HonorScale.Clamp(warrior.Honor + honorDelta);
 
         int days = RecoveryDays(state.Tuning, warrior, summary, lost.Count);

@@ -61,7 +61,8 @@ internal sealed record CampaignOptions(
     bool MeetRaids = true,
     RetirementPolicy Retirement = RetirementPolicy.None,
     bool UseSmithUpgrades = false,
-    StandingTuning? Standing = null)
+    StandingTuning? Standing = null,
+    HonorTuning? Honor = null)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -142,7 +143,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             // the night would never be measured at all.
             season: (_options.Season ?? new SeasonTuning()) with { Days = _options.Days },
             province: _options.Province,
-            standing: _options.Standing);
+            standing: _options.Standing,
+            honor: _options.Honor);
         state.Resources = new Resources(Gold: _options.StartingGold);
 
         // The map is dealt off the run's own seed, like the game's first day does it: what he already

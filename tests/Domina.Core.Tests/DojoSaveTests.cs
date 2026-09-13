@@ -371,4 +371,47 @@ public class DojoSaveTests
         Assert.Equal([1], loaded.State!.HiredToday);
         Assert.Null(loaded.State.HireRecruit(1));
     }
+
+    /// <summary>A corrupted save falls back to yesterday's, and says so.</summary>
+    /// <remarks>
+    /// Open Decision #15: the backup is for a broken file and not an undo door, so it fires only when
+    /// the current save cannot be read at all — and when it fires the player is told.
+    /// </remarks>
+    [Fact]
+    public void ACorruptedSaveFallsBackToYesterdayAndSaysSo()
+    {
+        DojoState dojo = new() { Resources = new Resources(Gold: 321) };
+        dojo.Roster.Recruit("Kenji");
+
+        string yesterday = DojoSaveFile.Write(dojo);
+
+        LoadResult loaded = DojoSaveFile.LoadWithBackup("{ this is not a save", yesterday);
+
+        Assert.True(loaded.Succeeded);
+        Assert.Equal(321, loaded.State!.Resources.Gold);
+        Assert.Contains(loaded.Warnings, w => w.Contains("day before", StringComparison.Ordinal));
+    }
+
+    /// <summary>A save that loads is never replaced by the backup, warnings or not.</summary>
+    [Fact]
+    public void AReadableSaveIsNeverReplacedByTheBackup()
+    {
+        DojoState today = new() { Resources = new Resources(Gold: 10) };
+        DojoState yesterday = new() { Resources = new Resources(Gold: 999) };
+
+        LoadResult loaded = DojoSaveFile.LoadWithBackup(
+            DojoSaveFile.Write(today),
+            DojoSaveFile.Write(yesterday));
+
+        Assert.Equal(10, loaded.State!.Resources.Gold);
+    }
+
+    /// <summary>With both broken, the failure reported is the current save's.</summary>
+    [Fact]
+    public void TwoBrokenFilesReportTheCurrentOne()
+    {
+        LoadResult loaded = DojoSaveFile.LoadWithBackup("{ broken", "{ also broken");
+
+        Assert.False(loaded.Succeeded);
+    }
 }

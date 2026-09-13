@@ -2,6 +2,7 @@ using System.Globalization;
 using Domina.Core.Campaign;
 using Domina.Core.Combat;
 using Domina.Core.Dojo;
+using Domina.Core.Honor;
 using Domina.Core.Model;
 
 namespace Domina.Sim;
@@ -99,6 +100,8 @@ internal static class SimArgs
         RetirementPolicy retirement = RetirementPolicy.None;
         bool smithUpgrades = false;
         StandingTuning standingTuning = new();
+        HonorTuning honorTuning = new();
+        double honorDecayPerDay = new DojoTuning().HonorDecayPerDay;
         int retireVictories = new DojoTuning().VictoriesForRetirement;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
@@ -1213,6 +1216,39 @@ internal static class SimArgs
                     training = training with { GapClosedPerDay = trainRate };
                     break;
 
+                case "--seppuku-threshold":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seppuku)
+                        || seppuku is < 0 or > 100)
+                    {
+                        return ParsedArgs.Fail($"--seppuku-threshold must be between 0 and 100: {value}");
+                    }
+
+                    honorTuning = honorTuning with { SeppukuThreshold = seppuku };
+                    break;
+
+                case "--retreat-honor":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double retreatHonor)
+                        || retreatHonor < 0)
+                    {
+                        return ParsedArgs.Fail($"--retreat-honor must be a non-negative number: {value}");
+                    }
+
+                    honorTuning = honorTuning with { RetreatHonorPenalty = retreatHonor };
+                    break;
+
+                case "--honor-decay":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double honorDecay)
+                        || honorDecay < 0)
+                    {
+                        return ParsedArgs.Fail($"--honor-decay must be a non-negative number: {value}");
+                    }
+
+                    honorDecayPerDay = honorDecay;
+                    break;
+
                 case "--missed-week-honor":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double missedWeek)
@@ -1565,6 +1601,7 @@ internal static class SimArgs
                     Mastery = masteryTuning,
                     RosterCapacity = rosterCapacity,
                     VictoriesForRetirement = retireVictories,
+                    HonorDecayPerDay = honorDecayPerDay,
                 },
                 tuning,
                 policy,
@@ -1594,7 +1631,8 @@ internal static class SimArgs
                 meetRaids,
                 retirement,
                 smithUpgrades,
-                standingTuning)
+                standingTuning,
+                honorTuning)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1797,6 +1835,9 @@ internal static class SimArgs
         writer.WriteLine("  --master-worth     What a retired man is worth in a post he was trained for");
         writer.WriteLine("  --smith-upgrades on|off  The policy fits full plate and reforges blades");
         writer.WriteLine("  --standing on|off  Whether the three parties' tiers are worth anything");
+        writer.WriteLine("  --seppuku-threshold  The honour a warrior is tried below");
+        writer.WriteLine("  --retreat-honor    What pulling out of a fight costs the man");
+        writer.WriteLine("  --honor-decay      How far honour drifts back to neutral each day");
         writer.WriteLine("  --forged-damage    What the dojo's own forge adds to a weapon");
         writer.WriteLine("  --retire-victories Fights behind a man before he may retire");
         writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");

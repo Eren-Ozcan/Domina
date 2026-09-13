@@ -50,6 +50,7 @@ public sealed class DojoState
         Bounties = new BountyBoard(bounties, encounters);
         Season = new Season(season);
         Tribunal = new Tribunal(honor);
+        Honor = new Domina.Core.Honor.HonorEngine(honor);
         Province = new Province(province);
         Standing = new Standing(standing);
         Difficulty = difficulty;
@@ -70,6 +71,17 @@ public sealed class DojoState
 
     /// <summary>Prices and shopping. The economy numbers are read from here.</summary>
     public Quartermaster Quartermaster { get; private set; }
+
+    /// <summary>
+    /// The honour numbers this dojo runs on — the fight's deltas and the tribunal's, in one place.
+    /// </summary>
+    /// <remarks>
+    /// The aftermath used to build its own engine on the defaults, so the dojo's honour settings
+    /// reached the tribunal and <b>not</b> the fight: the retreat penalty and the performance swing
+    /// could not be swept at all, and a sweep of them measured as exactly nothing. One engine now, held
+    /// where every other tuning is held.
+    /// </remarks>
+    public Domina.Core.Honor.HonorEngine Honor { get; }
 
     /// <summary>The dojo's facilities — the investment that does not die (GDD §10).</summary>
     public School School { get; }
@@ -679,7 +691,7 @@ public sealed class DojoState
 
         if (verdict is not null)
         {
-            if (verdict.Outcome == Honor.SeppukuOutcome.Seppuku)
+            if (verdict.Outcome == Domina.Core.Honor.SeppukuOutcome.Seppuku)
             {
                 Roster.Kill(verdict.Warrior);
                 Tribunal.Forget(verdict.Warrior);

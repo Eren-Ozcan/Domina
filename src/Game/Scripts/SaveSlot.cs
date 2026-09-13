@@ -25,6 +25,16 @@ public static class SaveSlot
 
     private const string TempPath = "user://dojo.json.new";
 
+    /// <summary>
+    /// Yesterday's copy. It is <b>not</b> an undo door (Open Decision #15).
+    /// </summary>
+    /// <remarks>
+    /// It is rolled every time the save is written and read only when the current file cannot be read
+    /// at all. Nothing in the game offers it: with permadeath, a "go back to the previous day" button
+    /// would empty every other rule of its cost, so the door is not built rather than built and hidden.
+    /// </remarks>
+    private const string BackupPath = "user://dojo.json.bak";
+
     /// <summary>Is there a save to load?</summary>
     public static bool Exists() => FileAccess.FileExists(Path);
 
@@ -46,6 +56,7 @@ public static class SaveSlot
             file.StoreString(json);
         }
 
+        Roll();
         return Swap();
     }
 
@@ -58,19 +69,69 @@ public static class SaveSlot
         }
 
         using FileAccess? file = FileAccess.Open(Path, FileAccess.ModeFlags.Read);
-        return file is null
-            ? LoadResult.Failed($"The save could not be opened: {FileAccess.GetOpenError()}")
-            : DojoSaveFile.Load(file.GetAsText());
+        if (file is null)
+        {
+            return LoadResult.Failed($"The save could not be opened: {FileAccess.GetOpenError()}");
+        }
+
+        return DojoSaveFile.LoadWithBackup(file.GetAsText(), ReadBackup());
     }
 
     /// <summary>Deletes the save — so a new game does not sit on top of the old one.</summary>
     public static void Delete()
     {
         using DirAccess? dir = DirAccess.Open("user://");
-        if (dir is not null && dir.FileExists(Path))
+        if (dir is null)
+        {
+            return;
+        }
+
+        if (dir.FileExists(Path))
         {
             dir.Remove(Path);
         }
+
+        // The backup goes with it: a new season must not be able to fall back into a dead one.
+        if (dir.FileExists(BackupPath))
+        {
+            dir.Remove(BackupPath);
+        }
+    }
+
+    /// <summary>Yesterday's text, or <c>null</c> if there is none.</summary>
+    private static string? ReadBackup()
+    {
+        if (!FileAccess.FileExists(BackupPath))
+        {
+            return null;
+        }
+
+        using FileAccess? file = FileAccess.Open(BackupPath, FileAccess.ModeFlags.Read);
+        return file?.GetAsText();
+    }
+
+    /// <summary>Moves the standing save into the backup's place before it is overwritten.</summary>
+    private static void Roll()
+    {
+        if (!FileAccess.FileExists(Path))
+        {
+            return;
+        }
+
+        using DirAccess? dir = DirAccess.Open("user://");
+        if (dir is null)
+        {
+            return;
+        }
+
+        if (dir.FileExists(BackupPath))
+        {
+            dir.Remove(BackupPath);
+        }
+
+        // A backup that could not be rolled is not worth failing the save over: the point of it is the
+        // corrupted file that has not happened yet, and the save itself is the thing being protected.
+        _ = dir.Copy(Path, BackupPath);
     }
 
     /// <summary>Puts the temporary file in the save's place.</summary>
