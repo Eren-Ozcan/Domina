@@ -184,8 +184,13 @@ still his, and a warrior of his who breaks still runs rather than kneels.
 > 60.63%**, warrior deaths 37.64% → 48.58%. The earlier gain — panic raising the player's victory rate
 > from 67.16% to 69.64% — came from the rule firing on **both** sides; now it fires on his side alone,
 > which is worse than switching it off entirely. Over a season (400 dojos × 180 days) deaths per
-> warrior-fight go 6.3% → 10.2% and dojos closed 90.2% → 92.8%. The rule is the design's; the numbers
-> around it are Phase 9's, and they are written down rather than patched here.
+> warrior-fight go 6.3% → 10.2% and dojos closed 90.2% → 92.8%.
+>
+> **Absorbed the same day.** Those season figures were read on a difficulty curve written for a 60-day
+> campaign (§10); re-derived for the 180-day season, the same policy loses **4.1%** of its warriors
+> per fight and closes **25.0%** of the time. The fight bed stays harder — `3v3` sits at 60.76% — and
+> the season does not. Nothing was given back to the player to compensate, because nothing needed to
+> be.
 
 > **Why honour and morale are separate:** honour is what the outside thinks about the
 > warrior, morale is the warrior's own condition. Collapsing them into a single counter

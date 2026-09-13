@@ -114,8 +114,10 @@ reward as one where he fell — an economy leak for step 7.
 ⏳ **Left open by step 6:** morale on the screens. **Closed 2026-09-12:** a feast **never** touches
 honour (GDD §3 — morale is the inside counter, honour the outside one), and the fled-enemy reward
 leak went with the rule that an adversary no longer flees at all — he stands on the road and
-**yields** in a match (GDD §5). It cost the player nine points of victory on `3v3` (69.64% → 60.63%),
-written down for Phase 9 rather than patched.
+**yields** in a match (GDD §5). It cost the player nine points of victory on `3v3` (69.64% → 60.63%)
+— and that cost was **absorbed the same day** by the difficulty curve being re-derived for a 180-day
+season: on the corrected slope the documented policy loses 4.1% of its warriors per fight and closes
+25% of the time, against 10.4% and 52.5% before. The fight bed is harder; the season is not.
 
 ⏳ **Left open by step 5:** retired warriors as free staff (retirement is not written), the ō-yoroi
 gate and forged weapons, a measurement of the classed candidate against a policy that trains classes,
