@@ -237,7 +237,8 @@ internal static class CampaignSummaryReport
             + $"  best warrior {report.AverageBestScore:F0} score (+{report.AverageScoreGain:F0})");
         writer.WriteLine(
             $"  School facilities      {report.AverageSchoolNodes:F1}"
-            + $"  {report.AverageSchoolGold:F0} gold, chose a path {report.AveragePaths:F2}");
+            + $"  {report.AverageSchoolGold:F0} gold, chose a path {report.AveragePaths:F2}"
+            + $", charms {report.AverageCharmGold:F0} gold");
         writer.WriteLine(
             $"  Posts filled           {report.AverageStaff:F1}"
             + $"  {report.AverageStaffDays:F0} post-days");

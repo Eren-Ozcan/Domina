@@ -95,6 +95,8 @@ internal static class SimArgs
         double? playerMastery = null;
         MasteryBand masteryBand = MasteryBand.Default;
         bool useCharms = false;
+        bool acceptCountsCharms = false;
+        CharmFit charmFit = CharmFit.IronGate;
         ProvinceTuning provinceTuning = new();
         bool meetRaids = true;
         RetirementPolicy retirement = RetirementPolicy.None;
@@ -364,6 +366,63 @@ internal static class SimArgs
                     }
 
                     tuning = tuning with { CatchTwoHandedFactor = catchTwoHanded };
+                    break;
+
+                case "--attack-stamina":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double attackStamina)
+                        || attackStamina < 0)
+                    {
+                        return ParsedArgs.Fail($"--attack-stamina must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { AttackStaminaCost = attackStamina };
+                    break;
+
+                case "--dodge-stamina":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double dodgeStamina)
+                        || dodgeStamina < 0)
+                    {
+                        return ParsedArgs.Fail($"--dodge-stamina must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { DodgeStaminaCost = dodgeStamina };
+                    break;
+
+                case "--block-stamina":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double blockStamina)
+                        || blockStamina < 0)
+                    {
+                        return ParsedArgs.Fail($"--block-stamina must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { BlockStaminaCost = blockStamina };
+                    break;
+
+                case "--enemy-profiles":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--enemy-profiles must be on or off: {value}");
+                    }
+
+                    tuning = tuning with
+                    {
+                        TargetProfiles = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase),
+                    };
+                    break;
+
+                case "--stamina-regen":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double staminaRegen)
+                        || staminaRegen < 0)
+                    {
+                        return ParsedArgs.Fail($"--stamina-regen must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { StaminaRegenPerSecond = staminaRegen };
                     break;
 
                 case "--catch-stamina":
@@ -720,6 +779,26 @@ internal static class SimArgs
                     }
 
                     useCharms = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--charm-fit":
+                    if (!Enum.TryParse(value, ignoreCase: true, out charmFit))
+                    {
+                        return ParsedArgs.Fail(
+                            "--charm-fit must be first, weakest or a charm name "
+                            + $"(steadyhand, irongate, longbreath, quietmind, swiftfoot): {value}");
+                    }
+
+                    break;
+
+                case "--accept-charms":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--accept-charms must be on or off: {value}");
+                    }
+
+                    acceptCountsCharms = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
                     break;
 
                 case "--will-brake":
@@ -1245,6 +1324,15 @@ internal static class SimArgs
                     training = training with { GapClosedPerDay = trainRate };
                     break;
 
+                case "--will-focus":
+                    if (!TryFraction(value, out double willFocus))
+                    {
+                        return ParsedArgs.Fail($"--will-focus must be between 0 and 1: {value}");
+                    }
+
+                    training = training with { WillFocus = willFocus };
+                    break;
+
                 case "--seppuku-threshold":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seppuku)
@@ -1662,7 +1750,9 @@ internal static class SimArgs
                 smithUpgrades,
                 standingTuning,
                 honorTuning,
-                trainClasses)
+                trainClasses,
+                acceptCountsCharms,
+                charmFit)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1791,7 +1881,7 @@ internal static class SimArgs
         writer.WriteLine("             [--catch-accuracy <0-1>]");
         writer.WriteLine("             [--mastery <0-1>] [--mastery-accuracy <0-1>]");
         writer.WriteLine("             [--mastery-rate <0-1>] [--mastery-fight <0-1>]");
-        writer.WriteLine("             [--funeral-relief <0-1>] [--charms on|off]");
+        writer.WriteLine("             [--funeral-relief <0-1>] [--charms on|off] [--accept-charms on|off]");
         writer.WriteLine("             [--class-catch-floor <0-1>] [--class-poison-share <0-1>]");
         writer.WriteLine("             [--class-range-share <0-1>]");
         writer.WriteLine("             [--poison-damage <number>] [--poison-seconds <sec>]");
@@ -1837,6 +1927,10 @@ internal static class SimArgs
         writer.WriteLine("  --catch-bind       How long the attacker whose weapon is caught stays exposed");
         writer.WriteLine("  --catch-two-handed The multiplier applied to a two-handed weapon's catch chance");
         writer.WriteLine("  --catch-stamina    The stamina cost of a catch");
+        writer.WriteLine("  --attack-stamina   The stamina an attack spends");
+        writer.WriteLine("  --dodge-stamina    The stamina a dodge spends");
+        writer.WriteLine("  --block-stamina    The stamina a block spends");
+        writer.WriteLine("  --stamina-regen    Stamina recovered per second of fighting");
         writer.WriteLine("  --catch-accuracy   The share added to catch chance at Accuracy 100");
         writer.WriteLine("  --staff            on|off — the campaign fills every post it can pay for");
         writer.WriteLine("  --branch-wage      The daily wage of a branch post (drill master, physician, smith, steward)");
@@ -1855,10 +1949,14 @@ internal static class SimArgs
         writer.WriteLine("  --mastery          Forces the player side's mastery of its weapon (0-1)");
         writer.WriteLine("  --mastery-accuracy What full mastery adds to Accuracy (0-1)");
         writer.WriteLine("  --mastery-rate     The share of the gap a drill day closes (campaign)");
+        writer.WriteLine("  --will-focus       The share of a drill day's gain willpower carries (campaign)");
         writer.WriteLine("  --mastery-fight    The share a fight closes (campaign)");
         writer.WriteLine("  --funeral-relief   The share of a comrade's death the rite takes off");
         writer.WriteLine("  --charms on|off    The policy buys temple charms and fits them (campaign)");
+        writer.WriteLine("  --accept-charms on|off  Whether the accept rule counts the charms a man wears (campaign, default off)");
+        writer.WriteLine("  --charm-fit first|weakest|<charm name>  Which charm the policy buys for a man (campaign, default irongate)");
         writer.WriteLine("  --charm-price      A multiplier over what the temple asks for a charm");
+        writer.WriteLine("  --enemy-profiles on|off  Whether each enemy kind reads the field its own way (default on)");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
         writer.WriteLine("  --retire off|all|maimed  Who the policy takes off the field into a post");

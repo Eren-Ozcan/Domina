@@ -22,6 +22,45 @@ namespace Domina.Sim;
 /// compared under the same behaviour.
 /// </para>
 /// </remarks>
+/// <summary>How the measuring policy chooses which charm to buy for a warrior.</summary>
+internal enum CharmFit
+{
+    /// <summary>The first charm in the catalogue, whoever the man is — the branch's first measurement.</summary>
+    First,
+
+    /// <summary>The charm that answers the man's weakest stat.</summary>
+    Weakest,
+
+    /// <summary>One named charm on every man — the five rungs that rank the axes against each other.</summary>
+    SteadyHand,
+
+    /// <inheritdoc cref="SteadyHand"/>
+    IronGate,
+
+    /// <inheritdoc cref="SteadyHand"/>
+    LongBreath,
+
+    /// <inheritdoc cref="SteadyHand"/>
+    QuietMind,
+
+    /// <inheritdoc cref="SteadyHand"/>
+    SwiftFoot,
+}
+
+/// <param name="CharmFit">
+/// Which charm a warrior is bought — see <see cref="Domina.Sim.CharmFit"/>. The default is
+/// <see cref="Domina.Sim.CharmFit.IronGate"/>: the measuring bed stands for an informed player,
+/// and on every sweep so far the defence charm is the one a player converges to within an
+/// afternoon. It is a bed, not a balance claim — if a later round moves the ladder, this default
+/// moves with it.
+/// </param>
+/// <param name="AcceptCountsCharms">
+/// Whether the accept rule reads the charms a warrior wears. It is <b>off</b> by default, and the
+/// default is a measured one: with the charms counted, a stronger blessing made the policy decline
+/// fewer offers and fight more, so raising the blessing made the season worse instead of better and
+/// the charm was buying greed rather than safety. A charm is bought, moved and sold back, so it does
+/// not belong in the judgement of what the roster can take. The fight always reads the blessed stats.
+/// </param>
 internal sealed record CampaignOptions(
     Scenario Scenario,
     int Days,
@@ -63,7 +102,9 @@ internal sealed record CampaignOptions(
     bool UseSmithUpgrades = false,
     StandingTuning? Standing = null,
     HonorTuning? Honor = null,
-    bool TrainClasses = false)
+    bool TrainClasses = false,
+    bool AcceptCountsCharms = false,
+    CharmFit CharmFit = CharmFit.IronGate)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -563,7 +604,9 @@ internal sealed class CampaignRunner(CampaignOptions options)
         {
             double party = state.Roster.FitForCampaign
                 .Take(_options.PartySize)
-                .Sum(e => Score(e.Warrior.EffectiveStats));
+                .Sum(e => Score(_options.AcceptCountsCharms
+                    ? e.Warrior.EffectiveStats
+                    : e.Warrior.UnblessedStats));
             double enemy = offer.Enemies.Sum(e => Score(e.EffectiveStats));
 
             return enemy > 0 && party < enemy * ratio;
@@ -1018,16 +1061,25 @@ internal sealed class CampaignRunner(CampaignOptions options)
         {
             while (entry.Warrior.Charms.Count < state.OmamoriSlots)
             {
-                OmamoriKind? held = state.CharmStore.FirstOrDefault(pair => pair.Value > 0).Key;
-                if (state.CharmStore.Count == 0)
+                OmamoriKind wanted = WantedCharm(entry.Warrior);
+                OmamoriKind? held = state.CharmStore.GetValueOrDefault(wanted) > 0
+                    ? wanted
+                    : state.CharmStore.FirstOrDefault(pair => pair.Value > 0).Key;
+
+                if (state.CharmStore.Count == 0 || (_options.CharmFit != CharmFit.First && held != wanted))
                 {
-                    OmamoriCharm wanted = Omamori.All[0];
-                    if (!Affordable(state, state.PriceOf(wanted.Kind), reserve) || !state.BuyCharm(wanted.Kind))
+                    if (!Affordable(state, state.PriceOf(wanted), reserve) || !state.BuyCharm(wanted))
                     {
-                        return before - state.Resources.Gold;
+                        // Nothing can be bought, so whatever is already in the store will have to do.
+                        if (held is not OmamoriKind spare || !state.FitCharm(entry.Id, spare))
+                        {
+                            return before - state.Resources.Gold;
+                        }
+
+                        continue;
                     }
 
-                    held = wanted.Kind;
+                    held = wanted;
                 }
 
                 if (held is not OmamoriKind kind || !state.FitCharm(entry.Id, kind))
@@ -1038,6 +1090,78 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         return before - state.Resources.Gold;
+    }
+
+    /// <summary>Which charm this warrior is bought.</summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="CharmFit.First"/> is the blunt policy the shrine branch was first measured with: the
+    /// first charm in the catalogue, on whoever has a slot. It answers "does the branch pay for itself
+    /// at all" and nothing else.
+    /// </para>
+    /// <para>
+    /// <see cref="CharmFit.Weakest"/> is the way the charm is meant to be used — five answers to five
+    /// weaknesses, hung on the man who has that weakness. The stats are compared **against a fresh
+    /// recruit's** rather than against each other: stamina is a pool on its own scale, and a raw
+    /// comparison would make it the answer every time.
+    /// </para>
+    /// </remarks>
+    private OmamoriKind WantedCharm(Warrior warrior)
+    {
+        switch (_options.CharmFit)
+        {
+            case CharmFit.First:
+                return Omamori.All[0].Kind;
+            case CharmFit.SteadyHand:
+                return OmamoriKind.SteadyHand;
+            case CharmFit.IronGate:
+                return OmamoriKind.IronGate;
+            case CharmFit.LongBreath:
+                return OmamoriKind.LongBreath;
+            case CharmFit.QuietMind:
+                return OmamoriKind.QuietMind;
+            case CharmFit.SwiftFoot:
+                return OmamoriKind.SwiftFoot;
+            default:
+                break;
+        }
+
+        WarriorStats s = warrior.UnblessedStats;
+        WarriorStats bed = WarriorStats.Recruit();
+
+        (OmamoriKind Kind, double Share)[] weaknesses =
+        [
+            (OmamoriKind.SteadyHand, s.Accuracy / bed.Accuracy),
+            (OmamoriKind.IronGate, s.Defense / bed.Defense),
+            (OmamoriKind.LongBreath, s.MaxStamina / bed.MaxStamina),
+            (OmamoriKind.QuietMind, s.Willpower / bed.Willpower),
+            (OmamoriKind.SwiftFoot, s.Evasion / bed.Evasion),
+        ];
+
+        OmamoriKind wanted = weaknesses[0].Kind;
+        double lowest = weaknesses[0].Share;
+        for (int i = 1; i < weaknesses.Length; i++)
+        {
+            if (weaknesses[i].Share < lowest)
+            {
+                (wanted, lowest) = weaknesses[i];
+            }
+        }
+
+        // A charm he already wears is not bought twice: the next weakness down is the one worth gold.
+        if (warrior.Charms.Contains(wanted))
+        {
+            Array.Sort(weaknesses, (a, b) => a.Share.CompareTo(b.Share));
+            foreach ((OmamoriKind kind, _) in weaknesses)
+            {
+                if (!warrior.Charms.Contains(kind))
+                {
+                    return kind;
+                }
+            }
+        }
+
+        return wanted;
     }
 
     /// <summary>
@@ -1521,6 +1645,9 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>The gold that went to the school (per dojo).</summary>
     public double AverageSchoolGold => Standing(r => r.GoldSpentOnSchool);
+
+    /// <summary>The gold that went to the temple's charms (per dojo).</summary>
+    public double AverageCharmGold => Standing(r => r.GoldSpentOnCharms);
 
     /// <summary>Warriors who chose a path (per dojo).</summary>
     public double AveragePaths => Standing(r => r.Paths);

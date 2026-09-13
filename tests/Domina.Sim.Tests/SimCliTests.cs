@@ -244,4 +244,27 @@ public class SimCliTests
             File.Delete(path);
         }
     }
+
+    /// <summary>
+    /// The two charm knobs the shrine round needs: which charm a man is bought, and whether the
+    /// accept rule is allowed to see the charms he already wears.
+    /// </summary>
+    [Fact]
+    public void TheCharmPolicyAndTheBlindAcceptRuleAreSweepable()
+    {
+        SimOptions defaults = Parse("--mode", "campaign");
+
+        Assert.NotNull(defaults.Campaign);
+        Assert.Equal(CharmFit.IronGate, defaults.Campaign!.CharmFit);
+        Assert.False(defaults.Campaign.AcceptCountsCharms);
+
+        SimOptions options = Parse(
+            "--mode", "campaign", "--charm-fit", "weakest", "--accept-charms", "on");
+
+        Assert.NotNull(options.Campaign);
+        Assert.Equal(CharmFit.Weakest, options.Campaign!.CharmFit);
+        Assert.True(options.Campaign.AcceptCountsCharms);
+
+        Assert.NotNull(SimArgs.Parse(["--mode", "campaign", "--charm-fit", "luck"]).Error);
+    }
 }
