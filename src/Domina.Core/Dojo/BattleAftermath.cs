@@ -34,6 +34,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         // on the men who saw it (docs/GDD.md §3).
         int fallen = result.Summaries.Count(s => s.Team == Battle.PlayerTeam && s.Died);
         bool won = result.Outcome == BattleOutcome.PlayerVictory;
+        bool stalled = result.Outcome == BattleOutcome.Stalled;
 
         List<WarriorAftermath> lines = [];
         foreach (WarriorBattleSummary summary in result.Summaries)
@@ -49,10 +50,10 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
                 continue;
             }
 
-            lines.Add(ApplyTo(state, entry, summary, won));
+            lines.Add(ApplyTo(state, entry, summary, won, stalled));
         }
 
-        SettleMorale(state, result, won, fallen);
+        SettleMorale(state, result, won, stalled, fallen);
 
         return new AftermathReport(result.Outcome, lines);
     }
@@ -96,11 +97,18 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
     /// Writes the fight onto the morale of everyone who came back from it.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// It runs after the roster is written, so it sees who actually lived — including a man the
     /// physician pulled back, who is a survivor and not a funeral. A warrior who broke and ran carries
     /// the defeat <b>and</b> his own panic; the rest carry only what the day did.
+    /// </para>
+    /// <para>
+    /// A fight that hit the stall guard swings morale <b>neither way</b>: nobody won and nobody was
+    /// beaten. What the men still carry is what actually happened to them on the field — a man who
+    /// broke still panicked, and a comrade who fell is still a funeral.
+    /// </para>
     /// </remarks>
-    private static void SettleMorale(DojoState state, BattleResult result, bool won, int fallen)
+    private static void SettleMorale(DojoState state, BattleResult result, bool won, bool stalled, int fallen)
     {
         MoraleTuning morale = state.Tuning.Morale;
 
@@ -121,7 +129,7 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             {
                 MoraleLedger.Raise(entry.Warrior, morale.VictoryGain);
             }
-            else
+            else if (!stalled)
             {
                 MoraleLedger.Lower(entry.Warrior, morale.DefeatLoss, morale);
             }
@@ -196,7 +204,12 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
         return new SeededRandom(seed).Chance(state.StaffTuning.MortalSaveChance);
     }
 
-    private WarriorAftermath ApplyTo(DojoState state, RosterEntry entry, WarriorBattleSummary summary, bool won)
+    private WarriorAftermath ApplyTo(
+        DojoState state,
+        RosterEntry entry,
+        WarriorBattleSummary summary,
+        bool won,
+        bool stalled)
     {
         Warrior warrior = entry.Warrior;
 
@@ -299,8 +312,15 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
 
         // The dojo's own engine unless one was handed in: the fight's honour and the tribunal's have
         // to be the same numbers, or a sweep moves one of them and not the other.
+        //
+        // A fight that hit the stall guard writes no honour at all. The guard is an anomaly, not a
+        // result (docs/GDD.md §7): the province never saw a fight it could read, so it cannot judge one.
+        // Leaving the performance delta in would let a stalled fight push a man towards the tribunal's
+        // threshold over something the resolver failed to finish.
         HonorEngine honor = _honor ?? state.Honor;
-        double honorDelta = honor.PerformanceDelta(summary) + honor.RetreatDelta(summary);
+        double honorDelta = stalled
+            ? 0
+            : honor.PerformanceDelta(summary) + honor.RetreatDelta(summary);
         warrior.Honor = HonorScale.Clamp(warrior.Honor + honorDelta);
 
         int days = RecoveryDays(state.Tuning, warrior, summary, lost.Count);

@@ -123,10 +123,20 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     /// Closes the books of a finished fight: writes to the roster, pays the reward, closes the day.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// <b>Where</b> the fight ran is of no concern here — it may have been watched in the arena or
     /// resolved inside <see cref="Send"/>. The accounting must live in one place: if the arena wrote its
     /// own books, a watched fight and a simulated one would leave different results and balance
     /// measurement would not be measuring what is on screen.
+    /// </para>
+    /// <para>
+    /// <b>A fight that hit the stall guard</b> (<see cref="BattleOutcome.Stalled"/>) closes as an
+    /// unresolved encounter: no reward, no honour and no morale swing (<see cref="BattleAftermath"/>),
+    /// but the wounds, the wear and the lesson stand, and the day is eaten like any other. It still
+    /// counts as a fight filed for the week — the party did take the field, and the guard is the
+    /// resolver's failure, not theirs. In the sim the same fight is a counted anomaly; here it must
+    /// simply not hang the game (docs/GDD.md §7, §10).
+    /// </para>
     /// </remarks>
     public ExpeditionResult Settle(DojoState state, BattleSetup setup, BattleResult battle)
     {
