@@ -10,8 +10,7 @@ namespace Domina.Presentation;
 /// <param name="DaysLeft">The days left, today included.</param>
 /// <param name="DaysToTick">
 /// The days to the next weekly tick. GDD §10 hangs two things on this one clock — the compulsory fight
-/// and the rival's next move — but the settlement map is not written yet, so the screen says only the
-/// half that exists.
+/// and the rival's next move — and both halves are now real.
 /// </param>
 /// <param name="FiledThisWeek">Has a fight been filed inside the week that is running?</param>
 /// <param name="AtRisk">
@@ -20,6 +19,14 @@ namespace Domina.Presentation;
 /// <param name="Heads">The heads brought in.</param>
 /// <param name="Gate">The heads the last night asks for.</param>
 /// <param name="Phase">Where the run stands.</param>
+/// <param name="Yours">The settlements that speak for the dojo.</param>
+/// <param name="His">The settlements that pay him.</param>
+/// <param name="DaysToMove">The days to his next move.</param>
+/// <param name="Pressed">
+/// The settlement he is pressing, if the dojo has been told which — a village that came over may hand
+/// his next target across, and that word is good for one turn (GDD §10).
+/// </param>
+/// <param name="UnderRaid">Is he at the gate today?</param>
 public readonly record struct SeasonBanner(
     int Day,
     int Days,
@@ -29,7 +36,12 @@ public readonly record struct SeasonBanner(
     bool AtRisk,
     int Heads,
     int Gate,
-    SeasonPhase Phase)
+    SeasonPhase Phase,
+    int Yours = 0,
+    int His = 0,
+    int DaysToMove = 0,
+    string? Pressed = null,
+    bool UnderRaid = false)
 {
     /// <summary>Are the heads in?</summary>
     public bool GateOpen => Heads >= Gate;
@@ -124,7 +136,15 @@ public static class SeasonModel
             AtRisk: !season.FiledThisWeek(dojo.Day) && dojo.Roster.FitForCampaign.Any(),
             Heads: season.HeadsTaken,
             Gate: season.Tuning.BountyGate,
-            Phase: season.Phase);
+            Phase: season.Phase,
+            Yours: dojo.Province.YourHoldings,
+            His: dojo.Province.HisHoldings,
+            DaysToMove: dojo.Province.DaysToMove(dojo.Day),
+
+            // The target is named only while a settlement's word is still good. The rest of the time the
+            // player reads the province, never a number — GDD §10 keeps the rival's own counter hidden.
+            Pressed: dojo.Day <= dojo.Province.TargetKnownUntil ? dojo.Province.Target?.Name : null,
+            UnderRaid: dojo.UnderRaid);
     }
 
     /// <summary>The line the day screen puts above everything else.</summary>
@@ -136,15 +156,22 @@ public static class SeasonModel
                 ? $"no fight filed — {banner.DaysToTick} days"
                 : $"nobody fit to send — {banner.DaysToTick} days";
 
-        // The rival's move is deliberately not named here. It lands on this same counter by design, but
-        // nothing in the code moves him yet, and a line that says "Kurogane moves in 3 days" would be
-        // the screen promising a system the game does not have. It goes back in with the map.
+        // What the player reads is the province — how much of it is his, how much is Kurogane's, and
+        // when the man moves next. His own bound is never printed: a visible bar would turn the season's
+        // one hidden pressure into arithmetic (GDD §10).
+        string map = banner.UnderRaid
+            ? "Kurogane is at the gate"
+            : banner.Pressed is string pressed
+                ? $"Province {banner.Yours}/{banner.Yours + banner.His} · he moves on {pressed} in {banner.DaysToMove} days"
+                : $"Province {banner.Yours}/{banner.Yours + banner.His} · he moves in {banner.DaysToMove} days";
+
         return string.Join(
             "  ·  ",
             $"Day {banner.Day} of {banner.Days}",
             $"Week closes in {banner.DaysToTick} days",
             week,
-            $"Heads {banner.Heads}/{banner.Gate}");
+            $"Heads {banner.Heads}/{banner.Gate}",
+            map);
     }
 
     /// <summary>The bout that is next; <c>null</c> if the night is not being played.</summary>
