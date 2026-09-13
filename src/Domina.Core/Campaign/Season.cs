@@ -493,4 +493,7 @@ public sealed record SeasonSummary(
     int Heads,
     int MissedWeeks,
     IReadOnlyList<string> Dead,
-    IReadOnlyList<string> Freed);
+    IReadOnlyList<string> Freed,
+    int SettlementsHeld = 0,
+    int SettlementsHis = 0,
+    int Sacks = 0);

@@ -78,17 +78,18 @@ public static class DojoSaveFile
             Capture(state.Tribunal),
             state.Difficulty,
             [.. state.CharmStore.Select(pair => new CharmStackSnapshot(pair.Key, pair.Value))],
-            Capture(state.Province));
+            CaptureProvince(state));
     }
 
-    private static ProvinceSnapshot Capture(Province province) => new(
-        [.. province.Settlements.Select(s =>
+    private static ProvinceSnapshot CaptureProvince(DojoState state) => new(
+        [.. state.Province.Settlements.Select(s =>
             new SettlementSnapshot(s.Index, s.Held, s.Warning, s.Contracts, s.ChangedDay))],
-        province.NextMoveDay,
-        province.Deniability,
-        province.RaidPending,
-        province.TargetKnownUntil,
-        province.AnsweredForMoveDay);
+        state.Province.NextMoveDay,
+        state.Province.Deniability,
+        state.Province.RaidPending,
+        state.Province.TargetKnownUntil,
+        state.Province.AnsweredForMoveDay,
+        state.Sacks);
 
     private static TribunalSnapshot Capture(Tribunal tribunal) => new(
         tribunal.Standing is Summons standing ? Capture(standing) : null,

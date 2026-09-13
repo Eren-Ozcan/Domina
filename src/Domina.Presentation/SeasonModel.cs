@@ -94,6 +94,9 @@ public readonly record struct NightVerdict(FinalRefusal? Refusal, int Size)
 /// <param name="Victories">The fights won.</param>
 /// <param name="Heads">The heads brought in.</param>
 /// <param name="MissedWeeks">The weeks that closed with no fight filed.</param>
+/// <param name="SettlementsHeld">The villages still speaking for the dojo when it ended.</param>
+/// <param name="SettlementsHis">The villages still paying him.</param>
+/// <param name="Sacks">The times he was left standing in the yard.</param>
 /// <param name="Dead">The men the season buried.</param>
 /// <param name="Freed">The men who walked out free.</param>
 public readonly record struct SeasonEndCard(
@@ -105,7 +108,10 @@ public readonly record struct SeasonEndCard(
     int Heads,
     int MissedWeeks,
     IReadOnlyList<string> Dead,
-    IReadOnlyList<string> Freed);
+    IReadOnlyList<string> Freed,
+    int SettlementsHeld = 0,
+    int SettlementsHis = 0,
+    int Sacks = 0);
 
 /// <summary>
 /// What the season's screens read: the banner on the day screen, the last night, the closing screen.
@@ -264,7 +270,10 @@ public static class SeasonModel
             summary.Heads,
             summary.MissedWeeks,
             summary.Dead,
-            summary.Freed);
+            summary.Freed,
+            summary.SettlementsHeld,
+            summary.SettlementsHis,
+            summary.Sacks);
     }
 
     private static string Headline(SeasonPhase phase, DojoState dojo) => phase switch

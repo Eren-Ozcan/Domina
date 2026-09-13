@@ -49,7 +49,14 @@ public sealed partial class SeasonEndScreen : DojoScreen
                 $"Days played: {card.Days}",
                 $"Fights: {card.Battles}  ·  won {card.Victories}",
                 $"Heads brought in: {card.Heads}",
-                $"Weeks with no fight filed: {card.MissedWeeks}"),
+                $"Weeks with no fight filed: {card.MissedWeeks}",
+
+                // The map is the half of the season a fight record cannot show: a run can be lost on
+                // the province without a single bout going badly.
+                $"The province: {card.SettlementsHeld} yours  ·  {card.SettlementsHis} his",
+                card.Sacks == 0
+                    ? "He never stood in your yard unanswered."
+                    : $"Left standing in your yard: {card.Sacks} times"),
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
 

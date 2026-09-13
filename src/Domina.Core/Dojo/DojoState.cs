@@ -758,7 +758,10 @@ public sealed class DojoState
         Season.HeadsTaken,
         Season.MissedWeeks,
         [.. Roster.Entries.Where(e => !e.Warrior.IsAlive).Select(e => e.Name)],
-        [.. Roster.Released.Concat(Roster.Living).Select(e => e.Name)]);
+        [.. Roster.Released.Concat(Roster.Living).Select(e => e.Name)],
+        Province.YourHoldings,
+        Province.HisHoldings,
+        Sacks);
 
     /// <summary>
     /// How many men the dojo can house — the master's six plus whatever the quarters branch added.
@@ -885,6 +888,14 @@ public sealed class DojoState
     /// <summary>The gift the last settlement to come over gave; <c>null</c> if none has.</summary>
     public SettlementGift? LastGift { get; private set; }
 
+    /// <summary>How many times he was left standing in the yard.</summary>
+    /// <remarks>
+    /// Counted because the closing screen has to be able to say it: a season can be lost on the map
+    /// without a single bout going badly, and a run that ends with an emptied store and nothing in the
+    /// fight record is otherwise unreadable.
+    /// </remarks>
+    public int Sacks { get; private set; }
+
     /// <summary>What a settlement hands over on the day it comes over.</summary>
     /// <remarks>
     /// One thing, once. The word — the name of his next target — is the only one that is not a store:
@@ -920,6 +931,7 @@ public sealed class DojoState
         }
 
         Province.RaidSettled();
+        Sacks++;
         return new SackReport(gold, food);
     }
 
@@ -1195,6 +1207,8 @@ public sealed class DojoState
             snapshot.RaidPending,
             snapshot.TargetKnownUntil,
             snapshot.AnsweredForMoveDay);
+
+        Sacks = Math.Max(0, snapshot.Sacks);
     }
 
     /// <summary>Restores the season's books coming from the save.</summary>

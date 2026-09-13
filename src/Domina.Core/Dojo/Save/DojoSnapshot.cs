@@ -172,13 +172,15 @@ public sealed record BuildSiteSnapshot(SchoolNodeId Id, int DaysLeft);
 /// <param name="RaidPending">Is he at the gate?</param>
 /// <param name="TargetKnownUntil">Until which day a settlement's word revealed his next target.</param>
 /// <param name="AnsweredForMoveDay">The move cycle the player has already answered.</param>
+/// <param name="Sacks">How many times he was left standing in the yard — the closing screen reads it.</param>
 public sealed record ProvinceSnapshot(
     IReadOnlyList<SettlementSnapshot> Settlements,
     int NextMoveDay,
     int Deniability,
     bool RaidPending = false,
     int TargetKnownUntil = 0,
-    int AnsweredForMoveDay = 0);
+    int AnsweredForMoveDay = 0,
+    int Sacks = 0);
 
 /// <summary>One settlement's line in the file.</summary>
 public sealed record SettlementSnapshot(
