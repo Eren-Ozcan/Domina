@@ -27,6 +27,11 @@ public enum SchoolNodeState
 
 /// <summary>A single row in the tree.</summary>
 /// <param name="Id">The node's identity; the screen's command returns it.</param>
+/// <param name="HeldByMaster">Is a retired warrior of the dojo's own standing in it, for no wage?</param>
+/// <param name="MastersMayHold">
+/// Can a retired warrior of the dojo's own hold it? Three trades cannot be taken up by a swordsman
+/// and are the reason wages stay a pressure at all (docs/GDD.md §10).
+/// </param>
 /// <param name="Branch">The branch it belongs to.</param>
 /// <param name="Name">Display name.</param>
 /// <param name="Cost">The cost in gold.</param>
@@ -100,7 +105,9 @@ public readonly record struct PostRow(
     bool Standing,
     bool Filled,
     int Wage,
-    bool Branch);
+    bool Branch,
+    bool MastersMayHold = false,
+    bool HeldByMaster = false);
 
 /// <summary>
 /// The model the school screen reads. It computes why a node is closed; it does not draw.
@@ -200,7 +207,9 @@ public static class SchoolModel
                 Standing: dojo.School.Has(node.Id),
                 Filled: dojo.Staff.Has(role),
                 Wage: dojo.StaffTuning.WageOf(role),
-                Branch: Facilities.IsBranchRole(role)));
+                Branch: Facilities.IsBranchRole(role),
+                MastersMayHold: dojo.StaffTuning.MasterMayHold(role),
+                HeldByMaster: dojo.Staff.HeldByMaster(role)));
         }
 
         return rows;

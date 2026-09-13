@@ -27,6 +27,9 @@ namespace Domina.Presentation;
 /// the man and that weapon, so the screen prints it beside the weapon's name and not beside his stats.
 /// </param>
 /// <param name="Morale">His own condition today, 0-100.</param>
+/// <param name="Victories">The fights he came back from.</param>
+/// <param name="CanRetire">May he leave the field for good today?</param>
+/// <param name="Post">The post he holds as a master of the house; <c>null</c> if he holds none.</param>
 /// <param name="Charms">The temple charms he is wearing.</param>
 /// <param name="CharmSlots">How many he may wear today — the shrine opens them, the monk the second.</param>
 /// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
@@ -58,7 +61,10 @@ public readonly record struct RosterRow(
     double WeaponSkill = 0,
     double Morale = MoraleScale.Starting,
     IReadOnlyList<OmamoriKind>? Charms = null,
-    int CharmSlots = 0);
+    int CharmSlots = 0,
+    int Victories = 0,
+    bool CanRetire = false,
+    StaffRole? Post = null);
 
 /// <summary>The row's badge — it also sets the ordering.</summary>
 public enum RosterStatus
@@ -74,6 +80,11 @@ public enum RosterStatus
 
     /// <summary>His term ended and he walked out free. The record stays, like a dead man's.</summary>
     Freed,
+
+    /// <summary>
+    /// Retired — a master of the house: no wage, no food, no field, and a post he can hold.
+    /// </summary>
+    Master,
 
     /// <summary>Dead. The record stays on the roster.</summary>
     Fallen,
@@ -170,14 +181,24 @@ public static class RosterModel
         ArgumentNullException.ThrowIfNull(dojo);
 
         return dojo.Roster.Entries
-            .Select(entry => Describe(entry, dojo.Tuning, dojo.OmamoriSlots))
+            .Select(entry => Describe(
+                entry,
+                dojo.Tuning,
+                dojo.OmamoriSlots,
+                dojo.CanRetire(entry),
+                PostOf(dojo, entry)))
             .OrderBy(row => (int)row.Status)
             .ThenBy(row => row.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
 
     /// <summary>A single warrior's row.</summary>
-    public static RosterRow Describe(RosterEntry entry, DojoTuning tuning, int charmSlots = 0)
+    public static RosterRow Describe(
+        RosterEntry entry,
+        DojoTuning tuning,
+        int charmSlots = 0,
+        bool canRetire = false,
+        StaffRole? post = null)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(tuning);
@@ -210,7 +231,10 @@ public static class RosterModel
             WeaponSkill: warrior.WeaponSkill,
             Morale: warrior.Morale,
             Charms: warrior.Charms,
-            CharmSlots: charmSlots);
+            CharmSlots: charmSlots,
+            Victories: entry.Victories,
+            CanRetire: canRetire,
+            Post: post);
     }
 
     /// <summary>The numbers at the top of the roster.</summary>
@@ -300,6 +324,25 @@ public static class RosterModel
         return roster.IsNameTaken(newName) ? RenameVerdict.Taken : RenameVerdict.Ok;
     }
 
+    /// <summary>The post this master holds, if he holds one.</summary>
+    private static StaffRole? PostOf(DojoState dojo, RosterEntry entry)
+    {
+        if (!entry.Retired)
+        {
+            return null;
+        }
+
+        foreach ((StaffRole role, WarriorId? master) in dojo.Staff.Posts)
+        {
+            if (master == entry.Id)
+            {
+                return role;
+            }
+        }
+
+        return null;
+    }
+
     private static RosterStatus StatusOf(RosterEntry entry)
     {
         if (!entry.Warrior.IsAlive)
@@ -310,6 +353,11 @@ public static class RosterModel
         if (entry.Released)
         {
             return RosterStatus.Freed;
+        }
+
+        if (entry.Retired)
+        {
+            return RosterStatus.Master;
         }
 
         if (entry.RecoveryDaysRemaining > 0)

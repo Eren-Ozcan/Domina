@@ -40,6 +40,10 @@ public sealed partial class RosterScreen : DojoScreen
     private Label _renameNotice = null!;
     private OptionButton _drillPicker = null!;
     private HBoxContainer _pathRow = null!;
+    private Button _retireButton = null!;
+    private Label _retireNotice = null!;
+    private HBoxContainer _postRow = null!;
+    private bool _retireArmed;
     private Button _feastButton = null!;
     private Label _feastNotice = null!;
     private Label _charmLabel = null!;
@@ -143,6 +147,20 @@ public sealed partial class RosterScreen : DojoScreen
         _releaseNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         panel.AddChild(_releaseNotice);
 
+        // Retirement is the other irreversible move, and it asks twice for the same reason releasing
+        // does: what the dojo gets back is a man who eats nothing and can hold a post, and what it
+        // loses is a sword it cannot have back.
+        _retireButton = new Button { Text = "Retire him" };
+        _retireButton.Pressed += Retire;
+        panel.AddChild(_retireButton);
+
+        _retireNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_retireNotice);
+
+        _postRow = new HBoxContainer();
+        _postRow.AddThemeConstantOverride("separation", 6);
+        panel.AddChild(_postRow);
+
         return panel;
     }
 
@@ -238,6 +256,7 @@ public sealed partial class RosterScreen : DojoScreen
         _nameEdit.Editable = row.IsAlive && row.Status != RosterStatus.Freed;
         _drillPicker.Disabled = !row.IsFitForCampaign;
         UpdateReleaseControls(row);
+        UpdateRetirementControls(row);
         _drillPicker.Select(_drillPicker.GetItemIndex((int)row.Drill));
 
         BuildPathButtons(row);
@@ -433,6 +452,96 @@ public sealed partial class RosterScreen : DojoScreen
             row.Status == RosterStatus.Freed ? MutedColor : PendingColor);
     }
 
+    /// <summary>
+    /// The retirement button, and the posts a master of the house can be put into.
+    /// </summary>
+    /// <remarks>
+    /// The posts are listed only for a man who has already retired: the three trades that need an
+    /// outsider (a physician, a cook, a diviner) are left out of the list entirely rather than shown
+    /// disabled, because they are not something he is bad at — they are not his to take.
+    /// </remarks>
+    private void UpdateRetirementControls(RosterRow row)
+    {
+        Clear(_postRow);
+
+        bool master = row.Status == RosterStatus.Master;
+        _retireButton.Visible = row.IsAlive && row.Status != RosterStatus.Freed && !master;
+        _retireButton.Disabled = !row.CanRetire;
+        _retireButton.Text = _retireArmed
+            ? $"Take {row.Name} off the field — for good"
+            : "Retire him";
+
+        _retireNotice.Text = master
+            ? row.Post is StaffRole post
+                ? $"A master of the house — {SchoolModel.RoleName(post)}, for no wage."
+                : "A master of the house. He eats nothing and can hold a post."
+            : row.CanRetire
+                ? _retireArmed
+                    ? "He never takes the field again. He draws no wage and eats nothing, "
+                      + "and the posts he was trained for are his."
+                    : $"{row.Victories} fights behind him."
+                : $"{row.Victories} fights behind him — not a career yet.";
+
+        _retireNotice.AddThemeColorOverride("font_color", master ? GoodColor : PendingColor);
+
+        if (!master)
+        {
+            return;
+        }
+
+        foreach (PostRow open in SchoolModel.Posts(_dojo))
+        {
+            if (!open.Standing || !open.MastersMayHold || (open.Filled && open.Role != row.Post))
+            {
+                continue;
+            }
+
+            StaffRole role = open.Role;
+            bool his = open.Role == row.Post;
+            Button button = new() { Text = his ? $"Leave the {open.Building.ToLowerInvariant()}" : open.Name };
+            button.Pressed += () =>
+            {
+                if (his)
+                {
+                    _dojo.Dismiss(role);
+                }
+                else
+                {
+                    _dojo.Appoint(row.Id, role);
+                }
+
+                Persist();
+                Refresh();
+            };
+
+            _postRow.AddChild(button);
+        }
+    }
+
+    /// <summary>Takes the selected warrior off the field — the second press is the one that does it.</summary>
+    private void Retire()
+    {
+        if (_selected is not WarriorId id)
+        {
+            return;
+        }
+
+        if (!_retireArmed)
+        {
+            _retireArmed = true;
+            Refresh();
+            return;
+        }
+
+        _retireArmed = false;
+        if (_dojo.Retire(id))
+        {
+            Persist();
+        }
+
+        Refresh();
+    }
+
     /// <summary>Ends the selected warrior's term — the second press is the one that does it.</summary>
     private void Release()
     {
@@ -565,6 +674,7 @@ public sealed partial class RosterScreen : DojoScreen
         RosterStatus.Recovering => "infirmary",
         RosterStatus.Fallen => "dead",
         RosterStatus.Freed => "walked out free",
+        RosterStatus.Master => "master of the house",
         _ => "ready",
     };
 

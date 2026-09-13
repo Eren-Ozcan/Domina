@@ -89,7 +89,11 @@ public sealed partial class SchoolScreen : DojoScreen
             Label line = new()
             {
                 Text = post.Standing
-                    ? $"{post.Name}  —  {post.Wage} gold/day" + (post.Filled ? "  ·  in post" : "  ·  empty")
+                    ? post.Filled
+                        ? post.HeldByMaster
+                            ? $"{post.Name}  —  a master of the house, no wage"
+                            : $"{post.Name}  —  {post.Wage} gold/day  ·  in post"
+                        : $"{post.Name}  —  {post.Wage} gold/day  ·  empty"
                     : $"{post.Name}  —  waits for the {post.Building.ToLowerInvariant()}",
                 AutowrapMode = TextServer.AutowrapMode.WordSmart,
             };
