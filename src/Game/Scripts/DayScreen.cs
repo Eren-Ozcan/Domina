@@ -188,8 +188,7 @@ public sealed partial class DayScreen : DojoScreen
                 : $"  · {line.Name} — {line.Weapon} — {line.Stats}");
         }
 
-        _readingLabel.Text = string.Join('
-', rows);
+        _readingLabel.Text = string.Join('\n', rows);
     }
 
     /// <summary>The three parties, what they are worth today, and the gift button.</summary>
