@@ -230,7 +230,8 @@ internal static class CampaignSummaryReport
         writer.WriteLine($"  Armour pieces broken   {report.AverageArmorPiecesLost:F2}");
         writer.WriteLine(
             $"  Weapon mastery         {report.AverageBestMastery * 100:F1}% on the best man"
-            + $"  ·  retired {report.AverageRetirements:F2}");
+            + $"  ·  retired {report.AverageRetirements:F2}"
+            + $"  ·  classed {report.AverageClassed:F2}");
         writer.WriteLine(
             $"  Training days          {report.AverageTrainingDays:F1}"
             + $"  best warrior {report.AverageBestScore:F0} score (+{report.AverageScoreGain:F0})");

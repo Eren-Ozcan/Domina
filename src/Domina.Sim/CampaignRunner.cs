@@ -62,7 +62,8 @@ internal sealed record CampaignOptions(
     RetirementPolicy Retirement = RetirementPolicy.None,
     bool UseSmithUpgrades = false,
     StandingTuning? Standing = null,
-    HonorTuning? Honor = null)
+    HonorTuning? Honor = null,
+    bool TrainClasses = false)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -191,6 +192,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (_options.UsePaths)
             {
                 row.Paths += ChoosePaths(state);
+            }
+
+            if (_options.TrainClasses)
+            {
+                row.Classed += TrainClasses(state);
             }
 
             if (_options.UseCharms)
@@ -891,6 +897,44 @@ internal sealed class CampaignRunner(CampaignOptions options)
     }
 
     /// <summary>
+    /// Trains whoever has no class into whichever class the dojo's halls have opened.
+    /// </summary>
+    /// <remarks>
+    /// The question this exists for is the market's: the stall sells a <b>ready-classed</b> candidate
+    /// now and then at a premium, and whether that is worth anything can only be read against a dojo
+    /// that can make its own. Blunt, like the rest of the policy — the first hall that stands is the
+    /// class every man gets.
+    /// </remarks>
+    private static int TrainClasses(DojoState state)
+    {
+        List<WarriorClass> open = [.. state.School.UnlockedClasses()];
+        if (open.Count == 0)
+        {
+            return 0;
+        }
+
+        int trained = 0;
+        foreach (RosterEntry entry in state.Roster.Living)
+        {
+            if (entry.Warrior.Class != WarriorClass.None)
+            {
+                continue;
+            }
+
+            foreach (WarriorClass klass in open)
+            {
+                if (state.TrainClass(entry.Id, klass))
+                {
+                    trained++;
+                    break;
+                }
+            }
+        }
+
+        return trained;
+    }
+
+    /// <summary>
     /// Retires the men who have earned it, and puts them in whatever post they may hold.
     /// </summary>
     /// <remarks>
@@ -1175,6 +1219,9 @@ internal sealed class CampaignRow
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
 
+    /// <summary>The warriors trained into a class in the dojo's own halls.</summary>
+    public int Classed { get; set; }
+
     /// <summary>The men who left the field for good.</summary>
     public int Retirements { get; set; }
 
@@ -1355,6 +1402,9 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>Raids nobody answered, per dojo.</summary>
     public double AverageSacks => Average(r => r.Sacks);
+
+    /// <summary>Warriors trained into a class, per dojo.</summary>
+    public double AverageClassed => Average(r => r.Classed);
 
     /// <summary>Retirements per dojo.</summary>
     public double AverageRetirements => Average(r => r.Retirements);

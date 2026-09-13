@@ -100,6 +100,7 @@ internal static class SimArgs
         RetirementPolicy retirement = RetirementPolicy.None;
         bool smithUpgrades = false;
         StandingTuning standingTuning = new();
+        bool trainClasses = false;
         HonorTuning honorTuning = new();
         double honorDecayPerDay = new DojoTuning().HonorDecayPerDay;
         int retireVictories = new DojoTuning().VictoriesForRetirement;
@@ -636,6 +637,34 @@ internal static class SimArgs
                     }
 
                     schoolTuning = schoolTuning with { ForgedWeaponDamage = forgedDamage };
+                    break;
+
+                case "--train-classes":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--train-classes must be on or off: {value}");
+                    }
+
+                    trainClasses = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--classed-chance":
+                    if (!TryFraction(value, out double classedChance))
+                    {
+                        return ParsedArgs.Fail($"--classed-chance must be between 0 and 1: {value}");
+                    }
+
+                    marketTuning = marketTuning with { ClassedChance = classedChance };
+                    break;
+
+                case "--classed-price":
+                    if (!TryMultiplier(value, out double classedPrice))
+                    {
+                        return ParsedArgs.Fail($"--classed-price must be 1 or more: {value}");
+                    }
+
+                    marketTuning = marketTuning with { ClassedPriceFactor = classedPrice };
                     break;
 
                 case "--standing":
@@ -1632,7 +1661,8 @@ internal static class SimArgs
                 retirement,
                 smithUpgrades,
                 standingTuning,
-                honorTuning)
+                honorTuning,
+                trainClasses)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1835,6 +1865,9 @@ internal static class SimArgs
         writer.WriteLine("  --master-worth     What a retired man is worth in a post he was trained for");
         writer.WriteLine("  --smith-upgrades on|off  The policy fits full plate and reforges blades");
         writer.WriteLine("  --standing on|off  Whether the three parties' tiers are worth anything");
+        writer.WriteLine("  --train-classes on|off  The policy trains its own men into a class");
+        writer.WriteLine("  --classed-chance   How often the stall puts out a ready-classed candidate");
+        writer.WriteLine("  --classed-price    What the stall charges for one, as a multiple");
         writer.WriteLine("  --seppuku-threshold  The honour a warrior is tried below");
         writer.WriteLine("  --retreat-honor    What pulling out of a fight costs the man");
         writer.WriteLine("  --honor-decay      How far honour drifts back to neutral each day");

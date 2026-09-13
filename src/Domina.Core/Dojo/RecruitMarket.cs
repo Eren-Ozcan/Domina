@@ -46,6 +46,14 @@ public sealed record MarketTuning
     /// otherwise the hall a dojo saved for could be bought around for the price of one man. The rare
     /// classed candidate is the shortcut, and <see cref="ClassedPriceFactor"/> is what it costs.
     /// </remarks>
+    /// <remarks>
+    /// <b>Measured 2026-09-12 against a policy that trains its own</b> (400 dojos x 180 days) — the
+    /// open question step 5 left. With the halls being used (3.3 men classed a season), the stall's
+    /// shortcut is still worth having: at 0 the night is won by 9.8% of the dojos that reach it and
+    /// 29.2% close, at 0.05 it is 11.8% and 26.5%, at 0.25 it is 12.2% and 25.5%. So the value is real
+    /// and it saturates quickly — 0.05 buys most of what the axis has to give, which is what a
+    /// <b>shortcut</b> should do: it is worth taking when it appears and never worth waiting for.
+    /// </remarks>
     public double ClassedChance { get; init; } = 0.05;
 
     /// <summary>What a trained class adds to a candidate's price.</summary>

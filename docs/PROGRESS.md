@@ -1695,6 +1695,52 @@ does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
 
+## 2026-09-12 (sixth round) — The list of things that were never written
+
+Eight items that had been carried as "open" for several rounds, in order.
+
+**Morale reached the screens.** The roster prints the dojo's spirits beside its beds and each man's
+beside his honour — as a **word** with the number after it, because a bare number next to eight real
+stats invites the player to train a condition. The feast is the roster's lever, so it sits with the
+summary and says which of the two refusals is in the way; the market sells the sake, since the day's
+bill never buys it.
+
+**Retirement (`Roster.Retire`, `DojoState.Appoint`).** Twelve victories or a lost limb, and a warrior
+becomes a **master of the house**: no food, no wage, no field, and a post at GDD §10's own tier table.
+The post now remembers **who** stands in it. ⚠️ Measured, and it is never the profitable move —
+retiring everyone eligible takes closure from 25.0% to 36.5% and the night from 11.2% to 0.0%, and
+even retiring only the maimed costs. Raising what a master is worth does not touch it (1.15 / 1.4 /
+1.8 → 28.7 / 28.0 / 28.7%): the economy is roster-bound, a body beats a multiplier. It stays the
+honourable exit it was written as, with the two levers that would change it named.
+
+**The equipment branch got its two upper tiers** — plate works (450, the ō-yoroi gate: full plate needs
+the building **and** the smith) and sword forge (700, a weapon reforged rather than replaced). The
+reforged blade carries a **new name**, so the mastery built on the old one stays with the old one.
+Measured: an equipment-only dojo that uses them closes **29.5%** against 61.8% and reaches the night
+69.2% against 37.0% — the branch that "paid for nothing" at step 5 is now a commitment worth making,
+and still a real cost against a school-first dojo (25.8 → 27.0% closed) because heavy is heavy.
+
+**The three parties (`Dojo/Standing.cs`).** Clerk's office, guild, temple; five tiers; each tier on its
+own axis (work pays ×0.06 a tier, prices ×0.05, charms ×0.10). A contract finished raises, a promise
+broken eats from two places at once, a quiet week costs, a gift is worth less every time, and the monk
+keeps the temple's regard up with a wage rather than with work. The whole system is worth **~4% of
+income and no closure** — the size it was written for.
+
+**#15 closed:** the backup is rolled on every write and read only when the current save cannot be read
+at all. Never offered, never a button, says so when it fires, and deleted with the save.
+
+**#8 measured and locked** — and a **bug** came out of it: `BattleAftermath` built its own honour
+engine on the defaults, so a dojo's honour numbers reached the tribunal and never the fight. Every
+earlier sweep of the retreat penalty had therefore measured nothing. One engine now, and with it:
+seppuku **30** (20 / 30 / 40 → 22.0 / 26.2 / 36.5% closed), decay **0.5** (0 / 0.5 / 1.5 → 36.5 / 26.2
+/ 19.5%), retreat penalty **8**, which only shows against a policy that actually flees (0 / 8 / 20 →
+43.2 / 55.2 / 67.5% closed, first seppuku on day 34 / 9 / 5).
+
+**The classed candidate, measured against a dojo that trains its own** (step 5's open question). With
+the halls in use — 3.3 men classed a season — the stall's shortcut still pays: chance 0 / 0.05 / 0.25
+gives last nights won 9.8 / 11.8 / 12.2% and dojos closed 29.2 / 26.5 / 25.5%. It saturates fast, so
+**0.05 stands**: worth taking when it appears, never worth waiting for.
+
 ## 2026-09-12 (fifth round) — One point of damage closes #19
 
 The catching implements were priced wrong in a way the class layer made obvious: a torite holding a
