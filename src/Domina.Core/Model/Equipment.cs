@@ -179,7 +179,16 @@ public sealed record Weapon(
     /// for the damage lost. Whether it pays is measured (the <c>katana</c>/<c>jitte</c>
     /// scenarios).
     /// </remarks>
-    public static Weapon Jitte() => new("Jitte", WeaponClass.Blunt, 14, false, 1.00)
+    /// <remarks>
+    /// <b>Repriced 2026-09-12 (Open Decision #19), 14 → 15 damage.</b> With the class layer in, a
+    /// catching warrior holding a <b>katana</b> beat the same warrior holding a jitte everywhere — a
+    /// catch pays per event, so even the 0.10 unskilled-implement floor collected most of its value
+    /// while the jitte paid for the frequency with every strike. One point of damage is the whole fix,
+    /// and the curve here is steep: at 14 the jitte loses the duel by 4.7 points, at 15 it is level
+    /// (77.07% against 76.13%) and **ahead against a two-handed enemy** (33.39% against 32.46%), and by
+    /// 16 it is winning the duel outright at 81.83%. 40.000 fights a row.
+    /// </remarks>
+    public static Weapon Jitte() => new("Jitte", WeaponClass.Blunt, 15, false, 1.00)
     {
         CatchSkill = 1.0,
     };
@@ -194,13 +203,14 @@ public sealed record Weapon(
     /// </para>
     /// <para>
     /// It started at 13/1.05 and was outright bad (61.92% victory, control 73.09%): the extra grip did
-    /// not pay for the damage lost. At 14/1.05 all three sit within half a point (72.73%). The
+    /// not pay for the damage lost. At 14/1.05 all three sat within half a point (72.73%), and it went
+    /// to <b>15</b> with the jitte when the implements were repriced (2026-09-12). The
     /// difference from the jitte is not damage but <b>volume</b>: the sai catches 3.71 times per fight,
     /// the jitte 2.75 — meaning the sai should have more work to do against a crowd. That encirclement
     /// measurement has not been made yet.
     /// </para>
     /// </remarks>
-    public static Weapon Sai() => new("Sai", WeaponClass.Blunt, 14, false, 1.05)
+    public static Weapon Sai() => new("Sai", WeaponClass.Blunt, 15, false, 1.05)
     {
         CatchSkill = 1.25,
     };

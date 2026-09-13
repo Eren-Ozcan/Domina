@@ -1695,6 +1695,32 @@ does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
 
+## 2026-09-12 (fifth round) — One point of damage closes #19
+
+The catching implements were priced wrong in a way the class layer made obvious: a torite holding a
+**katana** beat the same torite holding a jitte everywhere, because a catch pays **per event** and the
+0.10 unskilled-implement floor collected most of that value, while the jitte paid for its catch
+frequency with every strike it landed.
+
+The fix is one point of damage — **jitte and sai 14 → 15** — and the curve turned out to be steep
+enough that it had to be found rather than reasoned (40.000 fights a row):
+
+| Damage | Duel | Against a two-handed enemy | Against ō-yoroi |
+|---|---|---|---|
+| 14 (locked) | 71.42% | 29.19% | 26.92% |
+| **15** | **77.07%** | **33.39%** | 38.31% |
+| 16 | 81.83% | 40.59% | 50.01% |
+| 18 | 87.01% | 47.88% | 69.53% |
+
+The controls: a torite with a katana wins the duel **76.13%**, the two-handed fight **32.46%** and the
+armoured fight **56.24%**. So at 15 the implement is level in a duel, **ahead where it is supposed to
+be** — the heavy-weapon brake #19 reported as gone is back, 33.39% against 32.46% — and behind in
+front of plate, which is where §7 already put the katana. The hard zero is untouched: a classless
+jitte still wins 42.20% against a classed 77.07%.
+
+Both halves of Open Decision #19 are closed by the same number, and the margin is defensible on this
+bed: ±0.21 points of standard error at 40.000 fights against a gap of 0.9.
+
 ## 2026-09-12 (fourth round) — The curve was calibrated for a season a third as long
 
 The "campaign bed is brutal" figure — 90%+ of dojos closing, which had been shrugged at for two
