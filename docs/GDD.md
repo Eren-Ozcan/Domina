@@ -1560,6 +1560,27 @@ model and the altered animation set.
 
 ---
 
+### A fight that hits the stall guard (locked 2026-09-13, build step 8)
+
+`CombatTuning.StallGuardSeconds` (900 s) is a safety ceiling, not a rule of the fight: `Battle.Run()`
+is a loop whose only ordinary exit is one side finishing the other, and two sides that can neither
+close nor finish would run forever. Reaching it is **an anomaly, not a result** — in the sim it is a
+counted stall with a seed to reproduce.
+
+In the game it still has to end somewhere, so the **dojo** answers it: the encounter closes as
+**unresolved**.
+
+| | What happens |
+|---|---|
+| Reward | **None** — nobody held the field |
+| Honour | **Unchanged**, in either direction. The province saw no fight it could read; a resolver failure must not push a man toward the seppuku threshold |
+| Morale | **No swing**. Nobody won and nobody was beaten — but a man who broke still carries his panic, and a comrade who fell is still a funeral |
+| Wounds, wear, the fight's lesson | **Stand**, exactly as in any other fight |
+| The day | **Eaten**, and the week's compulsory fight counts as filed: the party did take the field |
+
+Nothing about it is balanced around, and the sim's anomaly count is untouched — if this line ever
+shows up in play, it is a bug to reproduce, not a tactic.
+
 ## 8. Chat Integration
 
 ### Participation (opt-out — the Domina model)
@@ -1625,6 +1646,27 @@ into an interruption.
 
 - Time **flows and can be stopped** (the Domina model). The core still advances on a **fixed tick**
   and determinism is preserved — real time is only the clock driving the tick
+- **In the game since build-order step 8 (2026-09-13).** The core was **not** touched: `AdvanceDay()`
+  is still the atomic unit and every number measured against it stands. The pacing lives in
+  `Domina.Presentation/DayClock.cs` and in `DojoHub`:
+  - **Speeds** ‖ / 1× / 2× / 4×, on the navigation bar, and the **space bar** pauses from any screen.
+    `SecondsPerDay = 60` — **not a measured number**, and it cannot be one: 180 days is three hours at
+    1× and about three quarters of an hour at 4×, before a fight is watched. A playtest number
+  - **A hold is not a pause.** The game holds the clock while the arena is open or while a party is
+    half picked; the player pauses it with his own key. Releasing a hold gives him back the speed he
+    chose, and his pause cannot clear a hold
+  - **The flow stops for what has to be answered** (`DayInterrupt`): a happening, a tribunal verdict, a
+    move on the map, an unanswered raid, a payroll that emptied, hungry men, a broken promise, the
+    season changing gear. It does **not** stop for a building finished or a man out of the infirmary —
+    a clock that stops every morning is the button-driven day with extra steps. The rollovers queued
+    behind an interruption are dropped rather than run past it, and a long frame can never close more
+    than three days
+  - **The dojo's day does not run under a fight.** The expedition already paid for that day, and a
+    player watching the arena cannot answer anything the morning would bring
+  - **A window clicked away from does not spend the season.** Losing focus holds the clock and getting
+    it back releases it, so the player returns to the speed he left rather than to a paused game
+  - **"Spend the day in the dojo" became "Skip to tomorrow".** The dojo works through the day either
+    way; the button now only refuses to wait for it
 - **A season is 180 days**, and the days remaining are shown on screen. A fixed countdown
 - **Events land at the turn of the day:** they do not pop up in the middle of the flow. In the
   morning the player sees all the offers and events together (event probability 15% per day, to be

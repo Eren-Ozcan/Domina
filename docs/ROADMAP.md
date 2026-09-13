@@ -65,7 +65,7 @@ one thing only; both the number and the sweeps that found nothing are written do
 | ~~6~~ | ~~Morale + Will~~ | **Done (2026-09-10)** — the ninth stat, the morale band (×0.94/×1.03), the panic check (0.10), the meditation drill and sake/feasts; #14 closed with it. GDD §3 and `docs/PROGRESS.md` carry the numbers |
 | ~~7~~ | ~~The season skeleton~~ | **Done (2026-09-10)** — the 180-day clock, the weekly tick, the 3-head gate and the five bouts of the last night are in `Campaign/Season.cs` and `Campaign/FinalNight.cs`. The missed-week honour penalty was locked at **5** and the rule was changed by the measurement: a week is only charged when the dojo **had men standing** (GDD §10). The five bouts were then measured too (2026-09-10): powers **2.2-3.2** against **2/3/3/4/1** men, and a wound carried onto the field as health instead of barring the man. The night asks for a school **and** depth — a developed dojo with eight men wins it 38.5% of the time, with six 13.5%, and a dojo that built nothing 0% |
 | 7b | **Step 7's audit** — done 2026-09-10 | The gaps step 7 left: the seppuku tribunal wired into the day loop (`Dojo/Tribunal.cs` — until then honour was written and never read), the difficulty tiers (`Campaign/Difficulty.cs`), a starting roster drawn 3-5 instead of a fixed 4, releasing a man from the roster screen, the missed week and the verdict printed in the day's report, a save test for a night in progress, and the last night recalibrated against a dojo that actually builds its school. Then the roster ceiling was closed too: the story's six is a **starting** ceiling, and the **quarters** branch (barracks/long house, +2 beds each) buys the rest — measured, beds from day one are worth 30-35% of nights won against 10-11% for beds bought late, because a bed bought in the fifth month holds a raw recruit. **Closed 2026-09-12:** the rival's settlement map (`Dojo/Province.cs`) — and it turned out to be the biggest number measured on this project: the hiding dojo closes 7.5% of the time without the map and **72.8%** with it, while a dojo that answers the map pays about one point for it |
-| 8 | Discrete day → pausable real time | The largest risk item, so last. The core stays on a fixed tick; the pausing, the speed and the flow of the day live in Godot |
+| ~~8~~ | ~~Discrete day → pausable real time~~ | **Done (2026-09-13)** — and it was the cheapest of the eight, because the core was not touched: `DayClock` / `DayInterrupt` / `DayLog` in the presentation layer, the ticking in `DojoHub._Process`, and a speed bar with ‖/1×/2×/4× plus the space bar. `AdvanceDay()` is still the atomic unit, so every measured dojo number stands. The stall guard's dojo answer landed with it. The record is in `docs/PROGRESS.md` |
 
 **Step 1 in detail** (done 2026-09-10 — `MaxBattleSeconds` became `StallGuardSeconds`, 900 s,
 and `BattleOutcome.TimeLimit` became `BattleOutcome.Stalled`). `MaxBattleSeconds` did two jobs at
@@ -136,15 +136,36 @@ Measured with them: mastery is worth +2.58 points of victory at full but the hal
 arrives too late in a season to move anything, the charms are worth buying (dojos closed
 89.8% → 86.8%), and the funeral rite measured as nothing.
 
-⏳ **Left open by this step:** what the dojo layer does if a fight ever hits the guard. In the
-sim it is a counted anomaly; in the game it cannot simply hang. Decide when step 8 (real time)
-lands, since the answer depends on whether the day keeps running underneath.
+⏳ ~~**Left open by this step:** what the dojo layer does if a fight ever hits the guard.~~
+**Closed 2026-09-13 with step 8.** The day does **not** run underneath a fight (the arena holds the
+clock), so the answer needed no second clock: a fight that hits the guard closes as an **unresolved
+encounter** — no reward, no honour, no morale swing, while the wounds, the wear, the lesson and the day
+stand and the week's fight still counts as filed. The guard is an anomaly, not a result, so nothing
+about it is balanced around; the sim keeps counting it exactly as before (GDD §7, §10).
 
-**Decisions that do not wait on code:** #3 adversary behaviour (only the per-kind
-target-selection weights are left; the numbers are in `Campaign/Adversaries.cs`) — #16 the
-opponent pool and #17 the rival school were closed together on 2026-09-10, and #3's behaviour
-weights are the remainder of that sitting; #15 the save backup is a small touch in
-`SaveSlot.cs`. **Decisions that wait on measurement:** #18 the round's numbers (with steps
+**Step 8 in detail** (done 2026-09-13). Three shapes were on the table — a sub-day tick in the core, a
+continuous clock with day-granular bookkeeping, or the core left alone with the pacing in the engine.
+The third was taken because of Open Decision **#13**: a core-side clock is a write-off if resolution
+ever moves into Godot, and a core-side tick would void every dojo number already measured (training
+rate, wages, recovery, the week's tick, the difficulty rungs) for something the player cannot see. What
+was written: `DayClock` (real seconds in, day rollovers out; speeds ‖/1×/2×/4×; a 3-rollover per-frame
+cap; **named holds**, which are the game saying "not now" and are kept apart from the player's own
+pause), `DayInterrupt` (which closed days stop the clock — what has to be **answered**, never a
+building finished), `DayLog` (a closed day as text, now that the log is the only place a rival's move or
+a verdict is seen), the ticking in `DojoHub._Process`, and the clock bar in the navigation chrome.
+`SecondsPerDay = 60` is **not** a measured number and is flagged as such in the code: nothing in the sim
+has an opinion about how long a quiet day should feel. Three holds are wired: the arena, a party being
+picked (released in `DayScreen._ExitTree` so it cannot outlive its screen) and the window losing focus.
+
+⏳ **Left open by this step:** the **timed offer queue** (GDD §10). One offer bound to the calendar day
+is thin once the day turns by itself — it rotates under a player who is in the market. Nothing is
+broken today (a party being picked holds the clock, so an offer cannot vanish mid-decision), so it is
+listed with the Phase 4 work rather than blocking anything.
+
+**Decisions that do not wait on code:** none left of that sitting — #16 the opponent pool and #17 the
+rival school closed on 2026-09-10, #15 the save backup on 2026-09-12, and **#3 adversary behaviour on
+2026-09-13** (`Combat/TargetProfile.cs`: per-kind multipliers over the target-selection weights,
+measured at zero against the season and kept as character). **Decisions that wait on measurement:** #18 the round's numbers (with steps
 2-7), the rest of #5 the economy (staff wages, the daily upkeep — not before step 5), #8 the
 honour thresholds (playtest, so after step 7). #14 is decided with step 6, #17 stays parked,
 and #7 the game's name blocks nothing.

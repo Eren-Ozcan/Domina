@@ -23,7 +23,7 @@ Every row carries a **status** mark:
 
 | Topic | Domina | Ours | Status |
 |---|---|---|---|
-| Time flow | **Real time**, pausable; the day flows on its own | A **discrete day**; nothing happens until the player makes a decision | 🔵 |
+| Time flow | **Real time**, pausable; the day flows on its own | **The same** — the day flows on its own and stops on the space bar (‖/1×/2×/4×), written 2026-09-13. The core kept the discrete day as its atomic unit; only the pacing is real time | ✅ |
 | Calendar | A **365-day** countdown, `Days Left` on screen | There is a day counter, but **no upper bound** — the campaign does not end | ⚪ |
 | A second clock | `Next Battle: n` — the days until the compulsory fight | None; the day's offer is regenerated every day and missing it costs nothing | ⚪ |
 | The ending | A **final championship** at the end of the year, 15 opponents | None | ⚪ |
@@ -266,7 +266,7 @@ written into the GDD.
 
 | Row | Old state | New decision | Note |
 |---|---|---|---|
-| Time flow | A discrete day 🔵 | **Real time + pause** (the Domina model) | The core keeps advancing on a fixed tick and determinism is preserved; real time only means the clock driving the tick. The day-close/event code that assumes a discrete day will be rebuilt. A pause-or-window rule is needed for the chat vote. |
+| Time flow | A discrete day 🔵 | **Real time + pause** (the Domina model) | The core keeps advancing on a fixed tick and determinism is preserved; real time only means the clock driving the tick. **Written 2026-09-13 (build step 8)** and it turned out the day-close code did not have to be rebuilt at all: `AdvanceDay()` stayed the atomic unit and the pacing went into `DayClock` in the presentation layer, so no measured dojo number moved. Speeds ‖/1×/2×/4×, the space bar pauses, the clock is **held** while a fight is watched or a party is being picked, and it stops on its own for a day the player has to answer (`DayInterrupt`). The chat vote is unaffected — a vote is still never opened during a fight (§7 below). |
 | Calendar | No upper bound ⚪ | **A fixed countdown**, with the days left on screen | The length will be decided in Section 10 (the measurements run over 60 days). |
 | A second clock | None ⚪ | **A compulsory fight counter** (`Next fight: n days`) | Missing it has a price; it closes the exploit of endless safe training. The kind of penalty and the number n will be set separately. |
 | The ending | None ⚪ | **A final tournament** — the last day, knockout, the whole roster | The season's goal is roster breadth and depth. The number of opponents will be set. |

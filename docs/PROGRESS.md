@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-13 (the yumi written, the enemy kinds' manner closed #3, the stall priced charm by charm, the tiers re-swept, and the bed given a paired multi-seed protocol)
+Last updated: 2026-09-13 (build order step 8 — the day stops being a button and the stall guard gets its dojo answer; before it: the yumi written, the enemy kinds' manner closed #3, the stall priced charm by charm, the tiers re-swept, and the bed given a paired multi-seed protocol)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1692,6 +1692,82 @@ roster ≠ day one's stall, save round trip).
 
 **Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
+
+---
+
+## 2026-09-13 (fourteenth round) — Build order step 8: the day stops being a button
+
+The last step of the build order. Time now **flows and can be stopped**, and the discrete day is gone
+from the interface — not from the core. `DojoState.AdvanceDay()` is still the atomic unit, still the
+thing every measured number was measured against; what changed is who presses it.
+
+**The choice that made the step small.** Three shapes were on the table: a sub-day tick inside the core,
+a continuous clock with day-granular bookkeeping, or the core left alone with the pacing living in the
+engine. The third was taken, and Open Decision **#13** is the reason. If combat resolution ever moves
+into Godot (option (c), which GDD §13 says to reconsider *after this step*), a core-side clock is a
+write-off; and a core-side tick would void every dojo number in the file — the training rate, the
+wages, recovery, the week's tick, the difficulty rungs — for a gain the player cannot see. So the core
+was not touched at all by the time model.
+
+**What was written.**
+
+| Piece | Where | What it owns |
+|---|---|---|
+| `DayClock` | `src/Domina.Presentation/DayClock.cs` | Real seconds in, day rollovers out. Speeds ‖/1×/2×/4×, a per-frame rollover cap, and named **holds** |
+| `DayInterrupt` | same file | Which closed days stop the clock |
+| `DayLog` | `src/Domina.Presentation/DayLog.cs` | A closed day as text, every field of `DayReport` that carries news |
+| The ticking | `DojoHub._Process` | Feeds the clock, closes the days it owes, saves, reprints the screen |
+| The bar | `DojoHub.BuildClockBar` | Day, days left, the day's progress, the four speed buttons; space bar pauses |
+
+**Three rules the code carries, each written to answer a specific way this breaks.**
+
+- **A hold is not a pause.** A hold is the game saying "not now" (the arena is open, a party is half
+  picked); a pause is the player's own key. Kept apart so that releasing a hold gives back the speed he
+  chose, and so that his pause button cannot clear the arena's hold.
+- **The flow stops for what has to be answered.** A happening, a verdict, a move on the map, an
+  unanswered raid, a payroll that emptied, hungry men, a broken promise, the season changing gear. It
+  does **not** stop for a building finished or a man out of the infirmary. A clock that stops every
+  morning is the button-driven day with extra steps; one that never stops loses a rival's move in the
+  log. The rollovers queued behind an interruption are dropped rather than run past it.
+- **A long frame cannot skip a week.** The rollover cap is 3 per frame and the leftover is thrown away,
+  not banked — the same guard the arena already puts on its own accumulator.
+
+**The dojo's answer to the stall guard — the item step 5 left open.** A fight that hits
+`StallGuardSeconds` now closes as an **unresolved encounter**: no reward, **no honour** and **no morale
+swing**, while the wounds, the wear, the lesson and the day all stand, and the week's fight still counts
+as filed. The reasoning is the one the guard was written with: it is an anomaly, not a result. The
+province never saw a fight it could read, so it cannot judge one — leaving the performance delta in
+would let a resolver failure push a man toward the seppuku threshold. In the sim nothing changes; it is
+still a counted anomaly.
+
+**The number that is not measured, and says so.** `SecondsPerDay = 60`. Nothing in the sim has an
+opinion about how long a quiet day should *feel*: 60 s puts a 180-day season at three hours at 1× and
+about three quarters of an hour at 4×, before a single fight is watched. It is flagged in the code as a
+playtest number.
+
+⏳ **What this leaves open:** the **timed offer queue** (GDD §10 — several offers standing at once, each
+with its own expiry). With the clock running, one offer bound to the calendar day is thin: it rotates
+under the player while he is in the market. It is Phase 4 work and the clock does not block it — a
+party being picked holds the clock, so no offer can vanish mid-decision today.
+
+**Four small items the step needed on top of the clock itself.** (a) The clock is **held while the
+window is not the one being looked at** — a player who clicks away does not come back to a spent
+season, and because it is a hold rather than a pause he returns to the speed he left. (b) The party
+hold is released in `DayScreen._ExitTree`: the screen is freed on a tab change and when the arena
+opens, and a hold whose owner is gone would have stopped the season for the rest of the run. (c) When
+an interruption stops the clock the log says **"The clock stopped here."** — the player must not have
+to wonder whether he paused it himself. (d) `DayLog` got its own tests, because it is now the only
+place several of a day's events are ever shown.
+
+727 tests green in Release (527 core + 147 presentation + 53 sim); this step added 4 core tests for
+the stalled encounter and 24 presentation tests for the clock, the interrupt rule and the day log.
+`dotnet format --verify-no-changes` is clean. The one Debug-only failure is
+`ThroughputTests.TenThousandBattlesRunWithinTheBudget`, the usual Debug timing artefact, which passes
+in Release in 1 s.
+
+⚠️ **Not covered by a test:** the ticking itself (`DojoHub._Process`) and the clock bar are Godot
+nodes. The rule was pushed down into `DayClock` / `DayInterrupt` / `DayLog`, which are tested; what is
+left in the engine is wiring.
 
 ---
 
