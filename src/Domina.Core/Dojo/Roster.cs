@@ -26,7 +26,11 @@ public sealed class Roster
 
     /// <summary>The warriors the dojo still keeps — the dead and the released are not among them.</summary>
     public IEnumerable<RosterEntry> Living =>
-        _entries.Values.Where(e => e.Warrior.IsAlive && !e.Released);
+        _entries.Values.Where(e => e.Warrior.IsAlive && !e.Released && !e.Retired);
+
+    /// <summary>The masters of the house — retired, fed by nobody, able to hold a post.</summary>
+    public IEnumerable<RosterEntry> Masters =>
+        _entries.Values.Where(e => e.Warrior.IsAlive && !e.Released && e.Retired);
 
     /// <summary>The men who walked out free while the season ran.</summary>
     public IEnumerable<RosterEntry> Released => _entries.Values.Where(e => e.Released);
@@ -86,6 +90,7 @@ public sealed class Roster
     /// Resolves the name chat wrote to a single living warrior. <c>null</c> if it is not found — per
     /// GDD §6 this is a silent outcome, not an error.
     /// </summary>
+    /// <summary>A living man who answers to this name — a master of the house included.</summary>
     public RosterEntry? FindLiving(string name) =>
         string.IsNullOrWhiteSpace(name)
             ? null
@@ -149,6 +154,38 @@ public sealed class Roster
         }
 
         entry.Released = true;
+        entry.RecoveryDaysRemaining = 0;
+        entry.Activity = DojoActivity.Resting;
+        return true;
+    }
+
+    /// <summary>
+    /// Writes a won fight to the warrior's record.
+    /// </summary>
+    /// <remarks>
+    /// The only door onto <see cref="RosterEntry.Victories"/>, so that what a career is made of is
+    /// counted in one place — the aftermath of a fight the dojo won and the man walked away from.
+    /// </remarks>
+    public void Credit(WarriorId id) => Require(id).Victories++;
+
+    /// <summary>
+    /// Takes the warrior off the field for good — he becomes a master of the house.
+    /// </summary>
+    /// <remarks>
+    /// Unlike a release he does not leave: his record stays and so does he, which is the point. His
+    /// name is <b>not</b> returned to the pool, because there is still a man in the dojo answering to
+    /// it (<see cref="FindLiving"/> counts him).
+    /// </remarks>
+    /// <returns><c>true</c> if he retired.</returns>
+    public bool Retire(WarriorId id)
+    {
+        RosterEntry entry = Require(id);
+        if (!entry.Warrior.IsAlive || entry.Released || entry.Retired)
+        {
+            return false;
+        }
+
+        entry.Retired = true;
         entry.RecoveryDaysRemaining = 0;
         entry.Activity = DojoActivity.Resting;
         return true;

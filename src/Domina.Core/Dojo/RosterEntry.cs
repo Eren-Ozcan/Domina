@@ -55,8 +55,27 @@ public sealed class RosterEntry
     /// </remarks>
     public bool Released { get; internal set; }
 
+    /// <summary>
+    /// Has he left the field for good and become a master of the house (docs/GDD.md §10)?
+    /// </summary>
+    /// <remarks>
+    /// A retired man is the long game's one reward: he draws <b>no wage</b>, he eats nothing more from
+    /// the day's bill, and he never takes the field again. He is not gone the way a released man is —
+    /// he is still in the dojo, and what he is now good for is a <b>post</b>.
+    /// </remarks>
+    public bool Retired { get; internal set; }
+
+    /// <summary>The fights he came back from — what earns a man his retirement.</summary>
+    /// <remarks>
+    /// Counted rather than derived: a warrior's stats say what he is worth today and nothing says what
+    /// he has already given. It is the number the retirement gate reads, and it is written to the save
+    /// because it is state the season produced.
+    /// </remarks>
+    public int Victories { get; internal set; }
+
     /// <summary>Can he be sent on an expedition?</summary>
-    public bool IsFitForCampaign => Warrior.IsAlive && !Released && RecoveryDaysRemaining == 0;
+    public bool IsFitForCampaign =>
+        Warrior.IsAlive && !Released && !Retired && RecoveryDaysRemaining == 0;
 
     /// <summary>Puts the warrior in the infirmary. A longer stay overrides a shorter one, never the reverse.</summary>
     public void Injure(int days)

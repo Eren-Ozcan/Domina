@@ -27,6 +27,16 @@ public sealed record DojoTuning
     /// </remarks>
     public int RosterCapacity { get; init; } = 6;
 
+    /// <summary>
+    /// The fights a warrior has to have come back from before he may retire.
+    /// </summary>
+    /// <remarks>
+    /// A career, not an escape hatch: without a gate, retiring would be the cheapest answer to a bad
+    /// week — walk the wounded man into a post, stop feeding him and keep his training bonus. A lost
+    /// limb opens the door too, because the field has already ended that career for him.
+    /// </remarks>
+    public int VictoriesForRetirement { get; init; } = 12;
+
     /// <summary>The infirmary days burnt in one day.</summary>
     public int NaturalRecoveryPerDay { get; init; } = 1;
 

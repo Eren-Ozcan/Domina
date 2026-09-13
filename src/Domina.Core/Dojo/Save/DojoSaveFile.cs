@@ -58,7 +58,9 @@ public static class DojoSaveFile
                 w.Morale,
                 entry.Released,
                 w.Mastery.Learned.Count == 0 ? null : new Dictionary<string, double>(w.Mastery.Learned),
-                w.Charms.Count == 0 ? null : [.. w.Charms]));
+                w.Charms.Count == 0 ? null : [.. w.Charms],
+                entry.Retired,
+                entry.Victories));
         }
 
         return new DojoSnapshot(
@@ -71,7 +73,7 @@ public static class DojoSaveFile
             state.ClaimedBountyDay,
             [.. state.School.Owned],
             [.. state.HiredToday],
-            [.. state.Staff.Hired],
+            [.. state.Staff.Posts.Select(p => new PostSnapshot(p.Key, p.Value?.Value))],
             [.. state.School.UnderConstruction.Select(s => new BuildSiteSnapshot(s.Key, s.Value))],
             state.LastFeastDay,
             SeasonSnapshot.From(state.Season),
@@ -169,7 +171,9 @@ public static class DojoSaveFile
         state.RestoreSchool(
             snapshot.School ?? [],
             snapshot.Sites ?? []);
-        state.RestoreStaff(snapshot.Staff ?? []);
+        state.RestoreStaff(
+            (snapshot.Staff ?? []).Select(p =>
+                (p.Role, p.Master is int id ? new WarriorId(id) : (WarriorId?)null)));
         state.RestoreFeast(snapshot.LastFeastDay);
         state.RestoreHiredToday(snapshot.HiredRecruits ?? []);
         if (snapshot.Province is ProvinceSnapshot province)
@@ -193,6 +197,8 @@ public static class DojoSaveFile
                 warnings.Add($"A warrior record was skipped (Id {record.Id}): {e.Message}");
             }
         }
+
+        state.VerifyPosts();
 
         return new LoadResult(state, warnings);
     }
@@ -253,6 +259,7 @@ public static class DojoSaveFile
         entry.Injure(Math.Max(0, record.RecoveryDaysRemaining));
         entry.TrainingDays = Math.Max(0, record.TrainingDays);
         entry.Drill = record.Drill;
+        entry.Victories = Math.Max(0, record.Victories);
 
         if (!record.IsAlive)
         {
@@ -261,6 +268,10 @@ public static class DojoSaveFile
         else if (record.Released)
         {
             state.Roster.Release(warrior.Id);
+        }
+        else if (record.Retired)
+        {
+            state.Roster.Retire(warrior.Id);
         }
     }
 }

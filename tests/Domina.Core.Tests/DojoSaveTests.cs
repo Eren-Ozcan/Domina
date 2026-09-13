@@ -155,7 +155,7 @@ public class DojoSaveTests
 
         DojoSnapshot tampered = DojoSaveFile.Capture(before) with
         {
-            Staff = [StaffRole.DrillMaster, StaffRole.Physician],
+            Staff = [new PostSnapshot(StaffRole.DrillMaster), new PostSnapshot(StaffRole.Physician)],
         };
 
         DojoState after = DojoSaveFile.Restore(tampered).State!;

@@ -289,6 +289,14 @@ public sealed class BattleAftermath(HonorEngine? honor = null)
             warrior.GainMastery(state.Tuning.Mastery.FightGain);
         }
 
+        // The fights he came back from: the number retirement is earned with (docs/GDD.md §10). It is
+        // counted on the man who <b>returned</b>, so a warrior who fell in a won fight does not earn a
+        // career he did not finish.
+        if (won)
+        {
+            state.Roster.Credit(entry.Id);
+        }
+
         double honorDelta = _honor.PerformanceDelta(summary) + _honor.RetreatDelta(summary);
         warrior.Honor = HonorScale.Clamp(warrior.Honor + honorDelta);
 

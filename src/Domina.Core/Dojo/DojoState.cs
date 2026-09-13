@@ -1086,6 +1086,73 @@ public sealed class DojoState
         return true;
     }
 
+    /// <summary>
+    /// Puts a master of the house into a post. He draws no wage (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// The three barred roles refuse him outright — a physician, a cook and a diviner are trades, not
+    /// things a swordsman picks up — and that bar is what keeps wages a real pressure: if free
+    /// retirees could fill every building, no building would ever stand empty.
+    /// </remarks>
+    /// <returns><c>true</c> if he took the post.</returns>
+    public bool Appoint(WarriorId id, StaffRole role)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        if (entry is null
+            || !entry.Retired
+            || !entry.Warrior.IsAlive
+            || !School.HasPostFor(role)
+            || !StaffTuning.MasterMayHold(role)
+            || !Staff.Add(role, id))
+        {
+            return false;
+        }
+
+        ApplySchool();
+        return true;
+    }
+
+    /// <summary>
+    /// Takes a warrior off the field for good: he becomes a master of the house.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The gate is what GDD §10 names — a man with many victories behind him, or one the field has
+    /// already taken a limb from. Both are the same statement said twice: retirement is what a career
+    /// ends in, not a way to dodge a bad week.
+    /// </para>
+    /// <para>
+    /// It is irreversible, like every other way off the roster. What the dojo gets back is a man who
+    /// eats nothing, draws no wage and can hold a post; what it loses is a sword.
+    /// </para>
+    /// </remarks>
+    /// <returns><c>true</c> if he retired.</returns>
+    public bool Retire(WarriorId id)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        if (entry is null || !CanRetire(entry) || !Roster.Retire(id))
+        {
+            return false;
+        }
+
+        // The charms are the dojo's and he is not going to the field again.
+        ReturnCharms(entry.Warrior.StripCharms());
+        Tribunal.Forget(id);
+        return true;
+    }
+
+    /// <summary>Has he earned the right to leave the field?</summary>
+    public bool CanRetire(RosterEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        return entry.Warrior.IsAlive
+            && !entry.Released
+            && !entry.Retired
+            && (entry.Victories >= Tuning.VictoriesForRetirement
+                || entry.Warrior.Disabilities.Count > 0);
+    }
+
     /// <summary>Lets the person go. The building stays and drops to half efficiency.</summary>
     public bool Dismiss(StaffRole role)
     {
@@ -1174,9 +1241,9 @@ public sealed class DojoState
     }
 
     /// <summary>Restores the posts coming from the save; a post with no building is dropped.</summary>
-    internal void RestoreStaff(IEnumerable<StaffRole> roles)
+    internal void RestoreStaff(IEnumerable<(StaffRole Role, WarriorId? Master)> posts)
     {
-        Staff.Restore(roles, School);
+        Staff.Restore(posts, School);
         ApplySchool();
     }
 
@@ -1190,6 +1257,33 @@ public sealed class DojoState
         School.Restore(
             owned,
             (sites ?? []).Select(s => new KeyValuePair<SchoolNodeId, int>(s.Id, s.DaysLeft)));
+        ApplySchool();
+    }
+
+    /// <summary>
+    /// Drops any post whose master is not a retired man of this dojo.
+    /// </summary>
+    /// <remarks>
+    /// The save restores the posts before the roster, so a corrupted or hand-edited file could leave a
+    /// post held by somebody who is dead, gone, or never existed. Merge-on-load's rule applies: what
+    /// cannot hold is dropped in silence rather than throwing.
+    /// </remarks>
+    internal void VerifyPosts()
+    {
+        foreach ((StaffRole role, WarriorId? master) in Staff.Posts.ToList())
+        {
+            if (master is not WarriorId id)
+            {
+                continue;
+            }
+
+            RosterEntry? entry = Roster.Find(id);
+            if (entry is null || !entry.Retired || !entry.Warrior.IsAlive)
+            {
+                Staff.Remove(role);
+            }
+        }
+
         ApplySchool();
     }
 

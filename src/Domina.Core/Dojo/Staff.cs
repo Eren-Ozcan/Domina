@@ -139,6 +139,22 @@ public sealed record StaffTuning
     /// </remarks>
     public double OmamoriResaleShare { get; init; } = 0.5;
 
+    /// <summary>
+    /// What a <b>retired warrior</b> is worth in a post he is good at, against a hire.
+    /// </summary>
+    /// <remarks>
+    /// Above 1 because GDD §10 says so outright — "better than hired" — and because the whole point of
+    /// the long game is that the man who survived it is worth more than the man you can buy. He also
+    /// costs no wage, which is the larger half of the gift.
+    /// </remarks>
+    public double MasterEfficiency { get; init; } = 1.15;
+
+    /// <summary>What he is worth in a post he is only passable at.</summary>
+    public double MasterMediumEfficiency { get; init; } = 1.0;
+
+    /// <summary>And in one he half understands.</summary>
+    public double MasterWeakEfficiency { get; init; } = 0.5;
+
     /// <summary>The share of a comrade's death the funeral rite takes off the survivors.</summary>
     /// <remarks>
     /// This is the monk's second job (GDD §10) and the only one that touches the fight's aftermath. It
@@ -146,6 +162,24 @@ public sealed record StaffTuning
     /// loses three men — which is the night a dojo actually spirals.
     /// </remarks>
     public double FuneralRelief { get; init; } = 0.5;
+
+    /// <summary>What a master of the house is worth in this post; 0 if he is barred from it.</summary>
+    /// <remarks>
+    /// The tiers are GDD §10's own table, and the <b>bar</b> is an economic decision rather than a
+    /// fictional one: if free retirees could fill every building, no building would ever stand empty,
+    /// wages would leave the economy and the "cut the staff, keep the building" gear would spin free.
+    /// The three barred roles are the ones that need an outsider — a physician, a cook, a diviner.
+    /// </remarks>
+    public double MasterWorth(StaffRole role) => role switch
+    {
+        StaffRole.DrillMaster or StaffRole.KataMaster or StaffRole.WeaponMaster => MasterEfficiency,
+        StaffRole.Steward or StaffRole.Broker or StaffRole.Monk => MasterMediumEfficiency,
+        StaffRole.Smith or StaffRole.Bard => MasterWeakEfficiency,
+        _ => 0,
+    };
+
+    /// <summary>Can a retired warrior hold this post at all?</summary>
+    public bool MasterMayHold(StaffRole role) => MasterWorth(role) > 0;
 
     /// <summary>The charm slots a dojo with this shrine and this staff opens.</summary>
     public int OmamoriSlots(bool shrine, bool monk) => !shrine
@@ -158,52 +192,72 @@ public sealed record StaffTuning
         : SituationalWagePerDay;
 }
 
-/// <summary>Who is employed today.</summary>
+/// <summary>Who is in which post today.</summary>
 /// <remarks>
+/// <para>
 /// It holds state and it does not decide: hiring's gold, the daily wage and the effects belong to
-/// <see cref="DojoState"/>. Only the <b>list of roles</b> goes into the save — a wage is a balance
-/// number and comes from the code.
+/// <see cref="DojoState"/>. What goes into the save is <b>which roles are filled and by whom</b> — a
+/// wage is a balance number and comes from the code.
+/// </para>
+/// <para>
+/// A post is held either by an outsider on a wage or by a <b>retired warrior</b> of the dojo's own,
+/// who draws none (docs/GDD.md §10). That is the whole reason the post remembers a name rather than a
+/// yes/no: the payroll and the efficiency both depend on which of the two is standing there.
+/// </para>
 /// </remarks>
 public sealed class Staff
 {
-    private readonly HashSet<StaffRole> _hired = [];
+    private readonly Dictionary<StaffRole, Model.WarriorId?> _posts = [];
 
     /// <summary>The roles filled today.</summary>
-    public IReadOnlyCollection<StaffRole> Hired => _hired;
+    public IReadOnlyCollection<StaffRole> Hired => _posts.Keys;
 
-    public bool Has(StaffRole role) => _hired.Contains(role);
+    /// <summary>The posts, each with the retired warrior holding it or <c>null</c> for an outsider.</summary>
+    public IReadOnlyDictionary<StaffRole, Model.WarriorId?> Posts => _posts;
 
-    /// <summary>The day's payroll.</summary>
+    public bool Has(StaffRole role) => _posts.ContainsKey(role);
+
+    /// <summary>The retired warrior in this post, if it is one of the dojo's own.</summary>
+    public Model.WarriorId? MasterIn(StaffRole role) =>
+        _posts.TryGetValue(role, out Model.WarriorId? master) ? master : null;
+
+    /// <summary>Is this post held by a master of the house rather than by a hire?</summary>
+    public bool HeldByMaster(StaffRole role) => MasterIn(role) is not null;
+
+    /// <summary>The day's payroll — a retired man costs nothing.</summary>
     public int DailyWage(StaffTuning tuning)
     {
         ArgumentNullException.ThrowIfNull(tuning);
 
         int total = 0;
-        foreach (StaffRole role in _hired)
+        foreach ((StaffRole role, Model.WarriorId? master) in _posts)
         {
-            total += tuning.WageOf(role);
+            if (master is null)
+            {
+                total += tuning.WageOf(role);
+            }
         }
 
         return total;
     }
 
     /// <summary>Takes the post. <c>false</c> if it is already filled.</summary>
-    internal bool Add(StaffRole role) => _hired.Add(role);
+    internal bool Add(StaffRole role, Model.WarriorId? master = null) => _posts.TryAdd(role, master);
 
-    /// <summary>Lets the person go. The building stays.</summary>
-    internal bool Remove(StaffRole role) => _hired.Remove(role);
+    /// <summary>Lets the person go, or sends the master back to his own room. The building stays.</summary>
+    internal bool Remove(StaffRole role) => _posts.Remove(role);
 
     /// <summary>Restores the posts coming from the save, dropping any whose building is not standing.</summary>
-    internal void Restore(IEnumerable<StaffRole> roles, School school)
+    internal void Restore(IEnumerable<(StaffRole Role, Model.WarriorId? Master)> posts, School school)
     {
         ArgumentNullException.ThrowIfNull(school);
 
-        _hired.Clear();
-        foreach (StaffRole role in roles)
+        _posts.Clear();
+        foreach ((StaffRole role, Model.WarriorId? master) in posts)
         {
             if (school.HasPostFor(role))
             {
-                _hired.Add(role);
+                _posts[role] = master;
             }
         }
     }

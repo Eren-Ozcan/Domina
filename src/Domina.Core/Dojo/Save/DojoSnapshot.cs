@@ -52,7 +52,7 @@ public sealed record DojoSnapshot(
     int? ClaimedBountyDay = null,
     IReadOnlyList<SchoolNodeId>? School = null,
     IReadOnlyList<int>? HiredRecruits = null,
-    IReadOnlyList<StaffRole>? Staff = null,
+    IReadOnlyList<PostSnapshot>? Staff = null,
     IReadOnlyList<BuildSiteSnapshot>? Sites = null,
     int? LastFeastDay = null,
     SeasonSnapshot? Season = null,
@@ -190,6 +190,13 @@ public sealed record SettlementSnapshot(
     int Contracts = 0,
     int ChangedDay = 0);
 
+/// <summary>One filled post: the role, and the retired warrior holding it if it is one of the dojo's own.</summary>
+/// <remarks>
+/// The wage is not written — it is a balance number — but <b>who</b> stands in the post is, because a
+/// master of the house costs nothing and is worth a different amount (docs/GDD.md §10).
+/// </remarks>
+public sealed record PostSnapshot(StaffRole Role, int? Master = null);
+
 /// <summary>How many of one kind of charm are in the store.</summary>
 /// <remarks>
 /// A list of pairs rather than a dictionary: the kinds are an enum, and a dictionary keyed by an enum
@@ -215,6 +222,8 @@ public sealed record CharmStackSnapshot(OmamoriKind Kind, int Count);
 /// the roster, and the closing screen counts them on opposite sides.
 /// </param>
 /// <param name="Charms">The temple charms he is wearing (docs/GDD.md §10).</param>
+/// <param name="Retired">He left the field for good and became a master of the house.</param>
+/// <param name="Victories">The fights he came back from — the retirement gate reads it.</param>
 /// <param name="Morale">
 /// His condition today. It is saved because it is state the season produced, not a balance number —
 /// what a point of morale is <b>worth</b> still comes from the code.
@@ -244,7 +253,9 @@ public sealed record WarriorSnapshot(
     double Morale = MoraleScale.Starting,
     bool Released = false,
     IReadOnlyDictionary<string, double>? Mastery = null,
-    IReadOnlyList<OmamoriKind>? Charms = null);
+    IReadOnlyList<OmamoriKind>? Charms = null,
+    bool Retired = false,
+    int Victories = 0);
 
 /// <summary>The weapon's <b>identifying</b> fields. The derived numbers are computed on load.</summary>
 public sealed record WeaponSnapshot(

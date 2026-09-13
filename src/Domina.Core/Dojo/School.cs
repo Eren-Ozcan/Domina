@@ -444,9 +444,16 @@ public sealed class School
             return 1;
         }
 
-        return staff?.Has(role) == true
-            ? 1
-            : (tuning ?? new StaffTuning()).EmptyFacilityShare;
+        StaffTuning numbers = tuning ?? new StaffTuning();
+        if (staff?.Has(role) != true)
+        {
+            return numbers.EmptyFacilityShare;
+        }
+
+        // A master of the house is worth what GDD §10's table says he is worth in that post — better
+        // than a hire in the three he was trained for, and less in the two he half understands. An
+        // outsider is always exactly one.
+        return staff.HeldByMaster(role) ? numbers.MasterWorth(role) : 1;
     }
 
     /// <summary>The facilities bought, applied to the day-loop settings.</summary>
