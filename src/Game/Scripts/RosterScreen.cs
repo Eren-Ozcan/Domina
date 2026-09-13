@@ -309,7 +309,10 @@ public sealed partial class RosterScreen : DojoScreen
 
             Label name = new()
             {
-                Text = $"{charm.Name}  ·  in store {held}",
+                // The blessing is on the row because the five are no longer the same size: the charms
+                // cost the same and give 4 to 40 points, so a row without it would hide the whole
+                // decision behind five identical price tags.
+                Text = $"{charm.Name}  ·  +{charm.Bonus:0.#} {StatOf(charm.Kind)}  ·  in store {held}",
                 SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             };
             name.AddThemeColorOverride("font_color", held > 0 ? InkColor : MutedColor);
@@ -692,5 +695,16 @@ public sealed partial class RosterScreen : DojoScreen
         WarriorPath.Stone => "Stone",
         WarriorPath.Shadow => "Shadow",
         _ => "not chosen",
+    };
+
+    /// <summary>The stat a charm blesses, for the temple's stall.</summary>
+    private static string StatOf(OmamoriKind kind) => kind switch
+    {
+        OmamoriKind.SteadyHand => "accuracy",
+        OmamoriKind.IronGate => "defence",
+        OmamoriKind.LongBreath => "stamina",
+        OmamoriKind.QuietMind => "will",
+        OmamoriKind.SwiftFoot => "evasion",
+        _ => "—",
     };
 }

@@ -106,7 +106,7 @@ public class OmamoriTests
         state.BuyCharm(OmamoriKind.SteadyHand);
         state.FitCharm(entry.Id, OmamoriKind.SteadyHand);
 
-        Assert.Equal(before + Omamori.StatBonus, entry.Warrior.EffectiveStats.Accuracy, 6);
+        Assert.Equal(before + Omamori.Find(OmamoriKind.SteadyHand).Bonus, entry.Warrior.EffectiveStats.Accuracy, 6);
 
         Assert.True(state.UnfitCharm(entry.Id, OmamoriKind.SteadyHand));
         Assert.Equal(before, entry.Warrior.EffectiveStats.Accuracy, 6);
@@ -190,5 +190,61 @@ public class OmamoriTests
 
         Assert.True(blessed > bare);
         Assert.True(blessed < MoraleScale.Starting);
+    }
+
+    /// <summary>
+    /// The charm is in the stats the fight reads and out of the stats a policy judges him by.
+    /// </summary>
+    [Fact]
+    public void TheUnblessedViewLeavesTheCharmOut()
+    {
+        DojoState state = Dojo(shrine: true, monk: true);
+        RosterEntry entry = state.Roster.Recruit("Kenji");
+
+        Assert.True(state.BuyCharm(OmamoriKind.SteadyHand));
+        Assert.True(state.FitCharm(entry.Id, OmamoriKind.SteadyHand));
+
+        WarriorStats blessed = entry.Warrior.EffectiveStats;
+        WarriorStats bare = entry.Warrior.UnblessedStats;
+
+        Assert.Equal(bare.Accuracy + Omamori.Find(OmamoriKind.SteadyHand).Bonus, blessed.Accuracy, 6);
+        Assert.Equal(bare.Defense, blessed.Defense, 6);
+    }
+
+    /// <summary>
+    /// Each charm blesses its own stat with its own measured size, and only that stat.
+    /// </summary>
+    /// <remarks>
+    /// The sizes are pinned here because they are not a style choice: one size for all five was
+    /// measured (2026-09-12) and made the equal prices a lie — +6 defence was worth more than three
+    /// times +6 accuracy over a season. The prices are pinned for the same reason: each charm was
+    /// priced on 2026-09-13 at the rung where it stops being a bad buy without becoming a landslide
+    /// (about +3.5 points of last nights won), measured one charm at a time against its own charmless
+    /// control.
+    /// </remarks>
+    [Theory]
+    [InlineData(OmamoriKind.IronGate, 4, 120)]
+    [InlineData(OmamoriKind.SwiftFoot, 8, 80)]
+    [InlineData(OmamoriKind.SteadyHand, 12, 40)]
+    [InlineData(OmamoriKind.QuietMind, 6, 30)]
+    [InlineData(OmamoriKind.LongBreath, 15, 40)]
+    public void EachCharmCarriesItsOwnMeasuredBlessing(OmamoriKind kind, double points, int price)
+    {
+        OmamoriCharm charm = Omamori.Find(kind);
+        WarriorStats bare = WarriorStats.Recruit();
+        WarriorStats blessed = charm.Apply(bare);
+
+        Assert.Equal(points, charm.Bonus);
+        Assert.Equal(price, charm.Price);
+
+        double moved =
+            (blessed.Accuracy - bare.Accuracy)
+            + (blessed.Defense - bare.Defense)
+            + (blessed.Evasion - bare.Evasion)
+            + (blessed.Willpower - bare.Willpower)
+            + (blessed.MaxStamina - bare.MaxStamina);
+
+        // One stat moved, by exactly the blessing.
+        Assert.Equal(points, moved, 6);
     }
 }

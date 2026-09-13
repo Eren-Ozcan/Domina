@@ -55,8 +55,9 @@ public sealed record EconomyTuning
     /// </summary>
     /// <remarks>
     /// The catalogue carries the price and this carries the balance, because the charm is the one
-    /// piece of kit that competes directly with the <b>school</b>: 120 gold against a 200-gold building
-    /// that compounds for the rest of the season. That trade is what the number has to get right.
+    /// piece of kit that competes directly with the <b>school</b>: 120 gold (40 for the two charms
+    /// whose stat cannot convert more) against a 200-gold building that compounds for the rest of the
+    /// season. That trade is what the number has to get right.
     /// </remarks>
     public double CharmPriceFactor { get; init; } = 1.0;
 

@@ -236,52 +236,60 @@ public sealed class Warrior
     public IReadOnlyList<Disability> Disabilities => new ReadOnlyCollection<Disability>(_disabilities);
 
     /// <summary>The stats with disabilities applied — the ones the fight uses.</summary>
-    public WarriorStats EffectiveStats
+    public WarriorStats EffectiveStats => Stats(withCharms: true);
+
+    /// <summary>The same stats with the temple's charms left out.</summary>
+    /// <remarks>
+    /// It exists for the callers that have to judge a warrior rather than fight with him — a policy
+    /// asking whether the roster can take an offer. A charm is bought, moved and sold back, so counting
+    /// it in that judgement lets a purchase talk the dojo into a fight it could not have taken the day
+    /// before the purchase. The fight itself always reads <see cref="EffectiveStats"/>.
+    /// </remarks>
+    public WarriorStats UnblessedStats => Stats(withCharms: false);
+
+    private WarriorStats Stats(bool withCharms)
     {
-        get
+        // With no path chosen the calculation is skipped entirely: this is the fight's hot path
+        // (millions of reads per warrior over tens of thousands of fights) and an empty multiplier
+        // pass slowed it down measurably.
+        WarriorStats s = Path == WarriorPath.None
+            ? BaseStats
+            : PathScale.Apply(BaseStats, Path);
+
+        // Morale sits between the path and disability: what he chose to become is beneath it, what
+        // the field took from him is above it. A man in poor spirits is still the man he trained
+        // into; he is only worse at being him today.
+        s = MoraleScale.Apply(s, Morale, MoraleBand);
+
+        // Mastery sits above morale and below disability, in the same place as everything else the
+        // warrior brings to the field himself: what he knows is his, what the field took from him
+        // lands last.
+        if (WeaponSkill > 0)
         {
-            // With no path chosen the calculation is skipped entirely: this is the fight's hot path
-            // (millions of reads per warrior over tens of thousands of fights) and an empty multiplier
-            // pass slowed it down measurably.
-            WarriorStats s = Path == WarriorPath.None
-                ? BaseStats
-                : PathScale.Apply(BaseStats, Path);
-
-            // Morale sits between the path and disability: what he chose to become is beneath it, what
-            // the field took from him is above it. A man in poor spirits is still the man he trained
-            // into; he is only worse at being him today.
-            s = MoraleScale.Apply(s, Morale, MoraleBand);
-
-            // Mastery sits above morale and below disability, in the same place as everything else the
-            // warrior brings to the field himself: what he knows is his, what the field took from him
-            // lands last.
-            if (WeaponSkill > 0)
-            {
-                s = s with { Accuracy = s.Accuracy * MasteryBand.FactorFor(WeaponSkill) };
-            }
-
-            // The charms are added last among the things the warrior brings himself, and as points
-            // rather than as a share: a blessing sewn into his collar is not worth less because he is
-            // in poor spirits today. Everything above it is a multiplier, so adding the points on top
-            // also keeps the charm out of morale's and mastery's compounding.
-            if (_charms.Count > 0)
-            {
-                s = Omamori.Apply(s, _charms);
-            }
-
-            foreach (Disability d in _disabilities)
-            {
-                s = s with
-                {
-                    Strength = s.Strength * d.StrengthMultiplier,
-                    Evasion = s.Evasion * d.EvasionMultiplier,
-                    Accuracy = s.Accuracy * d.AccuracyMultiplier,
-                    Speed = s.Speed * d.SpeedMultiplier,
-                };
-            }
-
-            return s;
+            s = s with { Accuracy = s.Accuracy * MasteryBand.FactorFor(WeaponSkill) };
         }
+
+        // The charms are added last among the things the warrior brings himself, and as points
+        // rather than as a share: a blessing sewn into his collar is not worth less because he is
+        // in poor spirits today. Everything above it is a multiplier, so adding the points on top
+        // also keeps the charm out of morale's and mastery's compounding.
+        if (withCharms && _charms.Count > 0)
+        {
+            s = Omamori.Apply(s, _charms);
+        }
+
+        foreach (Disability d in _disabilities)
+        {
+            s = s with
+            {
+                Strength = s.Strength * d.StrengthMultiplier,
+                Evasion = s.Evasion * d.EvasionMultiplier,
+                Accuracy = s.Accuracy * d.AccuracyMultiplier,
+                Speed = s.Speed * d.SpeedMultiplier,
+            };
+        }
+
+        return s;
     }
 
     /// <summary>
