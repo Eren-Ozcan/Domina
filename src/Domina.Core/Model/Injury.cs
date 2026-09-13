@@ -19,7 +19,7 @@ public enum BodyPart
     /// <summary>The right leg — mobility.</summary>
     RightLeg,
 
-    /// <summary>Sol bacak — hareket kabiliyeti.</summary>
+    /// <summary>The left leg — mobility.</summary>
     LeftLeg,
 
     /// <summary>Depth perception — it affects accuracy.</summary>
