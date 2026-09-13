@@ -96,6 +96,8 @@ internal static class SimArgs
         bool useCharms = false;
         ProvinceTuning provinceTuning = new();
         bool meetRaids = true;
+        RetirementPolicy retirement = RetirementPolicy.None;
+        int retireVictories = new DojoTuning().VictoriesForRetirement;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
         SchoolTuning schoolTuning = new();
@@ -599,6 +601,43 @@ internal static class SimArgs
                     }
 
                     economy = economy with { CharmPriceFactor = charmPrice };
+                    break;
+
+                case "--master-worth":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double masterWorth)
+                        || masterWorth <= 0)
+                    {
+                        return ParsedArgs.Fail($"--master-worth must be a positive number: {value}");
+                    }
+
+                    staffTuning = staffTuning with { MasterEfficiency = masterWorth };
+                    break;
+
+                case "--retire":
+                    retirement = value.ToLowerInvariant() switch
+                    {
+                        "off" => RetirementPolicy.None,
+                        "all" => RetirementPolicy.Everyone,
+                        "maimed" => RetirementPolicy.Maimed,
+                        _ => (RetirementPolicy?)null,
+                    } ?? RetirementPolicy.None;
+
+                    if (!new[] { "off", "all", "maimed" }.Contains(value.ToLowerInvariant()))
+                    {
+                        return ParsedArgs.Fail($"--retire must be off, all or maimed: {value}");
+                    }
+
+                    break;
+
+                case "--retire-victories":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int careers)
+                        || careers < 1)
+                    {
+                        return ParsedArgs.Fail($"--retire-victories must be a positive integer: {value}");
+                    }
+
+                    retireVictories = careers;
                     break;
 
                 case "--charms":
@@ -1485,6 +1524,7 @@ internal static class SimArgs
                     Morale = moraleTuning,
                     Mastery = masteryTuning,
                     RosterCapacity = rosterCapacity,
+                    VictoriesForRetirement = retireVictories,
                 },
                 tuning,
                 policy,
@@ -1511,7 +1551,8 @@ internal static class SimArgs
                 masteryBand,
                 useCharms,
                 provinceTuning,
-                meetRaids)
+                meetRaids,
+                retirement)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1710,6 +1751,9 @@ internal static class SimArgs
         writer.WriteLine("  --charm-price      A multiplier over what the temple asks for a charm");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
+        writer.WriteLine("  --retire off|all|maimed  Who the policy takes off the field into a post");
+        writer.WriteLine("  --master-worth     What a retired man is worth in a post he was trained for");
+        writer.WriteLine("  --retire-victories Fights behind a man before he may retire");
         writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");
         writer.WriteLine("  --raid-most        The most men he ever brings");
         writer.WriteLine("  --province-warning How many moves a settlement takes before it falls");

@@ -1863,9 +1863,23 @@ job:
 
 ### Leaving the roster — only honourable paths
 
-- **Retirement:** a warrior with many victories, or one badly maimed, leaves the field and becomes a
-  **master** — a permanent bonus to training speed, the daily food burden ends, they never take the
-  field again
+- **Retirement (in the core since 2026-09-12):** a warrior with **12 victories** behind him, or one the
+  field has already maimed, leaves it for good and becomes a **master of the house** — he eats nothing
+  more from the day's bill, draws **no wage**, never takes the field again, and can hold a post at
+  GDD's own tier table (better than a hire in the three he was trained for, half in the two he half
+  understands, barred from the physician, the cook and the diviner). It is irreversible, like every
+  other way off the roster, and the gate is what keeps it a career's ending rather than an answer to a
+  bad week.
+
+> ⚠️ **Measured, and it is never the profitable move (2026-09-12).** 400 dojos × 180 days on the
+> documented policy: retiring **every** eligible man takes dojos closed from 25.0% to 36.5% and the
+> last night from 11.2% to 0.0%; retiring **only the maimed** — the policy a player would actually run
+> — still costs, 28.7% closed and 4.0% of nights. Raising what a master is worth in his post does not
+> touch it (1.15 / 1.4 / 1.8 → 28.7 / 28.0 / 28.7%), because this economy is **roster-bound**: a body
+> in the party beats a multiplier in a building, and a maimed warrior still fights. So retirement
+> stands as the honourable exit it was written to be and not as an optimisation. What would move it is
+> making a maimed man genuinely unusable or making the wage and food lines bite harder — both Phase 9,
+> both written down rather than guessed at here.
 - **Seppuku** (§6) and **sending them on their way**
 - **Release — walking a man out under his own name (2026-09-10).** A warrior joins on a **fixed-term
   service contract** (the story's *nenki hōkō*): the market price settles the claim standing over him,

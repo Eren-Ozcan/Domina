@@ -58,7 +58,8 @@ internal sealed record CampaignOptions(
     MasteryBand MasteryBand = default,
     bool UseCharms = false,
     ProvinceTuning? Province = null,
-    bool MeetRaids = true)
+    bool MeetRaids = true,
+    RetirementPolicy Retirement = RetirementPolicy.None)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -190,6 +191,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (_options.UseCharms)
             {
                 row.GoldSpentOnCharms += FitCharms(state);
+            }
+
+            if (_options.Retirement != RetirementPolicy.None)
+            {
+                row.Retirements += RetireVeterans(state);
             }
 
             int purse = state.Resources.Gold;
@@ -803,7 +809,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
         {
             foreach (StaffRole role in state.Staff.Hired.ToList())
             {
-                state.Dismiss(role);
+                // A master of the house is not let go on a bad day: he costs nothing, and cutting him
+                // would be cutting the one thing the long game pays out.
+                if (!state.Staff.HeldByMaster(role))
+                {
+                    state.Dismiss(role);
+                }
             }
 
             return;
@@ -831,6 +842,67 @@ internal sealed class CampaignRunner(CampaignOptions options)
             }
 
             state.Hire(role);
+        }
+    }
+
+    /// <summary>
+    /// Retires the men who have earned it, and puts them in whatever post they may hold.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately blunt again, and deliberately <b>greedy</b>: the moment a man is eligible he comes
+    /// off the field. That is the policy the rule has to survive — if retiring the best sword the day
+    /// it qualifies were the winning move, the gate would be in the wrong place.
+    /// </remarks>
+    private int RetireVeterans(DojoState state)
+    {
+        int retired = 0;
+
+        foreach (RosterEntry entry in state.Roster.Living.ToList())
+        {
+            // A dojo that retires its way down to nobody has no season left; the roster comes first.
+            if (state.Roster.Living.Count() <= _options.PartySize)
+            {
+                break;
+            }
+
+            // The maimed-only policy is the one a player would actually run: a man the field has
+            // already taken an arm from is worth more in a post than in a party, while retiring a whole
+            // veteran is giving away the best sword in the dojo.
+            if (_options.Retirement == RetirementPolicy.Maimed
+                && entry.Warrior.Disabilities.Count == 0)
+            {
+                continue;
+            }
+
+            if (!state.CanRetire(entry) || !state.Retire(entry.Id))
+            {
+                continue;
+            }
+
+            retired++;
+            Appoint(state, entry);
+        }
+
+        return retired;
+    }
+
+    /// <summary>Puts a new master into the best post standing empty that he may hold.</summary>
+    private static void Appoint(DojoState state, RosterEntry master)
+    {
+        foreach (SchoolNode node in SchoolTree.All)
+        {
+            if (node.Role is not StaffRole role
+                || state.Staff.Has(role)
+                || !state.School.Has(node.Id)
+                || !state.StaffTuning.MasterMayHold(role))
+            {
+                continue;
+            }
+
+            if (state.Appoint(master.Id, role))
+            {
+                return;
+            }
         }
     }
 
@@ -972,6 +1044,19 @@ internal sealed class CampaignRunner(CampaignOptions options)
         price > 0 && state.Resources.Gold - price >= reserve;
 }
 
+/// <summary>Which men the policy takes off the field.</summary>
+internal enum RetirementPolicy
+{
+    /// <summary>Nobody retires — the control.</summary>
+    None,
+
+    /// <summary>Everyone the gate lets through, the day it lets him through.</summary>
+    Everyone,
+
+    /// <summary>Only the men the field has already maimed.</summary>
+    Maimed,
+}
+
 /// <summary>The life of a single dojo.</summary>
 internal sealed class CampaignRow
 {
@@ -1044,6 +1129,9 @@ internal sealed class CampaignRow
 
     /// <summary>The gold that went to the school.</summary>
     public int GoldSpentOnSchool { get; set; }
+
+    /// <summary>The men who left the field for good.</summary>
+    public int Retirements { get; set; }
 
     /// <summary>The best mastery on the roster when the season ended (0-1).</summary>
     /// <remarks>
@@ -1222,6 +1310,9 @@ internal sealed class CampaignReport(int days)
 
     /// <summary>Raids nobody answered, per dojo.</summary>
     public double AverageSacks => Average(r => r.Sacks);
+
+    /// <summary>Retirements per dojo.</summary>
+    public double AverageRetirements => Average(r => r.Retirements);
 
     /// <summary>The best mastery reached, averaged over the dojos.</summary>
     public double AverageBestMastery =>
