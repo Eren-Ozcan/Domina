@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-12 (the last three posts, the province, the enemy who no longer runs, the curve re-derived, and the eight carried-over items)
+Last updated: 2026-09-13 (the yumi written, the enemy kinds' manner closed #3, the stall priced charm by charm, the tiers re-swept, and the bed given a paired multi-seed protocol)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1694,6 +1694,462 @@ roster ≠ day one's stall, save round trip).
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
 
 ---
+
+## 2026-09-13 (thirteenth round) — The bow is written, and the range class stops being a promise
+
+**The yumi exists** (`ThrownWeapon.Yumi()`). It is built as the shuriken's opposite on every axis:
+range **1200** against 700, damage **26** against 12, **10** arrows against a handful of 4 — and a draw
+of **1.5 s** against 0.7, with a slower arrow. A bowman left alone settles the fight before it is
+joined; a bowman closed on has spent it drawing.
+
+**The class's depth moved onto the implement.** `UnclassedRangeFactor` (0.85) was always documented as
+deliberately shallow — the throwing slot every warrior carries must not become a class tax — with the
+note that the real payoff would arrive with the bow. So `ThrownWeapon.UntrainedShare` is new: 1 for
+every other thrown thing, **0.45** for the yumi, multiplied into the shared factor. A bow in an
+untrained hand is not a slightly worse bow.
+
+| Fight (20.000 each, same master, only the slot and the class differ) | Victory |
+|---|---|
+| Shuriken, no class | 75.72% |
+| Shuriken, kyūdō | 76.78% |
+| Yumi, no class | 77.73% |
+| Yumi, kyūdō | **82.77%** |
+
+The class is worth **+1.06** points on a star and **+5.04** on the bow. For scale, the poison class is
+worth ~11 points on its own blade, so the range class still sits below it — which is the right order
+for a class whose implement also outranges everything on the field. The bow is worth **+2.01** to an
+untrained hand as well, and that is intended: it is a real weapon anybody can loose badly.
+
+⚠️ **A gap found while writing it: the thrown slot has no shop.** `Warrior.Thrown` is fought with,
+saved and loaded, but nothing in the dojo — market, quartermaster, recruit screen — ever hands a
+warrior one. So the yumi has no price and a kyūdō cannot buy his own weapon in a running season. It is
+a shop gap, not a class gap; it is now a Phase 4 line in `ROADMAP.md`.
+
+**Two Turkish strings were found and fixed** while working here — `"Zehirli shuriken"` in
+`Equipment.cs` (a name the game would have shown a player) and a Turkish doc comment in `Injury.cs`.
+The repo's rule is English everywhere, the game's own UI included.
+
+**A save bug was closed before it could be shipped:** `ThrownWeaponSnapshot` did not carry the new
+share, so a saved yumi would have loaded as a bow anyone could draw. A test pins it.
+
+New scenarios: `yumi`, `yumi-unclassed`. New tests: `YumiTests` (4). 699 tests green under Release
+(523 core + 123 presentation + 53 sim).
+
+---
+
+## 2026-09-13 (twelfth round) — The enemy kinds get a manner, and it costs the season nothing
+
+**Open Decision #3 is closed.** The kinds had numbers and no behaviour; the decision had said since
+2026-09-03 that the difference would be the target-selection weights tuned per kind rather than a code
+path per kind, and that is what was built. `Combat/TargetProfile.cs` holds five **multipliers** over
+the five terms every warrior already scores — the road to be walked, the wounded man, the bare region,
+the teammate already on that target, the cost of turning away. Absolute numbers were rejected on
+purpose: with multipliers a later round that retunes what a bare region is worth moves every kind with
+it, and a profile stays a statement about character instead of a second balance table.
+
+`TargetProfile.Default` is all ones, so a field without profiles is bit-for-bit the fight it was
+before the type existed — a test pins that, because every combat figure in this file was taken on it.
+
+| Kind | Profile | What it is |
+|---|---|---|
+| Collector | crowd x0.5, wound x1.2 | He collects in numbers |
+| Cutthroat | wound x1.8, bare region x1.5, stickiness x0.6 | He finishes, he does not duel |
+| Duelist | wound x0.4, crowd x1.8, stickiness x1.6 | He wants his own opponent |
+| Kabukimono | distance x2.0, wound x0.6, stickiness x1.3 | Speed 28 under a tetsubo: the road is expensive |
+| Senior student | distance x0.8, bare region x1.4, crowd x0.8 | The yari's reach buys him the choice |
+| Kurogane | wound x1.5, bare region x1.6, stickiness x0.8 | He takes whatever is open |
+
+**The dojo's own men carry no profile.** The player directs his side; a hired man choosing his opponent
+by temperament would be reading the field against the player's plan.
+
+**Measured against its own absence, and it is zero.** New switch `--enemy-profiles on|off`
+(`CombatTuning.TargetProfiles`), six seeds x 1600 dojos x 180 days, each seed paired with its own
+control:
+
+| | profiles off | on | paired |
+|---|---|---|---|
+| Last night won | 13.67% | 13.73% | +0.07 ±0.84 |
+| Dojos closed | 28.32% | 28.15% | −0.17 ±1.14 |
+| Net per fight | 31.45 | 31.38 | −0.07 ±0.41 |
+| Deaths / warrior-fight | 4.78% | 4.82% | +0.03 ±0.05 |
+| Fight victory | 97.85% | 97.85% | +0.00 ±0.06 |
+
+**Kept at zero on purpose.** A manner that also moved survival would be a difficulty change wearing a
+personality, and the kinds are already separated by stats and weapons. What the round buys is the
+lever: if a kind ever has to become a threat rather than a manner, the knob is written, measured and
+switchable. The appetites do change the fights themselves — `AnAppetiteChangesTheFight` sweeps twelve
+seeds and the same men come out differently — so the zero is an effect that cancels over a season, not
+a feature that never fires.
+
+**A note on why this was cheap to measure:** the decision was written into the core, so the whole
+question was a sim flag and twelve runs. Had the behaviour been a code path per kind in the engine,
+the same question would have needed a playtest per kind.
+
+New files: `src/Domina.Core/Combat/TargetProfile.cs`, `tests/Domina.Core.Tests/TargetProfileTests.cs`
+(5 tests). Changed: `Warrior.Targeting`, `Combatant.Targeting` (read once, like the stats),
+`Battle.TargetScore` (every term through the attacker's profile), `EnemyKind.Targeting` + the six
+kinds, `CombatTuning.TargetProfiles`, `--enemy-profiles` in the sim, GDD S4 (a new "the kinds'
+appetites" block) and Open Decision #3.
+
+695 tests green under Release (519 core + 123 presentation + 53 sim).
+
+---
+
+## 2026-09-13 (eleventh round) — The stall is priced charm by charm, and the bed learns its own error
+
+**The round's first finding is about measurement, not about charms.** Halfway through, the same arm
+was run on six different seeds and the charmless bed read **11.1 / 13.9 / 14.2 / 13.9 ...** per cent
+of last nights won at 1600 dojos. That is a run-to-run spread of about **±1.3 points**, well over the
+±0.8 binomial error the earlier rounds quoted — so a single-seed sweep cannot tell a two-point effect
+from nothing, and a decision taken this morning on one seed had to be re-taken. **The protocol from
+here on: several seeds, and every arm compared against its own seed's control**, reporting the paired
+mean. The RNG is not at fault (xoshiro256** per campaign, stride 1,000,003); what is at fault is
+reading one number as if it had no variance of its own.
+
+**Open Decision 20 is closed, and larger than it was opened.** The question was what to do with the
+two charms that had been given jobs but still did not pay for their 120 gold. Measured charm by charm
+(six seeds x 1600 dojos x 180 days, each against its own charmless control, charmless bed **13.7%** of
+last nights), the shelf turned out to be mispriced at both ends:
+
+| Charm | 20g | 30g | 40g | 60g | 80g | 100g | 120g |
+|---|---|---|---|---|---|---|---|
+| Iron gate (defence) | | | **+10.5** | +7.9 | | | **+3.4** |
+| Swift foot (evasion) | | | +7.6 | | **+3.8** | +2.6 | +2.1 |
+| Steady hand (accuracy) | | | **+3.7** | +1.2 | | | **−2.1** |
+| Long breath (stamina) | | | **+3.7** | | | | +1.1 |
+| Quiet mind (will) | +3.1 | **+2.8** | +2.2 | | | | +0.6 |
+
+(points of last nights won over the same seed's charmless control; ±0.5-1.7 across the six seeds)
+
+**The rung is read in nights won, not in net.** This morning's working rule — "the charm should pay
+its own gold back" — puts iron gate at 60 and makes it a landslide (+7.9). A charm's job is to turn
+gold into victories; the net it costs per fight is the price of that, not a fault. At the rung
+(about +3.5 points) the five land at **iron gate 120, swift foot 80, steady hand 40, long breath 40,
+quiet mind 30**.
+
+**One price for all five fails in both directions**, which is why §10's equal-price rule is now
+superseded: at 120 gold steady hand is **worse than wearing nothing** (−2.1 nights, −5.8 net) while
+quiet mind and long breath are noise, and at 40 gold iron gate takes the dojo from 13.7% of nights to
+**24.2%** and closes 4.9 points fewer dojos — one right answer, and no shelf. The design's own intent
+(five answers to five weaknesses, the man deciding which) needs prices proportional to strength.
+Quiet mind reads the same at 20 and 30 inside the noise, so the dearer price was taken.
+
+**The difficulty tiers were re-swept and the multipliers stand.** The tenth round left GDD S10's tier
+table marked "partly void" because the curve moved under it when the stamina pool was made to bind.
+Six seeds x 1600 dojos per tier:
+
+| Tier | last night won | dojos closed | net / fight | deaths / warrior-fight | mastery, best man |
+|---|---|---|---|---|---|
+| Apprentice | 22.8% ±0.4 | 21.2% ±1.4 | +41.3 | 3.5% | 33.0% |
+| Master | 13.7% ±1.3 | 28.3% ±1.3 | +31.4 | 4.8% | 21.3% |
+| Legend | 5.2% ±0.5 | 35.5% ±1.0 | +19.0 | 6.5% | 10.3% |
+
+The spread survived the new curve and **Legend's floor rose**: on the old curve the hard tier ran a
+negative net and won 0.2% of nights, which was the season's second half removed; it is now a road
+that can be walked to the end. Nothing was retuned — **0.93/1.07/0.42, 1/1/0.5, 1.07/0.93/0.58** stay
+— and the "partly void" note is discharged in both places it appeared (S5's binding-pool paragraph
+and S10's tier table).
+
+Changed: `Omamori.All` (five prices), the catalogue's remarks,
+`OmamoriTests.EachCharmCarriesItsOwnMeasuredBlessing` (price pinned per charm), GDD S10 (the omamori
+section, the tier table, Open Decision 20) and S5's tier note. No new sim knobs; the sweeps used
+`--charm-price`, `--charm-fit`, `--difficulty` and `--seed`.
+
+⚠️ **Still owed:** the yumi is still unwritten, so the kyūdō class carries a placeholder number.
+
+690 tests green under Release (514 core + 123 presentation + 53 sim). `ThroughputTests` is a
+wall-clock budget and **fails under a Debug build** (10.000 fights take ~15 s against a 10 s budget);
+it is a Release-only check, which is what the line above has always meant.
+
+---
+
+## 2026-09-12 (tenth round) — The measuring bed is written down, and it stops being the worst policy
+
+**The campaign bed now has a name and a command line.** Two rounds in a row a figure was compared
+against a number measured on a bed nobody had written down, and reconstructing it cost more than the
+sweep. The bed every campaign figure in this file since the seventh round was taken on:
+
+```
+dotnet run --project src/Domina.Sim -c Release -- --mode campaign --days 180 --campaigns 1600   --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on   --province on --smith-upgrades on --standing on
+```
+
+Without `--accept-ratio 2.0` the same systems close 84-92% of dojos: the accept rule, not the
+season's length, is what the old "the bed is brutal" figures were measuring. The bed's charmless
+reading, 1600 dojos, Master: **27.7% closed, 9.4% won the night, net 24.4**.
+
+**`--charm-fit` now defaults to `irongate` instead of `weakest`.** The old default was the worst
+policy measured, so every campaign figure carried a pessimistic charm floor for no stated reason. A
+bed should stand for an informed player, and the player finds the defence charm in an afternoon. The
+default is a bed, not a balance claim — when a round moves the ladder, the default moves with it.
+`--charm-fit weakest` still reproduces the old reading.
+
+**The per-charm sizes did not flatten the ladder** — that is the round's real finding. On the bed
+above (1600 dojos, against charms off at 9.4% of nights and net 24.4):
+
+| Policy | Closed | Won the night | Net |
+|---|---|---|---|
+| charms off | 27.7% | 9.4% | 24.4 |
+| **iron gate** (+4 defence) | 25.2% | **14.7%** | 22.9 |
+| **swift foot** (+8 evasion) | **23.8%** | 13.0% | 23.0 |
+| steady hand / `first` (+12 accuracy) | 25.4% | 8.8% | 21.4 |
+| quiet mind (+6 will) | 28.7% | 5.9% | 18.4 |
+| long breath (+15 stamina) | 29.1% | 5.6% | 18.2 |
+| `weakest` | 27.9% | 6.1% | 18.4 |
+
+At 1600 dojos a 10% share carries about ±0.75 points of standard error, so iron gate's +5.3 and
+swift foot's +3.6 are real, steady hand's -0.6 is noise on a 120-gold bill, and the will and stamina
+charms are **worse than wearing nothing** by 3.5 and 3.8 points. Sizing them up was the wrong lever
+(the ninth round measured that and reverted it); sizing them honestly leaves them **net harmful**,
+because the gold is spent and nothing comes back. Two of the five charms are a trap the stall still
+sells at the same price as the two that work.
+
+The fix is not a number, and the ninth round already said so: **willpower and stamina need a job that
+is not a stat point** — the drill's mastery rate, the panic check inside the dojo, the recovery
+between fights. Until that job exists, `quietmind` and `longbreath` are measuring instruments, not
+buys, and GDD S10's equal-price rule stays open.
+
+**`--accept-charms` stays `off`.** The blind accept rule is the seventh round's measured fix, not an
+oversight; it is the comparison against pre-seventh-round numbers that is void, which the bed block
+above now makes checkable instead of implicit.
+
+**A stale claim was corrected**, not discovered: the ninth round wrote that CI does not build the
+Godot layer and a step was owed. It does — `.github/workflows/ci.yml` has had a separate `game` job
+since `27257f7` (2026-08-06). The `DayScreen.cs` break survived locally, not past CI.
+
+**Then the two open design items were closed** — the user picked the jobs, the measurement picked the
+numbers.
+
+**Willpower buys the rate of every other drill** (`TrainingTuning.WillFocus`, locked **0.5**). The
+factor is `1 + 0.5 × (will − 50) / 100`: a recruit's 35 learns at 0.93, a drilled 90 at 1.20, and the
+weapon master's rate is scaled by the same number — one day, one rate. The will read is the
+**effective** one, so the charm he wears and the spirits he is in both reach the training ground.
+Swept 0 / 0.25 / 0.5 / 1.0 (800 dojos × 180 days): the best man ends at 298 / 300 / 307 / 338 and the
+night is won 9.2 / 10.8 / 10.1 / 13.8%. 0.5 rather than 1.0 on purpose — at 1.0 meditation becomes the
+answer to every question and Will is the stat every dojo trains first.
+
+**The stamina pool was made to bind** (`AttackStaminaCost` 6 → **14**, `StaminaRegenPerSecond` 4 →
+**1**). At the old numbers a 17-second fight drained about a point a second out of a pool of 100-180,
+so `MaxStamina` changed nothing: on the 3v3 bed, cutting regeneration from 4 to 0.5 moved victory by
+0.5 points. Swept at a regeneration of 1, the fight runs 16.9 / 17.8 / 20.1 s at an attack cost of
+6 / 10 / 14, and only at 14 does the deeper pool decide fights. An earlier round's "stamina
+regeneration measures zero" is void with it — the knob measured zero **because** the pool never bound.
+
+**And that moved the season, so two difficulty numbers were re-locked in the same round.** The dojo
+trains stamina to 180 while an adversary carries a flat 100, so a binding pool hands the trained roster
+the long fight: the bed went from 27.7% closed / 9.4% of nights to **13.2% / 43.7%**. Each axis has its
+own answer:
+
+| | Was | Now | Measured against |
+|---|---|---|---|
+| `PowerPerDay` | 0.0072 | **0.011** | Deaths per warrior-fight back on 4.7% — swept 0.0072-0.016, deaths 2.6 / 4.2 / **4.9** / 5.3 / 6.0 / 7.0% and closures 13.2 / 26.2 / **30.7** / 33.5 / 34.7 / 39.7% |
+| `FinalRoundPowers` | 1.8-2.8 | **2.34-3.64** (×1.30) | The night is five bouts with nothing healing between them, which is where a binding pool pays most — swept ×1.15 / ×1.30 / ×1.45, nights won 14.2 / **9.7** / 6.0%, closures and deaths unmoved |
+
+Master's re-locked profile: **30.4% closed, 10.1% of nights won, net 30.1** (against 27.7 / 9.4 / 24.4).
+Harsher on the dojos that fail, richer for the ones that do not — which is what a binding pool is.
+**Apprentice and Legend were not re-swept**: their multipliers are unchanged and still sit over this
+curve, but the spread is owed a measurement, and GDD S10's tier table says so now.
+
+**The two dead charms are no longer worse than nothing** — and still do not clear their price. On the
+re-locked bed (800 dojos, charmless 10.1% / 30.4% / 30.1): quiet mind **9.8% / 29.0% / 23.0**, long
+breath **9.0% / 27.3% / 23.1**. They buy survival rather than nights. The remaining gap is the stall
+and not the stat: a charm-buying run also trains less, because the gold spent at the temple is gold the
+school does not get. That is GDD Open Decision **20**, deferred by the user on purpose.
+
+New sim knobs: `--will-focus`, `--attack-stamina`, `--dodge-stamina`, `--block-stamina`,
+`--stamina-regen`. New tests: `StaminaTests` 2 (the default numbers drain a pool; the deeper pool wins
+the long fight — 220 health a side, because a pool binds by outlasting and a short fight says nothing),
+`TrainingTests` +2 (will buys the rate; the charm he wears counts toward the day).
+
+690 tests green under Release (514 core + 123 presentation + 53 sim); `Domina.slnx` and
+`src/Game/Domina.Game.csproj` both build.
+
+---
+
+## 2026-09-12 (ninth round) — The blessing is per charm, and two of the five are the whole branch
+
+The eighth round found the five charms were a ladder rather than five answers. `OmamoriCharm` now
+carries **its own blessing size** (`Bonus`), the prices stay equal at 120, and the sizes were swept
+one charm at a time on the standing bed (4000 dojos x 180 days, every man wearing the same charm,
+full price). Charmless control: **28.0% closed, 9.8% night, 25.1 net**.
+
+| Charm | Size | Closed | Won the night | Net |
+|---|---|---|---|---|
+| Iron gate (Defence) | +2 / +3 / **+4** / +6 | 26.9 / 26.2 / **24.1** / 22.3% | 10.3 / 12.7 / **15.5** / 21.7% | 21.1 / 22.4 / **23.5** / 25.9 |
+| Swift foot (Evasion) | +6 / **+8** | 24.0 / **23.4%** | 13.1 / **15.2%** | 23.0 / **23.8** |
+| Steady hand (Accuracy) | +6 / +12 / +18 / +30 | 27.5 / 27.0 / 25.4 / 25.1% | 8.8 / **10.2** / 9.9 / 9.8% | 20.8 / 22.0 / 22.4 / 22.7 |
+| Quiet mind (Will) | +6 / +20 / +40 | 29.3 / 29.3 / 29.5% | 7.4 / 7.4 / 7.5% | 19.4 / 19.4 / 19.5 |
+| Long breath (Stamina) | +15 / +40 | 29.8 / 29.8% | 6.7 / 6.7% | 18.7 / 18.7 |
+
+**Locked: iron gate 4, swift foot 8, steady hand 12, quiet mind 6, long breath 15.** The first two
+land on the same rung as each other and that rung is the one a 120-gold charm should sit on — bought,
+the dojo closes 24.1% / 23.4% against 28.0% and wins the night 15.5% / 15.2% against 9.8%, for 1.3-1.6
+gold a fight. **The price needed no change at all**; the eighth round's "net harm" was the blunt
+policy buying the wrong charm.
+
+⚠️ **The other three cannot be brought to that rung with points.** Accuracy saturates — +12, +18 and
++30 all sit at ~10% of nights won, because the hit chance runs out of room — and will and stamina are
+**flat lines on or below the charmless dojo's own figures at any size**. The cause is that the points
+stop converting: Will is **clamped to 0-100** wherever it is read (panic, morale, the tribunal) and
+training already carries a man to 90, so most of a large blessing is thrown away, and a fight ends
+long before a larger stamina pool binds. So those two keep their **small** sizes (+6, +15) instead of
+being inflated along a flat curve — a "+40 stamina" on the temple's stall would read as the best buy
+on the shelf while doing nothing. The honest reading, now in `Omamori`'s own remarks
+and in GDD S10: **a stat point is the wrong currency for these three**; what they want is a job that
+is not a stat — the drill's mastery rate, the panic check inside the dojo, the recovery between
+fights. That is a design decision and it is left **open**.
+
+The measuring policies were re-read on the new sizes: `weakest` 7.3% of nights (it spreads the gold
+onto the two dead axes), `first` 10.2%, iron gate 15.5%, swift foot 15.2%. So the smart policy is
+still the wrong instrument while three charms are inert — which is the same finding from the other
+side.
+
+**The temple's stall now prints the blessing** (`Iron gate · +4 defence · in store 2`): five
+identical price tags over blessings that run from 4 to 40 points would hide the whole decision.
+
+**And a build that had been broken on `main` since `afd0837` was fixed.** `DayScreen.cs` had a raw
+newline inside a character literal (`string.Join('⏎', rows)`), so `src/Game` did not compile at all.
+The root `dotnet build` never touches it — the Godot project is isolated by its own
+`Directory.Build.props` — so nothing local caught it. **CI was not the gap**: `.github/workflows/ci.yml`
+has had a separate `game` job building `src/Game/Domina.Game.csproj` since `27257f7` (2026-08-06),
+and it would have failed on the first push. The gap is local: the break survived several commits
+because nothing on this machine builds the Godot layer before a commit.
+
+686 tests green under Release (510 core + 123 presentation + 53 sim), and
+`dotnet build src/Game/Domina.Game.csproj` succeeds again.
+
+## 2026-09-12 (eighth round) — The tiers are locked, and the five charms turn out to be a ladder
+
+**The difficulty tiers are re-locked** on the numbers the seventh round proposed, confirmed on the
+blind accept rule (4000 dojos x 180 days, every system on):
+
+| | Apprentice **0.93 / 1.07 / 0.42** | Master 1 / 1 / 0.5 | Legend **1.07 / 0.93 / 0.58** |
+|---|---|---|---|
+| Dojos closed | 19.9% | 27.5% | 35.2% |
+| Won the last night | 16.4% | 8.8% | 3.0% |
+| Net per fight | +27.4 | +20.8 | +11.4 |
+| Deaths / warrior-fight | 3.5% | 4.7% | 6.2% |
+| Mastery, best man | 25.3% | 15.1% | 6.9% |
+
+The old ±0.15 rungs are gone: they were read off the 60-day curve and on the real one Legend won the
+night 0.2% of the time on a negative net. GDD S10's table carries the new numbers.
+
+**The charm policy was written the way the design describes it** — `--charm-fit weakest` hangs the
+charm that answers the man's **weakest stat**, comparing each stat against a fresh recruit's rather
+than against the others (stamina is a pool on its own scale and would otherwise be the answer every
+time). `--charm-fit first` keeps the blunt policy the branch was first measured with, and the five
+charm names are accepted as well, which is what found the real problem.
+
+**It measured worse than the blunt policy**, and at zero price — where the two policies spend the
+same nothing and only the placement differs — it was still worse: night 11.7% against 14.1%. So the
+loss is not the extra gold the smart policy spends; it is the placement itself. The five-charm rank,
+every man wearing the same charm, **at zero price** (charms off: 28.0% closed, 9.8% night, 25.1 net):
+
+| Charm | Closed | Won the night | Net | Deaths / warrior-fight |
+|---|---|---|---|---|
+| **Iron gate** (Defence) | **18.2%** | **32.8%** | 35.1 | 3.1% |
+| Swift foot (Evasion) | 21.3% | 19.3% | 30.3 | 3.9% |
+| Steady hand (Accuracy) | 25.2% | 14.1% | 28.5 | 4.1% |
+| Quiet mind (Will) | 26.8% | 9.9% | 25.4 | 4.6% |
+| Long breath (Stamina) | 27.0% | 9.6% | 25.1 | 4.6% |
+
+**The charms are not five answers to five weaknesses, they are a ladder.** +6 defence is worth 3.3x
++6 accuracy, and the will and stamina charms are worth **nothing at all** — both sit on the charmless
+dojo's own figures at any price. That is also why filling a man's weakest stat loses: it spreads the
+gold onto the two dead axes.
+
+And the branch is not underpriced either. A dojo that buys **only the iron gate at the full 120
+gold** closes 22.3% against the charmless 28.0%, wins the night **21.7%** against 9.8% and still
+nets 25.9 a fight. The seventh round's "+6 at 120 is net harm" holds only for a policy that buys the
+wrong charm; the player will find the right one in an afternoon.
+
+⏳ **Left open, and it is a GDD question rather than a number**: S10 sets one blessing size for all
+five charms and equal prices, on the ground that the charms are not a power ladder. The measurement
+says they are. The fix is a **per-charm blessing size** (equal prices kept, the design's own reason
+intact), which is a core change to `Omamori` — not made blind in this round. Until it is made, the
+charm numbers stay unlocked.
+
+681 tests green under Release (505 core + 123 presentation + 53 sim). New sim knobs: `--charm-fit`,
+`--accept-charms`; the report's school line now prints the charm gold beside the school gold.
+
+## 2026-09-12 (seventh round) — The tier table re-measured, and a charm that was buying greed
+
+Both halves of this round run on the same bed, written down here because the earlier rounds each
+named a different one: **4000 dojos x 180 days**, the new curve, `--accept-ratio 2.0`, every system
+on (`--offers --market --bounty --school --paths --staff --charms --province --smith-upgrades
+--train-classes`). 4000 dojos puts the standard error on a last-night figure at ~0.5 points; the
+400-dojo bed the earlier charm numbers were read on carried ~1.8, which is most of what they said.
+
+**The difficulty tiers, re-derived on the new curve** (the fourth round invalidated the old table):
+
+| | Apprentice | Master | Legend |
+|---|---|---|---|
+| Dojos closed | 12.5% | 27.5% | **40.5%** |
+| Played the night | 85.8% | 69.8% | 53.7% |
+| Won all five | 22.6% | 8.8% | **0.2%** |
+| Net per fight | +31.7 | +20.8 | **-2.9** |
+| Fights per dojo | 125.1 | 79.5 | 35.6 |
+| Hungry days | 8.9% | 25.3% | 54.4% |
+| Deaths / warrior-fight | 2.5% | 4.7% | 7.9% |
+| Mastery, best man | 34.3% | 15.1% | 1.6% |
+
+**The +-15% multipliers are not symmetric in what they produce.** On Legend the net per fight goes
+negative, mastery falls to nothing and the night is won 0.2% of the time — 44x less often than at
+Master. That is not the harder road GDD S10 asks for ("a tier changes how often the player is in
+trouble, not what trouble means"); it is a different game with the season's whole second half
+removed. The sweep of the rungs (same bed):
+
+| Legend | Closed | Won the night | Net | Mastery |
+|---|---|---|---|---|
+| 1.15 / 0.85 / 0.67 (locked) | 40.5% | 0.2% | -2.9 | 1.6% |
+| 1.10 / 0.90 / 0.60 | 38.2% | 1.4% | +6.5 | 4.3% |
+| **1.07 / 0.93 / 0.58** | 35.4% | **2.8%** | +11.2 | 6.5% |
+| 1.05 / 0.95 / 0.55 | 33.4% | 3.5% | +14.4 | 8.4% |
+
+| Apprentice | Closed | Won the night | Net |
+|---|---|---|---|
+| 0.85 / 1.15 / 0.33 (locked) | 12.5% | 22.6% | +31.7 |
+| **0.93 / 1.07 / 0.42** | 20.8% | 14.9% | +26.9 |
+| 0.90 / 1.10 / 0.40 | 18.6% | 17.8% | +28.9 |
+
+Proposed, **not locked in this round**: Legend 1.07 / 0.93 / 0.58 and Apprentice 0.93 / 1.07 / 0.42,
+which puts the night's spread at 1.9x / 2.8÷ around Master instead of 2.6x / 44÷ and keeps all three
+tiers on a positive net.
+
+**The charm was net harm — and the measuring policy was half the reason.** On the school-first bed
+the omamori cost the season 2.0 points of last-night wins and 4.7 gold a fight. The first sweep said
+the blessing was not too small: raising it from +6 to +30 made every figure **worse** (night 7.8 ->
+4.9%). The cause was the accept rule, not the charm: `Declines()` scored the party on
+`EffectiveStats`, which the charms are inside, so a stronger blessing made the policy decline fewer
+offers (46.3% -> 43.7%), fight more (79.5 -> 83.3 a dojo), lose more men (10.44 -> 11.35) and train
+less (94 -> 62 days). **The charm was buying greed rather than safety.**
+
+`Warrior.UnblessedStats` was added for it — the same stats with the temple's charms left out — and
+the campaign policy now judges an offer with it (`--accept-charms on` restores the old reading; the
+fight itself has always read, and still reads, the blessed stats). A charm is bought, moved between
+men and sold back, so it has no business in the judgement of what the roster can take.
+
+With the blind rule the blessing sweep turns the right way up and saturates, and the price is what
+is left over (bonus / price, against **charms off: 28.0% closed, 9.8% night, 25.1 net**):
+
+| | Closed | Won the night | Net |
+|---|---|---|---|
+| +6 at 120 (locked) | 27.5% | 8.8% | 20.8 |
+| +12 at 120 | 27.0% | 10.2% | 22.0 |
+| +20 at 120 | 26.0% | 9.9% | 22.5 |
+| +30 at 120 | 25.1% | 9.8% | 22.7 |
+| +6 at 60 | 27.2% | 9.7% | 23.2 |
+| +6 at 30 | 25.4% | 11.8% | 25.4 |
+| **+12 at 60** | **25.0%** | **11.8%** | **24.5** |
+| +6 free | 25.2% | 14.1% | 28.5 |
+
+So the blessing is worth roughly **30-60 gold at +6**, and at 120 gold no size of blessing reaches
+parity on the night. The combination that pays for itself without being free money is **+12 at 60
+gold**: it beats the charmless dojo on closure (25.0% against 28.0%) and on the night (11.8% against
+9.8%) at the same net. Proposed, **not locked** — it is one bed and one policy, and the charm's
+other half (a player who fits the charm to the man's weakest stat instead of buying the first in the
+catalogue) has still never been measured.
+
+680 tests green under Release (505 core + 123 presentation + 52 sim; +1 for the unblessed view).
 
 ## 2026-09-12 (sixth round) — The list of things that were never written
 
