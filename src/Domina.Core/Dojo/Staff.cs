@@ -41,7 +41,7 @@ public enum StaffRole
     /// <summary>Bard — the day's morale gain in his hall.</summary>
     Bard,
 
-    /// <summary>Monk — the omamori slots and the funeral rite.</summary>
+    /// <summary>Monk — the omamori slots, the funeral rite, and the temple's regard.</summary>
     Monk,
 
     /// <summary>Cook — does not produce, cuts consumption.</summary>
@@ -154,6 +154,14 @@ public sealed record StaffTuning
 
     /// <summary>And in one he half understands.</summary>
     public double MasterWeakEfficiency { get; init; } = 0.5;
+
+    /// <summary>What the monk in the shrine is worth to the temple's regard, every week.</summary>
+    /// <remarks>
+    /// GDD §10's third line for the post — "raises the temple relationship" — and the only standing in
+    /// the game that is bought with a wage rather than with work. It is small and weekly rather than
+    /// daily, so it can hold a tier against neglect but cannot climb one on its own.
+    /// </remarks>
+    public double MonkTempleRegardPerWeek { get; init; } = 3;
 
     /// <summary>The share of a comrade's death the funeral rite takes off the survivors.</summary>
     /// <remarks>

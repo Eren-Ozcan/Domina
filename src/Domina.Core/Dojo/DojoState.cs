@@ -37,6 +37,7 @@ public sealed class DojoState
         SeasonTuning? season = null,
         Honor.HonorTuning? honor = null,
         ProvinceTuning? province = null,
+        StandingTuning? standing = null,
         DifficultyTier difficulty = DifficultyTier.Master)
     {
         _baseTuning = tuning ?? new DojoTuning();
@@ -50,6 +51,7 @@ public sealed class DojoState
         Season = new Season(season);
         Tribunal = new Tribunal(honor);
         Province = new Province(province);
+        Standing = new Standing(standing);
         Difficulty = difficulty;
         Seed = seed;
         Tuning = _baseTuning;
@@ -81,6 +83,16 @@ public sealed class DojoState
     /// so one counter on the screen answers both.
     /// </remarks>
     public Province Province { get; }
+
+    /// <summary>
+    /// What the clerk's office, the guild and the temple think of the dojo (GDD §10).
+    /// </summary>
+    /// <remarks>
+    /// Three numbers, five tiers, and each tier buys something on its own axis — what the work pays,
+    /// what the market asks, what the temple asks. They cannot all be courted at once, because the days
+    /// that raise one are the days that neglect another.
+    /// </remarks>
+    public Standing Standing { get; }
 
     /// <summary>Who is on the payroll. A building is bought once; a person is paid every day.</summary>
     public Staff Staff { get; } = new();
@@ -240,6 +252,22 @@ public sealed class DojoState
 
         // The season's tick is weighed last, after the day's own books: a warrior who died today does not
         // pay for the week he did not see, and a roster emptied today closes the dojo on the same day.
+        // The parties are weighed on the same weekly tick as everything else: a week with nothing
+        // filed for a party is the "never taking their offers" clause of GDD §10.
+        if (Day % Math.Max(1, Season.Tuning.CompulsoryFightDays) == 0)
+        {
+            Standing.CloseWeek(Day);
+
+            // The monk is the temple's hand inside the dojo, and this is the third thing GDD §10 gives
+            // him: a standing kept up by the rite itself rather than by work taken from the temple.
+            if (School.Has(SchoolNodeId.Shrine) && Staff.Has(StaffRole.Monk))
+            {
+                Standing.Keep(Patron.Temple, StaffTuning.MonkTempleRegardPerWeek);
+            }
+
+            ApplySchool();
+        }
+
         Season.RecordStanding(Roster.FitForCampaign.Any());
         SeasonDayClose season = Season.Close(Day, Roster.Living.Any());
         if (season.HonorPenalty > 0)
@@ -554,6 +582,12 @@ public sealed class DojoState
         // (GDD §10). Which one is decided by the province rather than by the contract — the work
         // already begun, then the village he is pressing — because a village drawn at random per
         // contract made the thresholds unreachable (see <see cref="Province.ContractTarget"/>).
+        if (Bounty is BountyContract filed)
+        {
+            Standing.Filed(filed.Party, Day);
+            ApplySchool();
+        }
+
         if (Province.ContractTarget is Settlement village)
         {
             LastGift = Province.FileContract(village.Index, Day);
@@ -715,8 +749,32 @@ public sealed class DojoState
     /// the two settle paths. A held settlement pays nothing itself: what it gives is the rival's own
     /// work, offered to the player at his rates.
     /// </remarks>
-    public int RewardFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome) =>
-        Province.Sweeten(Quartermaster.RewardFor(setup, outcome));
+    public int RewardFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome)
+    {
+        int reward = Province.Sweeten(Quartermaster.RewardFor(setup, outcome));
+
+        // The clerk's office owns the queue, so its standing is what the work is worth — the map's
+        // share is the rival's trade, this is the file the lord reads on his return.
+        return (int)Math.Round(reward * Standing.ClerkReward);
+    }
+
+    /// <summary>
+    /// Sends a party a gift. Each one is worth less than the last.
+    /// </summary>
+    /// <returns><c>true</c> if it was sent.</returns>
+    public bool SendGift(Patron patron)
+    {
+        int price = Standing.Tuning.GiftPrice;
+        if (Resources.Gold < price)
+        {
+            return false;
+        }
+
+        Resources = Resources with { Gold = Resources.Gold - price };
+        Standing.Gift(patron);
+        ApplySchool();
+        return true;
+    }
 
     /// <summary>
     /// Ends the warrior's term — he walks out free and is counted on the closing screen.
@@ -1291,7 +1349,34 @@ public sealed class DojoState
     private void ApplySchool()
     {
         Tuning = School.Apply(_baseTuning, Staff, StaffTuning);
-        Quartermaster = new Quartermaster(School.Apply(_baseEconomy, Staff, StaffTuning));
+
+        // The guild and the temple are read on the <b>prices</b>, so they enter here with the school:
+        // one gate, so a price can never be computed with the school and without the standing.
+        EconomyTuning economy = School.Apply(_baseEconomy, Staff, StaffTuning);
+        Quartermaster = new Quartermaster(economy with
+        {
+            FoodPrice = Priced(economy.FoodPrice),
+            WaterPrice = Priced(economy.WaterPrice),
+            MedicinePrice = Priced(economy.MedicinePrice),
+            SakePrice = Priced(economy.SakePrice),
+            RecruitPrice = Priced(economy.RecruitPrice),
+            ArmorGoldPerDurability = economy.ArmorGoldPerDurability * Standing.GuildPrice,
+            RepairGoldPerWear = economy.RepairGoldPerWear * Standing.GuildPrice,
+            CharmPriceFactor = economy.CharmPriceFactor * Standing.TempleCharmPrice,
+        });
+
+        // A price the school has already taken to zero — the physician's medicine — stays zero: the
+        // guild cannot charge for what the dojo no longer buys.
+        int Priced(int price) => price <= 0 ? 0 : Math.Max(1, (int)Math.Round(price * Standing.GuildPrice));
+    }
+
+    /// <summary>Restores the three parties' numbers coming from the save.</summary>
+    internal void RestoreStanding(IEnumerable<Save.StandingSnapshot> records)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        Standing.Restore(records.Select(r => (r.Patron, r.Value, r.Gifts, r.LastFiled)));
+        ApplySchool();
     }
 
     /// <summary>Restores the province coming from the save.</summary>
@@ -1408,6 +1493,11 @@ public sealed class DojoState
         {
             entry.Warrior.Honor = HonorScale.Clamp(entry.Warrior.Honor - penalty);
         }
+
+        // A broken promise eats from two places at once (docs/GDD.md §10): the roster's honour, and the
+        // standing of the party whose word the dojo gave. Taking a contract is giving your word.
+        Standing.Broke(open?.PostedDay == accepted ? open.Party : Patron.Clerk);
+        ApplySchool();
 
         AcceptedBountyDay = null;
         return true;

@@ -42,6 +42,7 @@ public sealed partial class DayScreen : DojoScreen
     private Label _seasonLabel = null!;
     private Label _offerLabel = null!;
     private Label _readingLabel = null!;
+    private VBoxContainer _patronRows = null!;
     private Label _bountyLabel = null!;
     private VBoxContainer _partyList = null!;
     private Label _verdictLabel = null!;
@@ -85,6 +86,12 @@ public sealed partial class DayScreen : DojoScreen
         // has no hut: an empty panel would advertise the information it is withholding.
         _readingLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
         page.AddChild(_readingLabel);
+
+        // The three parties sit on the day screen because that is where their work arrives: a contract
+        // is taken here, and what the tiers are worth is read against the offer standing beside them.
+        _patronRows = new VBoxContainer();
+        _patronRows.AddThemeConstantOverride("separation", 4);
+        page.AddChild(_patronRows);
 
         _bountyLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_bountyLabel);
@@ -151,6 +158,7 @@ public sealed partial class DayScreen : DojoScreen
                 : $"Party of at most {offer.MaxPartySize}.");
 
         ShowReading(OfferModel.ReadOffer(_dojo));
+        BuildPatronRows();
 
         BuildPartyList();
         ShowBounty(OfferModel.DescribeBounty(_dojo));
@@ -183,6 +191,54 @@ public sealed partial class DayScreen : DojoScreen
         _readingLabel.Text = string.Join('
 ', rows);
     }
+
+    /// <summary>The three parties, what they are worth today, and the gift button.</summary>
+    /// <remarks>
+    /// A gift is the only thing on this screen that buys a relationship with gold rather than with
+    /// work, and each one is worth less than the last — so the button says the price and the panel
+    /// says the tier, and the diminishing return is left for the player to notice.
+    /// </remarks>
+    private void BuildPatronRows()
+    {
+        Clear(_patronRows);
+
+        foreach (PatronCard card in OfferModel.Patrons(_dojo))
+        {
+            HBoxContainer line = new();
+            line.AddThemeConstantOverride("separation", 6);
+
+            Label name = new()
+            {
+                Text = $"{card.Name} — {OfferModel.TierName(card.Tier)} · {card.Effect}",
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            };
+            name.AddThemeColorOverride("font_color", TierColor(card.Tier));
+            line.AddChild(name);
+
+            Patron patron = card.Patron;
+            Button gift = new() { Text = $"Send a gift ({card.GiftPrice})", Disabled = !card.CanGift };
+            gift.Pressed += () =>
+            {
+                if (_dojo.SendGift(patron))
+                {
+                    Persist();
+                }
+
+                Refresh();
+            };
+
+            line.AddChild(gift);
+            _patronRows.AddChild(line);
+        }
+    }
+
+    private static Color TierColor(StandingTier tier) => tier switch
+    {
+        StandingTier.Hostile => WarningColor,
+        StandingTier.Cold => PendingColor,
+        StandingTier.Pleased or StandingTier.Loyal => GoodColor,
+        _ => InkColor,
+    };
 
     private void BuildPartyList()
     {

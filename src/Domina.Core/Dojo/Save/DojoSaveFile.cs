@@ -80,7 +80,12 @@ public static class DojoSaveFile
             Capture(state.Tribunal),
             state.Difficulty,
             [.. state.CharmStore.Select(pair => new CharmStackSnapshot(pair.Key, pair.Value))],
-            CaptureProvince(state));
+            CaptureProvince(state),
+            [.. Enum.GetValues<Patron>().Select(p => new StandingSnapshot(
+                p,
+                state.Standing.Of(p),
+                state.Standing.GiftsTo(p),
+                state.Standing.LastFiled(p)))]);
     }
 
     private static ProvinceSnapshot CaptureProvince(DojoState state) => new(
@@ -179,6 +184,11 @@ public static class DojoSaveFile
         if (snapshot.Province is ProvinceSnapshot province)
         {
             state.RestoreProvince(province);
+        }
+
+        if (snapshot.Standing is { Count: > 0 })
+        {
+            state.RestoreStanding(snapshot.Standing);
         }
 
         state.RestoreCharms(

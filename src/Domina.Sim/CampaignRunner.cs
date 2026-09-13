@@ -60,7 +60,8 @@ internal sealed record CampaignOptions(
     ProvinceTuning? Province = null,
     bool MeetRaids = true,
     RetirementPolicy Retirement = RetirementPolicy.None,
-    bool UseSmithUpgrades = false)
+    bool UseSmithUpgrades = false,
+    StandingTuning? Standing = null)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -140,7 +141,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             // calendar that outlives the measurement would put the last night beyond the last day and
             // the night would never be measured at all.
             season: (_options.Season ?? new SeasonTuning()) with { Days = _options.Days },
-            province: _options.Province);
+            province: _options.Province,
+            standing: _options.Standing);
         state.Resources = new Resources(Gold: _options.StartingGold);
 
         // The map is dealt off the run's own seed, like the game's first day does it: what he already

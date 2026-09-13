@@ -35,6 +35,21 @@ public readonly record struct OfferCard(
 /// </param>
 public readonly record struct EnemyLine(string Name, string Weapon, string? Stats);
 
+/// <summary>How one of the three parties reads on the screen.</summary>
+/// <param name="Patron">The party itself; the screen's command returns it.</param>
+/// <param name="Name">Display name.</param>
+/// <param name="Tier">The tier it stands at.</param>
+/// <param name="Effect">One line saying what that tier is worth today.</param>
+/// <param name="GiftPrice">What a gift would cost.</param>
+/// <param name="CanGift">Is there gold enough for one?</param>
+public readonly record struct PatronCard(
+    Patron Patron,
+    string Name,
+    StandingTier Tier,
+    string Effect,
+    int GiftPrice,
+    bool CanGift);
+
 /// <summary>The contract on the board — as the screen reads it.</summary>
 /// <param name="TargetName">The target's name; a contract is written against a single named creature.</param>
 /// <param name="Patron">The party that issued the contract.</param>
@@ -137,6 +152,58 @@ public static class OfferModel
 
         return lines;
     }
+
+    /// <summary>
+    /// The three parties as the day screen reads them.
+    /// </summary>
+    /// <remarks>
+    /// The <b>effect</b> is rendered here rather than on the screen, so that what a tier buys is said
+    /// in one tested place: the three axes are deliberately different, and a screen that printed the
+    /// same sentence for all three would hide the only thing that makes them a choice.
+    /// </remarks>
+    public static IReadOnlyList<PatronCard> Patrons(DojoState dojo)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+
+        Standing standing = dojo.Standing;
+        int price = standing.Tuning.GiftPrice;
+        bool afford = dojo.Resources.Gold >= price;
+
+        return
+        [
+            new(
+                Patron.Clerk,
+                "The clerk's office",
+                standing.TierOf(Patron.Clerk),
+                $"work pays ×{standing.ClerkReward:0.00}",
+                price,
+                afford),
+            new(
+                Patron.Guild,
+                "The merchant guild",
+                standing.TierOf(Patron.Guild),
+                $"prices ×{standing.GuildPrice:0.00}",
+                price,
+                afford),
+            new(
+                Patron.Temple,
+                "The temple",
+                standing.TierOf(Patron.Temple),
+                $"charms ×{standing.TempleCharmPrice:0.00}",
+                price,
+                afford),
+        ];
+    }
+
+    /// <summary>The tier's name on screen.</summary>
+    public static string TierName(StandingTier tier) => tier switch
+    {
+        StandingTier.Hostile => "hostile",
+        StandingTier.Cold => "cold",
+        StandingTier.Pleased => "pleased",
+        StandingTier.Loyal => "loyal",
+        _ => "neutral",
+    };
 
     /// <summary>The card if there is a contract on the board today, otherwise <c>null</c>.</summary>
     public static BountyCard? DescribeBounty(DojoState dojo)

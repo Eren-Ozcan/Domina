@@ -98,6 +98,7 @@ internal static class SimArgs
         bool meetRaids = true;
         RetirementPolicy retirement = RetirementPolicy.None;
         bool smithUpgrades = false;
+        StandingTuning standingTuning = new();
         int retireVictories = new DojoTuning().VictoriesForRetirement;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
@@ -632,6 +633,25 @@ internal static class SimArgs
                     }
 
                     schoolTuning = schoolTuning with { ForgedWeaponDamage = forgedDamage };
+                    break;
+
+                case "--standing":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--standing must be on or off: {value}");
+                    }
+
+                    // Off means the three parties still move, and nothing they think is worth
+                    // anything — the control the question needs.
+                    standingTuning = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        ? standingTuning
+                        : standingTuning with
+                        {
+                            ClerkRewardPerTier = 0,
+                            GuildPricePerTier = 0,
+                            TempleCharmPerTier = 0,
+                        };
                     break;
 
                 case "--retire":
@@ -1573,7 +1593,8 @@ internal static class SimArgs
                 provinceTuning,
                 meetRaids,
                 retirement,
-                smithUpgrades)
+                smithUpgrades,
+                standingTuning)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1775,6 +1796,7 @@ internal static class SimArgs
         writer.WriteLine("  --retire off|all|maimed  Who the policy takes off the field into a post");
         writer.WriteLine("  --master-worth     What a retired man is worth in a post he was trained for");
         writer.WriteLine("  --smith-upgrades on|off  The policy fits full plate and reforges blades");
+        writer.WriteLine("  --standing on|off  Whether the three parties' tiers are worth anything");
         writer.WriteLine("  --forged-damage    What the dojo's own forge adds to a weapon");
         writer.WriteLine("  --retire-victories Fights behind a man before he may retire");
         writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");

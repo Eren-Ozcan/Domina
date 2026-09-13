@@ -59,7 +59,8 @@ public sealed record DojoSnapshot(
     TribunalSnapshot? Tribunal = null,
     DifficultyTier Difficulty = DifficultyTier.Master,
     IReadOnlyList<CharmStackSnapshot>? Charms = null,
-    ProvinceSnapshot? Province = null)
+    ProvinceSnapshot? Province = null,
+    IReadOnlyList<StandingSnapshot>? Standing = null)
 {
     /// <summary>
     /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;
@@ -181,6 +182,14 @@ public sealed record ProvinceSnapshot(
     int TargetKnownUntil = 0,
     int AnsweredForMoveDay = 0,
     int Sacks = 0);
+
+/// <summary>What one party thinks of the dojo, and what the season has asked of it.</summary>
+/// <remarks>
+/// The number goes into the file because it is what the season produced; what a <b>tier</b> is worth
+/// stays in the code, so a retuned patch reaches an old save. The gifts are written with it, or
+/// reloading would make every gift the first one again.
+/// </remarks>
+public sealed record StandingSnapshot(Patron Patron, double Value, int Gifts = 0, int LastFiled = 0);
 
 /// <summary>One settlement's line in the file.</summary>
 public sealed record SettlementSnapshot(

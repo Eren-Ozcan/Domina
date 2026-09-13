@@ -1935,6 +1935,24 @@ Hostile / Cold / Neutral / Pleased / Loyal. Only that number is written to the s
 - **Abandoning a contract eats from two places at once:** the roster's honour drops **and** the
   relationship tier drops. Taking a contract is giving your word
 
+**In the core since 2026-09-12 (`Dojo/Standing.cs`).** Three numbers, five tiers, and each tier buys
+something on a **different axis** — the clerk's office is what the work pays (×0.06 a tier), the guild
+is what every price asks (×0.05), the temple is what a charm costs (×0.10). The prices are recomputed
+in the same place the school is applied, so a bill can never be worked out with one and not the other.
+A finished contract is worth **+8** to the party that issued it, a broken promise **−12**, a week with
+nothing filed for a party **−2**, and a gift **+6 falling by 0.55 each time** — the diminishing return
+is what stops a rich dojo buying three Loyal tiers in a week. The monk is the one standing raised by a
+wage rather than by work: **+3 a week** to the temple while he is in the shrine (GDD's own third line
+for the post), enough to hold a tier against neglect and not enough to climb one.
+
+| Number | Value | How it was settled |
+|---|---|---|
+| What the whole system is worth | **~4% of income, and no closure** | 400 dojos × 180 days on the documented policy, tiers worth something against tiers worth nothing: income per fight **123.3 → 128.3**, last nights won 9.5% → 10.5%, dojos closed 25.8% → 26.2% (noise). That is the intended size — the parties steer which work a season takes, they do not decide whether it survives |
+
+> **Why the effects are small and separate.** Three parties exist so that the days spent on one are
+> days the others count as neglect; if each tier also moved survival, the right play would be to court
+> whichever is cheapest and the choice would collapse into arithmetic.
+
 **Omamori** (a temple charm) is the counterpart of Domina's Jupiter cards: it is fitted to warriors
 **and to staff**, can be removed and passed on, and can be sold. That transferability is known to
 be open to exploitation (gathering them all on one warrior before an expedition) — to be measured in

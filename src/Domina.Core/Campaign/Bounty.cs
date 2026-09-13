@@ -68,7 +68,18 @@ public sealed record BountyTuning
     /// </remarks>
     public IReadOnlyList<string> Patrons { get; init; } =
     [
-        "a village headman", "a temple priest", "the merchants' guild", "the regional lord", "a widowed farmer",
+        "the clerk's office", "a temple priest", "the merchants' guild", "the regional lord", "a village headman",
+    ];
+
+    /// <summary>Which of the three parties each patron files for.</summary>
+    /// <remarks>
+    /// The tone stays in the string and the <b>standing</b> is what the party is for (docs/GDD.md §10):
+    /// a headman's job is licensed work like any other, so the clerk's office is what it files against.
+    /// The list runs parallel to <see cref="Patrons"/>; a patron with no entry files to the clerk.
+    /// </remarks>
+    public IReadOnlyList<Dojo.Patron> Parties { get; init; } =
+    [
+        Dojo.Patron.Clerk, Dojo.Patron.Temple, Dojo.Patron.Guild, Dojo.Patron.Clerk, Dojo.Patron.Clerk,
     ];
 }
 
@@ -101,7 +112,8 @@ public sealed record BountyContract(
     int Reward,
     string Patron,
     double HonorReward,
-    double BrokenHonorPenalty)
+    double BrokenHonorPenalty,
+    Dojo.Patron Party = Dojo.Patron.Clerk)
 {
     /// <summary>Is the contract still open on this day?</summary>
     public bool IsOpenOn(int day) => day >= PostedDay && day <= Deadline;
@@ -182,9 +194,11 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
         string epithet = Tuning.Epithets.Count == 0
             ? "Nameless"
             : Tuning.Epithets[random.NextInt(Tuning.Epithets.Count)];
-        string patron = Tuning.Patrons.Count == 0
-            ? "an unknown party"
-            : Tuning.Patrons[random.NextInt(Tuning.Patrons.Count)];
+        int which = Tuning.Patrons.Count == 0 ? -1 : random.NextInt(Tuning.Patrons.Count);
+        string patron = which < 0 ? "an unknown party" : Tuning.Patrons[which];
+        Dojo.Patron party = which >= 0 && which < Tuning.Parties.Count
+            ? Tuning.Parties[which]
+            : Dojo.Patron.Clerk;
 
         target.Name = $"{target.Name} — {epithet}";
 
@@ -205,7 +219,8 @@ public sealed class BountyBoard(BountyTuning? tuning = null, EncounterTuning? en
             reward,
             patron,
             Tuning.HonorReward,
-            Tuning.BrokenHonorPenalty);
+            Tuning.BrokenHonorPenalty,
+            party);
     }
 
     private ThreatBand Band(double power) => power switch
