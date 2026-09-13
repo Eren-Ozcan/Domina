@@ -810,6 +810,39 @@ From the moment the escape starts until leaving the arena:
   arena, and stays defenceless for that whole time
 - On leaving the arena an **accidental wound** die is rolled (it does not kill)
 
+### The pool that did not bind — re-locked 2026-09-12
+
+Stamina is spent by attacking, evading, blocking and catching, and below **30%** of the pool damage and
+hit chance drop to 0.65. Until the tenth round the numbers under that rule made it decoration: an
+attack spent **6** against a regeneration of **4 a second**, so a 17-second fight drained about a point
+a second out of a pool of 100-180. `MaxStamina` was a stat that changed nothing — which is why the
+conditioning drill's second half and the temple's long breath charm both measured as air, and why an
+earlier round deleted a regeneration knob after finding it "measured zero" (§7). The knob measured zero
+because the pool never bound.
+
+**Re-locked: an attack spends 14, regeneration is 1 a second.** Swept on the 3v3 bed (4000 fights a
+row): at a regeneration of 1 the fight runs 16.9 s / 17.8 s / 20.1 s at an attack cost of 6 / 10 / 14,
+and only at 14 does the deeper pool decide fights. The low-stamina threshold, the dodge cost (12), the
+block cost (5) and the catch cost (16) are untouched — what changed is whether the pool empties at all.
+
+**It moved the season, not only the fight, and the difficulty numbers were re-locked with it.** The
+dojo trains stamina toward a ceiling of 180 while an adversary carries a flat 100, so a binding pool
+hands the trained roster the long fight: on the measuring bed the Master tier went from 27.7% of dojos
+closing and 9.4% of last nights won to **13.2% and 43.7%**. Two numbers answer it, and each touches its
+own axis:
+
+| | Was | Now | What it was measured against |
+|---|---|---|---|
+| `EncounterTuning.PowerPerDay` | 0.0072 | **0.011** | Deaths per warrior-fight back on the locked 4.7% (swept 0.0072-0.016: 2.6 / 4.2 / **4.9** / 5.3 / 6.0 / 7.0%) |
+| `SeasonTuning.FinalRoundPowers` | 1.8-2.8 | **×1.30 → 2.34-3.64** | The five bouts are where a pool that binds pays most; swept ×1.15 / ×1.30 / ×1.45, nights won 14.2 / **9.7** / 6.0% with closures and deaths unmoved |
+
+The re-locked Master profile on the measuring bed: **30.4% of dojos closed, 10.1% of last nights won,
+net 30.1 a fight** (against the old 27.7% / 9.4% / 24.4). The season is a little harsher on the dojos
+that fail and a little richer for the ones that do not — which is what a binding pool is: the trained
+roster is rewarded and the thin one is punished. **The three tiers were re-swept on 2026-09-13** (six
+seeds × 1600 dojos each) and their multipliers stand — the spread survived the new curve and Legend's
+floor rose; the figures are in §10.
+
 ---
 
 ## 6. Honour System (Bushi / Ronin)
@@ -1343,8 +1376,11 @@ enemy's weapon out of their hand.
 
 Weight could have bitten in three places; two fell in measurement.
 
-- **Stamina recovery: measured zero.** Cutting regeneration by 90% in full kit moved 3v3 victory
-  from 92.34% to 92.33%. Stamina is not binding in this fight anyway; the knob was deleted.
+- ~~**Stamina recovery: measured zero.**~~ Cutting regeneration by 90% in full kit moved 3v3 victory
+  from 92.34% to 92.33%. Stamina was not binding in that fight, and the knob was deleted.
+  **Void 2026-09-12 (tenth round):** the reading was true and the conclusion was the wrong way round —
+  regeneration measured as nothing *because* the pool never bound, so the finding was about the
+  stamina numbers and not about regeneration. See §5, "The pool that did not bind".
 - **Walking speed: the gain could not be measured, and the price was §5's promise.** A speed penalty
   did not move victory at all but rendered the "Flee" key useless: because the escape ends on
   **distance** rather than a counter (§5), a kitted warrior is caught before they can leave the
@@ -1569,13 +1605,34 @@ into an interruption.
 - **Difficulty tiers:** Apprentice / Master / Legend. "Master" is the base of the balance
   measurement; the others are derived by multipliers, not by a separate measurement run.
   **In the core since 2026-09-10** (`Campaign/Difficulty.cs`): two multipliers, both 1 at Master —
-  enemy power ×0.85 / ×1.15 and what the work pays ×1.15 / ×0.85. They pull together on purpose: an
-  easier tier that only weakened the enemy would pile up gold and turn the dojo's decisions into
-  formalities. **Nothing** touches death, dismemberment or the seppuku threshold — a tier changes how
-  often the player is in trouble, not what trouble means. The tier is written to the save (it is the
-  player's decision, like the seed); its multipliers stay in the code, so a retuned patch reaches an
-  old save. Measured, 200 dojos × 180 days: closures 1.0% / 8.5% / 17.0%, deaths per warrior-fight
-  1.9% / 3.9% / 6.4%, the last night won 85.5% / 51.5% / 14.0%
+  enemy power and what the work pays — plus the share of the province the rival opens with. They pull
+  together on purpose: an easier tier that only weakened the enemy would pile up gold and turn the
+  dojo's decisions into formalities. **Nothing** touches death, dismemberment or the seppuku threshold
+  — a tier changes how often the player is in trouble, not what trouble means. The tier is written to
+  the save (it is the player's decision, like the seed); its multipliers stay in the code, so a
+  retuned patch reaches an old save.
+  **Re-measured and re-locked on the 0.0072 curve (2026-09-12)**, 4000 dojos × 180 days: the first
+  numbers (±0.15 on both axes, map 0.33 / 0.67) had been read off a curve calibrated for a 60-day
+  season, and on the real one they broke the rule above — Legend's net per fight was **−2.9 gold**,
+  its best man ended at 1.6% mastery and it won the last night **0.2%** of the time against Master's
+  8.8%, which is the season's second half removed rather than a harder road.
+  Locked: **Apprentice 0.93 / 1.07 / 0.42**, **Master 1 / 1 / 0.5**, **Legend 1.07 / 0.93 / 0.58**
+  (enemy power / reward / the rival's opening share). On the 0.0072 curve those rungs read: dojos
+  closed 19.9% / 27.5% / 35.2%, the last night won 16.4% / 8.8% / 3.0%, net per fight +27.4 / +20.8 /
+  +11.4, deaths per warrior-fight 3.5% / 4.7% / 6.2%, mastery on the best man 25.3% / 15.1% / 6.9%.
+  **Those five lines are historical** — the curve has moved since; the current readings are below.
+  **Re-measured on the current curve (2026-09-13) and the multipliers stand.** The tenth round's note
+  that these figures were "partly void" is discharged: the curve moved when the stamina pool was made
+  to bind (§5), so the three tiers were swept again — **six seeds × 1600 dojos × 180 days** each,
+  because a single seed's reading of the last night swings about ±1.3 points. Apprentice / Master /
+  Legend now read: last night won **22.8% / 13.7% / 5.2%**, dojos closed **21.2% / 28.3% / 35.5%**,
+  net per fight **+41.3 / +31.4 / +19.0**, deaths per warrior-fight **3.5% / 4.8% / 6.5%**, mastery on
+  the best man **33.0% / 21.3% / 10.3%**. The spread survived the new curve and **Legend's floor rose**:
+  on the old curve the hard tier had a negative net and a 0.2% night, which was the season's second
+  half removed; it is now a road that can be walked to the end (positive net, a man who ends at 10%
+  mastery, one night in twenty won). The multipliers are therefore **unchanged** — 0.93/1.07/0.42,
+  1/1/0.5, 1.07/0.93/0.58 — and this paragraph's figures are the current ones.
+
 
 ### The end of the season: the bounty gate and the final tournament
 

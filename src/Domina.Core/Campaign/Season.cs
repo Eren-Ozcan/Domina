@@ -120,8 +120,16 @@ public sealed record SeasonTuning
     /// developed party answers that with its own kit. Between 2.2-3.2 and 2.6-3.6 the night moved by
     /// three points (78% → 75%); between two men in a bout and four it moves by forty.
     /// </para>
+    /// <para>
+    /// <b>Re-locked on 2026-09-12 (tenth round)</b> — the five powers were multiplied by 1.30 when the
+    /// stamina pool was made to bind (<see cref="Combat.CombatTuning.AttackStaminaCost"/>). The night
+    /// is five bouts with nothing healing in between, which is exactly where a pool that binds pays,
+    /// so the tier's 8.8% of nights won had gone to 20.3%. Swept ×1.15 / ×1.30 / ×1.45 on the
+    /// re-locked curve: nights won 14.2 / 9.7 / 6.0%, with closures and deaths unmoved — the night's
+    /// powers touch the night alone.
+    /// </para>
     /// </remarks>
-    public IReadOnlyList<double> FinalRoundPowers { get; init; } = [1.8, 2.0, 2.2, 2.4, 2.8];
+    public IReadOnlyList<double> FinalRoundPowers { get; init; } = [2.34, 2.6, 2.86, 3.12, 3.64];
 
     /// <summary>How many men each bout puts on the field.</summary>
     /// <remarks>

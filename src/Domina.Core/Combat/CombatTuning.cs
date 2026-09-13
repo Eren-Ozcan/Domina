@@ -357,9 +357,32 @@ public sealed record CombatTuning
 
     // ---- Stamina ----
 
-    public double AttackStaminaCost { get; init; } = 6;
+    /// <summary>The stamina an attack spends.</summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Re-locked at 14 on 2026-09-12 (tenth round), with <see cref="StaminaRegenPerSecond"/> at 1.</b>
+    /// At 6 against a regen of 4 the pool never bound: a 17-second fight drained about a point a second
+    /// out of a pool of 100-180, so <see cref="Model.WarriorStats.MaxStamina"/> was a number that
+    /// changed nothing and the conditioning drill and the stamina charm were both buying air. Swept on
+    /// the 3v3 bed (4000 fights a row), the pool starts to bind between 10 and 14 at a regen of 1:
+    /// 16.9 s / 17.8 s / 20.1 s of fighting, and only at 14 does the bigger pool decide fights.
+    /// </para>
+    /// <para>
+    /// It is a large change and it moved the season, not only the fight: the dojo trains stamina to a
+    /// ceiling of 180 while an adversary carries a flat 100, so a binding pool hands the trained roster
+    /// the long fight. The difficulty curve was re-locked with it — see
+    /// <see cref="Campaign.EncounterTuning.PowerPerDay"/> and
+    /// <see cref="Campaign.SeasonTuning.FinalRoundPowers"/>.
+    /// </para>
+    /// </remarks>
+    public double AttackStaminaCost { get; init; } = 14;
+
+    /// <summary>The stamina a dodge spends.</summary>
     public double DodgeStaminaCost { get; init; } = 12;
-    public double StaminaRegenPerSecond { get; init; } = 4;
+
+    /// <summary>Stamina recovered per second of fighting.</summary>
+    /// <inheritdoc cref="AttackStaminaCost" path="/remarks"/>
+    public double StaminaRegenPerSecond { get; init; } = 1;
 
     /// <summary>Below this fraction of stamina, damage and hit chance drop.</summary>
     public double LowStaminaThreshold { get; init; } = 0.3;

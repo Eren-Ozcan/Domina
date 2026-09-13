@@ -16,7 +16,16 @@ public sealed record EncounterTuning
     public double StartingPower { get; init; } = 0.9;
 
     /// <summary>The power each day adds.</summary>
-    public double PowerPerDay { get; init; } = 0.0072;
+    /// <remarks>
+    /// <b>Re-locked at 0.011 on 2026-09-12 (tenth round)</b>, when the stamina pool was made to bind
+    /// (<see cref="Combat.CombatTuning.AttackStaminaCost"/>). At 0.0072 the same bed went from 27.7% of
+    /// dojos closing to 13.2% and from 9.4% of last nights won to 43.7% — the trained roster's pool
+    /// outlasts an adversary's flat 100. Swept 0.0072 / 0.010 / 0.011 / 0.012 / 0.013 / 0.016 (600 dojos
+    /// × 180 days, every system on): closures 13.2 / 26.2 / 30.7 / 33.5 / 34.7 / 39.7% and deaths per
+    /// warrior-fight 2.6 / 4.2 / 4.9 / 5.3 / 6.0 / 7.0%. 0.011 is the rung that puts deaths back on the
+    /// locked 4.7% and leaves the season survivable.
+    /// </remarks>
+    public double PowerPerDay { get; init; } = 0.011;
 
     /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>
