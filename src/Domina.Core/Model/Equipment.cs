@@ -245,6 +245,36 @@ public sealed record Weapon(
         Tanto() with { Name = "Zehirli tantō", Damage = 7, Poison = 1.0 };
 
     /// <summary>The fallback for being unarmed or after losing a limb.</summary>
+    /// <summary>
+    /// The same weapon, made in the dojo's own forge (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// A forged weapon is the <b>third</b> tier of the equipment branch and the only thing in the game
+    /// that improves a weapon rather than replacing it: the warrior keeps the weapon he has trained on,
+    /// which matters because mastery belongs to the weapon's name. So the name changes — a forged
+    /// katana is a different weapon to learn — and that is the price beside the gold.
+    /// </remarks>
+    /// <param name="weapon">The weapon to reforge.</param>
+    /// <param name="damage">What the forge adds to its damage, as a share.</param>
+    public static Weapon Forged(Weapon weapon, double damage = 0.15)
+    {
+        ArgumentNullException.ThrowIfNull(weapon);
+
+        return weapon with
+        {
+            Name = $"Forged {weapon.Name.ToLowerInvariant()}",
+            Damage = Math.Round(weapon.Damage * (1 + Math.Max(0, damage)), 2),
+        };
+    }
+
+    /// <summary>Was this weapon made in a dojo's own forge?</summary>
+    public static bool IsForged(Weapon weapon)
+    {
+        ArgumentNullException.ThrowIfNull(weapon);
+
+        return weapon.Name.StartsWith("Forged ", StringComparison.Ordinal);
+    }
+
     public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80)
     {
         Catchable = false,
@@ -414,7 +444,17 @@ public sealed record ArmorPiece(
     /// <summary>Is there really a piece in this slot?</summary>
     public bool IsWorn => DamageReduction > 0 || DismembermentResistance > 0;
 
-    /// <summary>An uncovered region.</summary>
+    /// <summary>
+    /// Only a smith of one's own can put this piece on a warrior (docs/GDD.md §10).
+    /// </summary>
+    /// <remarks>
+    /// The ō-yoroi is the gate the equipment branch was always supposed to carry: full plate is not
+    /// something a dojo buys off a stall, it is something a forge and the man who runs it produce. It
+    /// is a property of the <b>piece</b> rather than a list held elsewhere, so a new heavy piece cannot
+    /// be added without deciding which side of the gate it is on.
+    /// </remarks>
+    public bool NeedsSmith { get; init; }
+
     public static ArmorPiece Bare { get; } = new("Bare", 0, 0, 0);
 
     public static ArmorPiece Keikogi { get; } = new("Keikogi", 4, 0.20, 1, Durability: 40);
@@ -422,21 +462,24 @@ public sealed record ArmorPiece(
     public static ArmorPiece DoMaru { get; } = new("Dō-maru cuirass", 9, 0.45, 4, Durability: 110);
 
     public static ArmorPiece OYoroiCuirass { get; } =
-        new("Ō-yoroi cuirass", 14, 0.65, 7, Durability: 180);
+        new("Ō-yoroi cuirass", 14, 0.65, 7, Durability: 180) { NeedsSmith = true };
 
     /// <summary>Arm armour — it covers <b>one</b> arm; two arms need two pieces.</summary>
     public static ArmorPiece Kote { get; } = new("Kote", 4, 0.30, 0.75, Durability: 45);
 
     /// <inheritdoc cref="Kote"/>
-    public static ArmorPiece HeavyKote { get; } = new("Heavy kote", 6, 0.45, 1.5, Durability: 75);
+    public static ArmorPiece HeavyKote { get; } =
+        new("Heavy kote", 6, 0.45, 1.5, Durability: 75) { NeedsSmith = true };
 
     /// <summary>Shin armour — it covers <b>one</b> leg.</summary>
     public static ArmorPiece Suneate { get; } = new("Suneate", 4, 0.25, 0.75, Durability: 45);
 
     /// <inheritdoc cref="Suneate"/>
-    public static ArmorPiece HeavySuneate { get; } = new("Heavy suneate", 6, 0.40, 1.5, Durability: 75);
+    public static ArmorPiece HeavySuneate { get; } =
+        new("Heavy suneate", 6, 0.40, 1.5, Durability: 75) { NeedsSmith = true };
 
-    public static ArmorPiece Kabuto { get; } = new("Kabuto", 8, 0.55, 3, Durability: 90);
+    public static ArmorPiece Kabuto { get; } =
+        new("Kabuto", 8, 0.55, 3, Durability: 90) { NeedsSmith = true };
 }
 
 /// <summary>

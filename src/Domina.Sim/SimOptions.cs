@@ -97,6 +97,7 @@ internal static class SimArgs
         ProvinceTuning provinceTuning = new();
         bool meetRaids = true;
         RetirementPolicy retirement = RetirementPolicy.None;
+        bool smithUpgrades = false;
         int retireVictories = new DojoTuning().VictoriesForRetirement;
         double? playerMorale = null;
         MoraleBand moraleBand = MoraleBand.Default;
@@ -612,6 +613,25 @@ internal static class SimArgs
                     }
 
                     staffTuning = staffTuning with { MasterEfficiency = masterWorth };
+                    break;
+
+                case "--smith-upgrades":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--smith-upgrades must be on or off: {value}");
+                    }
+
+                    smithUpgrades = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase);
+                    break;
+
+                case "--forged-damage":
+                    if (!TryFraction(value, out double forgedDamage))
+                    {
+                        return ParsedArgs.Fail($"--forged-damage must be between 0 and 1: {value}");
+                    }
+
+                    schoolTuning = schoolTuning with { ForgedWeaponDamage = forgedDamage };
                     break;
 
                 case "--retire":
@@ -1552,7 +1572,8 @@ internal static class SimArgs
                 useCharms,
                 provinceTuning,
                 meetRaids,
-                retirement)
+                retirement,
+                smithUpgrades)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1753,6 +1774,8 @@ internal static class SimArgs
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
         writer.WriteLine("  --retire off|all|maimed  Who the policy takes off the field into a post");
         writer.WriteLine("  --master-worth     What a retired man is worth in a post he was trained for");
+        writer.WriteLine("  --smith-upgrades on|off  The policy fits full plate and reforges blades");
+        writer.WriteLine("  --forged-damage    What the dojo's own forge adds to a weapon");
         writer.WriteLine("  --retire-victories Fights behind a man before he may retire");
         writer.WriteLine("  --raid-size        The men he brings before his holdings are counted");
         writer.WriteLine("  --raid-most        The most men he ever brings");

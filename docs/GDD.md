@@ -1766,10 +1766,23 @@ the tiers stayed as upgrades and every node became a building:
 > counted (79.2% against 75.5%). What drives a dojo under is **death**, so the branch was bound
 > there. The branch that used to sell time now sells the one loss training cannot undo.
 
-> **What the forge does not pay for.** Measured branch by branch, the equipment branch changed
-> nothing (79.2% closed, the same as no school at all): repair money is a small line beside food and
-> replacing a dead man. It is left in with the finding written down rather than repriced blind — the
-> ō-yoroi gate it is supposed to carry is not written yet.
+> **What the forge does not pay for — answered 2026-09-12.** Measured branch by branch at step 5, the
+> equipment branch changed nothing (79.2% closed, the same as no school at all): repair money is a
+> small line beside food and replacing a dead man, and the gate it was supposed to carry did not
+> exist. The branch now has its two upper tiers — **plate works** (450 gold, the ō-yoroi gate) and
+> **sword forge** (700, a weapon reforged into a better one of its kind) — and with a policy that uses
+> them the branch is worth committing to: on the corrected curve, an equipment-only dojo closes
+> **61.8% → 29.5%** of the time and reaches the last night 37.0% → 69.2%.
+>
+> What it is **not** is a free upgrade. Against a dojo that spends on the whole school, fitting full
+> plate and reforging blades costs — dojos closed 25.8% → 27.0%, nights won 9.5% → 8.0%, kit spending
+> 11.8 → 32.5 gold a fight — because ō-yoroi is heavy as well as expensive (§7's attack slowdown). The
+> branch is a commitment, not an addition, and that is the trade it was missing.
+>
+> The forged weapon's share was swept at 0.05 / 0.15 / 0.30 → nights won 0.5 / 1.8 / 3.5%, and it is
+> kept at **0.15**: it is the third tier of a branch, not a second difficulty curve. Its real price is
+> not the gold — the reforged blade carries a **new name**, so the mastery the warrior built on the
+> old one stays with the old one (§10).
 
 #### Professions — 11 roles (profession round, 2026-09-07)
 

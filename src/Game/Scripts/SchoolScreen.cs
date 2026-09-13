@@ -269,6 +269,8 @@ public sealed partial class SchoolScreen : DojoScreen
         SchoolNodeId.Patron => "Victory pays more.",
         SchoolNodeId.Broker => "Hiring warriors and repairing armour get cheaper.",
         SchoolNodeId.Forge => "Repairs cost less, and the smith's post opens.",
+        SchoolNodeId.PlateWorks => "Full ō-yoroi can be fitted — the smith has to be in post.",
+        SchoolNodeId.SwordForge => "A weapon can be reforged into a better one of its own kind.",
         SchoolNodeId.Kitchen => "The day's food need falls.",
         SchoolNodeId.Shrine => "Temple charms can be bought and worn.",
         SchoolNodeId.BardHall => "The roster's spirits rise every day.",

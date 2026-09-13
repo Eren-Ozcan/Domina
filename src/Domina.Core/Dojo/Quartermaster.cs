@@ -81,6 +81,15 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         ArgumentNullException.ThrowIfNull(warrior);
         ArgumentNullException.ThrowIfNull(piece);
 
+        // The ō-yoroi gate (docs/GDD.md §10): full plate is not bought off a stall, it is fitted by a
+        // smith of one's own in a plate works. Both are needed — the building is the equipment, the man
+        // is the fitting — which is why it is a gate and not a share.
+        if (piece.NeedsSmith
+            && (!state.School.Has(SchoolNodeId.PlateWorks) || !state.Staff.Has(StaffRole.Smith)))
+        {
+            return false;
+        }
+
         int price = PiecePrice(piece);
         if (price > state.Resources.Gold)
         {
@@ -90,6 +99,53 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
         warrior.Armor = warrior.Armor.With(slot, piece);
         warrior.ArmorWear = warrior.ArmorWear.With(slot, 0);
+        return true;
+    }
+
+    /// <summary>What reforging this warrior's weapon would cost.</summary>
+    public int ForgePrice(Warrior warrior)
+    {
+        ArgumentNullException.ThrowIfNull(warrior);
+
+        return (int)Math.Ceiling(warrior.Weapon.Damage * Math.Max(0, Economy.ForgeGoldPerDamage));
+    }
+
+    /// <summary>
+    /// Reforges the warrior's weapon into a better one of its own kind.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The equipment branch's third tier, and the only thing in the game that improves a weapon rather
+    /// than replacing it. It needs the sword forge <b>and</b> the smith, like the plate gate: a
+    /// building with nobody in it forges nothing.
+    /// </para>
+    /// <para>
+    /// The new weapon carries a new name, so the mastery the warrior built on the old one does not come
+    /// with it (docs/GDD.md §10). That is deliberate and it is the real price: a veteran pays for the
+    /// better blade with the years he spent learning the old one.
+    /// </para>
+    /// </remarks>
+    /// <returns><c>true</c> if it was reforged.</returns>
+    public bool Forge(DojoState state, Warrior warrior)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(warrior);
+
+        if (!state.School.Has(SchoolNodeId.SwordForge)
+            || !state.Staff.Has(StaffRole.Smith)
+            || Weapon.IsForged(warrior.Weapon))
+        {
+            return false;
+        }
+
+        int price = ForgePrice(warrior);
+        if (price > state.Resources.Gold)
+        {
+            return false;
+        }
+
+        state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
+        warrior.Weapon = Weapon.Forged(warrior.Weapon, state.School.Tuning.ForgedWeaponDamage);
         return true;
     }
 

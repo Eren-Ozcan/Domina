@@ -60,6 +60,13 @@ public sealed record EconomyTuning
     /// </remarks>
     public double CharmPriceFactor { get; init; } = 1.0;
 
+    /// <summary>What reforging a weapon costs, per point of the damage it already deals.</summary>
+    /// <remarks>
+    /// Priced off the weapon rather than flat, so the forge is worth most to the warrior carrying the
+    /// heaviest thing in the dojo — and so reforging a tantō is never the cheap way to a better blade.
+    /// </remarks>
+    public double ForgeGoldPerDamage { get; init; } = 12;
+
     /// <summary>The purchase price of a new warrior.</summary>
     public int RecruitPrice { get; init; } = 150;
 

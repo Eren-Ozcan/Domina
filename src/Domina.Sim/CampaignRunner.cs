@@ -59,7 +59,8 @@ internal sealed record CampaignOptions(
     bool UseCharms = false,
     ProvinceTuning? Province = null,
     bool MeetRaids = true,
-    RetirementPolicy Retirement = RetirementPolicy.None)
+    RetirementPolicy Retirement = RetirementPolicy.None,
+    bool UseSmithUpgrades = false)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -624,6 +625,39 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// The order matters — repair first, replacement second. The other way round, a policy short of
     /// money would buy the expensive piece instead of the cheap repair and the price measurement would
     /// measure the policy's mistake.
+    /// <summary>
+    /// Puts the dojo's own forge to work: full plate where the gate is open, and a reforged blade.
+    /// </summary>
+    /// <remarks>
+    /// Greedy, like the rest of the policy — upgrade whatever is affordable the day it becomes so.
+    /// What is being measured is whether the branch pays for itself at all, which is the question it
+    /// has failed twice (GDD §10, "the forge pays for nothing").
+    /// </remarks>
+    private static void Upgrade(DojoState state, Warrior warrior, int reserve)
+    {
+        foreach ((HitLocation slot, ArmorPiece plate) in ((HitLocation, ArmorPiece)[])
+        [
+            (HitLocation.Torso, ArmorPiece.OYoroiCuirass),
+            (HitLocation.Head, ArmorPiece.Kabuto),
+            (HitLocation.SwordArm, ArmorPiece.HeavyKote),
+            (HitLocation.OffArm, ArmorPiece.HeavyKote),
+            (HitLocation.RightLeg, ArmorPiece.HeavySuneate),
+            (HitLocation.LeftLeg, ArmorPiece.HeavySuneate),
+        ])
+        {
+            if (warrior.Armor.At(slot) != plate
+                && Affordable(state, state.Quartermaster.PiecePrice(plate), reserve))
+            {
+                state.Quartermaster.Equip(state, warrior, slot, plate);
+            }
+        }
+
+        if (Affordable(state, state.Quartermaster.ForgePrice(warrior), reserve))
+        {
+            state.Quartermaster.Forge(state, warrior);
+        }
+    }
+
     private int Maintain(DojoState state, IReadOnlyList<Warrior> template)
     {
         int before = state.Resources.Gold;
@@ -644,6 +678,13 @@ internal sealed class CampaignRunner(CampaignOptions options)
                 {
                     state.Quartermaster.Repair(state, warrior, slot);
                 }
+            }
+
+            // The equipment branch's two upper tiers only show up in a measurement if the policy uses
+            // them: the template kit is what the scenario carries, and nothing in it is ō-yoroi.
+            if (_options.UseSmithUpgrades)
+            {
+                Upgrade(state, warrior, reserve);
             }
 
             foreach (HitLocation slot in ArmorSlots.All)

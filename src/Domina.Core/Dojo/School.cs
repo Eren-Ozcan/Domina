@@ -63,6 +63,12 @@ public enum SchoolNodeId
     /// <summary>Forge: the smith's post, and where a repair bill is cut.</summary>
     Forge,
 
+    /// <summary>Plate works: the ō-yoroi gate — full plate can be fitted at all.</summary>
+    PlateWorks,
+
+    /// <summary>Sword forge: a weapon can be reforged into a better one of its own kind.</summary>
+    SwordForge,
+
     /// <summary>Kitchen: the cook's post — the day's food need falls.</summary>
     Kitchen,
 
@@ -179,6 +185,14 @@ public sealed record SchoolTuning
     /// <summary>The multiplier the broker applies to hiring a warrior.</summary>
     public double RecruitPriceFactor { get; init; } = 0.75;
 
+    /// <summary>What the dojo's own forge adds to a weapon's damage.</summary>
+    /// <remarks>
+    /// It sits on the <b>third</b> tier of the branch, so it arrives late and has to be worth arriving
+    /// at. The share is small on purpose: a forged weapon is the one the warrior already carries, made
+    /// better, and a large number here would turn the branch into a second difficulty curve.
+    /// </remarks>
+    public double ForgedWeaponDamage { get; init; } = 0.15;
+
     /// <summary>The multiplier the broker applies to repairs.</summary>
     public double RepairPriceFactor { get; init; } = 0.80;
 
@@ -221,6 +235,8 @@ public static class SchoolTree
         new(SchoolNodeId.Broker, SchoolBranch.Steward, "Broker", 700, SchoolNodeId.Patron, 14, StaffRole.Broker),
 
         new(SchoolNodeId.Forge, SchoolBranch.Equipment, "Forge", 250, null, 8, StaffRole.Smith),
+        new(SchoolNodeId.PlateWorks, SchoolBranch.Equipment, "Plate works", 450, SchoolNodeId.Forge, 12),
+        new(SchoolNodeId.SwordForge, SchoolBranch.Equipment, "Sword forge", 700, SchoolNodeId.PlateWorks, 14),
 
         new(SchoolNodeId.Kitchen, SchoolBranch.Support, "Kitchen", 150, null, 5, StaffRole.Cook),
         new(SchoolNodeId.Armoury, SchoolBranch.Support, "Armoury", 200, null, 6, StaffRole.WeaponMaster),
