@@ -21,6 +21,13 @@ internal static class SimCli
             return ReplayCommand.Run(args, output, error);
         }
 
+        // The played season is answered here for the same reason: it takes a script and a seed, and
+        // none of the measurement's thousand switches mean anything to it.
+        if (PlayCommand.Wanted(args))
+        {
+            return PlayCommand.Run(output, args);
+        }
+
         ParsedArgs parsed = SimArgs.Parse(args);
 
         if (parsed.HelpRequested)
