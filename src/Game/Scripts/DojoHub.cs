@@ -21,6 +21,9 @@ public enum DojoTab
     /// <summary>The school tree.</summary>
     School,
 
+    /// <summary>The quartermaster's counter — armour, repairs, the forge and the throwing slot.</summary>
+    Armoury,
+
     /// <summary>The province board — a picture of the season, with nothing to press.</summary>
     Province,
 }
@@ -135,7 +138,23 @@ public sealed partial class DojoHub : Node
 
         for (int i = 0; i < rollovers; i++)
         {
-            DayReport report = dojo.Decline();
+            DayReport report;
+            try
+            {
+                report = dojo.Decline();
+            }
+            catch (Exception broken)
+            {
+                // A day that throws would otherwise throw again on the next frame, for ever. The clock
+                // stops, the fault is written into the journal beside the moves that led to it, and the
+                // file is flushed at once — the next thing to happen may be the process dying.
+                dojo.RecordFault("day", broken);
+                Save();
+                _clock.Pause();
+                log.Add("The day could not be closed; the clock stopped. It is in the journal.");
+                break;
+            }
+
             log.Add(DayLog.Line(report));
 
             if (report.Phase != SeasonPhase.Running)
@@ -222,6 +241,14 @@ public sealed partial class DojoHub : Node
         // Merge-on-load must not stay silent: a save that loaded incompletely says so in the day
         // screen's report, and the player sees what he lost (GDD §2).
         _report = result.Warnings.Count == 0 ? null : string.Join('\n', result.Warnings);
+
+        // And it goes into the journal as a fault: what a save could not carry is the kind of thing
+        // that shows up as a strange run three days later, and by then nothing remembers why.
+        if (result.Warnings.Count > 0)
+        {
+            dojo.RecordFault("save", "the save loaded incompletely", result.Warnings);
+        }
+
         Play(dojo);
     }
 
@@ -242,6 +269,11 @@ public sealed partial class DojoHub : Node
     private void Play(DojoState dojo)
     {
         _dojo = dojo;
+
+        // Where a fault may leave a file of its own. The core does not know Godot's user:// and must
+        // not learn it, so the path is resolved here and handed in: a fight that hits the stall guard
+        // writes its blow-by-blow stream next to the save and names the file on its fault line.
+        dojo.DiagnosticsFolder = ProjectSettings.GlobalizePath("user://diagnostics");
         _tab = DojoTab.Day;
 
         if (_title is not null)
@@ -254,7 +286,7 @@ public sealed partial class DojoHub : Node
         Show(_tab);
     }
 
-    /// <summary>Dojo'nun o anki hâlini yuvaya yazar.</summary>
+    /// <summary>Writes the dojo as it now stands into the slot.</summary>
     private void Save()
     {
         if (_dojo is DojoState dojo)
@@ -294,6 +326,7 @@ public sealed partial class DojoHub : Node
             DojoTab.Roster => new RosterScreen(),
             DojoTab.Market => new MarketScreen(),
             DojoTab.School => new SchoolScreen(),
+            DojoTab.Armoury => new ArmouryScreen(),
             DojoTab.Province => new ProvinceScreen(),
             _ => new DayScreen(),
         };
@@ -408,7 +441,18 @@ public sealed partial class DojoHub : Node
         // must not be thrown back into the dojo before seeing the fight's last frame, he returns with his own key.
         arena.Finished += result =>
         {
-            _report = bout.Settle(result);
+            try
+            {
+                _report = bout.Settle(result);
+            }
+            catch (Exception broken) when (_dojo is DojoState hurt)
+            {
+                // The fight is over and its result is in hand; what failed is the accounting. The run
+                // is left standing and the failure is filed with the fight's own seed beside it.
+                hurt.RecordFault("expedition", broken);
+                _report = "The expedition's books could not be closed. It is in the journal.";
+            }
+
             Save();
             ShowReturnButton();
         };
@@ -474,30 +518,47 @@ public sealed partial class DojoHub : Node
     /// </remarks>
     private Control BuildNav()
     {
-        VBoxContainer column = new();
-        column.AddThemeConstantOverride("separation", 6);
+        // The bar is a panel of its own rather than two loose rows: it is the only thing on screen that
+        // does not change when the screen does, so it has to read as the frame around them.
+        PanelContainer frame = new();
+        frame.AddThemeStyleboxOverride("panel", UiKit.PanelStyle(UiKit.Surface));
+
+        VBoxContainer column = UiKit.Padded(frame, 12, 8);
+        column.AddThemeConstantOverride("separation", 8);
 
         HBoxContainer nav = new();
-        nav.AddThemeConstantOverride("separation", 8);
+        nav.AddThemeConstantOverride("separation", 6);
         column.AddChild(nav);
 
         foreach (DojoTab tab in Enum.GetValues<DojoTab>())
         {
-            Button button = new()
+            bool current = tab == _tab;
+            Button button = UiKit.Tab(
+                new Button
+                {
+                    Text = TabName(tab),
+                    ToggleMode = true,
+                    ButtonPressed = current,
+                },
+                current);
+
+            // The open tab is lit rather than disabled, so it has to refuse its own press by hand:
+            // showing the screen again would rebuild it and throw away whatever row was selected on it.
+            DojoTab target = tab;
+            button.Pressed += () =>
             {
-                Text = TabName(tab),
-                ToggleMode = true,
-                ButtonPressed = tab == _tab,
-                Disabled = tab == _tab,
+                if (target != _tab)
+                {
+                    Show(target);
+                }
             };
 
-            DojoTab target = tab;
-            button.Pressed += () => Show(target);
             nav.AddChild(button);
         }
 
+        column.AddChild(UiKit.Rule());
         column.AddChild(BuildClockBar());
-        return column;
+        return frame;
     }
 
     /// <summary>The clock's own row: what day it is, how far into it, and the speed control.</summary>
@@ -506,7 +567,11 @@ public sealed partial class DojoHub : Node
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 8);
 
+        row.AddChild(UiKit.Emblem(Mark.Sun, UiKit.Heading, UiKit.BodySize - 3));
+
         _clockLabel = new Label();
+        _clockLabel.AddThemeFontSizeOverride("font_size", UiKit.BodySize);
+        _clockLabel.AddThemeColorOverride("font_color", UiKit.Ink);
         row.AddChild(_clockLabel);
 
         _clockBar = new ProgressBar
@@ -515,8 +580,9 @@ public sealed partial class DojoHub : Node
             MaxValue = 1,
             Step = 0.001,
             ShowPercentage = false,
-            CustomMinimumSize = new Vector2(140, 0),
+            CustomMinimumSize = new Vector2(200, 10),
             SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         row.AddChild(_clockBar);
 
@@ -564,6 +630,7 @@ public sealed partial class DojoHub : Node
         DojoTab.Roster => "Roster",
         DojoTab.Market => "Market",
         DojoTab.School => "School",
+        DojoTab.Armoury => "Armoury",
         DojoTab.Province => "Province",
         _ => "Day",
     };
