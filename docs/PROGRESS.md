@@ -1785,7 +1785,51 @@ the night from 14.8% to **18.3%**, and removing it entirely to **20.0%** — whi
 classed men *falls* (2.43 → 1.81), so this is the school as a whole, not the class branch.
 `--build-days` is a diagnostic here, not a proposal.
 
-Verification: `dotnet build` → 0 errors, `dotnet test` → 783/783 green.
+**Three items, handled.**
+
+**The board now promises its spoils, and the swing that would have made them a decision does not
+earn its place.** A posting draws its stores from its own stream, so the card shows what the fight
+will pay (`PromisedSpoilsFor`), the way the reference's pre-battle screen itemises coin, food, water,
+wine and slaves before the fight is accepted. But varying them — `EconomyTuning.SpoilsSwing`, swept
+0 / 0.5 / 1.0 — moves the night 14.8 → 15.2 → 15.2 and the closures 15.7 → 16.0 → 15.9. Noise. A
+policy written to read the board as a shop (`OfferPick.Stores`, scoring a posting by its fee *plus*
+whatever of its spoils the store is short of) lands on the same figures as the best-paying policy, at
+a two-day board and a six-day one alike. **The reason is the ratio:** 4 food and 1 water on a
+three-enemy fight is about 12 gold of stores against a fee near 150, and the fee buys eighteen days
+of eating by itself. Spoils cannot steer a choice they are that much smaller than. Kept, switched
+off, sweep written down.
+
+**The school was priced out of its own season.** This is the round's real finding. Same bed, every
+development switch on, scaling the whole ladder and nothing else:
+
+| Price | Build days | Won the night | Buildings | Classed | Dojos closed |
+|---|---|---|---|---|---|
+| ×1.00 | ×1.0 | 14.8% | 13.0 | 2.43 | 15.7% |
+| ×1.00 | ×0.5 | 18.3% | 13.4 | 2.32 | 15.0% |
+| **×0.75** | ×1.0 | **23.3%** | 15.3 | 3.37 | 14.7% |
+| ×0.75 | ×0.5 | 25.7% | 15.6 | 3.52 | 14.6% |
+| ×0.50 | ×1.0 | 36.5% | 17.8 | 4.51 | 11.7% |
+| ×0.50 | ×0.5 | 38.4% | 17.8 | 4.71 | 11.3% |
+
+Price is the lever and build time is second-order — halving the time is worth about 3 points of
+night, halving the price about 22. **Nothing gets worse as the price falls**: the closure rate falls
+with it, which is the mark of a cost buying no tension, only exclusion. And the class's thin reach
+was this same problem wearing another hat — the halls are 450 gold, so cutting the ladder classes
+more men (2.43 → 4.51) than anything done to the class itself did (+0.5 points, three seeds).
+
+**`SchoolTuning.PriceFactor` is now 0.75**, and not 0.50 although 0.50 lands on GDD §11's own 38.5%:
+it lands there with the **measuring policy**, which is a floor, not a ceiling — it never waits for a
+better board, never times a build against the calendar, and takes the first affordable node rather
+than the one it needs. A person plays above it, so tuning until the policy hits the design's number
+would hand a player a season he cannot lose. Reproduced on two seeds: 23.3% / 23.1%.
+
+**The head counter says what the heads buy.** A played season reached day 131 with the gate open
+since day 19 and the player never learned what the heads were for, or that a last night was coming.
+The line read `Heads 3/3` and nothing else. It now reads `Heads 1/3 — 3 open the last night`, and
+after the gate `The last night is open — day 180, 140 days off`. The reference keeps the same count
+in the yard rather than behind a menu, for the same reason.
+
+Verification: `dotnet build` → 0 errors, `dotnet test` → 784/784 green.
 
 ---
 
