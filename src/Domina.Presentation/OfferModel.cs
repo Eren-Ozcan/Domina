@@ -17,14 +17,35 @@ namespace Domina.Presentation;
 /// <param name="Sighting">The rough description ("three kappa", say).</param>
 /// <param name="RequiredPartySize">The party size imposed; <c>null</c> if there is none.</param>
 /// <param name="MaxPartySize">The maximum warriors who can go on the expedition.</param>
-/// <param name="PromisedReward">The gold paid if it is won — readable before going in.</param>
+/// <param name="PromisedReward">
+/// The gold paid if it is won — readable before going in, the standing job's lost fee already taken off.
+/// </param>
+/// <param name="AgeDays">Days since it was posted; 0 for a fresh posting.</param>
+/// <param name="FullReward">
+/// What the same job paid on the day it was posted — so the screen can show what the waiting cost.
+/// </param>
 public readonly record struct OfferCard(
     int Day,
     ThreatBand Threat,
     string Sighting,
     int? RequiredPartySize,
     int MaxPartySize,
-    int PromisedReward);
+    int PromisedReward,
+    int DaysLeft = 1,
+    bool IsRaid = false,
+    int AgeDays = 0,
+    int FullReward = 0)
+{
+    /// <summary>Is this the last day it can be taken?</summary>
+    public bool LastDay => DaysLeft <= 1;
+
+    /// <summary>Has this job been standing since an earlier day?</summary>
+    /// <remarks>
+    /// A standing job pays a reduced fee (docs/GDD.md §10), and the screen has to say so — otherwise
+    /// the player reads a smaller number with no reason attached to it.
+    /// </remarks>
+    public bool IsStanding => AgeDays > 0;
+}
 
 /// <summary>One line of the diviner's reading of the day's offer.</summary>
 /// <param name="Name">The enemy's name.</param>
@@ -103,12 +124,35 @@ public readonly record struct PartyVerdict(ExpeditionRefusal? Refusal, int Size)
 /// </remarks>
 public static class OfferModel
 {
-    /// <summary>Today's offer.</summary>
+    /// <summary>Today's newest posting — the one the day screen leads with.</summary>
     public static OfferCard Describe(DojoState dojo)
     {
         ArgumentNullException.ThrowIfNull(dojo);
 
-        EncounterOffer offer = dojo.Offer;
+        return Describe(dojo, dojo.Board.Count > 0 ? dojo.Board[0] : dojo.Offer);
+    }
+
+    /// <summary>
+    /// The whole board, newest first.
+    /// </summary>
+    /// <remarks>
+    /// The timed queue of docs/GDD.md §10. A job stands for a few days and then goes, so the card
+    /// carries the days it has left; the screen dims the last day rather than letting a posting vanish
+    /// without warning. Under a raid the board is the raid alone — he is at the gate, and there is
+    /// nothing else to read.
+    /// </remarks>
+    public static IReadOnlyList<OfferCard> DescribeBoard(DojoState dojo)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+
+        return [.. dojo.Board.Select(offer => Describe(dojo, offer))];
+    }
+
+    /// <summary>One posting as the screen reads it.</summary>
+    public static OfferCard Describe(DojoState dojo, EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+        ArgumentNullException.ThrowIfNull(offer);
 
         return new OfferCard(
             Day: offer.Day,
@@ -116,7 +160,11 @@ public static class OfferModel
             Sighting: offer.Sighting,
             RequiredPartySize: offer.RequiredPartySize,
             MaxPartySize: EncounterOffer.MaxPartySize,
-            PromisedReward: dojo.Quartermaster.PromisedReward(new BattleSetup([], offer.Enemies)));
+            PromisedReward: dojo.PromisedRewardFor(offer),
+            DaysLeft: Math.Max(0, dojo.ExpiryOf(offer) - dojo.Day + 1),
+            IsRaid: dojo.UnderRaid,
+            AgeDays: Math.Max(0, dojo.Day - offer.Day),
+            FullReward: dojo.Quartermaster.PromisedReward(new BattleSetup([], offer.Enemies)));
     }
 
     /// <summary>
@@ -128,11 +176,14 @@ public static class OfferModel
     /// to see it (docs/GDD.md §10). The stats are rendered here rather than on the screen so that what
     /// each depth reveals is decided in one tested place.
     /// </remarks>
-    public static IReadOnlyList<EnemyLine> ReadOffer(DojoState dojo)
+    public static IReadOnlyList<EnemyLine> ReadOffer(DojoState dojo) => ReadOffer(dojo, null);
+
+    /// <summary>The same reading, of one posting on the board.</summary>
+    public static IReadOnlyList<EnemyLine> ReadOffer(DojoState dojo, EncounterOffer? offer)
     {
         ArgumentNullException.ThrowIfNull(dojo);
 
-        OfferReading reading = dojo.Reading;
+        OfferReading reading = offer is null ? dojo.Reading : dojo.ReadingOf(offer);
         if (!reading.Any)
         {
             return [];
@@ -253,7 +304,7 @@ public static class OfferModel
     {
         ArgumentNullException.ThrowIfNull(dojo);
 
-        return Judge(dojo, dojo.Offer, party);
+        return Judge(dojo, dojo.Board.Count > 0 ? dojo.Board[0] : dojo.Offer, party);
     }
 
     /// <summary>Can the selected party be sent against the contract?</summary>
@@ -286,7 +337,8 @@ public static class OfferModel
         return [.. party.Select(dojo.Roster.Find).OfType<RosterEntry>()];
     }
 
-    private static PartyVerdict Judge(
+    /// <summary>Can the selected party be sent against this posting?</summary>
+    public static PartyVerdict Judge(
         DojoState dojo,
         EncounterOffer offer,
         IReadOnlyList<WarriorId> party)

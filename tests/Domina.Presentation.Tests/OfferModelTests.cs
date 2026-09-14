@@ -16,7 +16,7 @@ public class OfferModelTests
         DojoState state = new(
             seed: seed,
             school: instantBuild ? new SchoolTuning { BuildDaysFactor = 0 } : null);
-        state.Resources = new Resources(Gold: 2000, Food: 200, Water: 200, Medicine: 20);
+        state.SetPurse(new Resources(Gold: 2000, Food: 200, Water: 200, Medicine: 20));
         return state;
     }
 
@@ -49,7 +49,7 @@ public class OfferModelTests
         DojoState dojo = Stocked(instantBuild: true);
         int before = OfferModel.Describe(dojo).PromisedReward;
 
-        dojo.Resources = dojo.Resources with { Gold = 5000 };
+        dojo.SetPurse(dojo.Resources with { Gold = 5000 });
         Assert.True(dojo.BuySchoolNode(SchoolNodeId.Steward));
         Assert.True(dojo.BuySchoolNode(SchoolNodeId.Patron));
 
@@ -216,5 +216,78 @@ public class OfferModelTests
         IReadOnlyList<EnemyLine> priced = OfferModel.ReadOffer(dojo);
         Assert.Equal(named.Count, priced.Count);
         Assert.All(priced, line => Assert.False(string.IsNullOrWhiteSpace(line.Stats)));
+    }
+
+    /// <summary>
+    /// The board the screen draws: several postings, newest first, each carrying the days it has left.
+    /// </summary>
+    [Fact]
+    public void TheBoardCarriesEveryStandingPostingAndItsClock()
+    {
+        DojoState dojo = Stocked();
+        dojo.Decline();
+        dojo.Decline();
+
+        IReadOnlyList<OfferCard> board = OfferModel.DescribeBoard(dojo);
+
+        Assert.Equal(dojo.Board.Count, board.Count);
+        Assert.Equal(dojo.Day, board[0].Day);
+
+        // Newest first, and the clock counts down with the age of the posting.
+        Assert.True(board[0].DaysLeft > board[^1].DaysLeft);
+        Assert.True(board[^1].LastDay);
+        Assert.All(board, card => Assert.False(card.IsRaid));
+    }
+
+    /// <summary>The leading card is the newest posting — what the day screen opens on.</summary>
+    [Fact]
+    public void TheDaysCardIsTheNewestPosting()
+    {
+        DojoState dojo = Stocked();
+        dojo.Decline();
+
+        Assert.Equal(dojo.Day, OfferModel.Describe(dojo).Day);
+    }
+
+    /// <summary>
+    /// A standing posting reads as one that has lost value: the reduced fee, and the fee it was posted at.
+    /// </summary>
+    /// <remarks>
+    /// The card carries both figures so the screen can show what the waiting cost (docs/GDD.md §10).
+    /// A smaller number on its own reads as a cheap job rather than as a rule.
+    /// </remarks>
+    [Fact]
+    public void AStandingPostingCarriesBothFees()
+    {
+        DojoState dojo = Stocked();
+        EncounterOffer posting = dojo.Board[0];
+
+        Assert.False(OfferModel.Describe(dojo, posting).IsStanding);
+
+        dojo.Decline();
+        OfferCard standing = OfferModel.Describe(dojo, posting);
+
+        Assert.True(standing.IsStanding);
+        Assert.Equal(1, standing.AgeDays);
+        Assert.True(standing.PromisedReward < standing.FullReward);
+
+        // Today's own posting is fresh: the two figures agree on it.
+        OfferCard fresh = OfferModel.Describe(dojo, dojo.Board[0]);
+        Assert.False(fresh.IsStanding);
+        Assert.Equal(fresh.FullReward, fresh.PromisedReward);
+    }
+
+    /// <summary>The hut reads whichever posting the player is looking at, not only today's.</summary>
+    [Fact]
+    public void TheHutReadsThePostingItIsGiven()
+    {
+        DojoState dojo = Stocked(instantBuild: true);
+        dojo.BuySchoolNode(SchoolNodeId.DivinerHut);
+        dojo.Decline();
+
+        EncounterOffer older = dojo.Board[^1];
+        IReadOnlyList<EnemyLine> read = OfferModel.ReadOffer(dojo, older);
+
+        Assert.Equal(older.Enemies.Count, read.Count);
     }
 }
