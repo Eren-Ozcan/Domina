@@ -33,7 +33,9 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
             return ExpeditionRefusal.EmptyParty;
         }
 
-        if (offer.Day != state.Day)
+        // The board, not the calendar: a job posted two days ago is still a job until it expires
+        // (docs/GDD.md §10). What is refused is a posting that was already taken or has run out.
+        if (!state.IsOnTheBoard(offer))
         {
             return ExpeditionRefusal.StaleOffer;
         }
@@ -77,13 +79,33 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         Rng.IRandomSource random,
         CombatTuning? tuning = null,
         IRetreatPolicy? retreat = null,
-        bool collectEvents = false)
+        bool collectEvents = false,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = Prepare(state, offer, party, tuning, retreat, collectEvents);
-        return Settle(state, setup, new Battle(setup, random).Run());
+        return Settle(state, setup, new Battle(setup, random).Run(), offer, seed);
     }
+
+    /// <summary>
+    /// The same, from a seed rather than from a stream.
+    /// </summary>
+    /// <remarks>
+    /// This is the overload a journal can replay. A fight is the one move whose outcome does not follow
+    /// from the dojo's seed and the day — the stream is handed in from outside — so a run is only
+    /// reproducible if the number that stream was built from is written down with the move. Handing in
+    /// a seed rather than a stream is what lets that happen (<see cref="Dojo.Journal.MoveJournal"/>).
+    /// </remarks>
+    public ExpeditionResult Send(
+        DojoState state,
+        EncounterOffer offer,
+        IReadOnlyList<RosterEntry> party,
+        ulong seed,
+        CombatTuning? tuning = null,
+        IRetreatPolicy? retreat = null,
+        bool collectEvents = false) =>
+        Send(state, offer, party, new Rng.SeededRandom(seed), tuning, retreat, collectEvents, seed);
 
     /// <summary>
     /// Sets up the expedition's fight but <b>does not run it</b>.
@@ -138,20 +160,73 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
     /// simply not hang the game (docs/GDD.md §7, §10).
     /// </para>
     /// </remarks>
-    public ExpeditionResult Settle(DojoState state, BattleSetup setup, BattleResult battle)
+    public ExpeditionResult Settle(
+        DojoState state,
+        BattleSetup setup,
+        BattleResult battle,
+        EncounterOffer? taken = null,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(setup);
         ArgumentNullException.ThrowIfNull(battle);
 
+        // The posting comes off the board: there is one of each job, and a party that has just come
+        // back from it must not find it still standing there tomorrow.
+        if (taken is not null)
+        {
+            state.TakeOffer(taken);
+        }
+
         AftermathReport aftermath = _aftermath.Apply(state, battle);
 
-        int reward = state.RewardFor(setup, battle.Outcome);
+        // The stall guard is documented as <b>an anomaly, not a result</b> (docs/GDD.md §7): a fight
+        // that reaches it is a bug to be reproduced from its seed. The sim counts it; here it is filed
+        // as a fault, so the seed and the day are written down beside the fight that hung.
+        if (battle.Outcome == BattleOutcome.Stalled)
+        {
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "expedition");
+            state.RecordFault(
+                "combat",
+                $"the fight hit the stall guard after {battle.ElapsedSeconds:F0} s",
+                [
+                    $"seed {seed?.ToString() ?? "unrecorded"}",
+                    $"day {state.Day}",
+                    log is null ? "no blow-by-blow log was written" : $"blow by blow: {log}",
+                ]);
+        }
+
+        // The posting is handed in with the books: a job that stood on the board pays its posting-day
+        // fee less what the waiting cost it (docs/GDD.md §10).
+        int reward = state.RewardFor(setup, battle.Outcome, taken);
         state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
 
         // Filed before the day closes: the week's compulsory fight is answered by the day the dojo took
         // the field, and the tick is weighed while that day is still the current one.
         state.RecordFight(battle.Outcome == BattleOutcome.PlayerVictory, aftermath.Dead.Count());
+
+        // Written down before the day closes, so the journal reads in the order the day was played:
+        // the fight, then the evening it was fought on. The seed is the move's own argument — a fight
+        // is the one decision whose outcome does not follow from the dojo's seed and the day, because
+        // the stream is handed in from outside. Without it the line can be read but not replayed.
+        state.Record(
+            Dojo.Journal.MoveKind.Fight,
+            true,
+            Dojo.Journal.FightDetail.Of(battle, aftermath),
+            Dojo.Journal.MoveArg.Of("closesDay", true),
+            Dojo.Journal.FightDetail.Presses(battle),
+            Dojo.Journal.MoveArg.Of("posted", taken?.Day),
+            Dojo.Journal.MoveArg.Of("seed", seed),
+            Dojo.Journal.Move.List("party", setup.PlayerSide.Select(w => w.Id.Value)),
+            Dojo.Journal.MoveArg.Of("enemies", setup.EnemySide.Count),
+            Dojo.Journal.MoveArg.Of("outcome", battle.Outcome),
+            Dojo.Journal.MoveArg.Of("seconds", battle.ElapsedSeconds),
+            Dojo.Journal.MoveArg.Of("reward", reward),
+            Dojo.Journal.MoveArg.Of("dead", aftermath.Dead.Count()),
+            Dojo.Journal.MoveArg.Of("wounded", aftermath.Wounded.Count()));
+
+        // The day the fight ate closes as part of the fight, not as a move beside it.
+        state.ClosingMove = Dojo.Journal.MoveKind.Fight;
 
         DayReport day = state.AdvanceDay();
         return new ExpeditionResult(battle, aftermath, reward, day);
@@ -183,13 +258,33 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         Rng.IRandomSource random,
         CombatTuning? tuning = null,
         IRetreatPolicy? retreat = null,
-        bool collectEvents = false)
+        bool collectEvents = false,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = PrepareBounty(state, contract, party, tuning, retreat, collectEvents);
-        return SettleBounty(state, contract, party, setup, new Battle(setup, random).Run());
+        return SettleBounty(state, contract, party, setup, new Battle(setup, random).Run(), seed);
     }
+
+    /// <summary>The same, from a seed rather than from a stream — see <see cref="Send"/>.</summary>
+    public BountyResult SendToBounty(
+        DojoState state,
+        BountyContract contract,
+        IReadOnlyList<RosterEntry> party,
+        ulong seed,
+        CombatTuning? tuning = null,
+        IRetreatPolicy? retreat = null,
+        bool collectEvents = false) =>
+        SendToBounty(
+            state,
+            contract,
+            party,
+            new Rng.SeededRandom(seed),
+            tuning,
+            retreat,
+            collectEvents,
+            seed);
 
     /// <summary>Sets up the contract's fight but does not run it — see <see cref="Prepare"/>.</summary>
     /// <exception cref="InvalidOperationException">
@@ -220,7 +315,8 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         BountyContract contract,
         IReadOnlyList<RosterEntry> party,
         BattleSetup setup,
-        BattleResult battle)
+        BattleResult battle,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(contract);
@@ -229,6 +325,19 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         ArgumentNullException.ThrowIfNull(battle);
 
         AftermathReport aftermath = _aftermath.Apply(state, battle);
+
+        if (battle.Outcome == BattleOutcome.Stalled)
+        {
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "bounty");
+            state.RecordFault(
+                "combat",
+                $"the hunt hit the stall guard after {battle.ElapsedSeconds:F0} s",
+                [
+                    $"seed {seed?.ToString() ?? "unrecorded"}",
+                    $"day {state.Day}",
+                    log is null ? "no blow-by-blow log was written" : $"blow by blow: {log}",
+                ]);
+        }
 
         bool claimed = battle.Outcome == BattleOutcome.PlayerVictory;
         // The contract's own figure is sweetened the same way an ordinary reward is: what the held
@@ -256,6 +365,24 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         }
 
         state.RecordFight(battle.Outcome == BattleOutcome.PlayerVictory, aftermath.Dead.Count());
+
+        state.Record(
+            Dojo.Journal.MoveKind.BountyFight,
+            true,
+            Dojo.Journal.FightDetail.Of(battle, aftermath),
+            Dojo.Journal.MoveArg.Of("closesDay", true),
+            Dojo.Journal.FightDetail.Presses(battle),
+            Dojo.Journal.MoveArg.Of("posted", contract.PostedDay),
+            Dojo.Journal.MoveArg.Of("seed", seed),
+            Dojo.Journal.Move.List("party", party.Select(e => e.Id.Value)),
+            Dojo.Journal.MoveArg.Of("target", contract.Target.Name),
+            Dojo.Journal.MoveArg.Of("outcome", battle.Outcome),
+            Dojo.Journal.MoveArg.Of("seconds", battle.ElapsedSeconds),
+            Dojo.Journal.MoveArg.Of("claimed", claimed),
+            Dojo.Journal.MoveArg.Of("reward", reward),
+            Dojo.Journal.MoveArg.Of("dead", aftermath.Dead.Count()));
+
+        state.ClosingMove = Dojo.Journal.MoveKind.BountyFight;
 
         DayReport day = state.AdvanceDay();
         return new BountyResult(contract, battle, aftermath, reward, claimed, day);

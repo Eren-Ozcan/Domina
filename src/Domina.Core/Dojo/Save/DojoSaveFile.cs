@@ -85,7 +85,8 @@ public static class DojoSaveFile
                 p,
                 state.Standing.Of(p),
                 state.Standing.GiftsTo(p),
-                state.Standing.LastFiled(p)))]);
+                state.Standing.LastFiled(p)))],
+            [.. state.TakenOffers]);
     }
 
     private static ProvinceSnapshot CaptureProvince(DojoState state) => new(
@@ -219,6 +220,7 @@ public static class DojoSaveFile
         state.RestoreDay(Math.Max(1, snapshot.Day));
         state.RestoreSeed(snapshot.Seed);
         state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
+        state.RestoreTakenOffers(snapshot.TakenOffers);
         state.RestoreSchool(
             snapshot.School ?? [],
             snapshot.Sites ?? []);

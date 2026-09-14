@@ -37,6 +37,11 @@ namespace Domina.Core.Dojo.Save;
 /// The temple charms sitting in the store. A charm hanging on a warrior is written with that warrior,
 /// not here — the two lists are the two places a charm can be, and merging them would lose which.
 /// </param>
+/// <param name="TakenOffers">
+/// The posting days of the jobs already taken off the board. The jobs themselves are not written (they
+/// are recomputed from the day and the seed); without this mark a job could be taken twice by reloading
+/// the save, and one that was taken would stand on the board again.
+/// </param>
 /// <param name="HiredRecruits">
 /// The indices of the candidates bought from the stall today. The candidates themselves are not written
 /// (they are regenerated from the day and the seed); without this mark the same candidate could be
@@ -60,7 +65,8 @@ public sealed record DojoSnapshot(
     DifficultyTier Difficulty = DifficultyTier.Master,
     IReadOnlyList<CharmStackSnapshot>? Charms = null,
     ProvinceSnapshot? Province = null,
-    IReadOnlyList<StandingSnapshot>? Standing = null)
+    IReadOnlyList<StandingSnapshot>? Standing = null,
+    IReadOnlyList<int>? TakenOffers = null)
 {
     /// <summary>
     /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;

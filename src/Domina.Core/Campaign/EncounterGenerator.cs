@@ -24,8 +24,20 @@ public sealed record EncounterTuning
     /// × 180 days, every system on): closures 13.2 / 26.2 / 30.7 / 33.5 / 34.7 / 39.7% and deaths per
     /// warrior-fight 2.6 / 4.2 / 4.9 / 5.3 / 6.0 / 7.0%. 0.011 is the rung that puts deaths back on the
     /// locked 4.7% and leaves the season survivable.
+    ///
+    /// <b>Re-derived at 0.010 on 2026-09-13</b>, when the offer board became a two-day queue
+    /// (<see cref="OfferLifeDays"/>). A standing job is an older, weaker and therefore cheaper job that
+    /// eats a whole day, so the queue costs the dojo income rather than safety: on the old rung the
+    /// same bed went from a 17.1% last night to 8.9% and from 28.1 net per fight to 21.9. Swept under
+    /// the queue (three seeds × 1600 dojos × 180 days, every system on): at 0.010 / 0.0095 / 0.009 /
+    /// 0.0085 the last night is won 16.4 / 17.8 / 19.8 / 20.5%, dojos close 25.6 / 24.1 / 21.7 / 19.7%,
+    /// deaths per warrior-fight run 4.1 / 3.9 / 3.7 / 3.4% and the net per fight 27.8 / 28.7 / 29.5 /
+    /// 30.2. Against the pre-queue bed (16.4 vs 17.1 last nights, 25.6 vs 26.8 closed, 4.1 vs 4.5%
+    /// deaths, 27.8 vs 28.1 net) <b>0.010 is the rung that puts the
+    /// season back where it was</b> before the queue — everything below it buys the player a road that
+    /// is simply easier.
     /// </remarks>
-    public double PowerPerDay { get; init; } = 0.011;
+    public double PowerPerDay { get; init; } = 0.010;
 
     /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>
@@ -68,6 +80,63 @@ public sealed record EncounterTuning
     public double DireThreshold { get; init; } = 2.2;
 
     public double RisingThreshold { get; init; } = 1.1;
+
+    /// <summary>
+    /// How many days a posted job stays on the board, the day it was posted included.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 1 is the old rule: one job a day, gone by the morning. Above 1 the board becomes a queue — the
+    /// jobs of the last few days stand together, each with its own expiry, and the question stops being
+    /// "shall I take today's" and becomes "which of these can I get to" (docs/GDD.md §10). It is the
+    /// item the clock opened: with the day turning by itself, a job that lives exactly one day rotates
+    /// out from under a player who is in the market.
+    /// </para>
+    /// <para>
+    /// It is deliberately short. A long board is a shop: with eight jobs standing there is always a
+    /// safe one, the risk decision disappears and the season becomes a picking exercise.
+    /// </para>
+    /// <para>
+    /// <b>Locked at 2 on 2026-09-13, and it cost the curve.</b> A standing job is a job posted on an
+    /// earlier day, so it carries that day's power: weaker, and — because the reward follows enemy
+    /// health — cheaper, while eating a whole day just the same. Measured over three seeds × 1600
+    /// dojos, adding the queue on top of everything else took the last night from 17.1% to 8.9% (life
+    /// 2) and 6.1% (life 3) and the net per fight from 28.1 to 21.9 and 18.0; three policies (newest,
+    /// best-paying, and one that waits for its wounded) all landed in the same place. The board is not
+    /// more dangerous, it is <b>poorer</b>: it fills the season with cheap work on days the dojo would
+    /// have trained. Life 2 is the shortest queue that is still a queue, and
+    /// <see cref="PowerPerDay"/> was re-derived under it.
+    /// </para>
+    /// </remarks>
+    public int OfferLifeDays { get; init; } = 2;
+
+    /// <summary>
+    /// The share of the fee a standing job loses for each day it has been left on the board.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The queue must not become a larder.</b> Decided 2026-09-13, against the opposite proposal
+    /// that had stood open in docs/GDD.md §10 — that the clerk should sweeten work nobody takes. He
+    /// does not: a job sweetened by waiting makes "hoard the postings and come back when the roster is
+    /// strong" the correct play, and the day the offer arrives stops being the day to answer it. The
+    /// posting loses value instead, so <b>taking it the day it is posted is always the best price</b>
+    /// and a standing job is a fallback for a day the dojo could not meet the fresh one, never a plan.
+    /// </para>
+    /// <para>
+    /// The old job was already a slightly worse deal — it carries its posting day's power, so it is
+    /// weaker and, the reward following enemy health, cheaper — but by <see cref="PowerPerDay"/> that
+    /// is about 1% a day, far too small for a player to feel. This is the same pull written large
+    /// enough to read on the card.
+    /// </para>
+    /// <para>
+    /// 0 switches the rule off. The fee never falls below <see cref="StaleFeeFloor"/>: a job that paid
+    /// nothing would not be a fallback, it would be a line of dead text on the board.
+    /// </para>
+    /// </remarks>
+    public double StaleFeePerDay { get; init; } = 0.25;
+
+    /// <summary>The least a standing job can pay, as a share of its posting-day fee.</summary>
+    public double StaleFeeFloor { get; init; } = 0.4;
 }
 
 /// <summary>Produces the day's offer.</summary>
@@ -91,6 +160,48 @@ public sealed class EncounterGenerator(EncounterTuning? tuning = null)
     public const int FirstEnemyId = 100_000;
 
     public EncounterTuning Tuning { get; } = tuning ?? new EncounterTuning();
+
+    /// <summary>
+    /// The jobs standing on the board on this day, the newest first.
+    /// </summary>
+    /// <remarks>
+    /// Every one of them is the posting day's own offer, so the board is still a pure function of the
+    /// seed: nothing is stored and reloading cannot reroll it. An older job carries the power of the
+    /// day it was posted, which is the queue's own small pull — a job left standing is a job that has
+    /// gone stale rather than one that has grown, and <see cref="FeeScale"/> prices it that way.
+    /// </remarks>
+    public IReadOnlyList<EncounterOffer> Board(int day, ulong campaignSeed)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(day);
+
+        int life = Math.Max(1, Tuning.OfferLifeDays);
+        List<EncounterOffer> board = [];
+
+        for (int posted = day; posted > day - life && posted >= 1; posted--)
+        {
+            board.Add(Offer(posted, campaignSeed));
+        }
+
+        return board;
+    }
+
+    /// <summary>The last day a job posted on <paramref name="postedDay"/> can be taken.</summary>
+    public int ExpiryOf(int postedDay) => postedDay + Math.Max(1, Tuning.OfferLifeDays) - 1;
+
+    /// <summary>
+    /// The share of its posting-day fee a job posted on <paramref name="postedDay"/> pays today.
+    /// </summary>
+    /// <remarks>
+    /// 1 on the day it is posted and falling from there (<see cref="EncounterTuning.StaleFeePerDay"/>).
+    /// The whole rule lives in this one function so that the figure the board prints and the gold the
+    /// treasury receives cannot drift apart.
+    /// </remarks>
+    public double FeeScale(int postedDay, int today)
+    {
+        int age = Math.Max(0, today - postedDay);
+        double scale = 1 - (Math.Max(0, Tuning.StaleFeePerDay) * age);
+        return Math.Clamp(scale, Math.Clamp(Tuning.StaleFeeFloor, 0, 1), 1);
+    }
 
     /// <summary>The given day's offer.</summary>
     public EncounterOffer Offer(int day, ulong campaignSeed)
