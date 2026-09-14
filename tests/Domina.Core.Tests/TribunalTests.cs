@@ -16,7 +16,7 @@ public class TribunalTests
     {
         DojoState state = new(events: new EventTuning { ChancePerDay = 0 }, honor: honor)
         {
-            Resources = new Resources(Gold: 4000, Food: 600, Water: 600, Medicine: 40),
+            Purse = new Resources(Gold: 4000, Food: 600, Water: 600, Medicine: 40),
         };
 
         for (int i = 0; i < men; i++)

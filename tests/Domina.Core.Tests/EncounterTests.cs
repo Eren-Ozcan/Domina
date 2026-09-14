@@ -16,7 +16,7 @@ public class EncounterTests
     private static DojoState Funded(ulong seed = 7, int gold = 2000, EncounterTuning? encounters = null)
     {
         DojoState state = new(seed: seed, encounters: encounters);
-        state.Resources = new Resources(Gold: gold);
+        state.SetPurse(new Resources(Gold: gold));
         return state;
     }
 

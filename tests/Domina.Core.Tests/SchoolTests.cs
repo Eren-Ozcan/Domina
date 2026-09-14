@@ -17,7 +17,7 @@ public class SchoolTests
             events: new EventTuning { ChancePerDay = 0 },
             school: new SchoolTuning { BuildDaysFactor = 0 })
         {
-            Resources = new Resources(Gold: gold),
+            Purse = new Resources(Gold: gold),
         };
 
     /// <summary>Puts the warrior on drill for the given number of days and closes the days.</summary>
@@ -120,7 +120,7 @@ public class SchoolTests
     {
         DojoState state = new(economy: new EconomyTuning { WaterPrice = 1 })
         {
-            Resources = new Resources(Gold: 5000),
+            Purse = new Resources(Gold: 5000),
         };
 
         state.BuySchoolNode(SchoolNodeId.Steward);

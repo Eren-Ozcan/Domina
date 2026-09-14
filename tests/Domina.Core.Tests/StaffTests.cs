@@ -17,7 +17,7 @@ public class StaffTests
             events: new EventTuning { ChancePerDay = 0 },
             school: new SchoolTuning { BuildDaysFactor = buildFactor })
         {
-            Resources = new Resources(Gold: gold, Food: 500, Water: 500, Medicine: 50),
+            Purse = new Resources(Gold: gold, Food: 500, Water: 500, Medicine: 50),
         };
 
     [Fact]
@@ -139,7 +139,7 @@ public class StaffTests
         state.BuySchoolNode(SchoolNodeId.TrainingGround);
         state.Hire(StaffRole.DrillMaster);
 
-        state.Resources = state.Resources with { Gold = 1 };
+        state.SetPurse(state.Resources with { Gold = 1 });
         DayReport report = state.AdvanceDay();
 
         Assert.Equal([StaffRole.DrillMaster], report.Upkeep.Walked);
@@ -277,7 +277,7 @@ public class StaffTests
             school: new SchoolTuning { BuildDaysFactor = 0 },
             staff: new StaffTuning { MortalSaveChance = 1.0 })
         {
-            Resources = new Resources(Gold: 5000, Food: 100, Water: 100),
+            Purse = new Resources(Gold: 5000, Food: 100, Water: 100),
         };
 
         RosterEntry entry = state.Roster.Recruit("Kenji");
@@ -302,7 +302,7 @@ public class StaffTests
             school: new SchoolTuning { BuildDaysFactor = 0 },
             staff: new StaffTuning { MortalSaveChance = 1.0 })
         {
-            Resources = new Resources(Gold: 5000, Food: 100, Water: 100),
+            Purse = new Resources(Gold: 5000, Food: 100, Water: 100),
         };
 
         RosterEntry entry = state.Roster.Recruit("Kenji");

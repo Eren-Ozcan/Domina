@@ -15,7 +15,7 @@ public class MoraleTests
     private static DojoState Quiet(int gold = 2000) =>
         new(events: new EventTuning { ChancePerDay = 0 })
         {
-            Resources = new Resources(Gold: gold, Food: 200, Water: 200, Medicine: 20),
+            Purse = new Resources(Gold: gold, Food: 200, Water: 200, Medicine: 20),
         };
 
     /// <summary>Morale bends the fighting stats and leaves the pools alone.</summary>
@@ -91,7 +91,7 @@ public class MoraleTests
 
         DojoState starving = new(events: new EventTuning { ChancePerDay = 0 })
         {
-            Resources = Resources.Empty,
+            Purse = Resources.Empty,
         };
         RosterEntry hungry = starving.Roster.Recruit("Hana");
         hungry.Warrior.Morale = 40;
@@ -112,7 +112,7 @@ public class MoraleTests
                 events: new EventTuning { ChancePerDay = 0 },
                 school: new SchoolTuning { BuildDaysFactor = 0 })
             {
-                Resources = new Resources(Gold: 2000, Food: 50, Water: 50),
+                Purse = new Resources(Gold: 2000, Food: 50, Water: 50),
             };
 
             RosterEntry entry = state.Roster.Recruit("Kenji");

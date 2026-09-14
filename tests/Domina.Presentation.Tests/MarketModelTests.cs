@@ -13,7 +13,7 @@ public class MarketModelTests
     private static DojoState Funded(int gold, ulong seed = 12, MarketTuning? market = null)
     {
         DojoState state = new(seed: seed, market: market);
-        state.Resources = new Resources(Gold: gold);
+        state.SetPurse(new Resources(Gold: gold));
         return state;
     }
 

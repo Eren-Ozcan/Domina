@@ -17,7 +17,7 @@ public class SmithTests
             events: new EventTuning { ChancePerDay = 0 },
             school: new SchoolTuning { BuildDaysFactor = 0 })
         {
-            Resources = new Resources(Gold: 6000, Food: 200, Water: 200),
+            Purse = new Resources(Gold: 6000, Food: 200, Water: 200),
         };
 
         state.BuySchoolNode(SchoolNodeId.Forge);

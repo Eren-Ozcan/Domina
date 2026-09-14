@@ -15,7 +15,7 @@ public class QuartersTests
     private static DojoState Stocked(SchoolTuning? school = null) =>
         new(school: school ?? new SchoolTuning { BuildDaysFactor = 0 })
         {
-            Resources = new Resources(Gold: 20000, Food: 400, Water: 400),
+            Purse = new Resources(Gold: 20000, Food: 400, Water: 400),
         };
 
     private static void Fill(DojoState dojo, int men)

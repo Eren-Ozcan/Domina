@@ -85,7 +85,7 @@ public class RosterModelTests
     public void PathUnlockCountsDownWithTrainingDays()
     {
         DojoTuning tuning = new() { Training = new TrainingTuning { PathTrainingDays = 3 } };
-        DojoState dojo = new(tuning) { Resources = new Resources(Gold: 500) };
+        DojoState dojo = new(tuning) { Purse = new Resources(Gold: 500) };
         RosterEntry entry = dojo.Roster.Recruit("Kenji");
 
         RosterRow fresh = RosterModel.Describe(entry, dojo.Tuning);
@@ -166,7 +166,7 @@ public class RosterModelTests
     {
         DojoState dojo = new(school: new SchoolTuning { BuildDaysFactor = 0 })
         {
-            Resources = new Resources(Gold: 2000),
+            Purse = new Resources(Gold: 2000),
         };
 
         RosterEntry entry = dojo.Roster.Recruit("Kenji");
@@ -184,7 +184,7 @@ public class RosterModelTests
     [Fact]
     public void TheSummaryCarriesTheSpiritsAndTheFeast()
     {
-        DojoState dojo = new() { Resources = new Resources(Gold: 100, Sake: 2) };
+        DojoState dojo = new() { Purse = new Resources(Gold: 100, Sake: 2) };
         RosterEntry first = dojo.Roster.Recruit("Kenji");
         RosterEntry second = dojo.Roster.Recruit("Goro");
         first.Warrior.Morale = 30;
@@ -202,7 +202,7 @@ public class RosterModelTests
     [Fact]
     public void AFeastJustHeldReadsAsTheCooldown()
     {
-        DojoState dojo = new() { Resources = new Resources(Gold: 100, Sake: 10) };
+        DojoState dojo = new() { Purse = new Resources(Gold: 100, Sake: 10) };
         dojo.Roster.Recruit("Kenji");
 
         Assert.True(dojo.Feast());

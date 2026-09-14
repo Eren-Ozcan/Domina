@@ -14,7 +14,7 @@ public class EconomyTests
     private static DojoState Funded(int gold = 1000, EconomyTuning? economy = null)
     {
         DojoState state = new(economy: economy);
-        state.Resources = new Resources(Gold: gold);
+        state.SetPurse(new Resources(Gold: gold));
         return state;
     }
 
@@ -106,7 +106,7 @@ public class EconomyTests
     {
         EconomyTuning economy = new() { FoodPrice = 2, WaterPrice = 1, MedicinePrice = 10 };
         DojoState state = Funded(gold: 100, economy: economy);
-        state.Resources = state.Resources with { Food = 3 };
+        state.SetPurse(state.Resources with { Food = 3 });
 
         int spent = state.Quartermaster.Restock(state, new Resources(Food: 5, Water: 4, Medicine: 1));
 
@@ -248,7 +248,7 @@ public class EconomyTests
         RosterEntry healthy = state.Roster.Recruit("Hana");
         RosterEntry wounded = state.Roster.Recruit("Kenji");
         wounded.Injure(3);
-        state.Resources = new Resources(Food: 1, Water: 1);
+        state.SetPurse(new Resources(Food: 1, Water: 1));
 
         DayReport report = state.AdvanceDay();
 

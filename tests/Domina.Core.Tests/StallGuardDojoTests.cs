@@ -19,7 +19,7 @@ public class StallGuardDojoTests
     {
         DojoState dojo = new(seed: 5)
         {
-            Resources = new Resources(Gold: 500, Food: 50, Water: 50, Medicine: 5),
+            Purse = new Resources(Gold: 500, Food: 50, Water: 50, Medicine: 5),
         };
 
         RosterEntry entry = dojo.Roster.Recruit(

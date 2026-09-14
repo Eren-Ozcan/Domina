@@ -11,7 +11,7 @@ public class ProvinceModelTests
 {
     private static DojoState Dojo() => new(events: new EventTuning { ChancePerDay = 0 })
     {
-        Resources = new Resources(Gold: 600, Food: 100, Water: 100),
+        Purse = new Resources(Gold: 600, Food: 100, Water: 100),
     };
 
     [Fact]

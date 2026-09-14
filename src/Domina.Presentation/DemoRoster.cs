@@ -51,7 +51,7 @@ public static class DemoRoster
     /// </remarks>
     public static DojoState Dojo()
     {
-        DojoState dojo = new() { Resources = new Resources(Gold: 600, Food: 20, Water: 20, Medicine: 2) };
+        DojoState dojo = new() { Purse = new Resources(Gold: 600, Food: 20, Water: 20, Medicine: 2) };
 
         dojo.Roster.Recruit("Acemi", weapon: Weapon.Katana(), armor: Armor.Light());
 

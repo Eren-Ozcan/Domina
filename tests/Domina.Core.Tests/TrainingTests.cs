@@ -112,7 +112,7 @@ public class TrainingTests
     public void ATrainingDayWritesTheWarriorsStats()
     {
         DojoState state = new(new DojoTuning { Training = _fast });
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
         double before = entry.Warrior.BaseStats.Accuracy;
 
@@ -127,7 +127,7 @@ public class TrainingTests
     public void AHungryWarriorGainsNothing()
     {
         DojoState state = new(new DojoTuning { Training = _fast });
-        state.Resources = Resources.Empty;
+        state.SetPurse(Resources.Empty);
         RosterEntry entry = state.Roster.Recruit("Kenji");
         WarriorStats before = entry.Warrior.BaseStats;
 
@@ -143,7 +143,7 @@ public class TrainingTests
     public void AWoundedWarriorCannotTrain()
     {
         DojoState state = new(new DojoTuning { Training = _fast });
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
         entry.Injure(3);
         WarriorStats before = entry.Warrior.BaseStats;
@@ -162,7 +162,7 @@ public class TrainingTests
     public void TrainingWritesBaseStatsAndLeavesTheDisabilityPenaltyStanding()
     {
         DojoState state = new(new DojoTuning { Training = _fast });
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
         entry.Warrior.AddDisability(BodyPart.SwordArm);
 
@@ -177,7 +177,7 @@ public class TrainingTests
     public void TheChosenDrillSurvivesTheInfirmary()
     {
         DojoState state = new(new DojoTuning { Training = _fast });
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
 
         entry.Train(Drill.Conditioning);
@@ -221,7 +221,7 @@ public class TrainingTests
         static double AccuracyAfterADay(bool blessed)
         {
             DojoState state = new(new DojoTuning { Training = _fast });
-            state.Resources = new Resources(Gold: 500);
+            state.SetPurse(new Resources(Gold: 500));
             RosterEntry entry = state.Roster.Recruit("Kenji");
             entry.Warrior.BaseStats = entry.Warrior.BaseStats with { Willpower = 60, Accuracy = 40 };
 

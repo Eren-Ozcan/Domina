@@ -14,7 +14,7 @@ public class SchoolModelTests
         // Construction instant: these tests are about how the screen reads the tree, and the
         // "going up" state has its own test.
         DojoState state = new(school: new SchoolTuning { BuildDaysFactor = 0 });
-        state.Resources = new Resources(Gold: gold);
+        state.SetPurse(new Resources(Gold: gold));
         return state;
     }
 
@@ -22,7 +22,7 @@ public class SchoolModelTests
     [Fact]
     public void ABuildingGoingUpIsNeitherOwnedNorForSale()
     {
-        DojoState dojo = new(school: new SchoolTuning()) { Resources = new Resources(Gold: 5000) };
+        DojoState dojo = new(school: new SchoolTuning()) { Purse = new Resources(Gold: 5000) };
 
         Assert.True(dojo.BuySchoolNode(SchoolNodeId.TrainingGround));
 
@@ -96,7 +96,7 @@ public class SchoolModelTests
         Assert.Equal(SchoolNodeState.Owned, Row(dojo, SchoolNodeId.TrainingGround).State);
         Assert.Equal(SchoolNodeState.TooExpensive, Row(dojo, SchoolNodeId.FormsMaster).State);
 
-        dojo.Resources = dojo.Resources with { Gold = 400 };
+        dojo.SetPurse(dojo.Resources with { Gold = 400 });
         Assert.Equal(SchoolNodeState.Affordable, Row(dojo, SchoolNodeId.FormsMaster).State);
     }
 

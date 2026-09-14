@@ -16,7 +16,7 @@ public class BountyTests
     private static DojoState Dojo(ulong seed = 7, BountyTuning? bounties = null)
     {
         DojoState state = new(seed: seed, bounties: bounties);
-        state.Resources = new Resources(Gold: 1000);
+        state.SetPurse(new Resources(Gold: 1000));
         return state;
     }
 

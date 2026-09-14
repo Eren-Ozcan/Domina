@@ -16,7 +16,7 @@ public class SeasonTests
     private static DojoState Quiet(SeasonTuning? season = null) =>
         new(events: new EventTuning { ChancePerDay = 0 }, season: season)
         {
-            Resources = new Resources(Gold: 5000, Food: 900, Water: 900, Medicine: 60),
+            Purse = new Resources(Gold: 5000, Food: 900, Water: 900, Medicine: 60),
         };
 
     private static DojoState WithRoster(SeasonTuning? season = null, int men = 2)

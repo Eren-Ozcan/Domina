@@ -15,7 +15,7 @@ public class DojoSaveTests
     {
         DojoState state = new(school: instantBuild ? new SchoolTuning { BuildDaysFactor = 0 } : null)
         {
-            Resources = new Resources(Gold: 120, Food: 8, Water: 6, Medicine: 2),
+            Purse = new Resources(Gold: 120, Food: 8, Water: 6, Medicine: 2),
         };
 
         RosterEntry kenji = state.Roster.Recruit(
@@ -98,7 +98,7 @@ public class DojoSaveTests
     public void ARoundTripKeepsTheSchoolAndTheChosenPath()
     {
         DojoState before = Populated(instantBuild: true);
-        before.Resources = before.Resources with { Gold = 5000 };
+        before.SetPurse(before.Resources with { Gold = 5000 });
         before.BuySchoolNode(SchoolNodeId.TrainingGround);
         before.BuySchoolNode(SchoolNodeId.FormsMaster);
 
@@ -130,7 +130,7 @@ public class DojoSaveTests
     public void ARoundTripKeepsABuildingUnderConstruction()
     {
         DojoState before = Populated();
-        before.Resources = before.Resources with { Gold = 5000 };
+        before.SetPurse(before.Resources with { Gold = 5000 });
         Assert.True(before.BuySchoolNode(SchoolNodeId.Infirmary));
         before.AdvanceDay();
 
@@ -149,7 +149,7 @@ public class DojoSaveTests
     public void ARoundTripKeepsTheStaffButNotAPostWithNoBuilding()
     {
         DojoState before = Populated(instantBuild: true);
-        before.Resources = before.Resources with { Gold = 5000 };
+        before.SetPurse(before.Resources with { Gold = 5000 });
         Assert.True(before.BuySchoolNode(SchoolNodeId.TrainingGround));
         Assert.True(before.Hire(StaffRole.DrillMaster));
 
@@ -362,7 +362,7 @@ public class DojoSaveTests
     [Fact]
     public void ALoadedSaveRemembersWhichCandidatesWereAlreadyBought()
     {
-        DojoState state = new() { Resources = new Resources(Gold: 5000) };
+        DojoState state = new() { Purse = new Resources(Gold: 5000) };
         Assert.NotNull(state.HireRecruit(1));
 
         LoadResult loaded = DojoSaveFile.Load(DojoSaveFile.Write(state));
@@ -380,7 +380,7 @@ public class DojoSaveTests
     [Fact]
     public void ACorruptedSaveFallsBackToYesterdayAndSaysSo()
     {
-        DojoState dojo = new() { Resources = new Resources(Gold: 321) };
+        DojoState dojo = new() { Purse = new Resources(Gold: 321) };
         dojo.Roster.Recruit("Kenji");
 
         string yesterday = DojoSaveFile.Write(dojo);
@@ -396,8 +396,8 @@ public class DojoSaveTests
     [Fact]
     public void AReadableSaveIsNeverReplacedByTheBackup()
     {
-        DojoState today = new() { Resources = new Resources(Gold: 10) };
-        DojoState yesterday = new() { Resources = new Resources(Gold: 999) };
+        DojoState today = new() { Purse = new Resources(Gold: 10) };
+        DojoState yesterday = new() { Purse = new Resources(Gold: 999) };
 
         LoadResult loaded = DojoSaveFile.LoadWithBackup(
             DojoSaveFile.Write(today),

@@ -36,7 +36,7 @@ public class FinalNightTests
     {
         DojoState state = new(events: new EventTuning { ChancePerDay = 0 }, season: tuning)
         {
-            Resources = new Resources(Gold: 5000, Food: 500, Water: 500, Medicine: 40),
+            Purse = new Resources(Gold: 5000, Food: 500, Water: 500, Medicine: 40),
         };
 
         for (int i = 0; i < men; i++)
@@ -63,7 +63,7 @@ public class FinalNightTests
     {
         DojoState state = new(season: Easy(days: 40))
         {
-            Resources = new Resources(Gold: 1000),
+            Purse = new Resources(Gold: 1000),
         };
         RosterEntry master = state.Roster.Recruit("Master", Master());
 
@@ -123,7 +123,7 @@ public class FinalNightTests
         SeasonTuning tuning = Easy() with { FinalRoundPowers = [40, 40, 40, 40, 40] };
         DojoState state = new(events: new EventTuning { ChancePerDay = 0 }, season: tuning)
         {
-            Resources = new Resources(Gold: 2000, Food: 100, Water: 100),
+            Purse = new Resources(Gold: 2000, Food: 100, Water: 100),
         };
         state.Roster.Recruit("Kenji", WarriorStats.Recruit());
         for (int i = 0; i < tuning.BountyGate; i++)
@@ -280,7 +280,7 @@ public class FinalNightTests
     {
         DojoState state = new(seed: 11)
         {
-            Resources = new Resources(Gold: 1000),
+            Purse = new Resources(Gold: 1000),
         };
         RosterEntry master = state.Roster.Recruit("Master", Master());
 

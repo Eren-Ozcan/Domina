@@ -19,7 +19,7 @@ public class DayEventTests
     private static DojoState Dojo(int gold = 1000, EventTuning? events = null)
     {
         DojoState state = new(seed: 5, events: events);
-        state.Resources = new Resources(Gold: gold);
+        state.SetPurse(new Resources(Gold: gold));
         return state;
     }
 

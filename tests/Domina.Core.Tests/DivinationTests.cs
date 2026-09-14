@@ -16,7 +16,7 @@ public class DivinationTests
             events: new EventTuning { ChancePerDay = 0 },
             school: new SchoolTuning { BuildDaysFactor = 0 })
         {
-            Resources = new Resources(Gold: 2000, Food: 200, Water: 200),
+            Purse = new Resources(Gold: 2000, Food: 200, Water: 200),
         };
 
         if (hut)

@@ -16,7 +16,7 @@ public class ProvinceDayTests
             events: new EventTuning { ChancePerDay = 0 },
             province: province)
         {
-            Resources = new Resources(Gold: 900, Food: 200, Water: 200),
+            Purse = new Resources(Gold: 900, Food: 200, Water: 200),
         };
 
         state.Roster.Recruit("Kenji");

@@ -17,7 +17,7 @@ public class StandingTests
         events: new EventTuning { ChancePerDay = 0 },
         school: new SchoolTuning { BuildDaysFactor = 0 })
     {
-        Resources = new Resources(Gold: 4000, Food: 200, Water: 200),
+        Purse = new Resources(Gold: 4000, Food: 200, Water: 200),
     };
 
     /// <summary>Everyone starts in the middle, and the middle buys nothing.</summary>

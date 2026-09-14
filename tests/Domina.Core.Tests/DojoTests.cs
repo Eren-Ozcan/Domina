@@ -111,7 +111,7 @@ public class DojoTests
     {
         // A day with no medicine: the store is full but the dispensary is closed, so recovery stays at its natural rate.
         DojoState state = new(economy: new EconomyTuning { MedicineRecoveryDays = 0 });
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
         entry.Injure(2);
 
@@ -130,7 +130,7 @@ public class DojoTests
     public void TrainingDaysAccumulateOnlyWhileTraining()
     {
         DojoState state = new();
-        state.Resources = new Resources(Gold: 500);
+        state.SetPurse(new Resources(Gold: 500));
         RosterEntry entry = state.Roster.Recruit("Kenji");
 
         state.AdvanceDay();

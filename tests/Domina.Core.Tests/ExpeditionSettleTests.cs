@@ -18,7 +18,7 @@ public class ExpeditionSettleTests
     {
         DojoState state = new(seed: seed)
         {
-            Resources = new Resources(Gold: 500, Food: 50, Water: 50, Medicine: 5),
+            Purse = new Resources(Gold: 500, Food: 50, Water: 50, Medicine: 5),
         };
 
         state.Roster.Recruit("Kenji", WarriorStats.Recruit() with { Strength = 55 }, Weapon.Katana(), Armor.Medium());
