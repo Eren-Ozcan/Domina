@@ -180,13 +180,24 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
         IRandomSource random,
         CombatTuning? tuning = null,
         IRetreatPolicy? retreat = null,
-        bool collectEvents = false)
+        bool collectEvents = false,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = Prepare(state, party, tuning, retreat, collectEvents);
-        return Settle(state, setup, new Battle(setup, random).Run());
+        return Settle(state, setup, new Battle(setup, random).Run(), seed);
     }
+
+    /// <summary>The same bout, from a seed rather than from a stream — so that it can be replayed.</summary>
+    public FinalRoundResult Fight(
+        DojoState state,
+        IReadOnlyList<RosterEntry> party,
+        ulong seed,
+        CombatTuning? tuning = null,
+        IRetreatPolicy? retreat = null,
+        bool collectEvents = false) =>
+        Fight(state, party, new SeededRandom(seed), tuning, retreat, collectEvents, seed);
 
     /// <summary>
     /// Closes the books of a finished bout: the wounds and the dead go onto the roster, the score goes
@@ -197,7 +208,11 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
     /// spend it on, and paying for the bouts would quietly turn the night into another day of the
     /// economy — the night's only currency is the men still standing.
     /// </remarks>
-    public FinalRoundResult Settle(DojoState state, BattleSetup setup, BattleResult battle)
+    public FinalRoundResult Settle(
+        DojoState state,
+        BattleSetup setup,
+        BattleResult battle,
+        ulong? seed = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(setup);
@@ -205,6 +220,19 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
 
         int round = state.Season.FinalRound;
         AftermathReport aftermath = _aftermath.Apply(state, battle);
+
+        if (battle.Outcome == BattleOutcome.Stalled)
+        {
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, $"finalround{round}");
+            state.RecordFault(
+                "combat",
+                $"the bout hit the stall guard after {battle.ElapsedSeconds:F0} s",
+                [
+                    $"seed {seed?.ToString() ?? "unrecorded"}",
+                    $"round {round}",
+                    log is null ? "no blow-by-blow log was written" : $"blow by blow: {log}",
+                ]);
+        }
 
         bool won = battle.Outcome == BattleOutcome.PlayerVictory;
         SeasonPhase phase = state.Season.RecordFinalRound(won, aftermath.Dead.Count());
@@ -216,6 +244,20 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
         {
             phase = state.Season.RecordFinalRound(false);
         }
+
+        state.Record(
+            Dojo.Journal.MoveKind.FinalRound,
+            true,
+            Dojo.Journal.FightDetail.Of(battle, aftermath),
+            Dojo.Journal.FightDetail.Presses(battle),
+            Dojo.Journal.MoveArg.Of("round", round),
+            Dojo.Journal.MoveArg.Of("seed", seed),
+            Dojo.Journal.Move.List("party", setup.PlayerSide.Select(w => w.Id.Value)),
+            Dojo.Journal.MoveArg.Of("outcome", battle.Outcome),
+            Dojo.Journal.MoveArg.Of("seconds", battle.ElapsedSeconds),
+            Dojo.Journal.MoveArg.Of("won", won),
+            Dojo.Journal.MoveArg.Of("dead", aftermath.Dead.Count()),
+            Dojo.Journal.MoveArg.Of("phase", phase));
 
         return new FinalRoundResult(round, battle, aftermath, won, phase);
     }
