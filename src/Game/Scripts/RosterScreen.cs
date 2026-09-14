@@ -43,6 +43,9 @@ public sealed partial class RosterScreen : DojoScreen
     private Button _retireButton = null!;
     private Label _retireNotice = null!;
     private HBoxContainer _postRow = null!;
+    private Button _previousButton = null!;
+    private Button _nextButton = null!;
+    private Label _placeLabel = null!;
     private bool _retireArmed;
     private Button _feastButton = null!;
     private Label _feastNotice = null!;
@@ -86,6 +89,20 @@ public sealed partial class RosterScreen : DojoScreen
             CustomMinimumSize = new Vector2(560, 0),
         };
         panel.AddThemeConstantOverride("separation", 10);
+
+        // The list is on the left and the detail on the right, and comparing two men meant going back to
+        // the list for each of them. The arrows walk the roster in place, in the order the list is in.
+        _previousButton = new Button();
+        _previousButton.Pressed += Guarded(_dojo, () => Step(-1));
+        _nextButton = new Button();
+        _nextButton.Pressed += Guarded(_dojo, () => Step(1));
+
+        HBoxContainer browseRow = new();
+        browseRow.AddThemeConstantOverride("separation", 10);
+        _placeLabel = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        browseRow.AddChild(_placeLabel);
+        browseRow.AddChild(UiKit.Browse(_previousButton, _nextButton, string.Empty));
+        panel.AddChild(browseRow);
 
         _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         panel.AddChild(_detail);
@@ -140,7 +157,7 @@ public sealed partial class RosterScreen : DojoScreen
 
         // Releasing a man is the one thing on this screen that cannot be undone and costs nothing to
         // press, so it asks twice — the same courtesy the rest of the dojo owes an irreversible move.
-        _releaseButton = new Button { Text = "End his term" };
+        _releaseButton = UiKit.Danger(new Button { Text = "End his term" });
         _releaseButton.Pressed += Guarded(_dojo, Release);
         panel.AddChild(_releaseButton);
 
@@ -150,7 +167,7 @@ public sealed partial class RosterScreen : DojoScreen
         // Retirement is the other irreversible move, and it asks twice for the same reason releasing
         // does: what the dojo gets back is a man who eats nothing and can hold a post, and what it
         // loses is a sword it cannot have back.
-        _retireButton = new Button { Text = "Retire him" };
+        _retireButton = UiKit.Danger(new Button { Text = "Retire him" });
         _retireButton.Pressed += Guarded(_dojo, Retire);
         panel.AddChild(_retireButton);
 
@@ -174,14 +191,18 @@ public sealed partial class RosterScreen : DojoScreen
 
         foreach (RosterRow row in rows)
         {
-            Button button = new()
-            {
-                Text = RowText(row),
-                Alignment = HorizontalAlignment.Left,
-                ToggleMode = true,
-                ButtonPressed = row.Id == _selected,
-            };
-            button.AddThemeColorOverride("font_color", StatusColor(row.Status));
+            // The same card the party list and the arena HUD print. Outside a fight there is no current
+            // health to read — a man is either on the mat or in the infirmary — so the bar carries his
+            // spirits, which is the number that decides how he fights today.
+            Button button = UiKit.UnitButton(
+                row.Name,
+                PathName(row.Path),
+                MoraleScale.Clamp(row.Morale) / MoraleScale.Max,
+                RowText(row),
+                bar: StatusColor(row.Status),
+                ours: row.IsAlive && row.Status != RosterStatus.Freed,
+                selected: row.Id == _selected,
+                nameColor: row.IsAlive ? null : StatusColor(row.Status));
 
             WarriorId id = row.Id;
             button.Pressed += Guarded(_dojo, () =>
@@ -206,7 +227,58 @@ public sealed partial class RosterScreen : DojoScreen
 
         UpdateFeastControls(summary);
 
+        int place = _selected is WarriorId shown ? IndexOf(rows, shown) : -1;
+        _previousButton.Disabled = place <= 0;
+        _nextButton.Disabled = place < 0 || place >= rows.Count - 1;
+        _placeLabel.Text = place < 0 ? string.Empty : $"{place + 1} of {rows.Count}";
+
         ShowDetail(rows.FirstOrDefault(r => r.Id == _selected));
+    }
+
+    /// <summary>Moves the selection one place along the list the screen is showing.</summary>
+    /// <remarks>
+    /// It walks <see cref="RosterModel.Describe"/>'s order rather than the roster's own, so the arrows
+    /// follow what the player can see: the dead sort to the bottom and the arrows reach them last.
+    /// </remarks>
+    private void Step(int by)
+    {
+        IReadOnlyList<RosterRow> rows = RosterModel.Describe(_dojo);
+        if (rows.Count == 0 || _selected is not WarriorId id)
+        {
+            return;
+        }
+
+        int place = IndexOf(rows, id);
+        if (place < 0)
+        {
+            return;
+        }
+
+        int moved = Math.Clamp(place + by, 0, rows.Count - 1);
+        if (moved == place)
+        {
+            return;
+        }
+
+        // Moving off a man disarms both confirmations for the same reason picking another row does: the
+        // second press belongs to the man it was armed for.
+        _selected = rows[moved].Id;
+        _releaseArmed = false;
+        _retireArmed = false;
+        Refresh();
+    }
+
+    private static int IndexOf(IReadOnlyList<RosterRow> rows, WarriorId id)
+    {
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (rows[i].Id == id)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private void ShowDetail(RosterRow row)
@@ -613,12 +685,19 @@ public sealed partial class RosterScreen : DojoScreen
         }
     }
 
+    /// <summary>The line under a man's bar on his card.</summary>
+    /// <remarks>
+    /// It no longer repeats his name: the card prints that as its heading, and printing it twice was
+    /// what made the list read as a wall once the rows grew past one line.
+    /// </remarks>
     private static string RowText(RosterRow row) => row.Status switch
     {
-        RosterStatus.Recovering => $"{row.Name}  —  infirmary {row.RecoveryDaysRemaining}d",
-        RosterStatus.Fallen => $"{row.Name}  —  dead",
-        RosterStatus.Training => $"{row.Name}  —  {DrillName(row.Drill)}",
-        _ => $"{row.Name}  —  ready",
+        RosterStatus.Recovering => $"Infirmary — {row.RecoveryDaysRemaining}d  ·  spirits {row.Morale:0}",
+        RosterStatus.Fallen => "Dead",
+        RosterStatus.Freed => "Walked out free",
+        RosterStatus.Master => $"Master of the house  ·  {row.Victories} won",
+        RosterStatus.Training => $"{DrillName(row.Drill)}  ·  spirits {row.Morale:0}",
+        _ => $"Ready  ·  spirits {row.Morale:0}",
     };
 
     private static string Pair(double raw, double effective) =>
