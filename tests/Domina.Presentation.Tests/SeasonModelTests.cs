@@ -195,4 +195,33 @@ public class SeasonModelTests
 
         Assert.Contains("nobody left", SeasonModel.Close(empty).Headline, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// A counter the player cannot act on is decoration. A season was played to day 131 with the gate
+    /// open since day 19 without the player ever learning what the heads bought, so the line has to
+    /// name the thing they buy — before the gate opens and after.
+    /// </summary>
+    [Fact]
+    public void TheGateSaysWhatTheHeadsBuy()
+    {
+        string shut = SeasonModel.Line(Banner(heads: 1, gate: 3, day: 40, days: 180));
+        Assert.Contains("Heads 1/3", shut, StringComparison.Ordinal);
+        Assert.Contains("open the last night", shut, StringComparison.Ordinal);
+
+        string open = SeasonModel.Line(Banner(heads: 3, gate: 3, day: 40, days: 180));
+        Assert.Contains("The last night is open", open, StringComparison.Ordinal);
+        Assert.Contains("day 180", open, StringComparison.Ordinal);
+    }
+
+    private static SeasonBanner Banner(int heads, int gate, int day, int days) =>
+        new(
+            Day: day,
+            Days: days,
+            DaysLeft: days - day,
+            DaysToTick: 3,
+            FiledThisWeek: true,
+            AtRisk: false,
+            Heads: heads,
+            Gate: gate,
+            Phase: SeasonPhase.Running);
 }

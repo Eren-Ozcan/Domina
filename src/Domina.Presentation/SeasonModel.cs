@@ -171,12 +171,19 @@ public static class SeasonModel
                 ? $"Province {banner.Yours}/{banner.Yours + banner.His} · he moves on {pressed} in {banner.DaysToMove} days"
                 : $"Province {banner.Yours}/{banner.Yours + banner.His} · he moves in {banner.DaysToMove} days";
 
+        // The counter alone was unreadable: a season was played through to day 131 with the gate open
+        // since day 19, and the player never learned what the heads were for or that a last night was
+        // coming. A number the player cannot act on is decoration, so the line says what it buys.
+        string gate = banner.GateOpen
+            ? $"The last night is open — day {banner.Days}, {banner.DaysLeft} days off"
+            : $"Heads {banner.Heads}/{banner.Gate} — {banner.Gate} open the last night";
+
         return string.Join(
             "  ·  ",
             $"Day {banner.Day} of {banner.Days}",
             $"Week closes in {banner.DaysToTick} days",
             week,
-            $"Heads {banner.Heads}/{banner.Gate}",
+            gate,
             map);
     }
 
