@@ -78,6 +78,17 @@ public sealed class Battle
     /// <summary>Consecutive refused "pull out" presses before contact.</summary>
     private int _refusedRetreatPresses;
 
+    /// <summary>
+    /// The seconds at which the pull-out command was given.
+    /// </summary>
+    /// <remarks>
+    /// A watched fight is the one place the player reaches inside the resolver, so the presses are the
+    /// only part of a fight that the seed does not decide. They are kept so that the fight can be
+    /// written into the move journal and fought again exactly
+    /// (<see cref="ScriptedRetreat"/>); without them a watched fight would be a hole in the run.
+    /// </remarks>
+    private List<double>? _retreatPresses;
+
     public Battle(BattleSetup setup, IRandomSource rng)
     {
         ArgumentNullException.ThrowIfNull(setup);
@@ -147,6 +158,9 @@ public sealed class Battle
     /// <summary>How many times in a row the key was pressed before contact.</summary>
     public int RefusedRetreatPresses => _refusedRetreatPresses;
 
+    /// <summary>The seconds the pull-out command was given at, refused presses included.</summary>
+    public IReadOnlyList<double> RetreatPresses => _retreatPresses ?? (IReadOnlyList<double>)[];
+
     /// <summary>
     /// The warriors' current state. The Godot layer prints it to the HUD (health/stamina bars,
     /// which warrior the "pull out" key is active for).
@@ -199,6 +213,10 @@ public sealed class Battle
     /// <returns>True if at least one warrior accepted the command.</returns>
     public bool CommandRetreat()
     {
+        // The list is made on the first press: a measured batch never presses at all, and ten thousand
+        // empty lists a run is exactly the allocation the throughput test exists to catch.
+        (_retreatPresses ??= []).Add(ElapsedSeconds);
+
         if (!_contactMade)
         {
             // The fight has not begun: no pulling out before anyone is touched (§5).
@@ -2606,6 +2624,11 @@ public sealed class Battle
             LastChargeStartSeconds = c.LastChargeStartSeconds,
         });
 
-        Result = new BattleResult(outcome, ElapsedSeconds, summaries);
+        Result = _retreatPresses is null
+            ? new BattleResult(outcome, ElapsedSeconds, summaries)
+            : new BattleResult(outcome, ElapsedSeconds, summaries)
+            {
+                RetreatPresses = [.. _retreatPresses],
+            };
     }
 }

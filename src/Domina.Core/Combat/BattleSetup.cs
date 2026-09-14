@@ -66,6 +66,16 @@ public sealed record BattleResult(
     double ElapsedSeconds,
     IReadOnlyList<WarriorBattleSummary> Summaries)
 {
+    /// <summary>
+    /// The seconds the player pressed the pull-out key at, refused presses included.
+    /// </summary>
+    /// <remarks>
+    /// Empty for a fight nobody watched. It is on the result because the dojo layer writes it into the
+    /// move journal: everything else about a fight follows from its seed, the presses do not, and a
+    /// watched fight has to be replayable like any other move.
+    /// </remarks>
+    public IReadOnlyList<double> RetreatPresses { get; init; } = [];
+
     public WarriorBattleSummary SummaryFor(WarriorId id) =>
         Summaries.First(s => s.Id == id);
 }

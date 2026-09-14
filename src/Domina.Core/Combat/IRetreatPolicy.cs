@@ -31,6 +31,32 @@ public readonly record struct RetreatContext(
     int AlliesStanding,
     int EnemiesStanding);
 
+/// <summary>
+/// A player whose presses are already known: the pull-out key as a recorded set of seconds.
+/// </summary>
+/// <remarks>
+/// This is the replay's policy. A watched fight is the only place the player reaches inside the
+/// resolver, so the seed alone does not reproduce it; the move journal writes the seconds down
+/// (<see cref="Battle.RetreatPresses"/>) and this hands them back. Every press is given to the whole
+/// team on the first tick at or after its second, which is what the key itself does.
+/// </remarks>
+/// <param name="seconds">The seconds the key was pressed at, in any order.</param>
+public sealed class ScriptedRetreat(IEnumerable<double> seconds) : IRetreatPolicy
+{
+    private readonly Queue<double> _pending = new(seconds.OrderBy(t => t));
+
+    public bool ShouldRetreat(in RetreatContext context)
+    {
+        if (_pending.Count == 0 || context.ElapsedSeconds < _pending.Peek())
+        {
+            return false;
+        }
+
+        _pending.Dequeue();
+        return true;
+    }
+}
+
 /// <summary>A player who never pulls out — the baseline for carelessness.</summary>
 public sealed class NeverRetreat : IRetreatPolicy
 {
