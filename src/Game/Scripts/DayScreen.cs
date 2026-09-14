@@ -48,6 +48,8 @@ public sealed partial class DayScreen : DojoScreen
     private VBoxContainer _patronRows = null!;
     private Label _bountyLabel = null!;
     private VBoxContainer _partyList = null!;
+    private HBoxContainer _partyHeading = null!;
+    private int _partyLimit;
     private Label _verdictLabel = null!;
     private Button _sendButton = null!;
     private Button _bountyButton = null!;
@@ -103,7 +105,11 @@ public sealed partial class DayScreen : DojoScreen
         _acceptButton.Pressed += Guarded(_dojo, AcceptBounty);
         page.AddChild(_acceptButton);
 
-        page.AddChild(new Label { Text = "Who goes on the expedition?" });
+        // The refusal text below already says why the party will not do, but it says it in a sentence.
+        // The counter says the same thing in two characters, beside the question it answers.
+        _partyHeading = new HBoxContainer();
+        _partyHeading.AddThemeConstantOverride("separation", 14);
+        page.AddChild(_partyHeading);
 
         ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         page.AddChild(scroll);
@@ -161,6 +167,9 @@ public sealed partial class DayScreen : DojoScreen
             offer.RequiredPartySize is int size
                 ? $"This job wants exactly {size}."
                 : $"Party of at most {offer.MaxPartySize}.");
+
+        // A job that wants exactly three is counted against three; otherwise the limit is the ceiling.
+        _partyLimit = offer.RequiredPartySize ?? offer.MaxPartySize;
 
         ShowReading(OfferModel.ReadOffer(_dojo));
         BuildPatronRows();
@@ -261,15 +270,21 @@ public sealed partial class DayScreen : DojoScreen
 
         foreach (PartyCandidate candidate in candidates)
         {
-            CheckBox box = new()
-            {
-                Text = candidate.Fit
-                    ? $"{candidate.Name}  —  power {candidate.Score:0}"
-                    : $"{candidate.Name}  —  infirmary {candidate.RecoveryDaysRemaining} days",
-                Disabled = !candidate.Fit,
-                ButtonPressed = _party.Contains(candidate.Id),
-            };
-            box.AddThemeColorOverride("font_color", candidate.Fit ? InkColor : MutedColor);
+            // The bar is the gate this screen cares about and nothing else: a man is fit to go or he is
+            // in the infirmary. Drawing a fraction of his power here would invite the player to compare
+            // two numbers the resolver does not compare.
+            Button box = UiKit.UnitButton(
+                candidate.Name,
+                candidate.Fit ? $"power {candidate.Score:0}" : string.Empty,
+                candidate.Fit ? 1 : 0,
+                candidate.Fit
+                    ? "Fit for the road"
+                    : $"Infirmary — {candidate.RecoveryDaysRemaining} days",
+                bar: candidate.Fit ? GoodColor : WarningColor,
+                ours: candidate.Fit,
+                selected: _party.Contains(candidate.Id),
+                nameColor: candidate.Fit ? null : MutedColor);
+            box.Disabled = !candidate.Fit;
 
             WarriorId id = candidate.Id;
             box.Toggled += pressed =>
@@ -339,6 +354,14 @@ public sealed partial class DayScreen : DojoScreen
         _acceptButton.Visible = contract is not null;
         _acceptButton.Disabled = contract is null || _dojo.AcceptedBountyDay is not null;
         _restButton.Disabled = false;
+
+        Clear(_partyHeading);
+        _partyHeading.AddChild(new Label
+        {
+            Text = "Who goes on the expedition?",
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        });
+        _partyHeading.AddChild(UiKit.Counter("Party", party.Count, _partyLimit));
 
         _verdictLabel.Text = offer.Refusal is ExpeditionRefusal refusal
             ? RefusalText(refusal)
