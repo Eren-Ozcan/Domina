@@ -987,8 +987,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             List<SchoolNode> open = [.. state.School.Available()];
             SchoolNode? wanted = open
                 .Where(n => _options.SchoolOnly is not SchoolBranch only || n.Branch == only)
-                .Where(n => Affordable(state, n.Cost, reserve))
-                .OrderBy(n => n.Cost)
+                .Where(n => Affordable(state, state.School.PriceOf(n), reserve))
+                .OrderBy(state.School.PriceOf)
                 .FirstOrDefault();
 
             if (wanted is null || !state.BuySchoolNode(wanted.Id))

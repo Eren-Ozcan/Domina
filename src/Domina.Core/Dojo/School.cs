@@ -158,6 +158,43 @@ public sealed record SchoolTuning
     /// </remarks>
     public double BuildDaysFactor { get; init; } = 1.0;
 
+    /// <summary>A multiplier on every building's gold price.</summary>
+    /// <remarks>
+    /// The tree's costs rise within a branch (200 / 400 / 700) and were locked against a fee of about
+    /// 150 a fight, which makes the third node the business of a dojo that has already survived. This
+    /// scales the whole ladder at once, so the question "is the school priced against what a fight
+    /// pays" can be asked without re-tuning nineteen numbers one at a time.
+    ///
+    /// <b>0.75 since 2026-09-15.</b> At full price the school was the season's binding constraint and
+    /// not a decision: 10.000 dojos x 180 days on the documented bed, every development switch on, won
+    /// the last night <b>14.8%</b> of the time with 13.0 buildings and 2.43 classed men of an
+    /// eight-bed roster. Scaling the ladder, nothing else touched:
+    ///
+    /// | Price | Build days | Won the night | Buildings | Classed | Dojos closed |
+    /// |---|---|---|---|---|---|
+    /// | x1.00 | x1.0 | 14.8% | 13.0 | 2.43 | 15.7% |
+    /// | x1.00 | x0.5 | 18.3% | 13.4 | 2.32 | 15.0% |
+    /// | <b>x0.75</b> | <b>x1.0</b> | <b>23.3%</b> | <b>15.3</b> | <b>3.37</b> | <b>14.7%</b> |
+    /// | x0.75 | x0.5 | 25.7% | 15.6 | 3.52 | 14.6% |
+    /// | x0.50 | x1.0 | 36.5% | 17.8 | 4.51 | 11.7% |
+    /// | x0.50 | x0.5 | 38.4% | 17.8 | 4.71 | 11.3% |
+    ///
+    /// <b>Price is the lever; build time is a second-order one.</b> Halving the time is worth about
+    /// 3 points of night, halving the price about 22. And nothing gets worse as the price falls — the
+    /// closure rate falls with it — which is the mark of a cost that was buying no tension, only
+    /// exclusion. The class's thin reach was this same problem in another hat: the halls are 450 gold,
+    /// so cutting the ladder classes more men (2.43 -> 4.51) than anything done to the class itself.
+    ///
+    /// <b>Why 0.75 and not 0.50.</b> GDD §11 puts a developed dojo's night at about 38.5%, and x0.50
+    /// lands on 38.4% — but it lands there with the <b>measuring policy</b>, which is a floor and not
+    /// a ceiling: it never waits for a better board, never times a build against the calendar, and
+    /// takes the first affordable node rather than the one it needs. A person plays above it. Tuning
+    /// until the policy hits the design's own number would hand a player a season he cannot lose.
+    /// 0.75 moves the school from impossible to expensive, and leaves the rest to be measured against
+    /// a deciding player rather than a fixed one.
+    /// </remarks>
+    public double PriceFactor { get; init; } = 0.75;
+
     /// <summary>The training-speed multiplier of the training ground and the inner dojo.</summary>
     public double TrainingRateStep { get; init; } = 1.30;
 
@@ -320,6 +357,13 @@ public sealed class School
     public IReadOnlyCollection<SchoolNodeId> Owned => _owned;
 
     public bool Has(SchoolNodeId id) => _owned.Contains(id);
+
+    /// <summary>What this building costs today, the price factor applied.</summary>
+    public int PriceOf(SchoolNode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        return (int)Math.Round(node.Cost * Tuning.PriceFactor);
+    }
 
     /// <summary>The nodes that can be bought today — affording them is a separate question.</summary>
     /// <remarks>

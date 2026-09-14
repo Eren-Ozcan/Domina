@@ -43,7 +43,11 @@ public class SchoolTests
     [Fact]
     public void AFacilityIsPaidForOnceAndUpFront()
     {
-        DojoState state = Rich(gold: 200);
+        // The price is read off the tree rather than written here: what the rule protects is that a
+        // facility is paid for once and in full, not that it costs any particular number of gold.
+        DojoState state = Rich(gold: 0);
+        int price = state.School.PriceOf(SchoolTree.Find(SchoolNodeId.TrainingGround));
+        state.SetPurse(new Resources(Gold: price));
 
         Assert.True(state.BuySchoolNode(SchoolNodeId.TrainingGround));
         Assert.Equal(0, state.Resources.Gold);
@@ -54,10 +58,12 @@ public class SchoolTests
     [Fact]
     public void AFacilityBeyondThePurseChangesNothing()
     {
-        DojoState state = Rich(gold: 199);
+        DojoState state = Rich(gold: 0);
+        int short_ = state.School.PriceOf(SchoolTree.Find(SchoolNodeId.TrainingGround)) - 1;
+        state.SetPurse(new Resources(Gold: short_));
 
         Assert.False(state.BuySchoolNode(SchoolNodeId.TrainingGround));
-        Assert.Equal(199, state.Resources.Gold);
+        Assert.Equal(short_, state.Resources.Gold);
         Assert.Empty(state.School.Owned);
     }
 

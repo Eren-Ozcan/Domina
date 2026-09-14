@@ -1124,19 +1124,20 @@ public sealed class DojoState
     public bool BuySchoolNode(SchoolNodeId id)
     {
         SchoolNode node = SchoolTree.Find(id);
-        if (School.Has(id) || School.IsBuilding(id) || node.Cost > Resources.Gold || !School.Begin(id))
+        int cost = School.PriceOf(node);
+        if (School.Has(id) || School.IsBuilding(id) || cost > Resources.Gold || !School.Begin(id))
         {
             Note(MoveKind.BuySchoolNode, false, MoveArg.Of("node", id));
             return false;
         }
 
-        Resources = Resources with { Gold = Resources.Gold - node.Cost };
+        Resources = Resources with { Gold = Resources.Gold - cost };
         ApplySchool();
         Note(
             MoveKind.BuySchoolNode,
             true,
             MoveArg.Of("node", id),
-            MoveArg.Of("cost", node.Cost),
+            MoveArg.Of("cost", cost),
             MoveArg.Of("days", node.BuildDays));
         return true;
     }

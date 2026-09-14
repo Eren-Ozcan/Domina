@@ -1358,6 +1358,20 @@ internal static class SimArgs
                     staffTuning = staffTuning with { LimbSaveChance = limbSave };
                     break;
 
+                case "--school-price":
+                    if (!double.TryParse(
+                            value,
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out double schoolPrice)
+                        || schoolPrice < 0)
+                    {
+                        return ParsedArgs.Fail($"--school-price must be a non-negative number: {value}");
+                    }
+
+                    schoolTuning = schoolTuning with { PriceFactor = schoolPrice };
+                    break;
+
                 case "--build-days":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double buildDays)
@@ -2096,6 +2110,7 @@ internal static class SimArgs
         writer.WriteLine("  --deniability      How far the rival can go before the raid opens");
         writer.WriteLine("  --settlement-reward What one held settlement adds to the day's pay");
         writer.WriteLine("  --build-days       Multiplier on every building's construction time (0 = instant)");
+        writer.WriteLine("  --school-price     Multiplier on every building's gold price");
         writer.WriteLine("  --class-catch-floor  What a catching warrior's die is worth with the wrong implement");
         writer.WriteLine("  --class-poison-share The share of a dose a warrior of no poison class carries");
         writer.WriteLine("  --class-range-share  The share of the throw hit chance outside the range class");
