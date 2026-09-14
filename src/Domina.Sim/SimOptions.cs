@@ -1697,6 +1697,26 @@ internal static class SimArgs
                     economy = economy with { VictoryGoldPerEnemyHealth = reward };
                     break;
 
+                case "--spoils-food":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double spoilFood)
+                        || spoilFood < 0)
+                    {
+                        return ParsedArgs.Fail($"--spoils-food must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { VictoryFoodPerEnemy = spoilFood };
+                    break;
+
+                case "--spoils-water":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double spoilWater)
+                        || spoilWater < 0)
+                    {
+                        return ParsedArgs.Fail($"--spoils-water must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { VictoryWaterPerEnemy = spoilWater };
+                    break;
+
                 case "--armor-gold":
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double armorGold)
                         || armorGold < 0)
