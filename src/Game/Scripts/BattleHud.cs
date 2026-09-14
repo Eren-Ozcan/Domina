@@ -15,7 +15,6 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class BattleHud : CanvasLayer
 {
-    private static readonly Color HealthColor = new(0.72f, 0.25f, 0.25f);
     private static readonly Color StaminaColor = new(0.78f, 0.70f, 0.32f);
     private static readonly Color LockedColor = new(0.85f, 0.55f, 0.20f);
 
@@ -103,7 +102,7 @@ public sealed partial class BattleHud : CanvasLayer
             bool isPlayer = snapshot.Team == Battle.PlayerTeam;
             string name = names.GetValueOrDefault(snapshot.Id, snapshot.Id.ToString());
 
-            var panel = new WarriorPanel(name);
+            var panel = new WarriorPanel(name, isPlayer);
             (isPlayer ? player : enemy).AddChild(panel.Root);
             _panels[snapshot.Id] = panel;
         }
@@ -223,26 +222,50 @@ public sealed partial class BattleHud : CanvasLayer
     }
 
     /// <summary>A single warrior's interface row.</summary>
+    /// <remarks>
+    /// Both sides used to be drawn in the same red, so the only thing separating your man from the one
+    /// killing him was which column he sat in — and in a fight where the figures are two dark paper
+    /// cut-outs in the same dust, the HUD is the whole of the information. The side now colours the row:
+    /// indigo is yours, ochre is theirs, and the numbers are printed beside the bar so a losing fight
+    /// can be read without measuring a bar by eye.
+    /// </remarks>
     private sealed class WarriorPanel
     {
+        private static readonly Color TheirSide = new(0.541f, 0.435f, 0.235f);
+
         private readonly Label _name;
+        private readonly Label _figure;
         private readonly ProgressBar _health;
         private readonly ProgressBar _stamina;
         private readonly string _warriorName;
 
-        public WarriorPanel(string name)
+        public WarriorPanel(string name, bool ours)
         {
             _warriorName = name;
 
             Root = new VBoxContainer();
             Root.AddThemeConstantOverride("separation", 2);
 
-            _name = new Label { Text = name };
-            _name.AddThemeFontSizeOverride("font_size", 17);
-            _name.AddThemeColorOverride("font_color", UiKit.Ink);
-            Root.AddChild(_name);
+            HBoxContainer heading = new();
+            heading.AddThemeConstantOverride("separation", 8);
+            Root.AddChild(heading);
 
-            _health = Bar(HealthColor, 14);
+            _name = new Label
+            {
+                Text = name,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                ClipText = true,
+            };
+            _name.AddThemeFontSizeOverride("font_size", 17);
+            _name.AddThemeColorOverride("font_color", ours ? UiKit.Indigo : TheirSide);
+            heading.AddChild(_name);
+
+            _figure = new Label { HorizontalAlignment = HorizontalAlignment.Right };
+            _figure.AddThemeFontSizeOverride("font_size", 17);
+            _figure.AddThemeColorOverride("font_color", UiKit.Ink);
+            heading.AddChild(_figure);
+
+            _health = Bar(ours ? UiKit.Indigo : TheirSide, 14);
             _stamina = Bar(StaminaColor, 7);
             Root.AddChild(_health);
             Root.AddChild(_stamina);
@@ -255,6 +278,13 @@ public sealed partial class BattleHud : CanvasLayer
             _health.Value = snapshot.HealthFraction * 100;
             _stamina.Value = snapshot.StaminaFraction * 100;
             _name.Text = $"{_warriorName}  ·  {HudModel.DescribeState(snapshot)}";
+
+            // Rounded up, so a man on his last sliver reads 1 and not 0: a living warrior printed as
+            // dead is the one lie the HUD must never tell.
+            _figure.Text = $"{Math.Ceiling(Math.Max(snapshot.Health, 0)):0} / {snapshot.MaxHealth:0}";
+            _figure.AddThemeColorOverride(
+                "font_color",
+                snapshot.HealthFraction <= 0.25 ? UiKit.Warning : UiKit.Ink);
         }
 
         private static ProgressBar Bar(Color color, int height)
