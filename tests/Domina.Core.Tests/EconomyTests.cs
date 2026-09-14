@@ -215,6 +215,55 @@ public class EconomyTests
     }
 
     /// <summary>
+    /// The figure a screen prints as "−7 a day" has to be the figure the day actually takes, or the
+    /// player is budgeting against a number the dojo does not use.
+    /// </summary>
+    [Fact]
+    public void TheDrawItReportsIsTheDrawItTakes()
+    {
+        DojoState state = Funded();
+        RosterEntry wounded = state.Roster.Recruit("Kenji");
+        state.Roster.Recruit("Hana");
+        state.Roster.Recruit("Tora");
+        wounded.Injure(3);
+
+        Resources draw = state.DailyDraw();
+        Assert.Equal(3, draw.Food);
+        Assert.Equal(3, draw.Water);
+        Assert.Equal(1, draw.Medicine);
+
+        // Stocked exactly to the reported draw, nobody goes hungry and nobody goes without medicine.
+        state.SetPurse(new Resources(
+            Gold: draw.Gold,
+            Food: draw.Food,
+            Water: draw.Water,
+            Medicine: draw.Medicine));
+
+        DayReport report = state.AdvanceDay();
+
+        Assert.True(report.Upkeep.Fed);
+        Assert.Equal(0, state.Resources.Food);
+        Assert.Equal(0, state.Resources.Water);
+        Assert.Equal(0, state.Resources.Medicine);
+    }
+
+    /// <summary>Reading the draw must not spend it — a screen calls this on every redraw.</summary>
+    [Fact]
+    public void ReadingTheDrawChangesNothing()
+    {
+        DojoState state = Funded();
+        state.Roster.Recruit("Kenji");
+        state.SetPurse(new Resources(Gold: 500, Food: 20, Water: 20, Medicine: 5));
+
+        Resources before = state.Resources;
+        Resources first = state.DailyDraw();
+        Resources second = state.DailyDraw();
+
+        Assert.Equal(before, state.Resources);
+        Assert.Equal(first, second);
+    }
+
+    /// <summary>
     /// The price of scarcity is time: a hungry warrior neither heals nor trains that day.
     /// Nobody dies — hunger is not an irreversible penalty.
     /// </summary>

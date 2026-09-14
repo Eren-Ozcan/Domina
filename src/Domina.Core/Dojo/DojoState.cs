@@ -633,6 +633,56 @@ public sealed class DojoState
         }
     }
 
+    /// <summary>What one day draws out of the store, before anything is spent on it.</summary>
+    /// <remarks>
+    /// <para>
+    /// Called with no argument this is <b>tomorrow at the ordinary rate</b>, which is the figure a screen
+    /// wants: a store that says "96 rice" and not what melts a day hides the one pressure the season is
+    /// built on. Called with the day's event it is what that day actually draws, and
+    /// <see cref="PayUpkeep"/> calls it that way so there is one arithmetic rather than two that drift.
+    /// </para>
+    /// <para>
+    /// It reads the dojo and changes nothing, so a screen may call it on every redraw.
+    /// </para>
+    /// </remarks>
+    public Resources DailyDraw(DayEvent? happening = null)
+    {
+        int mouths = Roster.Living.Count();
+        DayRates rates = RatesFor(happening);
+
+        return new Resources(
+            Gold: Staff.DailyWage(StaffTuning),
+            Food: (int)Math.Ceiling(mouths * rates.FoodPer * rates.CookFactor),
+            Water: mouths * rates.WaterPer,
+            Medicine: rates.MedicineWorks ? rates.Wounded * Economy.MedicinePerInfirmaryDay : 0);
+    }
+
+    /// <summary>What a day charges per head, once the cook and the day's weather are in.</summary>
+    private DayRates RatesFor(DayEvent? happening)
+    {
+        // The cook does not produce, he cuts consumption — and he cuts it off the <b>kitchen's</b> total,
+        // not off each man's bowl. Per head the saving would vanish in the rounding (one measure of rice
+        // ×0.75 is still one measure), which is the same trap the steward's price floor guards against.
+        double cookFactor = School.Has(SchoolNodeId.Kitchen)
+            ? 1 - ((1 - StaffTuning.CookFoodFactor)
+                   * School.Efficiency(SchoolNodeId.Kitchen, Staff, StaffTuning))
+            : 1;
+
+        return new DayRates(
+            FoodPer: Scaled(Economy.FoodPerWarriorPerDay, happening?.FoodFactor ?? 1),
+            CookFactor: cookFactor,
+            WaterPer: Scaled(Economy.WaterPerWarriorPerDay, happening?.WaterFactor ?? 1),
+            MedicineWorks: happening?.MedicineWorks ?? true,
+            Wounded: Roster.Living.Count(e => e.RecoveryDaysRemaining > 0));
+    }
+
+    private readonly record struct DayRates(
+        int FoodPer,
+        double CookFactor,
+        int WaterPer,
+        bool MedicineWorks,
+        int Wounded);
+
     private UpkeepReport PayUpkeep(DayEvent? happening)
     {
         List<RosterEntry> living = [.. Roster.Living];
@@ -642,24 +692,15 @@ public sealed class DojoState
             .. living.Where(e => e.RecoveryDaysRemaining == 0),
         ];
 
-        int wounded = living.Count(e => e.RecoveryDaysRemaining > 0);
-        int foodPer = Scaled(Economy.FoodPerWarriorPerDay, happening?.FoodFactor ?? 1);
+        DayRates rates = RatesFor(happening);
+        int foodPer = rates.FoodPer;
+        double cookFactor = rates.CookFactor;
+        int waterPer = rates.WaterPer;
+        bool medicineWorks = rates.MedicineWorks;
+        int wounded = rates.Wounded;
 
-        // The cook does not produce, he cuts consumption — and he cuts it off the <b>kitchen's</b> total,
-        // not off each man's bowl. Per head the saving would vanish in the rounding (one measure of rice
-        // ×0.75 is still one measure), which is the same trap the steward's price floor guards against.
-        double cookFactor = School.Has(SchoolNodeId.Kitchen)
-            ? 1 - ((1 - StaffTuning.CookFoodFactor)
-                   * School.Efficiency(SchoolNodeId.Kitchen, Staff, StaffTuning))
-            : 1;
-        int waterPer = Scaled(Economy.WaterPerWarriorPerDay, happening?.WaterFactor ?? 1);
-        bool medicineWorks = happening?.MedicineWorks ?? true;
-
-        Resources need = new(
-            Gold: 0,
-            Food: (int)Math.Ceiling(living.Count * foodPer * cookFactor),
-            Water: living.Count * waterPer,
-            Medicine: medicineWorks ? wounded * Economy.MedicinePerInfirmaryDay : 0);
+        // The wage is paid separately below, so it is taken back off the shopping list here.
+        Resources need = DailyDraw(happening) with { Gold = 0 };
 
         int spent = Quartermaster.Restock(this, need, journal: false);
 
