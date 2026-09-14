@@ -1756,6 +1756,35 @@ that the store does not open empty — three days of food and water — and `New
 out 600 gold and nothing else ever since. It is now counted in **days against the roster actually
 left behind**, so a dojo of three and a dojo of five open with the same amount of time.
 
+**The last night is winnable, and the school is what wins it.** Measured on the documented bed with
+the new defaults, the same build, only the policy's development switches moved:
+
+| Policy | Reached the night | Won all five | Bouts won | Dojos closed |
+|---|---|---|---|---|
+| no development | 77.7% | 2.4% | 0.86 of 5 | 19.2% |
+| + paths, + classes | 79.0% | 4.4% | 1.16 | 17.9% |
+| + charms, smith, throwing, retirement | 80.8% | **14.3%** | 1.62 | **15.9%** |
+
+There is **no trade** between surviving and winning: the same investment buys both, and the closure
+rate falls as the night rate rises. That is the shape the design wanted.
+
+**The item this closes: the board's floor does not need to read the roster.** The one-way death
+spiral diagnosed earlier — the floor goes Heavy after day 86 and never comes back down, so a thinned
+roster can never rebuild — was an artefact of the blunt bed. On the documented bed the counter-move
+is there and is used: **49.4% of offers are declined**, the median dojo survives all 180 days, and
+81% reach the night. `EncounterGenerator.PowerFor` stays on the calendar.
+
+**What is open instead: the class is not yet a decision.** With classes trained, the three of them
+give 14.8 / 14.9 / 14.7 — the choice does not move the season. The system's whole contribution is
+**+0.5 points** (three seeds: 14.3 → 14.8, 14.7 → 15.0, 14.5 → 15.1), and only **2.4 men of an
+eight-bed roster** are ever classed, because the halls are 450 gold and 12 days each. It is not the
+class that is weak, it is its reach.
+
+**And build time is a brake worth its own round.** Halving every building's construction time takes
+the night from 14.8% to **18.3%**, and removing it entirely to **20.0%** — while the number of
+classed men *falls* (2.43 → 1.81), so this is the school as a whole, not the class branch.
+`--build-days` is a diagnostic here, not a proposal.
+
 Verification: `dotnet build` → 0 errors, `dotnet test` → 783/783 green.
 
 ---
