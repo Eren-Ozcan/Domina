@@ -99,6 +99,12 @@ public static class NewGame
             dojo.Roster.Recruit(name, offer.Stats, Weapon.Katana(), Armor.Light(), offer.Talent);
         }
 
+        // The journal's opening line. Everything above this point follows from the seed and the tier, so
+        // those two are the only things a replay needs to rebuild the dojo the player started with; the
+        // starting roster is deliberately not written down, because writing it would let an old file
+        // override a later draw (docs/GDD.md §2, the save's own rule).
+        dojo.Journal.Start(seed, tier);
+
         return dojo;
     }
 }

@@ -1,4 +1,5 @@
 using Domina.Core.Campaign;
+using Domina.Core.Dojo.Journal;
 using Domina.Core.Model;
 using Domina.Core.Rng;
 
@@ -18,11 +19,89 @@ public sealed class DojoState
     private readonly DojoTuning _baseTuning;
     private readonly EconomyTuning _baseEconomy;
     private EncounterOffer? _offer;
+    private IReadOnlyList<EncounterOffer>? _board;
+
+    /// <summary>
+    /// The postings the dojo has already taken.
+    /// </summary>
+    /// <remarks>
+    /// Only the day is kept, because the day is the posting's identity: the job itself is recomputed
+    /// from the seed. Postings older than the board's life are dropped as the day closes so the set
+    /// cannot grow with the season.
+    /// </remarks>
+    private readonly HashSet<int> _takenOffers = [];
     private IReadOnlyList<RecruitOffer>? _recruits;
     private BountyContract? _bounty;
     private bool _bountyRead;
     private readonly HashSet<int> _hiredToday = [];
     private readonly Dictionary<OmamoriKind, int> _charms = [];
+
+    /// <summary>
+    /// Every move made on this dojo, in order — the run's own test data.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The core is seeded and deterministic, so the seed plus this journal <b>is</b> the run: a
+    /// session that went wrong can be walked again in a test, without the engine
+    /// (<see cref="MoveReplay"/>). Every public method on this class that changes something
+    /// writes one line here, refusals included — "I pressed it and nothing happened" is the report a
+    /// bug usually arrives as.
+    /// </para>
+    /// <para>
+    /// Recording is on by default and costs one small record per player decision, which is nothing
+    /// beside a day's work. The batch runner turns it off
+    /// (<see cref="MoveJournal.Enabled"/>): a hundred thousand measured campaigns do not need
+    /// a hundred thousand journals.
+    /// </para>
+    /// </remarks>
+    public MoveJournal Journal { get; } = new();
+
+    /// <summary>
+    /// Where a fault may leave a file of its own; <c>null</c> — the default — means it may not.
+    /// </summary>
+    /// <remarks>
+    /// A fault line is one line, and one line is not enough for the one fault that needs more: a fight
+    /// that hits the stall guard is only debuggable blow by blow. The folder is <b>handed in</b> by
+    /// whoever owns the disk — the game resolves Godot's <c>user://</c>, the tools pass a run folder —
+    /// because the core does not decide where files live and must not reach for the engine to find out.
+    /// A measurement run leaves it null and writes nothing.
+    /// </remarks>
+    public string? DiagnosticsFolder { get; set; }
+
+    /// <summary>
+    /// The move the day is closing <b>inside</b>, if it is closing inside one.
+    /// </summary>
+    /// <remarks>
+    /// A fight and a declined offer both eat the day themselves, so the day's own line is a
+    /// <b>consequence</b> of that move rather than a move of its own. The line is still written — it
+    /// carries the bill, the drills and the wounds healed, which nothing else records — but it is
+    /// stamped with the move it belongs to, and a replay compares such a line instead of acting on it.
+    /// Without the stamp a replay would close the day twice and run a day ahead of the journal.
+    /// </remarks>
+    internal MoveKind? ClosingMove { get; set; }
+
+    /// <summary>Writes one move down against this dojo's state as it stands.</summary>
+    private void Note(Journal.MoveKind kind, bool ok, params MoveArg[] args) =>
+        Record(kind, ok, args);
+
+    /// <summary>
+    /// The same, for the parts of the core that act <b>on</b> a dojo rather than inside it — the
+    /// quartermaster's shop and the expedition's accounting.
+    /// </summary>
+    /// <remarks>
+    /// It is internal rather than public: a move is written by the code that carries it out, so that
+    /// the journal cannot drift from what actually happened. Nothing outside the core adds lines.
+    /// </remarks>
+    internal void Record(MoveKind kind, bool ok, params MoveArg[] args) =>
+        Journal.Record(this, kind, ok, args);
+
+    /// <summary>The same, with the move's line-by-line detail.</summary>
+    internal void Record(
+        MoveKind kind,
+        bool ok,
+        IReadOnlyList<MoveRow> detail,
+        params MoveArg[] args) =>
+        Journal.RecordDetailed(this, Day, kind, ok, detail, args);
 
     public DojoState(
         DojoTuning? tuning = null,
@@ -165,7 +244,58 @@ public sealed class DojoState
 
     public Roster Roster { get; } = new();
 
-    public Resources Resources { get; set; }
+    /// <summary>
+    /// The treasury and the stores.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It can be read by anybody and written only by the core. Every purchase goes through a move that
+    /// records what it cost, so a value assigned from outside would be a change nothing wrote down and
+    /// the run would stop being replayable — which is the whole point of the journal.
+    /// </para>
+    /// <para>
+    /// What the outside gets instead are two doors that are honest about themselves:
+    /// <see cref="Purse"/>, which is the purse a dojo is <b>opened</b> with (part of the run's start,
+    /// like its seed), and <see cref="SetPurse"/>, which is a move like any other and is written down.
+    /// </para>
+    /// </remarks>
+    public Resources Resources { get; internal set; }
+
+    /// <summary>
+    /// The purse the dojo is opened with — settable only while it is being built.
+    /// </summary>
+    /// <remarks>
+    /// A measurement bed and a test both start from a chosen purse, and that is not a move anybody
+    /// made: it is part of the opening, like the seed and the tier. Being init-only, it cannot be used
+    /// to reach into a running dojo, which is what the journal needs guaranteed.
+    /// </remarks>
+    public Resources Purse
+    {
+        init => Resources = value;
+    }
+
+    /// <summary>
+    /// Puts gold and stores into a running dojo — and writes it down.
+    /// </summary>
+    /// <remarks>
+    /// The one way the outside may change the purse of a dojo that is already being played. It is a
+    /// move, it carries what was set and it replays, so a run topped up by a test or a tool stays as
+    /// reproducible as one that earned every coin.
+    /// </remarks>
+    /// <param name="purse">What the treasury and the stores become.</param>
+    public void SetPurse(Resources purse)
+    {
+        Resources = purse;
+
+        Note(
+            MoveKind.SetPurse,
+            true,
+            MoveArg.Of("gold", purse.Gold),
+            MoveArg.Of("food", purse.Food),
+            MoveArg.Of("water", purse.Water),
+            MoveArg.Of("medicine", purse.Medicine),
+            MoveArg.Of("sake", purse.Sake));
+    }
 
     /// <summary>Which day it is. The game starts on day 1.</summary>
     public int Day { get; private set; } = 1;
@@ -204,6 +334,11 @@ public sealed class DojoState
         List<WarriorId> recovered = [];
         List<WarriorId> trained = [];
 
+        // The day's detail is gathered while the day runs, because afterwards most of it is gone: what
+        // a drill added is only visible as the difference across this loop, and who went hungry stops
+        // being readable the moment the next morning opens.
+        List<MoveRow> detail = [];
+
         foreach (RosterEntry entry in Roster.Living)
         {
             bool fed = !upkeep.Hungry.Contains(entry.Id);
@@ -219,6 +354,9 @@ public sealed class DojoState
                 // and the spirits he is in are both part of how much of the day he can hold on to
                 // (TrainingTuning.WillFocus).
                 double will = entry.Warrior.EffectiveStats.Willpower;
+
+                WarriorStats before = entry.Warrior.BaseStats;
+                double masteryBefore = entry.Warrior.Mastery.Of(entry.Warrior.Weapon.Name);
 
                 entry.Warrior.BaseStats = TrainingGround.After(
                     entry.Warrior.BaseStats,
@@ -237,6 +375,27 @@ public sealed class DojoState
                 }
 
                 trained.Add(entry.Id);
+
+                WarriorStats after = entry.Warrior.BaseStats;
+                detail.Add(new MoveRow(
+                    MoveArg.Of("what", "trained"),
+                    MoveArg.Of("warrior", entry.Id.Value),
+                    MoveArg.Of("name", entry.Name),
+                    MoveArg.Of("drill", entry.Drill),
+                    MoveArg.Of("health", after.MaxHealth - before.MaxHealth),
+                    MoveArg.Of("aggression", after.Aggression - before.Aggression),
+                    MoveArg.Of("defense", after.Defense - before.Defense),
+                    MoveArg.Of("evasion", after.Evasion - before.Evasion),
+                    MoveArg.Of("strength", after.Strength - before.Strength),
+                    MoveArg.Of("accuracy", after.Accuracy - before.Accuracy),
+                    MoveArg.Of("stamina", after.MaxStamina - before.MaxStamina),
+                    MoveArg.Of("speed", after.Speed - before.Speed),
+                    MoveArg.Of("willpower", after.Willpower - before.Willpower),
+                    MoveArg.Of("weapon", entry.Warrior.Weapon.Name),
+                    MoveArg.Of(
+                        "mastery",
+                        entry.Warrior.Mastery.Of(entry.Warrior.Weapon.Name) - masteryBefore),
+                    MoveArg.Of("trainingDays", entry.TrainingDays)));
             }
 
             if (entry.RecoveryDaysRemaining > 0 && fed)
@@ -245,6 +404,14 @@ public sealed class DojoState
                     + (upkeep.Medicated.Contains(entry.Id) ? Economy.MedicineRecoveryDays : 0);
 
                 entry.RecoveryDaysRemaining = Math.Max(0, entry.RecoveryDaysRemaining - days);
+
+                detail.Add(new MoveRow(
+                    MoveArg.Of("what", "healed"),
+                    MoveArg.Of("warrior", entry.Id.Value),
+                    MoveArg.Of("name", entry.Name),
+                    MoveArg.Of("days", days),
+                    MoveArg.Of("medicated", upkeep.Medicated.Contains(entry.Id)),
+                    MoveArg.Of("left", entry.RecoveryDaysRemaining)));
 
                 if (entry.RecoveryDaysRemaining == 0)
                 {
@@ -304,10 +471,99 @@ public sealed class DojoState
         int closed = Day;
         Day++;
         _offer = null;
+        _board = null;
+
+        // Postings that can no longer be on the board are forgotten, so the ledger of taken jobs stays
+        // the size of the board rather than the size of the season.
+        _takenOffers.RemoveWhere(posted => Encounters.ExpiryOf(posted) < Day);
         _recruits = null;
         _hiredToday.Clear();
         _bounty = null;
         _bountyRead = false;
+
+        // The day is written down under the day that was spent, not under the morning it opened onto.
+        // What is kept beside it is what the closing itself decided — the mishap, the bill, who went
+        // hungry, who walked out: a replay that drifts shows it here first, on the move every run makes
+        // most often.
+        // The bill is broken into its parts rather than kept as one figure: "where did the gold go" is
+        // the question the economy is tuned against, and a single number cannot answer it.
+        detail.Insert(
+            0,
+            new MoveRow(
+                MoveArg.Of("what", "upkeep"),
+                MoveArg.Of("gold", upkeep.GoldSpent),
+                MoveArg.Of("wages", upkeep.Wages),
+                MoveArg.Of("supplies", upkeep.GoldSpent - upkeep.Wages),
+                MoveArg.Of("food", upkeep.Food),
+                MoveArg.Of("water", upkeep.Water),
+                MoveArg.Of("medicine", upkeep.Medicine)));
+
+        foreach (WarriorId starved in upkeep.Hungry)
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "hungry"),
+                MoveArg.Of("warrior", starved.Value),
+                MoveArg.Of("name", Roster.Find(starved)?.Name)));
+        }
+
+        foreach (StaffRole gone in upkeep.Walked ?? [])
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "walkedOut"),
+                MoveArg.Of("role", gone)));
+        }
+
+        foreach (SchoolNodeId built in opened)
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "built"),
+                MoveArg.Of("node", built)));
+        }
+
+        if (verdict is TribunalVerdict tried)
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "tribunal"),
+                MoveArg.Of("warrior", tried.Warrior.Value),
+                MoveArg.Of("name", tried.Name),
+                MoveArg.Of("outcome", tried.Outcome),
+                MoveArg.Of("byAudience", tried.DecidedByAudience)));
+        }
+
+        if (sack is SackReport sacked)
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "sacked"),
+                MoveArg.Of("gold", -sacked.Gold),
+                MoveArg.Of("food", -sacked.Food)));
+        }
+
+        if (happening is DayEvent mishap)
+        {
+            detail.Add(new MoveRow(
+                MoveArg.Of("what", "mishap"),
+                MoveArg.Of("description", mishap.Description)));
+        }
+
+        MoveKind? within = ClosingMove;
+        ClosingMove = null;
+
+        Journal.RecordDetailed(
+            this,
+            closed,
+            MoveKind.AdvanceDay,
+            true,
+            detail,
+            MoveArg.Of("within", within),
+            MoveArg.Of("mishap", happening?.Description),
+            MoveArg.Of("spent", upkeep.GoldSpent),
+            MoveArg.Of("wages", upkeep.Wages),
+            MoveArg.Of("hungry", upkeep.Hungry.Count),
+            MoveArg.Of("recovered", recovered.Count),
+            MoveArg.Of("trained", trained.Count),
+            MoveArg.Of("verdict", verdict is null ? null : $"{verdict.Name}: {verdict.Outcome}"),
+            MoveArg.Of("sacked", sack is not null));
+
         return new DayReport(
             closed,
             recovered,
@@ -405,7 +661,7 @@ public sealed class DojoState
             Water: living.Count * waterPer,
             Medicine: medicineWorks ? wounded * Economy.MedicinePerInfirmaryDay : 0);
 
-        int spent = Quartermaster.Restock(this, need);
+        int spent = Quartermaster.Restock(this, need, journal: false);
 
         // Wages are paid before the stores are eaten but after the shopping: the payroll is the day's
         // first bill and the one the player can cut. A dojo that cannot meet it loses the people, never
@@ -471,6 +727,82 @@ public sealed class DojoState
     public EncounterOffer Offer => _offer ??= Province.RaidPending
         ? Encounters.Raid(Day, new SeededRandom(Seed + ((ulong)Day * 6_364_136_223_846_793_005UL)), Province.RaidSize)
         : Encounters.Offer(Day, Seed);
+
+    /// <summary>
+    /// The jobs standing on the clerk's board today, the newest first.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The timed queue of docs/GDD.md §10: several jobs stand at once, each expiring on its own day, so
+    /// the decision is not "take today's or lose it" but "which of these can I get to". Nothing about
+    /// it is stored except <b>which postings were taken</b> — every job is still its posting day's own
+    /// pure function of the seed, so a reload cannot reroll the board.
+    /// </para>
+    /// <para>
+    /// A raid is the exception and stands <b>alone</b>: he is at the gate, and a board offering
+    /// yesterday's patrol work beside him would be reading the day wrongly (see <see cref="UnderRaid"/>).
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<EncounterOffer> Board => _board ??= BuildBoard();
+
+    /// <summary>The last day this posting can be taken.</summary>
+    public int ExpiryOf(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+        return UnderRaid ? Day : Encounters.ExpiryOf(offer.Day);
+    }
+
+    /// <summary>
+    /// The share of its posting-day fee this posting pays today.
+    /// </summary>
+    /// <remarks>
+    /// A standing job pays less the longer it has stood (docs/GDD.md §10): the queue is a board of work
+    /// the dojo can still get to, not a larder to be filled and emptied once the roster is strong. A
+    /// raid has no age — he is at the gate today — so it is always paid in full.
+    /// </remarks>
+    public double FeeScaleOf(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+        return UnderRaid ? 1 : Encounters.FeeScale(offer.Day, Day);
+    }
+
+    /// <summary>The gold this posting promises today, the standing job's lost fee counted in.</summary>
+    public int PromisedRewardFor(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+
+        int full = Quartermaster.PromisedReward(new Combat.BattleSetup([], offer.Enemies));
+        return (int)Math.Round(full * FeeScaleOf(offer));
+    }
+
+    /// <summary>Is this posting still on the board — not taken, not expired?</summary>
+    public bool IsOnTheBoard(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+        return Board.Any(o => o.Day == offer.Day);
+    }
+
+    /// <summary>Strikes a posting off the board: the job has been taken and there is only one of it.</summary>
+    internal void TakeOffer(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+
+        _takenOffers.Add(offer.Day);
+        _board = null;
+    }
+
+    /// <summary>The postings already taken — the one thing about the board that is written down.</summary>
+    public IReadOnlyCollection<int> TakenOffers => _takenOffers;
+
+    private IReadOnlyList<EncounterOffer> BuildBoard()
+    {
+        if (UnderRaid)
+        {
+            return [Offer];
+        }
+
+        return [.. Encounters.Board(Day, Seed).Where(o => !_takenOffers.Contains(o.Day))];
+    }
 
     /// <summary>Is today's offer him at the gate rather than work on the road?</summary>
     /// <remarks>
@@ -542,14 +874,33 @@ public sealed class DojoState
     {
         if (index < 0 || index >= Recruits.Count || _hiredToday.Contains(index))
         {
+            Note(
+                MoveKind.HireRecruit,
+                false,
+                MoveArg.Of("index", index),
+                MoveArg.Of("weapon", weapon?.Name),
+                MoveArg.Of("armor", armor?.Name));
             return null;
         }
 
+        string candidate = Recruits[index].Name;
         RosterEntry? entry = Quartermaster.Hire(this, Recruits[index], weapon, armor);
         if (entry is not null)
         {
             _hiredToday.Add(index);
         }
+
+        // The candidate's name and the id he was given are notes rather than arguments: a replay hires
+        // by index off the same regenerated stall, and the name is what makes the line readable — and
+        // what proves the stall regenerated the way it did the first time.
+        Note(
+            MoveKind.HireRecruit,
+            entry is not null,
+            MoveArg.Of("index", index),
+            MoveArg.Of("weapon", weapon?.Name),
+            MoveArg.Of("armor", armor?.Name),
+            MoveArg.Of("candidate", candidate),
+            MoveArg.Of("warrior", entry?.Id.Value));
 
         return entry;
     }
@@ -586,10 +937,17 @@ public sealed class DojoState
     {
         if (Bounty is not BountyContract open || AcceptedBountyDay is not null)
         {
+            Note(MoveKind.AcceptBounty, false);
             return null;
         }
 
         AcceptedBountyDay = open.PostedDay;
+        Note(
+            MoveKind.AcceptBounty,
+            true,
+            MoveArg.Of("posted", open.PostedDay),
+            MoveArg.Of("target", open.Target.Name),
+            MoveArg.Of("reward", open.Reward));
         return open;
     }
 
@@ -645,7 +1003,18 @@ public sealed class DojoState
     /// job (<see cref="Expedition"/>), and closing the day is again <see cref="AdvanceDay"/>. Merged
     /// into a single call, the core would be coupled to the combat resolver.
     /// </remarks>
-    public DayReport Decline() => AdvanceDay();
+    public DayReport Decline()
+    {
+        // Written down before the day closes, so the journal reads in the order the player acted:
+        // first the job turned down, then the day it cost.
+        Note(
+            MoveKind.Decline,
+            true,
+            MoveArg.Of("closesDay", true),
+            MoveArg.Of("posted", Offer.Day));
+        ClosingMove = MoveKind.Decline;
+        return AdvanceDay();
+    }
 
     /// <summary>
     /// Buys a facility from the school.
@@ -661,11 +1030,18 @@ public sealed class DojoState
         SchoolNode node = SchoolTree.Find(id);
         if (School.Has(id) || School.IsBuilding(id) || node.Cost > Resources.Gold || !School.Begin(id))
         {
+            Note(MoveKind.BuySchoolNode, false, MoveArg.Of("node", id));
             return false;
         }
 
         Resources = Resources with { Gold = Resources.Gold - node.Cost };
         ApplySchool();
+        Note(
+            MoveKind.BuySchoolNode,
+            true,
+            MoveArg.Of("node", id),
+            MoveArg.Of("cost", node.Cost),
+            MoveArg.Of("days", node.BuildDays));
         return true;
     }
 
@@ -769,9 +1145,16 @@ public sealed class DojoState
     /// the two settle paths. A held settlement pays nothing itself: what it gives is the rival's own
     /// work, offered to the player at his rates.
     /// </remarks>
-    public int RewardFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome)
+    public int RewardFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome, EncounterOffer? taken = null)
     {
         int reward = Province.Sweeten(Quartermaster.RewardFor(setup, outcome));
+
+        // A job left standing pays its posting-day fee less what the waiting cost it (FeeScaleOf).
+        if (taken is not null)
+        {
+            reward = (int)Math.Round(reward * FeeScaleOf(taken));
+        }
+
 
         // The clerk's office owns the queue, so its standing is what the work is worth — the map's
         // share is the rival's trade, this is the file the lord reads on his return.
@@ -787,12 +1170,18 @@ public sealed class DojoState
         int price = Standing.Tuning.GiftPrice;
         if (Resources.Gold < price)
         {
+            Note(MoveKind.SendGift, false, MoveArg.Of("patron", patron));
             return false;
         }
 
         Resources = Resources with { Gold = Resources.Gold - price };
         Standing.Gift(patron);
         ApplySchool();
+        Note(
+            MoveKind.SendGift,
+            true,
+            MoveArg.Of("patron", patron),
+            MoveArg.Of("cost", price));
         return true;
     }
 
@@ -810,6 +1199,7 @@ public sealed class DojoState
         RosterEntry? entry = Roster.Find(id);
         if (entry is null || entry.RecoveryDaysRemaining > 0 || !Roster.Release(id))
         {
+            Note(MoveKind.Release, false, MoveArg.Of("warrior", id.Value));
             return false;
         }
 
@@ -818,6 +1208,12 @@ public sealed class DojoState
 
         // A man who has walked out of the gate is not tried the next morning.
         Tribunal.Forget(id);
+        Note(
+            MoveKind.Release,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("name", entry.Name),
+            MoveArg.Of("victories", entry.Victories));
         return true;
     }
 
@@ -879,10 +1275,12 @@ public sealed class DojoState
     {
         if (!CanFeast)
         {
+            Note(MoveKind.Feast, false);
             return false;
         }
 
-        Resources = Resources with { Sake = Resources.Sake - FeastSake };
+        int poured = FeastSake;
+        Resources = Resources with { Sake = Resources.Sake - poured };
         LastFeastDay = Day;
 
         foreach (RosterEntry entry in Roster.Living)
@@ -890,6 +1288,7 @@ public sealed class DojoState
             MoraleLedger.Raise(entry.Warrior, Tuning.Morale.FeastGain);
         }
 
+        Note(MoveKind.Feast, true, MoveArg.Of("poured", poured));
         return true;
     }
 
@@ -899,12 +1298,14 @@ public sealed class DojoState
     {
         if (measures <= 0 || Economy.SakePrice <= 0)
         {
+            Note(MoveKind.BuySake, false, MoveArg.Of("measures", measures));
             return 0;
         }
 
         int affordable = Math.Min(measures, Resources.Gold / Economy.SakePrice);
         if (affordable <= 0)
         {
+            Note(MoveKind.BuySake, false, MoveArg.Of("measures", measures));
             return 0;
         }
 
@@ -913,6 +1314,15 @@ public sealed class DojoState
             Gold = Resources.Gold - (affordable * Economy.SakePrice),
             Sake = Resources.Sake + affordable,
         };
+
+        // What was asked for and what was afforded are both written down: the gap between them is the
+        // day the purse said no, and that is the interesting half of a sake purchase.
+        Note(
+            MoveKind.BuySake,
+            true,
+            MoveArg.Of("measures", measures),
+            MoveArg.Of("bought", affordable),
+            MoveArg.Of("cost", affordable * Economy.SakePrice));
 
         return affordable;
     }
@@ -960,8 +1370,15 @@ public sealed class DojoState
         ? ReadingDepth.None
         : Staff.Has(StaffRole.Diviner) ? ReadingDepth.Full : ReadingDepth.Partial;
 
-    /// <summary>What the hut says about today's offer.</summary>
-    public OfferReading Reading => Divination.Read(Offer, ReadingDepth);
+    /// <summary>What the hut says about today's newest posting.</summary>
+    public OfferReading Reading => ReadingOf(Board.Count > 0 ? Board[0] : Offer);
+
+    /// <summary>What the hut says about one posting on the board.</summary>
+    /// <remarks>
+    /// The hut reads whatever the player is looking at: with several jobs standing at once, a reading
+    /// tied to one of them would be the screen choosing which job is worth studying.
+    /// </remarks>
+    public OfferReading ReadingOf(EncounterOffer offer) => Divination.Read(offer, ReadingDepth);
 
     /// <summary>The gift the last settlement to come over gave; <c>null</c> if none has.</summary>
     public SettlementGift? LastGift { get; private set; }
@@ -1044,11 +1461,18 @@ public sealed class DojoState
         int price = PriceOf(kind);
         if (!School.Has(SchoolNodeId.Shrine) || Resources.Gold < price)
         {
+            Note(MoveKind.BuyCharm, false, MoveArg.Of("charm", kind));
             return false;
         }
 
         Resources = Resources with { Gold = Resources.Gold - price };
         _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
+        Note(
+            MoveKind.BuyCharm,
+            true,
+            MoveArg.Of("charm", kind),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("inStore", _charms[kind]));
         return true;
     }
 
@@ -1065,12 +1489,18 @@ public sealed class DojoState
     {
         if (_charms.GetValueOrDefault(kind) <= 0)
         {
+            Note(MoveKind.SellCharm, false, MoveArg.Of("charm", kind));
             return 0;
         }
 
         Take(kind);
         int gold = (int)Math.Floor(PriceOf(kind) * Math.Clamp(StaffTuning.OmamoriResaleShare, 0, 1));
         Resources = Resources with { Gold = Resources.Gold + gold };
+        Note(
+            MoveKind.SellCharm,
+            true,
+            MoveArg.Of("charm", kind),
+            MoveArg.Of("paid", gold));
         return gold;
     }
 
@@ -1084,11 +1514,23 @@ public sealed class DojoState
             || entry.Warrior.Charms.Count >= OmamoriSlots
             || _charms.GetValueOrDefault(kind) <= 0)
         {
+            Note(
+                MoveKind.FitCharm,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("charm", kind));
             return false;
         }
 
         Take(kind);
         entry.Warrior.Wear(kind);
+        Note(
+            MoveKind.FitCharm,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("charm", kind),
+            MoveArg.Of("name", entry.Name),
+            MoveArg.Of("worn", entry.Warrior.Charms.Count));
         return true;
     }
 
@@ -1098,10 +1540,21 @@ public sealed class DojoState
         RosterEntry? entry = Roster.Find(id);
         if (entry is null || !entry.Warrior.Remove(kind))
         {
+            Note(
+                MoveKind.UnfitCharm,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("charm", kind));
             return false;
         }
 
         _charms[kind] = _charms.GetValueOrDefault(kind) + 1;
+        Note(
+            MoveKind.UnfitCharm,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("charm", kind),
+            MoveArg.Of("name", entry.Name));
         return true;
     }
 
@@ -1157,10 +1610,12 @@ public sealed class DojoState
     {
         if (!School.HasPostFor(role) || !Staff.Add(role))
         {
+            Note(MoveKind.HireStaff, false, MoveArg.Of("role", role));
             return false;
         }
 
         ApplySchool();
+        Note(MoveKind.HireStaff, true, MoveArg.Of("role", role));
         return true;
     }
 
@@ -1183,10 +1638,21 @@ public sealed class DojoState
             || !StaffTuning.MasterMayHold(role)
             || !Staff.Add(role, id))
         {
+            Note(
+                MoveKind.AppointStaff,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("role", role));
             return false;
         }
 
         ApplySchool();
+        Note(
+            MoveKind.AppointStaff,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("role", role),
+            MoveArg.Of("name", entry.Name));
         return true;
     }
 
@@ -1210,12 +1676,19 @@ public sealed class DojoState
         RosterEntry? entry = Roster.Find(id);
         if (entry is null || !CanRetire(entry) || !Roster.Retire(id))
         {
+            Note(MoveKind.Retire, false, MoveArg.Of("warrior", id.Value));
             return false;
         }
 
         // The charms are the dojo's and he is not going to the field again.
         ReturnCharms(entry.Warrior.StripCharms());
         Tribunal.Forget(id);
+        Note(
+            MoveKind.Retire,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("name", entry.Name),
+            MoveArg.Of("victories", entry.Victories));
         return true;
     }
 
@@ -1236,10 +1709,12 @@ public sealed class DojoState
     {
         if (!Staff.Remove(role))
         {
+            Note(MoveKind.DismissStaff, false, MoveArg.Of("role", role));
             return false;
         }
 
         ApplySchool();
+        Note(MoveKind.DismissStaff, true, MoveArg.Of("role", role));
         return true;
     }
 
@@ -1262,6 +1737,11 @@ public sealed class DojoState
             || !School.UnlockedClasses().Contains(klass)
             || !ClassAptitude.IsPossibleFor(klass, entry.Warrior.Disabilities))
         {
+            Note(
+                MoveKind.TrainClass,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("class", klass));
             return false;
         }
 
@@ -1269,10 +1749,24 @@ public sealed class DojoState
         if (entry.Warrior.Class != WarriorClass.None
             && ClassAptitude.IsPossibleFor(entry.Warrior.Class, entry.Warrior.Disabilities))
         {
+            Note(
+                MoveKind.TrainClass,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("class", klass),
+                MoveArg.Of("had", entry.Warrior.Class));
             return false;
         }
 
+        WarriorClass before = entry.Warrior.Class;
         entry.Warrior.Class = klass;
+        Note(
+            MoveKind.TrainClass,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("class", klass),
+            MoveArg.Of("name", entry.Name),
+            MoveArg.Of("had", before));
         return true;
     }
 
@@ -1293,11 +1787,174 @@ public sealed class DojoState
             || entry.Warrior.Path != WarriorPath.None
             || entry.TrainingDays < Tuning.Training.PathTrainingDays)
         {
+            Note(
+                MoveKind.ChoosePath,
+                false,
+                MoveArg.Of("warrior", id.Value),
+                MoveArg.Of("path", path));
             return false;
         }
 
         entry.Warrior.Path = path;
+        Note(
+            MoveKind.ChoosePath,
+            true,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("path", path),
+            MoveArg.Of("name", entry.Name),
+            MoveArg.Of("trainingDays", entry.TrainingDays));
         return true;
+    }
+
+    /// <summary>
+    /// Puts a warrior on the training ground, with a drill if one is named.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="RosterEntry.Train"/> does the work and is still the place the rule lives; this is the
+    /// way in that goes <b>through the dojo</b>, so the decision is written into the journal. Which
+    /// drill a man spent his days on decides what he is worth by the season's end, so a journal that
+    /// skipped it would replay a different warrior under the same name.
+    /// </remarks>
+    /// <param name="id">Whose day it is.</param>
+    /// <param name="drill">The drill to set; the one he is already on continues if nothing is named.</param>
+    /// <returns><c>true</c> if he went to the ground — a man in the infirmary does not.</returns>
+    public bool SetDrill(WarriorId id, Drill? drill = null)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        bool ok = entry?.Train(drill) ?? false;
+
+        Note(
+            MoveKind.SetDrill,
+            ok,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("drill", drill),
+            MoveArg.Of("name", entry?.Name),
+            MoveArg.Of("onDrill", entry is null ? null : entry.Drill.ToString()));
+
+        return ok;
+    }
+
+    /// <summary>
+    /// Gives a warrior a new name.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Roster.Rename"/> holds the rule — a living warrior's name is his alone (GDD §6) —
+    /// and this is the way in that goes <b>through the dojo</b>, so the choice reaches the journal.
+    /// Naming the men is one of the few marks the player leaves on a roster the market dealt him, and
+    /// a replay that skipped it would walk the run with strangers in it.
+    /// </remarks>
+    /// <param name="id">Whose name is changing.</param>
+    /// <param name="name">The new name.</param>
+    /// <returns><c>true</c> if he was renamed; <c>false</c> if he is not on the roster or the name is taken.</returns>
+    public bool RenameWarrior(WarriorId id, string name)
+    {
+        RosterEntry? entry = Roster.Find(id);
+        string? before = entry?.Name;
+
+        bool ok = false;
+        if (entry is not null && !string.IsNullOrWhiteSpace(name))
+        {
+            bool taken = !string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase)
+                && Roster.IsNameTaken(name);
+
+            if (!taken)
+            {
+                Roster.Rename(id, name);
+                ok = true;
+            }
+        }
+
+        Note(
+            MoveKind.Rename,
+            ok,
+            MoveArg.Of("warrior", id.Value),
+            MoveArg.Of("name", name),
+            MoveArg.Of("was", before));
+
+        return ok;
+    }
+
+    /// <summary>
+    /// Counts a voice at the tribunal — chat speaking for or against the man standing.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Dojo.Tribunal.Vote"/> holds the rule (one voice per user, only while a summons is
+    /// standing); this is the way in that goes through the dojo, so the voice reaches the journal. It
+    /// has to: a verdict decided by the crowd is not a function of the seed and the day, so a run whose
+    /// votes were not written down would come out differently the second time.
+    /// </remarks>
+    /// <param name="user">Who spoke.</param>
+    /// <param name="bushi">Were they for the man (<c>true</c>) or against him?</param>
+    /// <returns><c>true</c> if the voice was counted.</returns>
+    public bool CastVote(string user, bool bushi)
+    {
+        bool ok = !string.IsNullOrWhiteSpace(user) && Tribunal.Vote(user, bushi);
+
+        Note(
+            MoveKind.CastVote,
+            ok,
+            MoveArg.Of("user", user),
+            MoveArg.Of("bushi", bushi),
+            MoveArg.Of("standing", Tribunal.Standing?.Name));
+
+        return ok;
+    }
+
+    /// <summary>
+    /// Writes a fault into the run's journal: something went wrong here.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The journal keeps what the player did; this keeps what broke while he was doing it, in the same
+    /// file and in the same order. That order is the whole value: a caught exception on its own says
+    /// almost nothing, and the same exception with the four moves before it is a test case.
+    /// </para>
+    /// <para>
+    /// It is written by whoever catches the trouble — the engine layer around a screen, the resolver
+    /// when a fight hits the stall guard, the loader when a save came back incomplete. A replay reads
+    /// it and walks on: a fault is a record, never an instruction.
+    /// </para>
+    /// </remarks>
+    /// <param name="where">Where it happened — a screen, a system, a file.</param>
+    /// <param name="what">What went wrong, in one line.</param>
+    /// <param name="detail">Anything worth keeping beside it: a stack, the offending values.</param>
+    public void RecordFault(string where, string what, IEnumerable<string>? detail = null)
+    {
+        List<MoveRow> rows = [];
+        foreach (string line in detail ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                rows.Add(new MoveRow(MoveArg.Of("line", line.Trim())));
+            }
+        }
+
+        Record(
+            MoveKind.Fault,
+            false,
+            rows,
+            MoveArg.Of("where", where),
+            MoveArg.Of("what", what));
+    }
+
+    /// <summary>The same, for an exception that was caught.</summary>
+    /// <remarks>
+    /// The type and the message go on the line and the stack goes into the detail, trimmed to the
+    /// frames that say something: a journal is read by a person, and forty frames of engine plumbing
+    /// bury the three that matter.
+    /// </remarks>
+    /// <param name="where">Where it was caught.</param>
+    /// <param name="problem">The exception itself.</param>
+    /// <param name="frames">How many stack frames to keep.</param>
+    public void RecordFault(string where, Exception problem, int frames = 8)
+    {
+        ArgumentNullException.ThrowIfNull(problem);
+
+        IEnumerable<string> stack = (problem.StackTrace ?? string.Empty)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Take(Math.Max(0, frames));
+
+        RecordFault(where, $"{problem.GetType().Name}: {problem.Message}", stack);
     }
 
     /// <summary>Restores the facilities coming from the save.</summary>
@@ -1464,10 +2121,23 @@ public sealed class DojoState
     {
         Day = Math.Max(1, day);
         _offer = null;
+        _board = null;
         _recruits = null;
         _hiredToday.Clear();
         _bounty = null;
         _bountyRead = false;
+    }
+
+    /// <summary>Restores the postings already taken, coming from the save.</summary>
+    internal void RestoreTakenOffers(IEnumerable<int>? taken)
+    {
+        _takenOffers.Clear();
+        foreach (int day in taken ?? [])
+        {
+            _takenOffers.Add(day);
+        }
+
+        _board = null;
     }
 
     /// <summary>Restores the expedition seed coming from the save.</summary>
@@ -1475,6 +2145,7 @@ public sealed class DojoState
     {
         Seed = seed;
         _offer = null;
+        _board = null;
         _recruits = null;
         _bounty = null;
         _bountyRead = false;
