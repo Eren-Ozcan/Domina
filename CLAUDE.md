@@ -64,6 +64,19 @@ Marketing assets such as the store listing, feature graphic, icon and screenshot
    private `Eren-Ozcan/pictures` repo) — the files are copied there, then committed and
    pushed in that repo.
 
+## Licensing
+
+This repo is proprietary: the root `LICENSE` is an all-rights-reserved notice
+(copyright Yilk Games), and GitHub therefore reports no open-source license.
+Never replace it with MIT or any other permissive licence, and never leave a
+scaffold's own LICENSE file (Expo's, Unity's, a starter template's) in the repo
+root — that would publish this project under someone else's terms.
+
+No third-party fonts or asset packs are bundled; the only external packages are
+test-only (xunit, coverlet), which are not distributed. If that changes, keep
+the component's licence text in the repo and add a `THIRD-PARTY-NOTICES.md`
+listing it.
+
 ## Studio-wide information
 
 For topics that are not specific to this game (Google account, Play Console, Steam
