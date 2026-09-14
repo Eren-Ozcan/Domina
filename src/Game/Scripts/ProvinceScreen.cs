@@ -22,6 +22,7 @@ namespace Domina.Game;
 public sealed partial class ProvinceScreen : DojoScreen
 {
     private DojoState _dojo = null!;
+    private HFlowContainer _summaryRow = null!;
     private Label _summary = null!;
     private VBoxContainer _tiles = null!;
 
@@ -30,23 +31,28 @@ public sealed partial class ProvinceScreen : DojoScreen
         ArgumentNullException.ThrowIfNull(dojo);
         _dojo = dojo;
 
-        VBoxContainer page = BuildPage();
+        VBoxContainer page = BuildPage(
+            "Province",
+            "Twelve villages and who they pay. Nothing on this board can be pressed — a village "
+            + "changes hands on the work you take on the day screen, and this is where you read the "
+            + "result of it.");
 
-        _summary = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        page.AddChild(_summary);
+        VBoxContainer standing = UiKit.Section(page, "Where the province stands");
+        _summaryRow = UiKit.ChipRow();
+        standing.AddChild(_summaryRow);
+
+        _summary = UiKit.Note();
+        standing.AddChild(_summary);
+
+        VBoxContainer villages = UiKit.Section(page, "The villages", fill: true);
+        villages.AddChild(UiKit.Note("Green is yours, red is his, and amber is a village leaning away from you."));
 
         ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        page.AddChild(scroll);
+        villages.AddChild(scroll);
 
         _tiles = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _tiles.AddThemeConstantOverride("separation", 6);
+        _tiles.AddThemeConstantOverride("separation", 4);
         scroll.AddChild(_tiles);
-
-        page.AddChild(new Label
-        {
-            Text = "A village changes hands on the work you file for it, not from this board.",
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        });
 
         Refresh();
     }
@@ -57,25 +63,37 @@ public sealed partial class ProvinceScreen : DojoScreen
 
         ProvinceBoard board = ProvinceModel.Describe(_dojo);
 
-        _summary.Text = board.UnderRaid
-            ? $"Yours {board.Yours}  ·  his {board.His}  ·  free {board.Free}  ·  he is at the gate"
-            : $"Yours {board.Yours}  ·  his {board.His}  ·  free {board.Free}"
-              + $"  ·  he moves in {board.DaysToMove} days";
+        Clear(_summaryRow);
+        _summaryRow.AddChild(UiKit.Chip($"{board.Yours}", "yours", board.Yours > 0 ? UiKit.Good : UiKit.Warning));
+        _summaryRow.AddChild(UiKit.Chip($"{board.His}", "his", board.His > 0 ? UiKit.Warning : UiKit.Ink));
+        _summaryRow.AddChild(UiKit.Chip($"{board.Free}", "neither"));
+        _summaryRow.AddChild(UiKit.Chip(
+            board.UnderRaid ? "now" : $"{board.DaysToMove}",
+            board.UnderRaid ? "he is at the gate" : "days to his next move",
+            board.UnderRaid ? UiKit.Warning : UiKit.Pending));
 
-        _summary.AddThemeColorOverride("font_color", board.UnderRaid ? WarningColor : InkColor);
+        _summary.Text = board.UnderRaid
+            ? "He is standing in your yard. Answer him, or the village he came for is his."
+            : "He takes one village at a time, and the board says which one he is walking toward.";
+        _summary.AddThemeColorOverride("font_color", board.UnderRaid ? WarningColor : UiKit.Muted);
 
         foreach (SettlementTile tile in board.Settlements)
         {
-            Label line = new()
-            {
-                Text = tile.Pressed
-                    ? $"{ProvinceModel.Line(tile)}  ←  his next move"
-                    : ProvinceModel.Line(tile),
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            };
+            PanelContainer panel = new();
+            panel.AddThemeStyleboxOverride(
+                "panel",
+                UiKit.PanelStyle(UiKit.Raised, radius: 3, border: tile.Pressed ? UiKit.Warning : null));
 
-            line.AddThemeColorOverride("font_color", Tint(tile));
-            _tiles.AddChild(line);
+            VBoxContainer box = UiKit.Padded(panel, 10, 6);
+            box.SizeFlagsVertical = Control.SizeFlags.ShrinkBegin;
+            box.AddChild(UiKit.Body(ProvinceModel.Line(tile), Tint(tile)));
+
+            if (tile.Pressed)
+            {
+                box.AddChild(UiKit.Note("This is the one he moves on next.", UiKit.Warning));
+            }
+
+            _tiles.AddChild(panel);
         }
     }
 

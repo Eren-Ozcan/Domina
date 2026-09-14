@@ -30,75 +30,74 @@ public sealed partial class SeasonEndScreen : DojoScreen
         ArgumentNullException.ThrowIfNull(dojo);
 
         SeasonEndCard card = SeasonModel.Close(dojo);
-        VBoxContainer page = BuildPage();
+        VBoxContainer page = BuildPage(
+            "The season is over",
+            "How the run ended, what it cost, and the names on both sides of that.");
 
-        Label headline = new()
-        {
-            Text = card.Headline,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        };
-        headline.AddThemeColorOverride(
-            "font_color",
-            card.Phase == SeasonPhase.Triumph ? GoodColor : WarningColor);
-        page.AddChild(headline);
+        VBoxContainer verdict = UiKit.Section(page, "The verdict");
 
-        page.AddChild(new Label
-        {
-            Text = string.Join(
-                '\n',
-                $"Days played: {card.Days}",
-                $"Fights: {card.Battles}  ·  won {card.Victories}",
-                $"Heads brought in: {card.Heads}",
-                $"Weeks with no fight filed: {card.MissedWeeks}",
+        Label headline = UiKit.Body(
+            card.Headline,
+            card.Phase == SeasonPhase.Triumph ? GoodColor : WarningColor,
+            UiKit.FigureSize);
+        verdict.AddChild(headline);
 
-                // The map is the half of the season a fight record cannot show: a run can be lost on
-                // the province without a single bout going badly.
-                $"The province: {card.SettlementsHeld} yours  ·  {card.SettlementsHis} his",
-                card.Sacks == 0
-                    ? "He never stood in your yard unanswered."
-                    : $"Left standing in your yard: {card.Sacks} times"),
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        });
+        HFlowContainer figures = UiKit.ChipRow();
+        verdict.AddChild(figures);
+
+        figures.AddChild(UiKit.Chip($"{card.Days}", "days played", mark: Mark.Sun));
+        figures.AddChild(UiKit.Chip($"{card.Victories}/{card.Battles}", "fights won", mark: Mark.Blade));
+        figures.AddChild(UiKit.Chip($"{card.Heads}", "heads brought in", mark: Mark.Grave));
+        figures.AddChild(UiKit.Chip(
+            $"{card.MissedWeeks}",
+            "weeks with nothing filed",
+            card.MissedWeeks > 0 ? UiKit.Warning : UiKit.Ink));
+
+        // The map is the half of the season a fight record cannot show: a run can be lost on the
+        // province without a single bout going badly.
+        figures.AddChild(UiKit.Chip($"{card.SettlementsHeld}", "villages yours", UiKit.Good, Mark.Banner));
+        figures.AddChild(UiKit.Chip($"{card.SettlementsHis}", "villages his", UiKit.Warning, Mark.Banner));
+        figures.AddChild(UiKit.Chip(
+            $"{card.Sacks}",
+            "times he stood unanswered",
+            card.Sacks > 0 ? UiKit.Warning : UiKit.Ink));
 
         HBoxContainer columns = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        columns.AddThemeConstantOverride("separation", 32);
+        columns.AddThemeConstantOverride("separation", 12);
         page.AddChild(columns);
 
-        columns.AddChild(Column($"Buried ({card.Dead.Count})", card.Dead, WarningColor));
-        columns.AddChild(Column($"Walked out free ({card.Freed.Count})", card.Freed, GoodColor));
+        Column(columns, $"Buried — {card.Dead.Count}", card.Dead, WarningColor);
+        Column(columns, $"Walked out free — {card.Freed.Count}", card.Freed, GoodColor);
 
-        Button back = new() { Text = "Back to the title" };
+        Button back = UiKit.Primary(new Button
+        {
+            Text = "Back to the title",
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+        });
         back.Pressed += () => Closed?.Invoke();
         page.AddChild(back);
     }
 
-    private static Control Column(string title, IReadOnlyList<string> names, Color color)
+    private static void Column(Control parent, string title, IReadOnlyList<string> names, Color color)
     {
-        VBoxContainer column = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-
-        Label heading = new() { Text = title };
-        heading.AddThemeColorOverride("font_color", color);
-        column.AddChild(heading);
+        VBoxContainer column = UiKit.Section(parent, title, fill: true);
 
         ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         column.AddChild(scroll);
 
         VBoxContainer list = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        list.AddThemeConstantOverride("separation", 2);
         scroll.AddChild(list);
 
         if (names.Count == 0)
         {
-            Label none = new() { Text = "nobody" };
-            none.AddThemeColorOverride("font_color", MutedColor);
-            list.AddChild(none);
-            return column;
+            list.AddChild(UiKit.Body("nobody", MutedColor));
+            return;
         }
 
         foreach (string name in names)
         {
-            list.AddChild(new Label { Text = name });
+            list.AddChild(UiKit.Body(name, color));
         }
-
-        return column;
     }
 }

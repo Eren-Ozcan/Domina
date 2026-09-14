@@ -60,17 +60,43 @@ public sealed partial class BattleHud : CanvasLayer
             names[warrior.Id] = warrior.Name;
         }
 
-        _status = new Label { Position = new Vector2(24, 20) };
-        _status.AddThemeFontSizeOverride("font_size", 20);
-        AddChild(_status);
+        // The interface is anchored rather than placed at fixed coordinates: the enemy column used to
+        // sit at x=1560, which puts it off the side of any window that is not the one it was written on.
+        MarginContainer frame = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
+        frame.AddThemeConstantOverride("margin_left", 20);
+        frame.AddThemeConstantOverride("margin_right", 20);
+        frame.AddThemeConstantOverride("margin_top", 16);
+        frame.AddThemeConstantOverride("margin_bottom", 16);
+        frame.MouseFilter = Control.MouseFilterEnum.Ignore;
+        AddChild(frame);
 
-        _notice = new Label { Position = new Vector2(24, 48) };
-        _notice.AddThemeFontSizeOverride("font_size", 18);
-        _notice.AddThemeColorOverride("font_color", ShutColor);
-        AddChild(_notice);
+        // Everything that is only a container is transparent to the mouse: the interface covers the
+        // window, and the fight is behind it.
+        VBoxContainer page = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        page.AddThemeConstantOverride("separation", 10);
+        frame.AddChild(page);
 
-        var player = Column(new Vector2(24, 60));
-        var enemy = Column(new Vector2(1560, 60));
+        page.AddChild(BuildStatusBar());
+
+        // The two sides stand on the two edges of the window with the fight itself between them, so
+        // whose bar is whose never has to be worked out from the names.
+        HBoxContainer sides = new()
+        {
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        page.AddChild(sides);
+
+        VBoxContainer player = Column(sides, "Your men", Control.SizeFlags.ShrinkBegin);
+
+        Control gap = new()
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        sides.AddChild(gap);
+
+        VBoxContainer enemy = Column(sides, "Against you", Control.SizeFlags.ShrinkEnd);
 
         foreach (CombatantSnapshot snapshot in battle.Snapshots())
         {
@@ -86,6 +112,33 @@ public sealed partial class BattleHud : CanvasLayer
         _retreat.AddThemeFontSizeOverride("font_size", 20);
         _retreat.Pressed += () => onRetreat();
         player.AddChild(_retreat);
+    }
+
+    /// <summary>The bar across the top: how the fight stands, and whatever the interface last refused.</summary>
+    private Control BuildStatusBar()
+    {
+        PanelContainer panel = new()
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        panel.AddThemeStyleboxOverride("panel", UiKit.PanelStyle(UiKit.Surface));
+
+        VBoxContainer column = UiKit.Padded(panel, 14, 8);
+        column.AddThemeConstantOverride("separation", 2);
+        column.SizeFlagsVertical = Control.SizeFlags.ShrinkBegin;
+
+        _status = new Label();
+        _status.AddThemeFontSizeOverride("font_size", UiKit.FigureSize);
+        _status.AddThemeColorOverride("font_color", UiKit.Ink);
+        column.AddChild(_status);
+
+        _notice = new Label();
+        _notice.AddThemeFontSizeOverride("font_size", UiKit.BodySize);
+        _notice.AddThemeColorOverride("font_color", ShutColor);
+        column.AddChild(_notice);
+
+        return panel;
     }
 
     /// <summary>Called every frame.</summary>
@@ -150,11 +203,22 @@ public sealed partial class BattleHud : CanvasLayer
         }
     }
 
-    private VBoxContainer Column(Vector2 position)
+    /// <summary>One side's column of bars, under a heading saying whose side it is.</summary>
+    private static VBoxContainer Column(Control parent, string title, Control.SizeFlags vertical)
     {
-        var column = new VBoxContainer { Position = position, CustomMinimumSize = new Vector2(330, 0) };
+        PanelContainer panel = new()
+        {
+            SizeFlagsVertical = vertical,
+            CustomMinimumSize = new Vector2(330, 0),
+        };
+        panel.AddThemeStyleboxOverride("panel", UiKit.PanelStyle(UiKit.Surface));
+        parent.AddChild(panel);
+
+        VBoxContainer column = UiKit.Padded(panel, 12, 10);
         column.AddThemeConstantOverride("separation", 12);
-        AddChild(column);
+        column.SizeFlagsVertical = Control.SizeFlags.ShrinkBegin;
+        column.AddChild(UiKit.SectionLabel(title));
+
         return column;
     }
 
@@ -175,6 +239,7 @@ public sealed partial class BattleHud : CanvasLayer
 
             _name = new Label { Text = name };
             _name.AddThemeFontSizeOverride("font_size", 17);
+            _name.AddThemeColorOverride("font_color", UiKit.Ink);
             Root.AddChild(_name);
 
             _health = Bar(HealthColor, 14);
@@ -202,8 +267,8 @@ public sealed partial class BattleHud : CanvasLayer
                 CustomMinimumSize = new Vector2(300, height),
             };
 
-            var fill = new StyleBoxFlat { BgColor = color };
-            var background = new StyleBoxFlat { BgColor = new Color(0.16f, 0.15f, 0.15f) };
+            StyleBoxFlat fill = UiKit.PanelStyle(color, radius: 2, border: color);
+            StyleBoxFlat background = UiKit.PanelStyle(UiKit.Raised, radius: 2);
 
             bar.AddThemeStyleboxOverride("fill", fill);
             bar.AddThemeStyleboxOverride("background", background);

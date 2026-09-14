@@ -20,20 +20,23 @@ namespace Domina.Game;
 /// </remarks>
 public abstract partial class DojoScreen : CanvasLayer
 {
+    // The palette lives in UiKit, which is what the screens are drawn out of; these stay so that the
+    // screens written before it keep reading the same names for the same four colours.
+
     /// <summary>Ordinary text.</summary>
-    protected static readonly Color InkColor = new(0.82f, 0.82f, 0.78f);
+    protected static readonly Color InkColor = UiKit.Ink;
 
     /// <summary>Dimmed text — a disabled option, a past record.</summary>
-    protected static readonly Color MutedColor = new(0.45f, 0.45f, 0.48f);
+    protected static readonly Color MutedColor = UiKit.Muted;
 
     /// <summary>Positive: buyable, sendable, won.</summary>
-    protected static readonly Color GoodColor = new(0.55f, 0.75f, 0.45f);
+    protected static readonly Color GoodColor = UiKit.Good;
 
     /// <summary>Pending: its turn has come but it cannot be afforded, its deadline is closing in.</summary>
-    protected static readonly Color PendingColor = new(0.78f, 0.70f, 0.32f);
+    protected static readonly Color PendingColor = UiKit.Pending;
 
     /// <summary>Warning: a refused command, a death, a broken promise.</summary>
-    protected static readonly Color WarningColor = new(0.80f, 0.35f, 0.35f);
+    protected static readonly Color WarningColor = UiKit.Warning;
 
     /// <summary>
     /// The navigation bar to put at the top of the screen; <c>null</c> in a scene opened on its own.
@@ -84,21 +87,21 @@ public abstract partial class DojoScreen : CanvasLayer
     {
         ColorRect backdrop = new()
         {
-            Color = new Color(0.09f, 0.09f, 0.11f),
+            Color = UiKit.Ground,
             AnchorRight = 1,
             AnchorBottom = 1,
         };
         AddChild(backdrop);
 
-        MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1 };
-        margin.AddThemeConstantOverride("margin_left", 24);
-        margin.AddThemeConstantOverride("margin_top", 20);
-        margin.AddThemeConstantOverride("margin_right", 24);
-        margin.AddThemeConstantOverride("margin_bottom", 20);
+        MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
+        margin.AddThemeConstantOverride("margin_left", 28);
+        margin.AddThemeConstantOverride("margin_top", 18);
+        margin.AddThemeConstantOverride("margin_right", 28);
+        margin.AddThemeConstantOverride("margin_bottom", 18);
         AddChild(margin);
 
         VBoxContainer page = new();
-        page.AddThemeConstantOverride("separation", 12);
+        page.AddThemeConstantOverride("separation", 10);
         margin.AddChild(page);
 
         if (Chrome is not null)
@@ -106,6 +109,21 @@ public abstract partial class DojoScreen : CanvasLayer
             page.AddChild(Chrome);
         }
 
+        return page;
+    }
+
+    /// <summary>
+    /// The same page, with the screen's name and the one line saying what it is for at the top of it.
+    /// </summary>
+    /// <param name="title">The screen's name — the same word the navigation tab carries.</param>
+    /// <param name="purpose">
+    /// One line: what the screen shows and what the player can do here. It is not flavour text; the
+    /// screens are dense, and a player who arrives on one has to be told which decision it is holding.
+    /// </param>
+    protected VBoxContainer BuildPage(string title, string purpose)
+    {
+        VBoxContainer page = BuildPage();
+        page.AddChild(UiKit.PageHeader(title, purpose));
         return page;
     }
 
@@ -123,4 +141,45 @@ public abstract partial class DojoScreen : CanvasLayer
             child.QueueFree();
         }
     }
+    /// <summary>
+    /// Wraps a button's action so that a screen which throws is written down rather than swallowed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Godot catches an exception thrown inside a signal handler, writes it into its own log and
+    /// carries on. That is the right thing for the window and the wrong thing for the run: the move
+    /// journal — the file a bug report is made of — would show the moves before the press and then
+    /// nothing, as though the player had simply stopped playing. The fault belongs in the same file and
+    /// in the same order as the moves that led to it.
+    /// </para>
+    /// <para>
+    /// The screen is written and reprinted afterwards either way. A half-applied action leaves the
+    /// interface describing a dojo that no longer exists, and that is how one bug becomes three.
+    /// </para>
+    /// </remarks>
+    /// <param name="dojo">The dojo the fault is filed against.</param>
+    /// <param name="act">What the button does.</param>
+    /// <param name="where">The name it is filed under; the screen's own type by default.</param>
+    protected Action Guarded(DojoState dojo, Action act, string? where = null)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+        ArgumentNullException.ThrowIfNull(act);
+
+        return () =>
+        {
+            try
+            {
+                act();
+            }
+            catch (Exception broken)
+            {
+                dojo.RecordFault(where ?? GetType().Name, broken);
+                GD.PushError($"{GetType().Name}: {broken}");
+
+                Persist();
+                Refresh();
+            }
+        };
+    }
+
 }

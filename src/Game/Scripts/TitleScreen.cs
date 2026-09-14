@@ -32,17 +32,17 @@ public sealed partial class TitleScreen : CanvasLayer
     {
         ColorRect backdrop = new()
         {
-            Color = new Color(0.09f, 0.09f, 0.11f),
+            Color = UiKit.Ground,
             AnchorRight = 1,
             AnchorBottom = 1,
         };
         AddChild(backdrop);
 
-        CenterContainer center = new() { AnchorRight = 1, AnchorBottom = 1 };
+        CenterContainer center = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
         AddChild(center);
 
-        VBoxContainer column = new();
-        column.AddThemeConstantOverride("separation", 16);
+        VBoxContainer column = new() { CustomMinimumSize = new Vector2(420, 0) };
+        column.AddThemeConstantOverride("separation", 10);
         center.AddChild(column);
 
         Label title = new()
@@ -50,8 +50,21 @@ public sealed partial class TitleScreen : CanvasLayer
             Text = "DOMINA",
             HorizontalAlignment = HorizontalAlignment.Center,
         };
-        title.AddThemeFontSizeOverride("font_size", 48);
+        title.AddThemeFontSizeOverride("font_size", 52);
+        title.AddThemeColorOverride("font_color", UiKit.Ink);
         column.AddChild(title);
+
+        // The working title, said once, so the screen does not read as a finished product's front page.
+        Label subtitle = new()
+        {
+            Text = "a dojo, a season, and a debt at the gate",
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        subtitle.AddThemeFontSizeOverride("font_size", UiKit.NoteSize);
+        subtitle.AddThemeColorOverride("font_color", UiKit.Muted);
+        column.AddChild(subtitle);
+
+        column.AddChild(new Control { CustomMinimumSize = new Vector2(0, 18) });
 
         bool saved = SaveSlot.Exists();
 
@@ -60,6 +73,11 @@ public sealed partial class TitleScreen : CanvasLayer
             Text = "Continue where you left off",
             Disabled = !saved,
         };
+        if (saved)
+        {
+            UiKit.Primary(resume);
+        }
+
         resume.Pressed += () => Continued?.Invoke();
         column.AddChild(resume);
 
@@ -74,7 +92,8 @@ public sealed partial class TitleScreen : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(420, 0),
         };
-        _note.AddThemeColorOverride("font_color", new Color(0.78f, 0.70f, 0.32f));
+        _note.AddThemeColorOverride("font_color", UiKit.Pending);
+        _note.AddThemeFontSizeOverride("font_size", UiKit.NoteSize);
         column.AddChild(_note);
     }
 

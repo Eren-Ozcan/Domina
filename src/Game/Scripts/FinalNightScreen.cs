@@ -49,36 +49,43 @@ public sealed partial class FinalNightScreen : DojoScreen
         ArgumentNullException.ThrowIfNull(dojo);
         _dojo = dojo;
 
-        VBoxContainer page = BuildPage();
+        VBoxContainer page = BuildPage(
+            "The last night",
+            "Five bouts, one after another, and the only decision left is who goes out for each. "
+            + "Nothing heals in between and there is no way back to the dojo.");
 
-        Label title = new() { Text = "The last night" };
-        title.AddThemeColorOverride("font_color", PendingColor);
-        page.AddChild(title);
+        VBoxContainer bout = UiKit.Section(page, "The bout in front of you");
+        _boutLabel = UiKit.Body();
+        bout.AddChild(_boutLabel);
 
-        _boutLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        page.AddChild(_boutLabel);
+        VBoxContainer bell = UiKit.Section(page, "Who answers the bell", fill: true);
 
-        page.AddChild(new Label { Text = "Who answers the bell?" });
-
-        ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        page.AddChild(scroll);
+        ScrollContainer scroll = new()
+        {
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, 150),
+        };
+        bell.AddChild(scroll);
 
         _partyList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        _partyList.AddThemeConstantOverride("separation", 4);
         scroll.AddChild(_partyList);
 
-        _verdictLabel = new Label();
-        page.AddChild(_verdictLabel);
+        VBoxContainer orders = UiKit.Section(page, "Orders");
 
-        _sendButton = new Button { Text = "Take the field" };
-        _sendButton.Pressed += Send;
-        page.AddChild(_sendButton);
+        _verdictLabel = UiKit.Body();
+        orders.AddChild(_verdictLabel);
 
-        _log = new Label
+        _sendButton = UiKit.Primary(new Button
         {
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            Text = Report ?? string.Empty,
-        };
-        page.AddChild(_log);
+            Text = "Take the field",
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+        });
+        _sendButton.Pressed += Guarded(_dojo, Send);
+        orders.AddChild(_sendButton);
+
+        _log = UiKit.Note(Report ?? string.Empty);
+        orders.AddChild(_log);
 
         Refresh();
     }
@@ -116,7 +123,7 @@ public sealed partial class FinalNightScreen : DojoScreen
 
         if (candidates.Count == 0)
         {
-            _partyList.AddChild(new Label { Text = "There is nobody left to send." });
+            _partyList.AddChild(UiKit.Body("There is nobody left to send.", UiKit.Warning));
             return;
         }
 
@@ -182,10 +189,12 @@ public sealed partial class FinalNightScreen : DojoScreen
         int round = dojo.Season.FinalRound;
         BattleSetup setup = FinalNight.Prepare(dojo, party, collectEvents: true);
 
+        ulong seed = BoutSeed(round);
+
         Fight(new PendingBattle(
             setup,
-            BoutSeed(round),
-            battle => Describe(_night.Settle(dojo, setup, battle), dojo)));
+            seed,
+            battle => Describe(_night.Settle(dojo, setup, battle, seed), dojo)));
     }
 
     private void Fight(PendingBattle bout)
