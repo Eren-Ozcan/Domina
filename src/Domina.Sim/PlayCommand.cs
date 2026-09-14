@@ -643,9 +643,13 @@ internal static class PlayCommand
                 string party = o.RequiredPartySize is int need
                     ? $"send exactly {need}"
                     : $"send 1-{EncounterOffer.MaxPartySize}";
+                Resources spoils = _state.PromisedSpoilsFor(o);
+                string stores = spoils.Food > 0 || spoils.Water > 0
+                    ? $" + {spoils.Food} food, {spoils.Water} water"
+                    : string.Empty;
                 output.WriteLine(
                     $"  {i}  {o.Threat,-7} {o.Enemies.Count} men, health {o.EnemyHealth:F0}  "
-                    + $"{_state.PromisedRewardFor(o)} gold  expires day {_state.ExpiryOf(o)}  "
+                    + $"{_state.PromisedRewardFor(o)} gold{stores}  expires day {_state.ExpiryOf(o)}  "
                     + $"{party}  — {o.Sighting}");
             }
 

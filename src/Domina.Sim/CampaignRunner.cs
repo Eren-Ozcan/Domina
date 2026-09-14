@@ -38,6 +38,16 @@ internal enum OfferPick
     Richest,
 
     /// <summary>
+    /// The job whose spoils best cover what the store is short of.
+    /// </summary>
+    /// <remarks>
+    /// The one policy that reads the board as a <b>shop</b> rather than as a wage. It exists to answer
+    /// one question and no other: when a posting's spoils swing, does choosing by what the dojo needs
+    /// beat choosing by what pays most? If it does not, the swing is decoration.
+    /// </remarks>
+    Stores,
+
+    /// <summary>
     /// The best-paying job, but only when the dojo is whole.
     /// </summary>
     /// <remarks>
@@ -579,9 +589,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         // Best-paying reads the fee, not the enemy's size: a standing job pays a reduced one
         // (docs/GDD.md §10), so ordering by raw health would be shopping with yesterday's price list.
-        EncounterOffer? standing = _options.OfferPick == OfferPick.Newest
-            ? open.FirstOrDefault()
-            : open.OrderByDescending(o => o.EnemyHealth * state.FeeScaleOf(o)).FirstOrDefault();
+        EncounterOffer? standing = _options.OfferPick switch
+        {
+            OfferPick.Newest => open.FirstOrDefault(),
+            OfferPick.Stores => open.OrderByDescending(o => Shopping(state, o)).FirstOrDefault(),
+            _ => open.OrderByDescending(o => o.EnemyHealth * state.FeeScaleOf(o)).FirstOrDefault(),
+        };
         if (standing is not EncounterOffer offer)
         {
             return Rest(state, row, declined: true);
@@ -701,6 +714,30 @@ internal sealed class CampaignRunner(CampaignOptions options)
         return _options.CautiousWhenThin
             && offer.Threat >= ThreatBand.Heavy
             && state.Roster.Living.Count() < _options.RosterTarget;
+    }
+
+    /// <summary>
+    /// What this posting is worth to a dojo that has to eat, in gold.
+    /// </summary>
+    /// <remarks>
+    /// The fee counts as itself; the stores count for what they would cost to buy, but <b>only up to
+    /// what the dojo is actually short of</b> — a cart of food is worth nothing to a full store, which
+    /// is the whole of the decision the swing is supposed to create. Short is measured against the
+    /// reserve the policy keeps anyway, so the rule does not change what the dojo hoards.
+    /// </remarks>
+    private double Shopping(DojoState state, EncounterOffer offer)
+    {
+        Resources spoils = state.PromisedSpoilsFor(offer);
+        int mouths = Math.Max(1, state.Roster.Living.Count());
+        int want = mouths * _options.ReserveDays;
+
+        int foodShort = Math.Max(0, want - state.Resources.Food);
+        int waterShort = Math.Max(0, want - state.Resources.Water);
+
+        double fee = offer.EnemyHealth * state.FeeScaleOf(offer);
+        return fee
+            + (Math.Min(spoils.Food, foodShort) * state.Quartermaster.Economy.FoodPrice)
+            + (Math.Min(spoils.Water, waterShort) * state.Quartermaster.Economy.WaterPrice);
     }
 
     private static DayReport Rest(DojoState state, CampaignRow row, bool declined = false)

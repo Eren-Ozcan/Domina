@@ -821,20 +821,55 @@ public sealed class DojoState
     /// Only a victory is looted: a party that withdrew or was routed left the field to the enemy, and
     /// the same rule the reward follows (GDD §10) applies to the stores it did not carry off.
     /// </remarks>
-    public Resources SpoilsFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome)
+    public Resources SpoilsFor(
+        Combat.BattleSetup setup,
+        Combat.BattleOutcome outcome,
+        EncounterOffer? offer = null)
     {
         ArgumentNullException.ThrowIfNull(setup);
 
-        if (outcome != Combat.BattleOutcome.PlayerVictory)
+        return outcome == Combat.BattleOutcome.PlayerVictory
+            ? Spoils(setup.EnemySide.Count, offer)
+            : Resources.Empty;
+    }
+
+    /// <summary>What this posting promises to leave behind, before it is taken.</summary>
+    /// <remarks>
+    /// A promise the board can print. The spoils are drawn from the <b>posting's own stream</b> rather
+    /// than rolled when the fight ends, so what is shown on the card is what is paid — a board that
+    /// advertised one thing and paid another would be worse than one that said nothing.
+    /// </remarks>
+    public Resources PromisedSpoilsFor(EncounterOffer offer)
+    {
+        ArgumentNullException.ThrowIfNull(offer);
+        return Spoils(offer.Enemies.Count, offer);
+    }
+
+    private Resources Spoils(int enemies, EncounterOffer? offer)
+    {
+        EconomyTuning economy = Quartermaster.Economy;
+        double food = enemies * economy.VictoryFoodPerEnemy;
+        double water = enemies * economy.VictoryWaterPerEnemy;
+
+        // Without a swing every posting leaves the same two numbers, and a number that never changes
+        // is not read twice. The draw is keyed to the posting's own day so the same card always
+        // carries the same promise, however often it is looked at.
+        if (economy.SpoilsSwing > 0 && offer is not null)
         {
-            return Resources.Empty;
+            Rng.SeededRandom stream = new(Seed ^ SpoilsSalt ^ (ulong)offer.Day);
+            food *= Swing(stream, economy.SpoilsSwing);
+            water *= Swing(stream, economy.SpoilsSwing);
         }
 
-        int enemies = setup.EnemySide.Count;
-        return new Resources(
-            Food: (int)Math.Round(enemies * Quartermaster.Economy.VictoryFoodPerEnemy),
-            Water: (int)Math.Round(enemies * Quartermaster.Economy.VictoryWaterPerEnemy));
+        return new Resources(Food: (int)Math.Round(food), Water: (int)Math.Round(water));
     }
+
+    /// <summary>A multiplier centred on 1, so the swing changes the mix without changing the mean.</summary>
+    private static double Swing(Rng.SeededRandom stream, double swing) =>
+        Math.Max(0, 1 + (swing * ((stream.NextDouble() * 2) - 1)));
+
+    /// <summary>Separates the spoils' stream from the day's own.</summary>
+    private const ulong SpoilsSalt = 0x5E01_15A1_7C0F_FEE1;
 
     /// <summary>Is this posting still on the board — not taken, not expired?</summary>
     public bool IsOnTheBoard(EncounterOffer offer)

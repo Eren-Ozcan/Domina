@@ -202,7 +202,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         // The fee is the lord's; the stores are the field's. A beaten band's provisions go into the
         // dojo's own store, where they answer the calendar rather than the treasury.
-        Resources spoils = state.SpoilsFor(setup, battle.Outcome);
+        Resources spoils = state.SpoilsFor(setup, battle.Outcome, taken);
         state.Resources = state.Resources with
         {
             Gold = state.Resources.Gold + reward,

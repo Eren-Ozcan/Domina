@@ -192,4 +192,40 @@ public sealed record EconomyTuning
     /// reference pays 75 food against 12 water on one fight, a steeper version of the same asymmetry.
     /// </remarks>
     public double VictoryWaterPerEnemy { get; init; } = 1;
+
+    /// <summary>How far a posting's spoils swing around their mean, as a share.</summary>
+    /// <remarks>
+    /// <para>
+    /// At 0 every posting leaves the same two numbers, and a number that never changes is not a
+    /// decision — it is a subsidy the player stops reading on the second day. The reference varies the
+    /// <b>composition</b> far more than the size: one of its offers promises 213 coin with 75 food and
+    /// 12 water, the next 131 coin with 166 food and 155 water, so a ludus short of water takes the
+    /// water contract (REFERENCE-DOMINA.md §3a).
+    /// </para>
+    /// <para>
+    /// The food and water multipliers are drawn separately and centred on 1, so the swing changes what
+    /// a board looks like without changing what it pays on average. <b>Zero by default</b> until it is
+    /// measured: the question a sweep has to answer is whether the swing changes which posting is
+    /// taken, or whether the policy simply takes the richest either way — in which case it is
+    /// decoration and does not belong in the game.
+    /// </para>
+    /// <para>
+    /// <b>Measured 2026-09-15, and it is decoration — so it stays at zero.</b> Swept 0 / 0.5 / 1.0 on
+    /// the documented bed: the night moves 14.8% → 15.2% → 15.2% and the closures 15.7% → 16.0% →
+    /// 15.9%, which is noise. A policy written to read the board as a shop (<c>OfferPick.Stores</c>,
+    /// which scores a posting by the fee <i>plus</i> whatever of its spoils the store is actually short
+    /// of) lands on the same figures as the one that takes the best-paying job — at a two-day board and
+    /// at a six-day one alike.
+    /// </para>
+    /// <para>
+    /// The reason is the ratio, and it is worth writing down because it governs any future attempt:
+    /// spoils of 4 food and 1 water on a three-enemy fight are about 12 gold of stores against a fee
+    /// near 150, and the fee itself buys about 18 days of eating. The spoils can never outweigh what
+    /// the fee already pays for. They would have to be several times larger to steer a choice — and
+    /// larger spoils were measured too (see <see cref="VictoryFoodPerEnemy"/>): past 4 they raise the
+    /// closure rate and buy no more nights. The swing is kept, switched off, so the sweep can be run
+    /// again if the fee or the prices move.
+    /// </para>
+    /// </remarks>
+    public double SpoilsSwing { get; init; }
 }

@@ -797,7 +797,8 @@ internal static class SimArgs
                 case "--offer-pick":
                     if (!Enum.TryParse(value, ignoreCase: true, out offerPick))
                     {
-                        return ParsedArgs.Fail($"--offer-pick must be newest, richest or patient: {value}");
+                        return ParsedArgs.Fail(
+                            $"--offer-pick must be newest, richest, stores or patient: {value}");
                     }
 
                     break;
@@ -1707,6 +1708,20 @@ internal static class SimArgs
                     economy = economy with { VictoryFoodPerEnemy = spoilFood };
                     break;
 
+                case "--spoils-swing":
+                    if (!double.TryParse(
+                            value,
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out double spoilSwing)
+                        || spoilSwing < 0)
+                    {
+                        return ParsedArgs.Fail($"--spoils-swing must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { SpoilsSwing = spoilSwing };
+                    break;
+
                 case "--spoils-water":
                     if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double spoilWater)
                         || spoilWater < 0)
@@ -2051,7 +2066,7 @@ internal static class SimArgs
         writer.WriteLine("  --accept-charms on|off  Whether the accept rule counts the charms a man wears (campaign, default off)");
         writer.WriteLine("  --charm-fit first|weakest|<charm name>  Which charm the policy buys for a man (campaign, default irongate)");
         writer.WriteLine("  --charm-price      A multiplier over what the temple asks for a charm");
-        writer.WriteLine("  --offer-pick newest|richest|patient  Which standing job the policy takes (campaign, default newest)");
+        writer.WriteLine("  --offer-pick newest|richest|stores|patient  Which standing job the policy takes (campaign, default newest)");
         writer.WriteLine("  --offer-life <days>  How many days a posted job stands on the board (campaign, default 3)");
         writer.WriteLine("  --stale-fee <share> Fee a standing job loses per day of age (campaign, default 0.25)");
         writer.WriteLine("  --class-fit torite|dokushi|kyudo  Which class the policy trains first (campaign)");
