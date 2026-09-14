@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-13 (build order step 8 — the day stops being a button and the stall guard gets its dojo answer; before it: the yumi written, the enemy kinds' manner closed #3, the stall priced charm by charm, the tiers re-swept, and the bed given a paired multi-seed protocol)
+Last updated: 2026-09-14 (the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1692,6 +1692,283 @@ roster ≠ day one's stall, save round trip).
 
 **Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
+
+---
+
+## 2026-09-14 — The journal gets a reader, and the last door closes
+
+**`Domina.Sim --replay <moves.jsonl>`.** The journal had no consumer: the game wrote a file nothing
+read. The sim now walks one — it rebuilds the dojo from the seed on the opening line, makes every move
+again and compares line by line, in a terminal, without Godot:
+
+```
+Journal: ...\domina-demo.jsonl
+Seed 21, Master, 29 moves, 7 days.
+Replayed to day 7: 997 gold, 2 standing.
+29 matched, 0 skipped, 1 fault filed.
+  fault  day 7  day: a made-up fault, to show the shape
+
+The run came out the same, move for move.
+```
+
+Exit **0** if the run came out the same, **1** if it diverged — and the divergence names the move it
+began at, which is what a retuning has to be held against. `--verbose` prints every line. It sits
+outside the measurement's argument parser on purpose: a replay takes one path and shares no settings
+with a batch.
+
+**The stall guard now leaves the fight behind it.** A fault line is one line, and the one fault that
+needs more is a fight that hung: `StallReport` **fights it again** from the same seed with the event
+stream collected — the core is deterministic, so the second fight is the first one — and writes it
+blow by blow through `BattleLog`. It costs one extra fight on the day a fight hung. The folder is
+handed in (`DojoState.DiagnosticsFolder`, `user://diagnostics` in the game) because the core does not
+know where files live and must not learn.
+
+**Every screen button is guarded.** Godot catches an exception inside a signal handler, logs it to its
+own console and carries on — which leaves the journal showing the moves before the press and then
+nothing, as though the player had stopped playing. `DojoScreen.Guarded` wraps the press: the fault is
+filed against the dojo, the screen is written and reprinted, and the run stays standing. 26 handlers
+across seven screens.
+
+**The purse door is shut.** `DojoState.Resources` is now `internal set`, and the outside gets two doors
+that are honest about themselves: **`Purse`**, init-only, the purse a dojo is *opened* with (part of
+the start, like the seed), and **`SetPurse`**, which is a move like any other and replays. 62 call
+sites in the tests and the sim moved to them; nothing in the game ever used either. A run topped up by
+a tool is now as reproducible as one that earned every coin.
+
+**Still open, and not by oversight:** `CastVote` has no caller — `Domina.Chat` contains no code yet,
+so the door waits for the layer it belongs to.
+
+5 replay-tool tests; 557 core, 58 sim, 162 presentation green.
+
+---
+
+## 2026-09-14 — The journal's holes, closed one by one
+
+A pass over **every door in the core that changes something**, checking that each one writes a line.
+Five were open:
+
+- **Renaming a warrior** went straight to `Roster.Rename` from the roster screen. Naming the men is
+  one of the few marks the player leaves on a roster the market dealt him, so it is now
+  `DojoState.RenameWarrior` → `MoveKind.Rename`, replayed like any other move.
+- **A watched fight's pull-out presses.** The seed decides everything about a fight except the
+  player's hand on the key, so a watched fight was unreplayable. `Battle` now keeps the seconds it
+  was pressed at, `BattleResult` carries them, the fight's line records them, and
+  `ScriptedRetreat` hands them back on the replay. The list is made on the first press — a measured
+  batch never presses, and ten thousand empty lists a run is exactly what the throughput test is for.
+- **The arena's fights carried no seed.** `DayScreen` and `FinalNightScreen` resolved through
+  `Settle` without it, so watched fights were written down but could not be fought again. The bout's
+  own seed is now passed through.
+- **A chat voice at the tribunal** decides a verdict the seed does not. `DojoState.CastVote` wraps
+  `Tribunal.Vote` so the voice is a move; the chat layer will drive it rather than a second door.
+- **A malformed line could throw.** A journal is a file on disk, possibly written by another build:
+  the replay now skips a line the core refuses instead of dying on it, and a `Hire` with no name is
+  named as the reason.
+
+The rest of the audit came back clean: the day's own shopping, the starting roster, a save being
+restored and the demo scene are not moves (they follow from the seed or from the file), and the sim's
+journal stays off. The one door left round the journal is the public `Resources` setter — measurement
+setups and tests open a dojo with a chosen purse; nothing in the game does, and it is documented on
+the property.
+
+**And what broke goes into the same file.** `MoveKind.Fault` is not a move — nobody decided it — but
+it belongs in the run's order: `DojoState.RecordFault(where, what)` takes a message or a caught
+exception (type, message, the first eight stack frames), and a bug report stops being "it broke" and
+becomes the four moves before it. Three places file one by themselves: a fight that hits the **stall
+guard** (documented as an anomaly, not a result — the seed and the day go on the line), a **save that
+loaded incompletely**, and the **day or the expedition's books throwing** in the game, where the clock
+stops, the journal is flushed at once and the run is left standing instead of throwing again on the
+next frame. `MoveJournal.Faults` is the first thing to look at in a journal that came from a player.
+
+`EveryMoveKindIsUnderstoodByTheReplay` now holds the line: a kind the journal can write but the
+replay has never heard of fails the build.
+
+18 journal tests; 556 of 557 core tests green — `ThroughputTests.TenThousandBattlesRunWithinTheBudget`
+fails on this machine at **10.2-10.6 s against a 10 s budget**, and it fails identically with every
+change of this round stashed. A machine-speed problem, not a journal one.
+
+---
+
+## 2026-09-13 (eighteenth round) — Every move of a run is written down
+
+**`src/Domina.Core/Dojo/Journal/`: the move journal.** The core is seeded and deterministic, so a
+seed and the list of moves made against it **are** the run. Until now nothing kept that list: a
+session that went wrong could only be described, never re-run. Every public method on `DojoState`
+that changes something — and the quartermaster's shop, the expedition's accounting and the last
+night's bouts — now writes one line into `DojoState.Journal`.
+
+**The format is JSONL, one move a line**, and each line has three parts kept deliberately apart:
+
+- the move's **arguments** — what a replay hands back to the same method,
+- **`after`** — gold, stores, who is standing, observed the moment the move was made,
+- **`detail`** — the rows that answer the detailed questions.
+
+```json
+{"day":2,"move":"Fight","closesDay":true,"posted":2,"seed":404,"party":"1","outcome":"PlayerVictory",
+ "reward":23,"detail":[{"what":"ours","warrior":1,"name":"Kaede","damageDealt":52.088,
+ "damageTaken":13.735,"lostParts":"","recoveryDays":0,"honor":10,"lesson":"Strikes"}],
+ "after":{"ok":true,"gold":564,"food":0,"sake":2,"living":5,"injured":0}}
+```
+
+**A refused move is written down too.** "I pressed it and nothing happened" is the shape a bug
+report arrives in, and a journal of successes alone would delete exactly that report.
+
+**The day's bill is broken into its parts** — wages against supplies, who went hungry, who healed and
+by how many days, what each drill added to which stat, which facility finished, what the tribunal
+decided, what a sack took. Where the gold came from and where it went is the question the economy is
+tuned against, and a single "spent 81" cannot answer it.
+
+**`MoveReplay` walks a journal into a fresh dojo and compares line by line.** A run that stops
+agreeing with itself is reported at **the move it diverged at**, not at the season's end. A fight is
+the one move whose outcome does not follow from the dojo's seed and the day — the stream is handed in
+from outside — so `Expedition.Send` / `FinalNight.Fight` gained overloads that take the **seed**, and
+the seed goes onto the line.
+
+**Two rules that came out of making the replay honest:**
+
+- A day that closes **inside** another move (a fight, a declined offer) is stamped `within`. Its line
+  is still written — it carries the bill and the wounds — but a replay compares it instead of acting
+  on it, or the walk would close the day twice and run a day ahead.
+- The day's own shopping goes through `Quartermaster.Restock(journal: false)`. It is part of the day,
+  not a move beside it.
+
+**`BattleLog`** writes a fight's event stream blow by blow when the arena collected it — the finest
+record of a fight that exists, for a bug report or a test fixture.
+
+**Where it lands.** The game appends to `user://moves.jsonl` beside the save, **append-only**, so a
+loaded run keeps its history; a new game deletes both. The batch runner turns recording off
+(`MoveJournal.Enabled = false`): a hundred thousand measured campaigns read no journals.
+
+11 new tests (`MoveJournalTests`), 550 core tests green.
+
+---
+
+## 2026-09-13 (seventeenth round) — The screens stop being columns of text
+
+**`src/Game/Scripts/UiKit.cs`: the shared look.** The dojo screens were plain `Label` columns on a
+dark ground, which reads as one grey paragraph the moment a screen carries more than a few lines. The
+palette, the type scale (title / section / figure / body / note), the panel and button styleboxes, the
+`Section`, `Chip`, `Rule`, `Body` and `Primary` helpers now live in one place, and `DojoScreen`
+hangs the shared `Theme` on every page — so every screen, including the ones not touched this round,
+got readable buttons, spacing and colours for free.
+
+- **The day screen is two columns.** Left: the season, the board, what the hut read, the orders.
+  Right: the storehouse, the patrons, the contract, who can go. The two are read against each other,
+  and a single column made the player scroll past the board to find out whether he could pay for it.
+- **The board is drawn, not written.** A card a posting: a stripe down the left in the threat's
+  colour, the sighting and the band on the first line, the fee and the days left on the second,
+  brighter ground and a thicker stripe on the one selected, and the whole card clickable. A
+  **standing** job prints `was N on day D · standing, reduced fee` beside the reduced figure — the
+  rule decided this morning is now visible where the decision is made (`OfferCard.FullReward`).
+- **The storehouse is chips.** Gold, food, water, medicine, sake and spirits, each figure on its own
+  small panel with its name under it, food and water in the warning colour at zero.
+- **The roster screen followed:** the summary is chips, the men are a filling list on the left, and
+  the eight stats are a four-column grid instead of a column of padded text — a stat the wounds or
+  the armour moved is printed in the pending colour. The detail is sectioned into the man, his name,
+  what he works at, the hall and his term.
+- **The title screen** got the theme, a subtitle and a filled primary button.
+- Checked on the running game (Godot 4.7, 1600×900) rather than by eye on the code: two rounds of
+  screenshots caught a section collapsing to its heading and a grid column wrapping one letter a
+  line, both fixed (`Section(..., fill: true)`, no autowrap in grid cells).
+
+---
+
+## 2026-09-13 (sixteenth round) — A standing job pays less, and the queue stops being a larder
+
+**The open item on the offer queue is closed, in the opposite direction to the one it proposed.** The
+question left standing was whether an unclaimed posting should get *more* attractive as it ages — the
+clerk sweetening work nobody takes. It should not, and the reason is a strategy rather than a number:
+a posting that improves with age makes *hoard the board, come back when the roster is strong* the
+correct play, and the day a job arrives stops being the day to answer it. The rule chosen instead is
+that **taking a job the day it is posted is always its best price**.
+
+- **`EncounterTuning.StaleFeePerDay` = 0.25 a day, floored at `StaleFeeFloor` = 0.4** of the
+  posting-day fee. The whole rule lives in `EncounterGenerator.FeeScale(postedDay, today)`, so the
+  figure the board prints and the gold the treasury receives cannot drift apart: `DojoState`
+  exposes `FeeScaleOf` and `PromisedRewardFor`, `RewardFor` takes the posting that was handed in,
+  and `Expedition.Settle` passes it.
+- **The floor is not decoration.** A job decayed to nothing would be dead text on the board rather
+  than a fallback for a day the dojo cannot meet the fresh posting.
+- **The card says it in words.** `OfferCard.AgeDays` / `IsStanding`, and the day screen prints
+  `standing, reduced fee` — a smaller number with no reason attached reads as a bug.
+- **Measured on the named bed (3 seeds × 1600 dojos), and the curve did not need re-deriving.** Net
+  per fight 29.6 at fee 0 → **28.7** at 0.25 → 27.9 at 0.5; last night won 11.3% → 10.5% → 10.5%;
+  dojos closed 28.6% → 29.0% → 28.2%. It costs about a gold a fight because the policy takes the
+  newest posting anyway — which is the point: it does not tax ordinary play, it removes the waiting
+  strategy. `--stale-fee <share>` is the new sweep flag, and `--offer-pick richest` now orders by the
+  fee actually payable rather than by raw enemy health.
+- **Tests:** `OfferBoardTests` — a standing posting pays less than a fresh one, the printed fee is
+  what the fight pays, and the fee stops at the floor.
+
+---
+
+## 2026-09-13 (fifteenth round) — The quartermaster's counter, and the board becomes a queue
+
+Two items, and each one turned out to be bigger than its line in the roadmap.
+
+**1. Nothing in the game could buy anything for a warrior.** The throwing slot had no shop — that was
+the known gap, and the reason the kyūdō class could not be fielded in a real season. Looking for the
+right screen to put it on found the rest of it: `Quartermaster.Equip`, `Repair` and `Forge` have
+existed since the economy landed and **no screen ever called any of them**, so armour could not be
+bought, mended or reforged either. The only side shopping for steel was the measuring policy.
+
+The counter is now its own screen — `Game/Scripts/ArmouryScreen.cs` over the engine-free, tested
+`QuartermasterModel` — and not a panel under the roster, because six regions with three pieces each
+plus a repair line and a stall would push everything the roster exists for off the bottom of the
+window. A piece that needs the smith is **listed and refused**, never hidden: the plate works is a
+long investment and a player cannot save toward something he cannot see.
+
+**The stall's price, locked at 1.4 gold per point of the quiver** (damage × ammunition; a full dose of
+poison adds 150%). Four seeds × 1600 dojos against a control that fills no throwing slot:
+
+| Gold per quiver point | Stars | Last night | Closed | Net per fight |
+|---|---|---|---|---|
+| — | — | 17.3% | 26.5% | 28.2 |
+| 1.1 | 53 | 22.0% | 22.5% | 31.7 |
+| **1.4** | **68** | **20.5%** | **24.1%** | **30.1** |
+| 1.65 | 80 | 18.4% | 25.0% | 28.2 |
+| 2.2 | 106 | 17.0% | 27.2% | 25.8 |
+
+The trade turns at about **1.65** and at 2.2 filling the slot is worse than leaving it empty; 1.4 sits
+one rung below the turn, because at 1.1 buying is not a decision and at the turn the stall is
+decoration. **The finding is that the slot, not the class, was what was missing** — every warrior can
+throw, and until now no measured season had ever had one who did. ⚠️ Two things it does not measure:
+the poison premium (the policy never buys poisoned stars) and the yumi itself — a dojo that buys bows
+only for its range class spends 27 gold a season, because the class hall arrives too late to put
+trained hands on the field. The same shape as the weapon master's hall.
+
+**2. The timed offer queue — and it cost the difficulty curve.** Yesterday's posting now stands beside
+today's (`EncounterTuning.OfferLifeDays`, locked at **2**), each printing its own last day; taking one
+strikes it off for good. The only thing written to the save is **which postings were taken**, so the
+board stays a pure function of the seed and a reload can neither reroll it nor hand back a finished
+job. A raid stands alone — he is at the gate.
+
+Then the measurement said something nobody was expecting. Added on top of everything else the queue
+takes the last night from **17.1% to 8.9%** (life 2) and **6.1%** (life 3), and the net per fight from
+28.1 to 21.9 and 18.0, over three seeds × 1600 dojos. Three policies were tried — take the newest
+acceptable, take the best-paying, and wait for the wounded because the job will still be there
+tomorrow — and **all three land in the same place**. The cause is not danger but money: a standing job
+was posted on an earlier day, so it carries that day's power — weaker, and because the reward follows
+enemy health, **cheaper** — while eating a whole day just the same. The board fills the season with
+cheap work on days the dojo would have trained.
+
+So the curve was re-derived under the queue: **`PowerPerDay` 0.011 → 0.010**, which puts the season
+back where it was (last night 16.4% against 17.1, closed 25.6% against 26.8, deaths per warrior-fight
+4.1% against 4.5, net 27.8 against 28.1). Swept 0.010 / 0.0095 / 0.009 / 0.0085 over three seeds:
+nights 16.4 / 17.8 / 19.8 / 20.5, closures 25.6 / 24.1 / 21.7 / 19.7, deaths 4.1 / 3.9 / 3.7 / 3.4 —
+everything below 0.010 is simply an easier road.
+
+⏳ **Open, and it is the queue's real question:** an unclaimed posting should probably grow **more**
+attractive as it ages (the clerk sweetens work nobody takes) instead of standing there as a weaker job
+at a lower price. As written, an old posting is strictly the worse deal, which makes the board filler
+rather than the "which of these can I get to" decision GDD §10 asks for.
+
+**New in the sim with these:** `--thrown-fit none|bow|everyone`, `--thrown-gold`, `--thrown-poison`,
+`--class-fit torite|dokushi|kyudo` (a measurement about one class needs a dojo that goes that way),
+`--offer-life <days>` and `--offer-pick newest|richest|patient`. The report prints what went to the
+throwing stall.
+
+750 tests green in Release (536 core + 161 presentation + 53 sim); this round added 9 core tests for
+the board, 11 presentation tests for the counter and 3 for the board's cards.
 
 ---
 
