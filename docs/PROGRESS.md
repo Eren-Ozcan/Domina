@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-14 (the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
+Last updated: 2026-09-15 (a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1692,6 +1692,71 @@ roster ≠ day one's stall, save round trip).
 
 **Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
+
+---
+
+## 2026-09-15 — A season played by a deciding player, and the spoils that came out of it
+
+**The round's own lesson first: two measurement rounds were thrown away for reading a number without
+its policy beside it.** This file already warned about it — *"a dojo that accepts every offer still
+closes 88% of the time on the new curve, while the documented policy closes 25%; every closure figure
+in this file should be read with the policy beside it"* — and the warning was not read. The default
+`--mode campaign` bed has `--offers`, `--market`, `--bounty` and `--school` **off** and accepts every
+offer it is shown; measured there the game looks broken (5.5 fights a season, 95% idle days, net −93
+a fight, the last night never reached). On the documented bed — every system on, `--accept-ratio 2.0`
+— the same build gives **72.3 fights, net +37.5, the last night reached by 78.3%, 18.3% of dojos
+closed**, and deaths per warrior-fight **5.1%** against the locked 4.7%. Nothing had regressed.
+
+**A season can now be played a day at a time** (`Domina.Sim --play <script> --seed`). The command is
+stateless on purpose: every invocation rebuilds the dojo from the seed and replays the whole script,
+then prints where the season stands, so a deciding player — a person at a terminal, or an agent —
+plays by appending one line and running again, and the script plus the seed **is** the save. It exists
+because the batch runner cannot question its own policy: if the policy is starving itself, every
+number it prints measures the policy.
+
+**Three seasons were played through it**, one aggressive, one economy-first, one by a first-time
+player. All three cleared the three-head gate inside three weeks; two were wiped out mid-season
+(day 131, day 105) and the third reached day 180 with three men and lost bout 1 of the last night.
+What they were worth was not the outcomes — they were played on the blunt bed — but the **report**:
+casualties were invisible (a won fight quietly returned two men fewer), the bounty contract was never
+printed, offers refused with `WrongPartySize` and no number, and there was no move that could fight
+the last night at all. All four were the harness's gaps, not the game's, and all four are closed.
+
+**The spoils.** A won fight now leaves **4 food and 1 water per enemy put down**; only a victory is
+looted. Swept 0-8 on the documented bed, 10.000 dojos × 180 days:
+
+| Food / enemy | Net / fight | Hungry days | Training days | Best man | Dojos closed | Won all five |
+|---|---|---|---|---|---|---|
+| 0 | 38.8 | 30.7% | 65.2 | 256 | 18.5% | 2.0% |
+| 2 | 42.4 | 28.4% | 71.3 | 267 | 19.6% | 2.3% |
+| 3 | 44.4 | 27.4% | 72.1 | 276 | 19.1% | 2.1% |
+| **4** | **45.2** | **26.1%** | **73.9** | **273** | **19.2%** | **2.4%** |
+| 5 | 45.4 | 22.2% | 77.7 | 281 | 20.7% | 2.6% |
+| 6 | 45.4 | 19.8% | 78.5 | 283 | 21.6% | 2.5% |
+| 8 | 45.3 | 18.0% | 80.2 | 284 | 22.0% | 2.6% |
+
+**The replication chose the number, not the table.** At 4 the closure cost over three seeds is +0.7,
+−0.2 and +0.5 points — astride zero — while the training gain (+9 days), the best man (+18) and the
+night (+0.5) repeat in all three. At 5 and above the closures are 2-3.5 points up, which is real.
+
+**What the sweep also settled: gold is not the binding resource, and neither is food.** Raising the
+victory fee 0.45 → 1.50 on the blunt bed fixes the treasury (net −93 → +292) and makes the season
+*worse* (closures 82% → 93%, median survival 149 → 54 days), because every relief channel feeds more
+men into more fights. The same shape appeared in the first spoils sweep before the bed was corrected.
+The binding resource is **men**, and the number that governs them is the death rate.
+
+**The reference was wrong in this file's sources and is corrected.** `REFERENCE-DOMINA.md` listed the
+fight reward as coin; frame-by-frame, Domina's victory screen opens a `Rewards` panel paying
+`Coin 213 · Food 75 · Wine 2 · Water 12` beside two slaves, two cards and `Crowd Favour 73`. Paying
+spoils in stores is the reference's own answer, not our invention. Its magnitude is far larger and is
+deliberately not copied.
+
+**The opening store was a decided-but-unbuilt item.** GDD §11's decision round (2026-09-07) settled
+that the store does not open empty — three days of food and water — and `NewGame` had been handing
+out 600 gold and nothing else ever since. It is now counted in **days against the roster actually
+left behind**, so a dojo of three and a dojo of five open with the same amount of time.
+
+Verification: `dotnet build` → 0 errors, `dotnet test` → 783/783 green.
 
 ---
 

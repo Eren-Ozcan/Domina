@@ -2486,6 +2486,26 @@ on the field. The measurement is in §11.
   completely empty: you plan your first expedition without going hungry, and supply pressure sets in
   from day 4. (Domina starts you with 1000 gold and a full store.) Opening the first day with a
   supply crisis did not make the game harder, it made it more **confusing**
+- **A won fight is paid in stores as well as coin (decided 2026-09-15):** a beaten band leaves
+  **4 food and 1 water per enemy put down**
+  (`EconomyTuning.VictoryFoodPerEnemy` / `VictoryWaterPerEnemy`). Only a victory is looted — a party
+  that withdrew or was routed left the field. The point is the **channel**, not the size: a fee
+  answers the treasury, and the store answers the **calendar**, which is what actually stops a dojo
+  (a roster that cannot eat does not heal, and one that does not heal cannot take the field).
+  - The number is the last free step. Swept 0-8 against the documented policy (10.000 dojos × 180
+    days, `--accept-ratio 2.0`): the treasury's gain saturates at 4 (net per fight 38.8 → **45.2**,
+    then 45.4 at both 5 and 6), while what the food is spent on keeps paying — training days 65.2 →
+    **73.9**, the best man 256 → **273**. Past 4 the closure rate starts to move for real (20.7% at
+    5, 22.0% at 8, against 18.5% with none) and buys no more nights won.
+  - **What chose it was the replication, not the table.** At 4 the closure cost across three seeds is
+    +0.7, −0.2 and +0.5 points — astride zero — while the training gain, the best man's score and the
+    night repeat in all three.
+  - Water is a quarter of the food because **food is the scarce good** (it costs 2, water 1), not
+    because a measurement asked for it: water on its own moves almost nothing.
+  - **The reference does this too**, which was not known when the item was first considered: Domina's
+    victory screen has a `Rewards` panel paying `Coin 213 · Food 75 · Wine 2 · Water 12` on one
+    ordinary fight. Its magnitude is far larger than ours and is deliberately not copied — a 364-day
+    season with a bigger roster and cheap food is a different bed. See `REFERENCE-DOMINA.md` §3.
 - **The roster ceiling is tiered** (starting at ~6) and is raised by dojo upgrades; each tier brings
   a gold cost and a daily stores burden. The expedition limit is still 4
 - **Staff expenses enter the economy:** a daily wage + food/water per head. The price of growing your
