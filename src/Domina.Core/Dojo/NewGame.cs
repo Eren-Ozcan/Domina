@@ -31,6 +31,18 @@ public static class NewGame
     /// <summary>The starting purse — GDD §11.</summary>
     public const int StartingGold = 600;
 
+    /// <summary>
+    /// The days of food and water the master left in the store.
+    /// </summary>
+    /// <remarks>
+    /// GDD §11 (decision round, 2026-09-07): the store does <b>not</b> open empty. The first
+    /// expedition is planned without going hungry and the supply pressure arrives on day 4 — opening
+    /// day one with a supply crisis did not make the game harder, it made it <b>confusing</b>. The
+    /// stock is counted in days against the roster actually left behind, not as a flat number, so a
+    /// dojo of three and a dojo of five both open with the same amount of <b>time</b>.
+    /// </remarks>
+    public const int StartingStoreDays = 3;
+
     /// <summary>The smallest starting roster the master can have left behind.</summary>
     public const int FewestWarriors = 3;
 
@@ -98,6 +110,15 @@ public static class NewGame
             // roster itself.
             dojo.Roster.Recruit(name, offer.Stats, Weapon.Katana(), Armor.Light(), offer.Talent);
         }
+
+        // The store is filled last, because what it holds is counted against the roster that was
+        // actually left behind: three days of eating, whether the master left three men or five.
+        int mouths = dojo.Roster.Living.Count();
+        dojo.Resources = dojo.Resources with
+        {
+            Food = StartingStoreDays * mouths * dojo.Economy.FoodPerWarriorPerDay,
+            Water = StartingStoreDays * mouths * dojo.Economy.WaterPerWarriorPerDay,
+        };
 
         // The journal's opening line. Everything above this point follows from the seed and the tier, so
         // those two are the only things a replay needs to rebuild the dojo the player started with; the

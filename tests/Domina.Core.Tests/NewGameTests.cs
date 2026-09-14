@@ -105,4 +105,22 @@ public class NewGameTests
         Assert.Equal(before.Offer.Sighting, after.Offer.Sighting);
         Assert.Equal(before.Recruits.Select(o => o.Name), after.Recruits.Select(o => o.Name));
     }
+
+    /// <summary>
+    /// GDD §11: the store does not open empty. The stock is counted in <b>days</b> against the roster
+    /// the master actually left, so a dojo of three and a dojo of five open with the same time.
+    /// </summary>
+    [Fact]
+    public void TheStoreOpensWithThreeDaysOfEating()
+    {
+        for (ulong seed = 1; seed <= 12; seed++)
+        {
+            DojoState dojo = NewGame.Create(seed);
+            int mouths = dojo.Roster.Living.Count();
+
+            Assert.Equal(NewGame.StartingStoreDays * mouths, dojo.Resources.Food);
+            Assert.Equal(NewGame.StartingStoreDays * mouths, dojo.Resources.Water);
+            Assert.Equal(NewGame.StartingGold, dojo.Resources.Gold);
+        }
+    }
 }
