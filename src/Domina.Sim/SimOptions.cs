@@ -97,6 +97,9 @@ internal static class SimArgs
         bool useCharms = false;
         bool acceptCountsCharms = false;
         CharmFit charmFit = CharmFit.IronGate;
+        ThrownFit thrownFit = ThrownFit.None;
+        WarriorClass? classFit = null;
+        OfferPick offerPick = OfferPick.Newest;
         ProvinceTuning provinceTuning = new();
         bool meetRaids = true;
         RetirementPolicy retirement = RetirementPolicy.None;
@@ -789,6 +792,75 @@ internal static class SimArgs
                             + $"(steadyhand, irongate, longbreath, quietmind, swiftfoot): {value}");
                     }
 
+                    break;
+
+                case "--offer-pick":
+                    if (!Enum.TryParse(value, ignoreCase: true, out offerPick))
+                    {
+                        return ParsedArgs.Fail($"--offer-pick must be newest, richest or patient: {value}");
+                    }
+
+                    break;
+
+                case "--offer-life":
+                    if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int offerLife)
+                        || offerLife < 1)
+                    {
+                        return ParsedArgs.Fail($"--offer-life must be a day count of 1 or more: {value}");
+                    }
+
+                    encounters = encounters with { OfferLifeDays = offerLife };
+                    break;
+
+                case "--stale-fee":
+                    if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double staleFee)
+                        || staleFee < 0)
+                    {
+                        return ParsedArgs.Fail($"--stale-fee must be a share of 0 or more: {value}");
+                    }
+
+                    encounters = encounters with { StaleFeePerDay = staleFee };
+                    break;
+
+                case "--thrown-fit":
+                    if (!Enum.TryParse(value, ignoreCase: true, out thrownFit))
+                    {
+                        return ParsedArgs.Fail(
+                            $"--thrown-fit must be none, bow or everyone: {value}");
+                    }
+
+                    break;
+
+                case "--class-fit":
+                    if (!Enum.TryParse(value, ignoreCase: true, out WarriorClass wantedClass)
+                        || wantedClass == WarriorClass.None)
+                    {
+                        return ParsedArgs.Fail($"--class-fit must be torite, dokushi or kyudo: {value}");
+                    }
+
+                    classFit = wantedClass;
+                    break;
+
+                case "--thrown-gold":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double thrownGold)
+                        || thrownGold < 0)
+                    {
+                        return ParsedArgs.Fail($"--thrown-gold must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { ThrownGoldPerDamage = thrownGold };
+                    break;
+
+                case "--thrown-poison":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double thrownPoison)
+                        || thrownPoison < 0)
+                    {
+                        return ParsedArgs.Fail($"--thrown-poison must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { ThrownPoisonPremium = thrownPoison };
                     break;
 
                 case "--accept-charms":
@@ -1752,7 +1824,10 @@ internal static class SimArgs
                 honorTuning,
                 trainClasses,
                 acceptCountsCharms,
-                charmFit)
+                charmFit,
+                thrownFit,
+                classFit,
+                offerPick)
             : null;
 
         return ParsedArgs.Ok(new SimOptions(
@@ -1956,6 +2031,13 @@ internal static class SimArgs
         writer.WriteLine("  --accept-charms on|off  Whether the accept rule counts the charms a man wears (campaign, default off)");
         writer.WriteLine("  --charm-fit first|weakest|<charm name>  Which charm the policy buys for a man (campaign, default irongate)");
         writer.WriteLine("  --charm-price      A multiplier over what the temple asks for a charm");
+        writer.WriteLine("  --offer-pick newest|richest|patient  Which standing job the policy takes (campaign, default newest)");
+        writer.WriteLine("  --offer-life <days>  How many days a posted job stands on the board (campaign, default 3)");
+        writer.WriteLine("  --stale-fee <share> Fee a standing job loses per day of age (campaign, default 0.25)");
+        writer.WriteLine("  --class-fit torite|dokushi|kyudo  Which class the policy trains first (campaign)");
+        writer.WriteLine("  --thrown-fit none|bow|everyone  Whose throwing slot the policy fills (campaign, default none)");
+        writer.WriteLine("  --thrown-gold      The stall's price per point of a full quiver's damage");
+        writer.WriteLine("  --thrown-poison    What a full dose adds to a thrown implement's price, as a share");
         writer.WriteLine("  --enemy-profiles on|off  Whether each enemy kind reads the field its own way (default on)");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");

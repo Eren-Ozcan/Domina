@@ -22,6 +22,53 @@ namespace Domina.Sim;
 /// compared under the same behaviour.
 /// </para>
 /// </remarks>
+/// <summary>Which of the standing jobs the measuring policy takes.</summary>
+/// <remarks>
+/// The board only became a choice when jobs started standing for more than a day, and the two answers
+/// bracket what a player might do: take whatever is newest and acceptable, or read the board and take
+/// the one that pays most. The first measures the queue as a pure addition, the second measures it as
+/// the decision it was written to be (docs/GDD.md §10).
+/// </remarks>
+internal enum OfferPick
+{
+    /// <summary>The newest job the policy does not decline.</summary>
+    Newest,
+
+    /// <summary>The best-paying job the policy does not decline.</summary>
+    Richest,
+
+    /// <summary>
+    /// The best-paying job, but only when the dojo is whole.
+    /// </summary>
+    /// <remarks>
+    /// The one policy that can use a queue for what it is. With a job standing for a day or two, a
+    /// wounded dojo can wait for its men and take the work afterwards; a policy that always takes what
+    /// is on the board can only ever pay the queue's price. If the board holds nothing that will still
+    /// be there tomorrow, patience is not an option and it takes what it can.
+    /// </remarks>
+    Patient,
+}
+
+/// <summary>Whose throwing slot the measuring policy fills, and with what.</summary>
+/// <remarks>
+/// The stall for the throwing slot arrived long after the implements did, so nothing in a measured
+/// season had ever bought one. These are the three answers worth measuring: nobody (the seasons every
+/// number in the file was locked against), the taught hand only (a yumi for the man who can use it),
+/// and everybody (a handful of stars for the whole roster, to price the slot itself rather than the
+/// class).
+/// </remarks>
+internal enum ThrownFit
+{
+    /// <summary>Nobody buys one. The bed every earlier measurement was taken on.</summary>
+    None,
+
+    /// <summary>The range class buys the bow; nobody else buys anything.</summary>
+    Bow,
+
+    /// <summary>The bow for the range class, a handful of stars for everyone else.</summary>
+    Everyone,
+}
+
 /// <summary>How the measuring policy chooses which charm to buy for a warrior.</summary>
 internal enum CharmFit
 {
@@ -104,7 +151,10 @@ internal sealed record CampaignOptions(
     HonorTuning? Honor = null,
     bool TrainClasses = false,
     bool AcceptCountsCharms = false,
-    CharmFit CharmFit = CharmFit.IronGate)
+    CharmFit CharmFit = CharmFit.IronGate,
+    ThrownFit ThrownFit = ThrownFit.None,
+    WarriorClass? ClassFit = null,
+    OfferPick OfferPick = OfferPick.Newest)
 {
     public const int DefaultDays = 60;
     public const int DefaultCampaigns = 200;
@@ -187,7 +237,12 @@ internal sealed class CampaignRunner(CampaignOptions options)
             province: _options.Province,
             standing: _options.Standing,
             honor: _options.Honor);
-        state.Resources = new Resources(Gold: _options.StartingGold);
+        // The measurement runs tens of thousands of campaigns and reads none of their journals, so the
+        // recording is turned off: it would be the run's largest allocation and would buy nothing. A
+        // single campaign worth inspecting is replayed from the game's own journal instead.
+        state.Journal.Enabled = false;
+
+        state.SetPurse(new Resources(Gold: _options.StartingGold));
 
         // The map is dealt off the run's own seed, like the game's first day does it: what he already
         // holds is half of the run-to-run variety, and a measurement that opened every season on an
@@ -243,6 +298,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (_options.UseCharms)
             {
                 row.GoldSpentOnCharms += FitCharms(state);
+            }
+
+            if (_options.ThrownFit != ThrownFit.None)
+            {
+                row.GoldSpentOnThrown += FillThrowingSlots(state);
             }
 
             if (_options.Retirement != RetirementPolicy.None)
@@ -453,7 +513,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             // policy that withdrew would be measuring the key rather than the raid.
             new SeededRandom(seed),
             _options.Tuning,
-            retreat: null);
+            retreat: null,
+            seed: seed);
 
         row.Battles++;
         row.RaidsMet++;
@@ -503,8 +564,25 @@ internal sealed class CampaignRunner(CampaignOptions options)
             return hunted;
         }
 
-        EncounterOffer offer = state.Offer;
-        if (Declines(state, offer))
+        // The board, not one job: the policy takes the first posting it does not decline, newest first
+        // (docs/GDD.md §10). Picking the best of the standing jobs would be a cleverer policy than the
+        // measurements were locked against — what is being measured here is the queue, not a shopper.
+        List<EncounterOffer> open = [.. state.Board.Where(o => !Declines(state, o))];
+
+        // A thin roster waits, as long as something on the board will still be standing tomorrow.
+        if (_options.OfferPick == OfferPick.Patient
+            && state.Roster.FitForCampaign.Count() < _options.PartySize
+            && open.Any(o => state.ExpiryOf(o) > state.Day))
+        {
+            return Rest(state, row);
+        }
+
+        // Best-paying reads the fee, not the enemy's size: a standing job pays a reduced one
+        // (docs/GDD.md §10), so ordering by raw health would be shopping with yesterday's price list.
+        EncounterOffer? standing = _options.OfferPick == OfferPick.Newest
+            ? open.FirstOrDefault()
+            : open.OrderByDescending(o => o.EnemyHealth * state.FeeScaleOf(o)).FirstOrDefault();
+        if (standing is not EncounterOffer offer)
         {
             return Rest(state, row, declined: true);
         }
@@ -523,7 +601,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             party,
             new SeededRandom(seed),
             _options.Tuning,
-            _options.RetreatPolicy);
+            _options.RetreatPolicy,
+            seed: seed);
 
         row.Battles++;
         row.GoldEarned += result.Reward;
@@ -570,7 +649,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
             party,
             new SeededRandom(seed),
             _options.Tuning,
-            _options.RetreatPolicy);
+            _options.RetreatPolicy,
+            seed: seed);
 
         row.Battles++;
         row.Bounties++;
@@ -635,7 +715,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         // not how well the player chooses but what training <b>itself</b> adds.
         foreach (RosterEntry entry in state.Roster.FitForCampaign)
         {
-            entry.Train(TrainingGround.Weakest(entry.Warrior.BaseStats, state.Tuning.Training));
+            state.SetDrill(entry.Id, TrainingGround.Weakest(entry.Warrior.BaseStats, state.Tuning.Training));
         }
 
         return state.AdvanceDay();
@@ -655,7 +735,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         AftermathReport aftermath = new BattleAftermath().Apply(state, result);
 
         int reward = state.Quartermaster.RewardFor(setup, result.Outcome);
-        state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
+        state.SetPurse(state.Resources with { Gold = state.Resources.Gold + reward });
 
         row.Battles++;
         row.GoldEarned += reward;
@@ -948,12 +1028,20 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// that can make its own. Blunt, like the rest of the policy — the first hall that stands is the
     /// class every man gets.
     /// </remarks>
-    private static int TrainClasses(DojoState state)
+    private int TrainClasses(DojoState state)
     {
         List<WarriorClass> open = [.. state.School.UnlockedClasses()];
         if (open.Count == 0)
         {
             return 0;
+        }
+
+        // A measurement about one class needs a dojo that actually goes that way: left to itself the
+        // policy trains whichever hall opened first, which is the school tree's order and not a
+        // decision. The preference only reorders what is already unlocked.
+        if (_options.ClassFit is WarriorClass wanted && open.Remove(wanted))
+        {
+            open.Insert(0, wanted);
         }
 
         int trained = 0;
@@ -1090,6 +1178,53 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         return before - state.Resources.Gold;
+    }
+
+    /// <summary>
+    /// Fills the throwing slots the policy is told to fill.
+    /// </summary>
+    /// <remarks>
+    /// One implement per warrior for the season: nothing is sold back and ammunition is not a stock,
+    /// so a slot filled once stays filled. The bow goes to the range class only — a bow in an
+    /// untrained hand is the penalty the class exists to lift (docs/GDD.md §4) — and everyone else
+    /// gets stars, which anybody may throw.
+    /// </remarks>
+    /// <returns>The gold spent.</returns>
+    private int FillThrowingSlots(DojoState state)
+    {
+        int before = state.Resources.Gold;
+        int reserve = Reserve(state) + _options.Economy.RecruitPrice;
+
+        foreach (RosterEntry entry in state.Roster.Living)
+        {
+            Warrior warrior = entry.Warrior;
+            ThrownWeapon? wanted = WantedThrown(warrior);
+
+            if (wanted is null || warrior.Thrown?.Name == wanted.Name)
+            {
+                continue;
+            }
+
+            if (!Affordable(state, state.Quartermaster.ThrownPrice(wanted), reserve))
+            {
+                continue;
+            }
+
+            state.Quartermaster.EquipThrown(state, warrior, wanted);
+        }
+
+        return before - state.Resources.Gold;
+    }
+
+    /// <summary>What this warrior is bought for his throwing slot, if anything.</summary>
+    private ThrownWeapon? WantedThrown(Warrior warrior)
+    {
+        if (warrior.Class == WarriorClass.Kyudo)
+        {
+            return ThrownWeapon.Yumi();
+        }
+
+        return _options.ThrownFit == ThrownFit.Everyone ? ThrownWeapon.Shuriken() : null;
     }
 
     /// <summary>Which charm this warrior is bought.</summary>
@@ -1384,6 +1519,13 @@ internal sealed class CampaignRow
     /// </remarks>
     public int GoldSpentOnCharms { get; set; }
 
+    /// <summary>The gold that went to the throwing stall.</summary>
+    /// <remarks>
+    /// Its own line for the same reason the charms have one: it is the newest thing the dojo can buy
+    /// and the question it was written for is whether it is worth what it costs.
+    /// </remarks>
+    public int GoldSpentOnThrown { get; set; }
+
     /// <summary>The gold that went to warriors hired to replace the dead.</summary>
     /// <remarks>
     /// A separate item: because the economy's binding constraint is the roster (GDD §11), the
@@ -1649,6 +1791,9 @@ internal sealed class CampaignReport(int days)
     /// <summary>The gold that went to the temple's charms (per dojo).</summary>
     public double AverageCharmGold => Standing(r => r.GoldSpentOnCharms);
 
+    /// <summary>The gold that went to the throwing stall (per dojo).</summary>
+    public double AverageThrownGold => Standing(r => r.GoldSpentOnThrown);
+
     /// <summary>Warriors who chose a path (per dojo).</summary>
     public double AveragePaths => Standing(r => r.Paths);
 
@@ -1699,6 +1844,7 @@ internal sealed class CampaignReport(int days)
                     - r.GoldSpentOnUpkeep
                     - r.GoldSpentOnSchool
                     - r.GoldSpentOnCharms
+                    - r.GoldSpentOnThrown
                     - r.GoldSpentOnHires);
             return (double)net / battles;
         }
