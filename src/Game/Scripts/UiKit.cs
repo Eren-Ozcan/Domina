@@ -50,6 +50,24 @@ public static class UiKit
     /// <summary>Warning: a refused command, a death, a broken promise.</summary>
     public static readonly Color Warning = new(0.76f, 0.40f, 0.38f);
 
+    /// <summary>The player's own side (GDD §12 → the palette's seven roles).</summary>
+    /// <remarks>
+    /// The screens had no colour that meant "yours". A man of the dojo, a patron's regard and your
+    /// side of a fight are the same fact wearing three names, and until now each screen painted it
+    /// with whatever was nearest — usually the heading's ochre, which is also the accent. Indigo is
+    /// spent on nothing else, so a card with an indigo edge is read without a label.
+    /// </remarks>
+    public static readonly Color Indigo = new(0.36f, 0.43f, 0.66f);
+
+    /// <summary>Blood, and a limb coming away. Nowhere else (GDD §12).</summary>
+    /// <remarks>
+    /// <see cref="Warning"/> is the interface's red — a refusal, an empty chest, a button you must not
+    /// press by accident — and it is desaturated so it can sit in a row of text. Vermilion is the
+    /// scene's red and it is not an interface colour at all: if it is on screen, something has been
+    /// cut. Keeping the two apart is what stops a dwindling food stock from reading as a wound.
+    /// </remarks>
+    public static readonly Color Vermilion = new(0.745f, 0.227f, 0.133f);
+
     /// <summary>The screen's own title.</summary>
     public const int TitleSize = 26;
 
@@ -297,7 +315,18 @@ public static class UiKit
     /// steady the row scans as one instrument, and the bar still says which figure wants attention.
     /// </para>
     /// </remarks>
-    public static Control Chip(string figure, string name, Color? color = null, Mark mark = Mark.None)
+    /// <param name="trend">
+    /// What the figure is doing — <c>"−7 / day"</c>, <c>"13 days left"</c>. A stock with no trend is the
+    /// reference game's own worst habit: it writes "800 food" and never what melts a day, so the one
+    /// pressure the whole game is built on is the one thing not on the bar. Left empty for a figure that
+    /// does not move on its own, like a headcount.
+    /// </param>
+    public static Control Chip(
+        string figure,
+        string name,
+        Color? color = null,
+        Mark mark = Mark.None,
+        string trend = "")
     {
         PanelContainer panel = new() { CustomMinimumSize = new Vector2(84, 0) };
         panel.AddThemeStyleboxOverride("panel", PanelStyle(Raised, radius: 3));
@@ -325,6 +354,14 @@ public static class UiKit
         caption.AddChild(name_);
         column.AddChild(caption);
 
+        if (trend.Length > 0)
+        {
+            Label moving = new() { Text = trend, HorizontalAlignment = HorizontalAlignment.Center };
+            moving.AddThemeFontSizeOverride("font_size", NoteSize - 1);
+            moving.AddThemeColorOverride("font_color", color ?? Muted);
+            column.AddChild(moving);
+        }
+
         if (color is Color state && state != Ink)
         {
             column.AddChild(new ColorRect
@@ -336,6 +373,275 @@ public static class UiKit
         }
 
         return panel;
+    }
+
+    /// <summary>
+    /// One man, written the same way on every screen: a portrait, his name and trade, a bar, one note.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A warrior was printed as three different row formats — a toggle button on the roster, a
+    /// checkbox line on the day screen, a name and a number in the arena's HUD — so the player had to
+    /// learn him three times. The reference game's one good structural decision is that its unit card
+    /// is identical in the courtyard, the contract and the fight; this is that card.
+    /// </para>
+    /// <para>
+    /// <paramref name="fraction"/> is deliberately unnamed: in the arena it is health, on the roster it
+    /// is composure, on a patron it is regard. They are one concept in the fiction — how much of him is
+    /// left to spend — and giving them one widget is what makes the three screens read as one game.
+    /// </para>
+    /// </remarks>
+    /// <param name="ours">
+    /// Whether the man belongs to the dojo. <see cref="Indigo"/> on the edge and the portrait is the
+    /// only thing that separates your side from theirs in the arena, where both are dark paper figures.
+    /// </param>
+    public static Control UnitCard(
+        string name,
+        string trade,
+        double fraction,
+        string note,
+        Color? bar = null,
+        bool ours = false,
+        bool selected = false,
+        Color? nameColor = null)
+    {
+        PanelContainer panel = new();
+        panel.AddThemeStyleboxOverride(
+            "panel",
+            PanelStyle(Raised, radius: 3, border: selected ? Heading : ours ? Indigo : Edge));
+
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 10);
+        Padded(panel, 12, 10).AddChild(row);
+
+        // The portrait is a hole in the card until the rig can draw a head into it. An empty framed
+        // square reads as "a man goes here"; a placeholder drawing would read as a bug.
+        PanelContainer portrait = new() { CustomMinimumSize = new Vector2(40, 40) };
+        portrait.AddThemeStyleboxOverride(
+            "panel",
+            PanelStyle(new Color(0.102f, 0.113f, 0.149f), radius: 2, border: ours ? Indigo : Edge));
+        portrait.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        row.AddChild(portrait);
+
+        VBoxContainer column = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        column.AddThemeConstantOverride("separation", 4);
+        row.AddChild(column);
+
+        HBoxContainer heading = new();
+        heading.AddThemeConstantOverride("separation", 8);
+        column.AddChild(heading);
+
+        Label named = new()
+        {
+            Text = name,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            ClipText = true,
+        };
+        named.AddThemeColorOverride("font_color", nameColor ?? (selected ? Heading : Ink));
+        heading.AddChild(named);
+
+        if (trade.Length > 0)
+        {
+            heading.AddChild(Note(trade, wrap: false));
+        }
+
+        column.AddChild(Bar(fraction, bar ?? Good, height: 6));
+
+        if (note.Length > 0)
+        {
+            column.AddChild(Note(note, wrap: false));
+        }
+
+        return panel;
+    }
+
+    /// <summary>The same card, as something the player can pick.</summary>
+    /// <remarks>
+    /// The card is laid over a toggle button rather than drawn inside one: a Godot
+    /// <see cref="Button"/> takes a single line of text, and the card is four rows. The children are
+    /// told to ignore the mouse so the whole card stays one hit target instead of eating its own clicks.
+    /// </remarks>
+    public static Button UnitButton(
+        string name,
+        string trade,
+        double fraction,
+        string note,
+        Color? bar = null,
+        bool ours = false,
+        bool selected = false,
+        Color? nameColor = null)
+    {
+        Button button = new()
+        {
+            ToggleMode = true,
+            ButtonPressed = selected,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+
+        StyleBoxFlat flat = PanelStyle(new Color(0, 0, 0, 0), radius: 3, border: new Color(0, 0, 0, 0));
+        button.AddThemeStyleboxOverride("normal", flat);
+        button.AddThemeStyleboxOverride("hover", flat);
+        button.AddThemeStyleboxOverride("pressed", flat);
+        button.AddThemeStyleboxOverride("focus", flat);
+
+        Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor);
+        card.MouseFilter = Control.MouseFilterEnum.Ignore;
+        card.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        button.AddChild(card);
+        button.CustomMinimumSize = new Vector2(0, 62);
+
+        return button;
+    }
+
+    /// <summary>
+    /// A labelled bar with its own reading beside the label: health, composure, a patron's regard.
+    /// </summary>
+    /// <remarks>
+    /// The reference game shows a gladiator's mood and a magistrate's goodwill with the same widget,
+    /// which is the cheapest way to tell the player those are one idea. Ours does the same, and the
+    /// reading to the right is always words or a figure — never a percentage of something unnamed.
+    /// </remarks>
+    public static Control Gauge(string label, string reading, double fraction, Color? fill = null)
+    {
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 5);
+
+        HBoxContainer line = new();
+        line.AddThemeConstantOverride("separation", 8);
+        column.AddChild(line);
+
+        Label named = new() { Text = label, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        named.AddThemeFontSizeOverride("font_size", NoteSize);
+        named.AddThemeColorOverride("font_color", Muted);
+        line.AddChild(named);
+
+        Label read = new() { Text = reading, HorizontalAlignment = HorizontalAlignment.Right };
+        read.AddThemeColorOverride("font_color", Ink);
+        line.AddChild(read);
+
+        column.AddChild(Bar(fraction, fill ?? Indigo, height: 10));
+        return column;
+    }
+
+    /// <summary>A bare bar: a dark trough with a filled run in it.</summary>
+    /// <remarks>
+    /// Godot's <c>ProgressBar</c> would do this, and it brings a minimum height, a centred percentage
+    /// label to switch off and a value range to keep in step with whatever is being shown. Two
+    /// rectangles are cheaper to read in the code and to lay out at six pixels tall.
+    /// </remarks>
+    public static Control Bar(double fraction, Color fill, int height = 8)
+    {
+        PanelContainer trough = new() { CustomMinimumSize = new Vector2(0, height) };
+        trough.AddThemeStyleboxOverride(
+            "panel",
+            PanelStyle(new Color(0.102f, 0.102f, 0.122f), radius: 2, border: new Color(0, 0, 0, 0)));
+
+        // A run is laid out by ratio rather than by pixels: the card is stretched by its container and
+        // a pixel width measured now would be wrong by the time the screen is drawn.
+        HBoxContainer split = new();
+        trough.AddChild(split);
+
+        float part = Math.Clamp((float)fraction, 0f, 1f);
+        if (part > 0f)
+        {
+            ColorRect run = new()
+            {
+                Color = fill,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                SizeFlagsStretchRatio = part,
+            };
+            split.AddChild(run);
+        }
+
+        if (part < 1f)
+        {
+            split.AddChild(new Control
+            {
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                SizeFlagsStretchRatio = 1f - part,
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+            });
+        }
+
+        return trough;
+    }
+
+    /// <summary>
+    /// A live count against its limit — <c>Party 2 / 3</c> — for a command that stays refused until it reads full.
+    /// </summary>
+    /// <remarks>
+    /// The refusal text already says why a command cannot be given, but it says it in a sentence the
+    /// player has to read. A counter beside the button says the same thing in two characters, and it
+    /// is the one piece of the reference game's gating that we had in the model and never put on screen.
+    /// </remarks>
+    public static Control Counter(string label, int count, int limit, Color? color = null)
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 6);
+
+        Label named = new() { Text = label };
+        named.AddThemeFontSizeOverride("font_size", SectionSize);
+        named.AddThemeColorOverride("font_color", Muted);
+        row.AddChild(named);
+
+        Label now = new() { Text = count.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        now.AddThemeFontSizeOverride("font_size", SectionSize);
+        now.AddThemeColorOverride("font_color", color ?? (count == limit ? Good : Pending));
+        row.AddChild(now);
+
+        Label of = new()
+        {
+            Text = $"/ {limit.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+        };
+        of.AddThemeFontSizeOverride("font_size", SectionSize);
+        of.AddThemeColorOverride("font_color", Muted);
+        row.AddChild(of);
+
+        return row;
+    }
+
+    /// <summary>
+    /// The two arrows that walk the roster from inside a detail panel, with the place in the list between them.
+    /// </summary>
+    /// <remarks>
+    /// Going back to the list to read the next man is the thing that makes comparing two of them
+    /// tedious, and the reference game solved it with a pair of arrows twenty years ago. The buttons are
+    /// the caller's so it can wire and disable them; this only dresses them and sets them in a row.
+    /// </remarks>
+    public static Control Browse(Button previous, Button next, string position)
+    {
+        ArgumentNullException.ThrowIfNull(previous);
+        ArgumentNullException.ThrowIfNull(next);
+
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 8);
+
+        previous.Text = "‹";
+        next.Text = "›";
+        row.AddChild(previous);
+        row.AddChild(Note(position, wrap: false));
+        row.AddChild(next);
+        return row;
+    }
+
+    /// <summary>Marks a button as the one that cannot be taken back.</summary>
+    /// <remarks>
+    /// In the reference game <c>Put to Death</c> is the same grey box as <c>Close</c> and sits beside
+    /// it. Seppuku, sending a man off and closing the dojo are ours, and they are given a red ground
+    /// and a red edge so the hand slows down before the click, not after it.
+    /// </remarks>
+    public static Button Danger(Button button)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+
+        Color edge = new(0.353f, 0.180f, 0.161f);
+        button.AddThemeStyleboxOverride("normal", ButtonStyle(new Color(0.169f, 0.098f, 0.090f), edge));
+        button.AddThemeStyleboxOverride("hover", ButtonStyle(new Color(0.235f, 0.125f, 0.114f), edge));
+        button.AddThemeStyleboxOverride("pressed", ButtonStyle(new Color(0.129f, 0.075f, 0.071f), edge));
+        button.AddThemeColorOverride("font_color", Warning);
+        button.AddThemeColorOverride("font_hover_color", Warning);
+        button.AddThemeColorOverride("font_pressed_color", Warning);
+        return button;
     }
 
     /// <summary>
