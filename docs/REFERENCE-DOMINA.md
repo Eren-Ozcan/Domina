@@ -171,6 +171,11 @@ the same fields, but promises gold only and pays a flat rate of spoils; see the 
 Three of nine, then a final. The same shape as our three heads and the last night, arrived at
 independently.
 
+The count is **on the ludus screen too**, not only on the map: a small `n/9` counter sits in the
+yard, reading `0/9` on day 1 and `1/9` after the first champion falls. So the season's gate is
+readable without opening anything — which is exactly what our own three-head gate lacks: it is shown
+on the day screen, but nothing tells the player what it is for until the night arrives. **[V]**
+
 ### Staff: the price of a person
 
 | Role | Hire | Eats per day | Gives |
