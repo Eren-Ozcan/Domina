@@ -157,10 +157,13 @@ a verdict is seen), the ticking in `DojoHub._Process`, and the clock bar in the 
 has an opinion about how long a quiet day should feel. Three holds are wired: the arena, a party being
 picked (released in `DayScreen._ExitTree` so it cannot outlive its screen) and the window losing focus.
 
-⏳ **Left open by this step:** the **timed offer queue** (GDD §10). One offer bound to the calendar day
-is thin once the day turns by itself — it rotates under a player who is in the market. Nothing is
-broken today (a party being picked holds the clock, so an offer cannot vanish mid-decision), so it is
-listed with the Phase 4 work rather than blocking anything.
+⏳ ~~**Left open by this step:** the **timed offer queue** (GDD §10).~~ **Closed 2026-09-13** — the
+board stands for **2 days** (`EncounterTuning.OfferLifeDays`), yesterday's posting beside today's, each
+printing its last day; only the taken postings go into the save, so the board stays a pure function of
+the seed. It cost the curve: a standing job is an older, weaker and therefore cheaper job that eats a
+whole day, which took the last night from 17.1% to 8.9% until `PowerPerDay` was re-derived from 0.011
+to **0.010**. Still open with it: an unclaimed posting should probably grow **more** attractive as it
+ages, or the queue stays filler rather than a decision (GDD §10).
 
 **Decisions that do not wait on code:** none left of that sitting — #16 the opponent pool and #17 the
 rival school closed on 2026-09-10, #15 the save backup on 2026-09-12, and **#3 adversary behaviour on
@@ -465,10 +468,14 @@ closed and reopened everything is in place.
 - [x] **Party selection: 1-4 warriors** — `EncounterOffer.Accepts`; a duel offer imposes exactly
       one warrior, and `Expedition.Refuse` declines an unfit party with its reason
 - [ ] ~~The map/progress screen~~ — **dropped** (Open Decision #2 closed: there is no map screen)
-- [ ] **The throwing slot has no shop** — the market, the quartermaster and the recruit screen all
-      ignore `Warrior.Thrown`, so a shuriken or a yumi can be fought with, saved and loaded but never
-      bought. Found on 2026-09-13 while writing the yumi; it is the one thing standing between the
-      kyūdō class and a season that can actually field it
+- [x] **The throwing slot has no shop** — **closed 2026-09-13**, and it turned out to be the smaller
+      half of the hole: `Quartermaster.Equip` / `Repair` / `Forge` were never called by a screen
+      either, so nothing in the game could buy armour, mend it or reforge a blade. The counter is now
+      its own screen (`Game/Scripts/ArmouryScreen.cs` over the tested `QuartermasterModel`), selling
+      armour region by region, repairs, the forge and the throwing slot. The stall's price is locked
+      at **1.4 gold per point of the quiver** (GDD §11); the measurement's surprise is that the slot
+      itself, not the class, is what was missing — a roster that throws wins the last night 20.5% of
+      the time against 17.3% for one that does not
 - [x] **Adversary behaviour/AI profiles** — done 2026-09-13 (`Combat/TargetProfile.cs`). Not a combat
       pattern per kind but five multipliers over the shared target-selection weights, along the
       **discipline** axis the decision named: the collector gangs up, the cutthroat finishes the

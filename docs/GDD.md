@@ -2497,6 +2497,43 @@ on the field. The measurement is in §11.
 - **Contracts:** instead of a single daily offer, a **timed offer queue** — several offers hang at
   once, each with an expiry, and an expedition consumes real time. **Blind fights** are in (the
   opponent hidden, the reward high); **betting is not**
+- **In the core since 2026-09-13, and the board's life is locked at 2 days**
+  (`EncounterTuning.OfferLifeDays`). Yesterday's posting still stands beside today's, each with its own
+  last day printed on it; taking one strikes it off for good, and the only thing written to the save is
+  **which postings were taken** — every job is still its posting day's own pure function of the seed, so
+  a reload can neither reroll the board nor hand back a job already done. A **raid stands alone**: he is
+  at the gate, and a board offering yesterday's patrol work beside him would be reading the day wrongly.
+  - ⚠️ **The queue is not free, and the measurement is the reason the life is 2.** A standing job was
+    posted on an earlier day, so it carries that day's power: weaker, and — because the reward follows
+    enemy health — **cheaper**, while eating a whole day just the same. Added on top of everything else
+    it took the last night from 17.1% to 8.9% (life 2) and 6.1% (life 3), and the net per fight from
+    28.1 to 21.9 and 18.0, over three seeds × 1600 dojos. Three policies were tried — take the newest
+    acceptable, take the best-paying, and wait for the wounded because the job will still be there
+    tomorrow — and all three landed in the same place. The board is not more dangerous, it is
+    **poorer**: it fills the season with cheap work on days the dojo would have trained.
+  - **The curve was re-derived under it**: `PowerPerDay` 0.011 → **0.010**, which puts the season back
+    where it was (last night 16.4% against 17.1, dojos closed 25.6% against 26.8, deaths per
+    warrior-fight 4.1% against 4.5, net per fight 27.8 against 28.1). The sweep is in
+    `EncounterGenerator.PowerPerDay`.
+  - **Decided 2026-09-13, and the other way round: a standing job pays less, not more**
+    (`EncounterTuning.StaleFeePerDay` 0.25 a day, floored at 0.4 of the posting-day fee). The open
+    proposal had been that the clerk sweetens work nobody takes; it was **rejected**, because a posting
+    that improves with age makes *hoard the board and come back when the roster is strong* the correct
+    play, and the day a job arrives stops being the day to answer it. The rule the queue is built on is
+    that **taking a job the day it is posted is always its best price**; a standing job is the fallback
+    for a day the dojo could not meet the fresh one, never a plan.
+    - The old posting was already the slightly worse deal — it carries its posting day's power, so it
+      is weaker and, the reward following enemy health, cheaper — but at `PowerPerDay` that is about
+      1% a day, far below what a player can feel. The fee loss is the same pull written large enough
+      to read on the card, and the board says so in words (`standing, reduced fee`).
+    - **The floor is the point of the floor:** a job that decayed to nothing would be a line of dead
+      text, not a fallback.
+    - **Measured, and the curve did not need re-deriving.** Same bed (3 seeds × 1600 dojos): net per
+      fight 29.6 at fee 0 → **28.7** at 0.25 → 27.9 at 0.5; last night won 11.3% → 10.5% → 10.5%;
+      dojos closed 28.6% → 29.0% → 28.2%. The rule costs about a gold a fight because the policy
+      takes the newest posting anyway — which is exactly what it is for: it does not tax ordinary
+      play, it removes the waiting strategy. Against the policy that waits (`--offer-pick patient`),
+      taking the newest posting stays the better-paying play at every fee tried.
 - **Some contracts forbid pulling out** and pay more (Domina's `Surrender Allowed: No` line). The
   decision is made not in the fight but **when taking the contract** — this does not conflict with the
   sanctity of the surrender key; what closes the key is the player's own signature. If it appeared on
@@ -2529,11 +2566,45 @@ debt; a purchase you cannot afford is not made.
 | Pull-out / rout reward | **0** | §10: surrendering erases that expedition's reward |
 | Armour piece | **1.50 gold / durability point** | Keikogi 60, dō-maru 165, ō-yoroi cuirass 270 |
 | Repair | **0.90 gold / wear point** | No more than the piece's pool is paid |
+| Thrown implement | **1.40 gold / point of the quiver** (damage × ammunition), **+150%** for a full dose of poison | Shuriken 67, poisoned shuriken 84, throwing spear 73, yumi 364. Locked 2026-09-13 — see below |
 | Food / water | **2 / 1 gold**, one each per warrior per day | Roster size |
 | Medicine | **12 gold**, one per warrior in the infirmary per day | Number of wounded |
 | Buying a warrior | **150 gold** | — |
 | Starting capital | **600 gold** | — |
 | Starting roster | **3-5 warriors** (drawn per run, 4 is the measured middle), free | §10, run variety |
+
+**The throwing stall (locked 2026-09-13).** Until this day nothing in the dojo sold a throwing
+implement: a shuriken or a yumi could be fought with, saved and loaded, and never bought — so the
+kyūdō class could not be fielded in a real season, and no measured season had ever had a warrior with
+a full throwing slot. The stall prices the **quiver** — damage × ammunition — because that is the axis
+the four implements differ on; **range and draw time are deliberately not in the price**, since they
+are what the class is for and charging for them at the stall would sell the kyūdō's payoff to a dojo
+that never built the hall. A dose of poison adds a share rather than a flat sum, because a poisoned
+star carries half the quiver and would otherwise be the cheapest thing on the stall.
+
+The number was swept with a policy that fills every warrior's throwing slot, four seeds × 1600 dojos
+× 180 days, against a control that fills none:
+
+| Gold per quiver point | A handful of stars | Last night won | Dojos closed | Net per fight |
+|---|---|---|---|---|
+| — (nobody throws) | — | 17.3% | 26.5% | 28.2 |
+| 1.1 | 53 | **22.0%** | 22.5% | 31.7 |
+| **1.4 (locked)** | **68** | **20.5%** | **24.1%** | **30.1** |
+| 1.65 | 80 | 18.4% | 25.0% | 28.2 |
+| 2.2 | 106 | 17.0% | 27.2% | 25.8 |
+
+**The trade turns at about 1.65**, where the slot pays for itself and no more; at 2.2 filling it is
+worse than leaving it empty. 1.4 sits one rung below the turn on purpose — at 1.1 the slot is so cheap
+that buying it is not a decision, and at the turn the stall is decoration. At 1.4 a dojo spends about
+536 gold a season there, which puts the stall beside the temple's charms (693) as a real competitor
+for the school's money.
+
+⚠️ **Two things this did not measure.** The **poison premium (1.5)** is unswept: the measuring policy
+buys clean stars and bows, never poisoned ones, so the number is a price relation rather than a
+measured one. And the **yumi** still cannot be priced over a season — a policy that buys bows only for
+its range class spends 27 gold a dojo, because the class hall arrives too late in a 180-day season to
+put many trained hands on the field. It is the same shape as the weapon master's hall, and it is a
+statement about the hall's place in the season rather than about the bow.
 
 The starting roster is the same size as the measurement's roster (four warriors) and comes free: the
 600 gold stands there for the first day's decisions, not for the roster itself. Had another number
