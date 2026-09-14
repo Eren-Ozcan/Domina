@@ -159,4 +159,37 @@ public sealed record EconomyTuning
     /// <summary>The reward of an expedition withdrawn from or routed.</summary>
     /// <remarks>Zero — GDD §10: surrendering erases that expedition's reward.</remarks>
     public int LostBattleGold { get; init; }
+
+    /// <summary>The food a beaten band leaves behind, per enemy put down.</summary>
+    /// <remarks>
+    /// <para>
+    /// Men who came to the field carried what they meant to eat on it. Paying the spoils in <b>stores</b>
+    /// rather than in coin aims at a different channel from the reward: gold answers the treasury, and
+    /// the store answers the <b>calendar</b>. A dojo that cannot buy food does not heal, and a roster
+    /// that does not heal cannot take the field — which is the loop a purse alone cannot open.
+    /// </para>
+    /// <para>
+    /// <b>4 per enemy</b>, chosen on 2026-09-15 as the last step that is free. Swept 0-8 against the
+    /// documented policy (10.000 dojos x 180 days, <c>--accept-ratio 2.0</c>): the treasury's gain
+    /// saturates here (net per fight 38.8 -> 45.2, and 45.4 at 5 and 6), while what the dojo does with
+    /// the food keeps paying — training days 65.2 -> 73.9 and the best man 256 -> 273. Above it the
+    /// closure rate starts to move for real (20.7% at 5, 22.0% at 8, against 18.5% with none), and the
+    /// extra hunger relief buys no more nights won.
+    /// </para>
+    /// <para>
+    /// <b>The closure cost at 4 is not real.</b> Three seeds put it at +0.7, -0.2 and +0.5 points —
+    /// astride zero — while the training gain, the best man's score and the night repeat in all three.
+    /// That replication is what chose the number, not the single-seed table.
+    /// </para>
+    /// </remarks>
+    public double VictoryFoodPerEnemy { get; init; } = 4;
+
+    /// <summary>The water a beaten band leaves behind, per enemy put down.</summary>
+    /// <remarks>
+    /// A quarter of the food. Water on its own moves almost nothing (net 37.5 -> 38.8, closures 18.3%
+    /// -> 18.5%), so the ratio is not carrying a measurement — it is carrying the prices: water costs 1
+    /// and food 2, so food is the scarce good and the spoils pay mostly in the scarce good. The
+    /// reference pays 75 food against 12 water on one fight, a steeper version of the same asymmetry.
+    /// </remarks>
+    public double VictoryWaterPerEnemy { get; init; } = 1;
 }

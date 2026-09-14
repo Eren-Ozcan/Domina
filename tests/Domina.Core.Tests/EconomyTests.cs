@@ -305,4 +305,41 @@ public class EconomyTests
         Assert.DoesNotContain(wounded.Id, report.Upkeep.Hungry);
         Assert.Equal(2, wounded.RecoveryDaysRemaining);
     }
+
+    /// <summary>
+    /// The spoils are paid in the store, not in the purse: a beaten band's provisions answer the
+    /// calendar, which is the channel a fee cannot reach (GDD §11).
+    /// </summary>
+    [Fact]
+    public void ABeatenBandLeavesItsProvisions()
+    {
+        DojoState state = Funded(economy: new EconomyTuning { VictoryFoodPerEnemy = 4, VictoryWaterPerEnemy = 1 });
+        BattleSetup setup = new(
+            [Fighter("Kenji")],
+            [Fighter("Bandit"), Fighter("Cutthroat"), Fighter("Collector")]);
+
+        Resources spoils = state.SpoilsFor(setup, BattleOutcome.PlayerVictory);
+
+        Assert.Equal(12, spoils.Food);
+        Assert.Equal(3, spoils.Water);
+        Assert.Equal(0, spoils.Gold);
+    }
+
+    /// <summary>
+    /// Only a victory is looted. A party that withdrew or was routed left the field — and with it
+    /// everything standing on it.
+    /// </summary>
+    [Theory]
+    [InlineData(BattleOutcome.PlayerWipe)]
+    [InlineData(BattleOutcome.PlayerWithdrawal)]
+    public void ALostFieldIsNotLooted(BattleOutcome outcome)
+    {
+        DojoState state = Funded(economy: new EconomyTuning { VictoryFoodPerEnemy = 4, VictoryWaterPerEnemy = 1 });
+        BattleSetup setup = new([Fighter("Kenji")], [Fighter("Bandit")]);
+
+        Assert.Equal(Resources.Empty, state.SpoilsFor(setup, outcome));
+    }
+
+    private static Warrior Fighter(string name) =>
+        new(new WarriorId(name.GetHashCode(StringComparison.Ordinal)), name, WarriorStats.Recruit(), Weapon.Katana(), Armor.Medium());
 }

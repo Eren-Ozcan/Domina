@@ -199,7 +199,16 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         // The posting is handed in with the books: a job that stood on the board pays its posting-day
         // fee less what the waiting cost it (docs/GDD.md §10).
         int reward = state.RewardFor(setup, battle.Outcome, taken);
-        state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
+
+        // The fee is the lord's; the stores are the field's. A beaten band's provisions go into the
+        // dojo's own store, where they answer the calendar rather than the treasury.
+        Resources spoils = state.SpoilsFor(setup, battle.Outcome);
+        state.Resources = state.Resources with
+        {
+            Gold = state.Resources.Gold + reward,
+            Food = state.Resources.Food + spoils.Food,
+            Water = state.Resources.Water + spoils.Water,
+        };
 
         // Filed before the day closes: the week's compulsory fight is answered by the day the dojo took
         // the field, and the tick is weighed while that day is still the current one.
@@ -345,7 +354,16 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         int reward = claimed
             ? state.Province.Sweeten(contract.Reward)
             : state.Quartermaster.Economy.LostBattleGold;
-        state.Resources = state.Resources with { Gold = state.Resources.Gold + reward };
+
+        // A hunted band is looted like any other: the head is the contract's business, the stores it
+        // carried are the dojo's.
+        Resources spoils = state.SpoilsFor(setup, battle.Outcome);
+        state.Resources = state.Resources with
+        {
+            Gold = state.Resources.Gold + reward,
+            Food = state.Resources.Food + spoils.Food,
+            Water = state.Resources.Water + spoils.Water,
+        };
 
         if (claimed)
         {

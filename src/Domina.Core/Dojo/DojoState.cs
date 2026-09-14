@@ -816,6 +816,26 @@ public sealed class DojoState
         return (int)Math.Round(full * FeeScaleOf(offer));
     }
 
+    /// <summary>What a beaten band leaves behind, beyond its fee.</summary>
+    /// <remarks>
+    /// Only a victory is looted: a party that withdrew or was routed left the field to the enemy, and
+    /// the same rule the reward follows (GDD §10) applies to the stores it did not carry off.
+    /// </remarks>
+    public Resources SpoilsFor(Combat.BattleSetup setup, Combat.BattleOutcome outcome)
+    {
+        ArgumentNullException.ThrowIfNull(setup);
+
+        if (outcome != Combat.BattleOutcome.PlayerVictory)
+        {
+            return Resources.Empty;
+        }
+
+        int enemies = setup.EnemySide.Count;
+        return new Resources(
+            Food: (int)Math.Round(enemies * Quartermaster.Economy.VictoryFoodPerEnemy),
+            Water: (int)Math.Round(enemies * Quartermaster.Economy.VictoryWaterPerEnemy));
+    }
+
     /// <summary>Is this posting still on the board — not taken, not expired?</summary>
     public bool IsOnTheBoard(EncounterOffer offer)
     {
