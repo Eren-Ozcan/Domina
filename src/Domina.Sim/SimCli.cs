@@ -14,11 +14,20 @@ internal static class SimCli
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
 
+        // The replay takes a path and nothing else, so it is answered before the measurement's own
+        // options are parsed: the two commands share no settings (see ReplayCommand).
+        if (ReplayCommand.Wanted(args))
+        {
+            return ReplayCommand.Run(args, output, error);
+        }
+
         ParsedArgs parsed = SimArgs.Parse(args);
 
         if (parsed.HelpRequested)
         {
             SimArgs.WriteUsage(output);
+            output.WriteLine();
+            ReplayCommand.WriteUsage(output);
             return ExitOk;
         }
 
