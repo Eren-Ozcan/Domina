@@ -102,7 +102,7 @@ public sealed partial class RosterScreen : DojoScreen
         renameRow.AddChild(_nameEdit);
 
         _renameButton = new Button { Text = "Rename" };
-        _renameButton.Pressed += ApplyRename;
+        _renameButton.Pressed += Guarded(_dojo, ApplyRename);
         renameRow.AddChild(_renameButton);
 
         _renameNotice = new Label();
@@ -123,7 +123,7 @@ public sealed partial class RosterScreen : DojoScreen
         // The feast is the roster's lever, not one warrior's, so it sits with the summary's business
         // rather than in a man's detail: one measure of sake per living head, and then a week's wait.
         _feastButton = new Button { Text = "Hold a feast" };
-        _feastButton.Pressed += Feast;
+        _feastButton.Pressed += Guarded(_dojo, Feast);
         panel.AddChild(_feastButton);
 
         _feastNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -141,7 +141,7 @@ public sealed partial class RosterScreen : DojoScreen
         // Releasing a man is the one thing on this screen that cannot be undone and costs nothing to
         // press, so it asks twice — the same courtesy the rest of the dojo owes an irreversible move.
         _releaseButton = new Button { Text = "End his term" };
-        _releaseButton.Pressed += Release;
+        _releaseButton.Pressed += Guarded(_dojo, Release);
         panel.AddChild(_releaseButton);
 
         _releaseNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -151,7 +151,7 @@ public sealed partial class RosterScreen : DojoScreen
         // does: what the dojo gets back is a man who eats nothing and can hold a post, and what it
         // loses is a sword it cannot have back.
         _retireButton = new Button { Text = "Retire him" };
-        _retireButton.Pressed += Retire;
+        _retireButton.Pressed += Guarded(_dojo, Retire);
         panel.AddChild(_retireButton);
 
         _retireNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -184,14 +184,14 @@ public sealed partial class RosterScreen : DojoScreen
             button.AddThemeColorOverride("font_color", StatusColor(row.Status));
 
             WarriorId id = row.Id;
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 // Moving to another man disarms the release: the confirmation belongs to the warrior it
                 // was armed for, not to the button.
                 _selected = id;
                 _releaseArmed = false;
                 Refresh();
-            };
+            });
 
             _list.AddChild(button);
         }
@@ -289,12 +289,12 @@ public sealed partial class RosterScreen : DojoScreen
         {
             OmamoriKind kind = charm;
             Button off = new() { Text = $"Take off — {Omamori.Find(kind).Name}" };
-            off.Pressed += () =>
+            off.Pressed += Guarded(_dojo, () =>
             {
                 _dojo.UnfitCharm(row.Id, kind);
                 Persist();
                 Refresh();
-            };
+            });
 
             _charmRows.AddChild(off);
         }
@@ -325,30 +325,30 @@ public sealed partial class RosterScreen : DojoScreen
                 Text = $"Buy ({charm.Price})",
                 Disabled = _dojo.Resources.Gold < charm.Price,
             };
-            buy.Pressed += () =>
+            buy.Pressed += Guarded(_dojo, () =>
             {
                 _dojo.BuyCharm(kind);
                 Persist();
                 Refresh();
-            };
+            });
             line.AddChild(buy);
 
             Button fit = new() { Text = "Fit", Disabled = !room || held == 0 };
-            fit.Pressed += () =>
+            fit.Pressed += Guarded(_dojo, () =>
             {
                 _dojo.FitCharm(row.Id, kind);
                 Persist();
                 Refresh();
-            };
+            });
             line.AddChild(fit);
 
             Button sell = new() { Text = "Sell back", Disabled = held == 0 };
-            sell.Pressed += () =>
+            sell.Pressed += Guarded(_dojo, () =>
             {
                 _dojo.SellCharm(kind);
                 Persist();
                 Refresh();
-            };
+            });
             line.AddChild(sell);
 
             _charmRows.AddChild(line);
@@ -425,12 +425,12 @@ public sealed partial class RosterScreen : DojoScreen
             Button button = new() { Text = PathName(path) };
             WarriorId id = row.Id;
             WarriorPath chosen = path;
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 _dojo.ChoosePath(id, chosen);
                 Persist();
                 Refresh();
-            };
+            });
             _pathRow.AddChild(button);
         }
     }
@@ -502,7 +502,7 @@ public sealed partial class RosterScreen : DojoScreen
             StaffRole role = open.Role;
             bool his = open.Role == row.Post;
             Button button = new() { Text = his ? $"Leave the {open.Building.ToLowerInvariant()}" : open.Name };
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 if (his)
                 {
@@ -515,7 +515,7 @@ public sealed partial class RosterScreen : DojoScreen
 
                 Persist();
                 Refresh();
-            };
+            });
 
             _postRow.AddChild(button);
         }

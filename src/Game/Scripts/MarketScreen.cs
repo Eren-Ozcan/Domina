@@ -69,7 +69,7 @@ public sealed partial class MarketScreen : DojoScreen
         panel.AddChild(_detail);
 
         _buyButton = new Button { Text = "Buy" };
-        _buyButton.Pressed += Buy;
+        _buyButton.Pressed += Guarded(_dojo, Buy);
         panel.AddChild(_buyButton);
 
         _notice = new Label();
@@ -95,7 +95,7 @@ public sealed partial class MarketScreen : DojoScreen
         {
             int wanted = measures;
             Button button = new() { Text = $"Buy {wanted} sake" };
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 if (_dojo.BuySake(wanted) > 0)
                 {
@@ -103,7 +103,7 @@ public sealed partial class MarketScreen : DojoScreen
                 }
 
                 Refresh();
-            };
+            });
 
             row.AddChild(button);
         }
@@ -134,11 +134,11 @@ public sealed partial class MarketScreen : DojoScreen
             button.AddThemeColorOverride("font_color", RowColor(row));
 
             int index = row.Index;
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 _selected = index;
                 Refresh();
-            };
+            });
 
             _list.AddChild(button);
         }

@@ -100,7 +100,7 @@ public sealed partial class DayScreen : DojoScreen
         page.AddChild(_bountyLabel);
 
         _acceptButton = new Button { Text = "Accept the contract" };
-        _acceptButton.Pressed += AcceptBounty;
+        _acceptButton.Pressed += Guarded(_dojo, AcceptBounty);
         page.AddChild(_acceptButton);
 
         page.AddChild(new Label { Text = "Who goes on the expedition?" });
@@ -119,17 +119,17 @@ public sealed partial class DayScreen : DojoScreen
         page.AddChild(buttons);
 
         _sendButton = new Button { Text = "Take the offer" };
-        _sendButton.Pressed += SendToOffer;
+        _sendButton.Pressed += Guarded(_dojo, SendToOffer);
         buttons.AddChild(_sendButton);
 
         _bountyButton = new Button { Text = "Take the bounty" };
-        _bountyButton.Pressed += SendToBounty;
+        _bountyButton.Pressed += Guarded(_dojo, SendToBounty);
         buttons.AddChild(_bountyButton);
 
         // With the clock running this is no longer how a day is spent — it is how a day is skipped.
         // The dojo works through the day either way; this only refuses to wait for it.
         _restButton = new Button { Text = "Skip to tomorrow" };
-        _restButton.Pressed += Rest;
+        _restButton.Pressed += Guarded(_dojo, Rest);
         buttons.AddChild(_restButton);
 
         _log = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -221,7 +221,7 @@ public sealed partial class DayScreen : DojoScreen
 
             Patron patron = card.Patron;
             Button gift = new() { Text = $"Send a gift ({card.GiftPrice})", Disabled = !card.CanGift };
-            gift.Pressed += () =>
+            gift.Pressed += Guarded(_dojo, () =>
             {
                 if (_dojo.SendGift(patron))
                 {
@@ -229,7 +229,7 @@ public sealed partial class DayScreen : DojoScreen
                 }
 
                 Refresh();
-            };
+            });
 
             line.AddChild(gift);
             _patronRows.AddChild(line);

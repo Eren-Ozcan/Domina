@@ -35,6 +35,27 @@ public static class SaveSlot
     /// </remarks>
     private const string BackupPath = "user://dojo.json.bak";
 
+    /// <summary>
+    /// The run's move journal — every decision the player made, in order.
+    /// </summary>
+    /// <remarks>
+    /// It sits beside the save rather than inside it, because the two answer different questions. The
+    /// save is <b>where the run stands</b>; the journal is <b>how it got there</b>, and a seed plus the
+    /// journal is enough to walk the whole run again in a test without opening the engine
+    /// (<see cref="Domina.Core.Dojo.Journal.MoveReplay"/>).
+    /// </remarks>
+    public const string JournalPath = "user://moves.jsonl";
+
+    /// <summary>
+    /// How many of the live journal's moves are already in the file.
+    /// </summary>
+    /// <remarks>
+    /// The file is <b>appended to</b>, never rewritten. A loaded save comes back with an empty journal
+    /// in memory while the file still holds every earlier day, so rewriting it from memory would throw
+    /// the run's history away on the first autosave after a load.
+    /// </remarks>
+    private static int _writtenMoves;
+
     /// <summary>Is there a save to load?</summary>
     public static bool Exists() => FileAccess.FileExists(Path);
 
@@ -55,6 +76,8 @@ public static class SaveSlot
 
             file.StoreString(json);
         }
+
+        AppendMoves(dojo);
 
         Roll();
         return Swap();
@@ -96,6 +119,52 @@ public static class SaveSlot
         {
             dir.Remove(BackupPath);
         }
+
+        // And so does the journal: a new run opens its own, and moves from a dead season above a new
+        // Start line would make the file unreplayable.
+        if (dir.FileExists(JournalPath))
+        {
+            dir.Remove(JournalPath);
+        }
+
+        _writtenMoves = 0;
+    }
+
+    /// <summary>
+    /// Adds the moves made since the last write to the journal file.
+    /// </summary>
+    /// <remarks>
+    /// A journal that cannot be written does <b>not</b> fail the save: the save is the player's run and
+    /// the journal is our test data, and losing the second must never cost him the first.
+    /// </remarks>
+    private static void AppendMoves(DojoState dojo)
+    {
+        if (dojo.Journal.Count <= _writtenMoves)
+        {
+            return;
+        }
+
+        string lines = string.Concat(
+            dojo.Journal.Moves.Skip(_writtenMoves).Select(m => m.ToJson() + "\n"));
+
+        bool existing = FileAccess.FileExists(JournalPath);
+        using FileAccess? file = FileAccess.Open(
+            JournalPath,
+            existing ? FileAccess.ModeFlags.ReadWrite : FileAccess.ModeFlags.Write);
+
+        if (file is null)
+        {
+            GD.PushWarning($"The move journal could not be written: {FileAccess.GetOpenError()}");
+            return;
+        }
+
+        if (existing)
+        {
+            file.SeekEnd();
+        }
+
+        file.StoreString(lines);
+        _writtenMoves = dojo.Journal.Count;
     }
 
     /// <summary>Yesterday's text, or <c>null</c> if there is none.</summary>

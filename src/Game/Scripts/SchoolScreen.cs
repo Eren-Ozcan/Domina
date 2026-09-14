@@ -110,7 +110,7 @@ public sealed partial class SchoolScreen : DojoScreen
             StaffRole role = post.Role;
             bool filled = post.Filled;
             Button button = new() { Text = filled ? "Let him go" : "Hire" };
-            button.Pressed += () =>
+            button.Pressed += Guarded(_dojo, () =>
             {
                 if (filled)
                 {
@@ -123,7 +123,7 @@ public sealed partial class SchoolScreen : DojoScreen
 
                 Persist();
                 Refresh();
-            };
+            });
 
             _posts.AddChild(button);
         }
@@ -138,7 +138,7 @@ public sealed partial class SchoolScreen : DojoScreen
         panel.AddChild(_detail);
 
         _buyButton = new Button { Text = "Buy" };
-        _buyButton.Pressed += Buy;
+        _buyButton.Pressed += Guarded(_dojo, Buy);
         panel.AddChild(_buyButton);
 
         _notice = new Label();
@@ -178,11 +178,11 @@ public sealed partial class SchoolScreen : DojoScreen
                 button.AddThemeColorOverride("font_color", StateColor(node.State));
 
                 SchoolNodeId id = node.Id;
-                button.Pressed += () =>
+                button.Pressed += Guarded(_dojo, () =>
                 {
                     _selected = id;
                     Refresh();
-                };
+                });
 
                 box.AddChild(button);
             }
