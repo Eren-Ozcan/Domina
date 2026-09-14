@@ -1,0 +1,238 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --ground: #111215;   /* UiKit.Ground   */
+      --surface: #1c1c21;  /* UiKit.Surface  */
+      --raised: #25262b;   /* UiKit.Raised   */
+      --edge: #383941;     /* UiKit.Edge     */
+      --ink: #e0dfd7;      /* UiKit.Ink      */
+      --muted: #808188;    /* UiKit.Muted    */
+      --heading: #b89e66;  /* UiKit.Heading  */
+      --good: #7da878;     /* UiKit.Good     */
+      --pending: #ccad5c;  /* UiKit.Pending  */
+      --warning: #c26661;  /* UiKit.Warning  */
+      --indigo: #5c6ea8;   /* GDD 12 - the player's side  */
+      --vermilion: #be3a22;/* GDD 12 - blood and critical only */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: var(--ground); color: var(--ink);
+      font-family: "Open Sans", system-ui, sans-serif; font-size: 16px;
+    }
+    a { color: var(--heading); } a:hover { color: var(--pending); }
+    .panel { background: var(--surface); border: 1px solid var(--edge); border-radius: 4px; padding: 12px 14px; }
+    .sec { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--heading);
+           letter-spacing: 0.06em; text-transform: uppercase; }
+    .sec::before { content: ""; width: 2px; height: 12px; background: var(--heading); flex: none; }
+    .note { font-size: 13px; color: var(--muted); }
+    .fig { font-size: 20px; }
+    .btn { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+           padding: 7px 14px; font-size: 16px; color: var(--ink); text-align: center; }
+    .btn.primary { background: #384233; color: var(--good); }
+    .btn.danger { background: #2b1917; border-color: #5a2e29; color: var(--warning); }
+    .btn.off { background: #1c1c21; color: var(--muted); }
+    .rule { height: 1px; background: var(--edge); }
+    .chip { min-width: 84px; background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+            padding: 7px 10px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .chip .cap { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .chip .trend { font-size: 12px; color: var(--muted); }
+    .chip .state { height: 3px; align-self: stretch; }
+    .tabs { display: flex; gap: 6px; }
+    .tab { padding: 7px 14px; border-radius: 3px 3px 0 0; font-size: 16px; color: var(--muted); }
+    .tab.on { background: var(--raised); color: var(--heading); box-shadow: inset 0 -2px 0 var(--heading); }
+    .meter { background: #1a1a1f; border-radius: 2px; height: 8px; overflow: hidden; }
+    .meter > i { display: block; height: 100%; background: var(--heading); border-radius: 2px; }
+    .row { display: flex; }
+    .card { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px; padding: 10px 12px; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 18px 24px 20px; gap: 14px">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--edge)">
+    <div class="tabs">
+      <div class="tab">Day</div>
+      <div class="tab">Roster</div>
+      <div class="tab on">Market</div>
+      <div class="tab">School</div>
+      <div class="tab">Armoury</div>
+      <div class="tab">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 7px">
+      <div style="display: flex; flex-direction: column; gap: 3px; width: 220px">
+        <div class="note" style="display: flex; justify-content: space-between">
+          <span>Hour of the Horse</span><span style="color: var(--ink)">Day 23 of 60</span>
+        </div>
+        <div class="meter"><i style="width: 38%"></i></div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <div class="btn" style="padding: 5px 11px">II</div>
+        <div class="btn off" style="padding: 5px 11px">1&times;</div>
+        <div class="btn" style="padding: 5px 11px; color: var(--heading); border-color: var(--heading)">2&times;</div>
+        <div class="btn off" style="padding: 5px 11px">4&times;</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 26px">The Market</div>
+      <div class="note">Every price is on its own button, and every stall says how long the stock will last.</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="chip" style="min-width: 132px">
+      <div class="fig">412</div><div class="cap">gold</div>
+      <div class="trend">&minus;96 if you fill up</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- the stalls. Buy and sell are the same row shape, unlike the reference. -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+      <div class="sec">The stalls</div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span>Rice</span><span class="note">2 gold each</span>
+          </div>
+          <div class="fig">96 <span class="note" style="font-size: 13px">in store</span></div>
+          <div class="meter" style="height: 6px"><i style="width: 46%; background: var(--pending)"></i></div>
+          <div class="note" style="color: var(--pending)">&minus;7 a day &mdash; 13 days left</div>
+          <div style="display: flex; gap: 6px">
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Buy 10 &middot; 20g</div>
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Sell 10 &middot; 14g</div>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span>Water</span><span class="note">1 gold each</span>
+          </div>
+          <div class="fig">140 <span class="note" style="font-size: 13px">in store</span></div>
+          <div class="meter" style="height: 6px"><i style="width: 70%; background: var(--good)"></i></div>
+          <div class="note">&minus;7 a day &mdash; 20 days left</div>
+          <div style="display: flex; gap: 6px">
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Buy 10 &middot; 10g</div>
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Sell 10 &middot; 7g</div>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 8px; border-color: #5a2e29">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span>Medicine</span><span class="note">12 gold each</span>
+          </div>
+          <div class="fig" style="color: var(--warning)">3 <span class="note" style="font-size: 13px">in store</span></div>
+          <div class="meter" style="height: 6px"><i style="width: 12%; background: var(--warning)"></i></div>
+          <div class="note" style="color: var(--warning)">&minus;2 a day &mdash; Genji runs dry in 2</div>
+          <div style="display: flex; gap: 6px">
+            <div class="btn primary" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Buy 6 &middot; 72g</div>
+            <div class="btn off" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Sell &mdash; a man needs it</div>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span>Sake</span><span class="note">34 gold a cask</span>
+          </div>
+          <div class="fig">1 <span class="note" style="font-size: 13px">cask</span></div>
+          <div class="meter" style="height: 6px"><i style="width: 25%; background: var(--indigo)"></i></div>
+          <div class="note">No daily drain. It sits until you call a feast.</div>
+          <div style="display: flex; gap: 6px">
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Buy 1 &middot; 34g</div>
+            <div class="btn" style="flex-grow: 1; font-size: 14px; padding: 6px 8px">Sell 1 &middot; 22g</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">A feast</div>
+      <div style="display: flex; gap: 12px; align-items: center">
+        <div class="card" style="flex-grow: 1; display: flex; flex-direction: column; gap: 5px">
+          <div>Two casks and a night off. Every man's composure climbs, and tomorrow nobody trains.</div>
+          <div class="note">Composure +18 across the mat &middot; one day lost &middot; 2 sake, 12 rice</div>
+        </div>
+        <div class="btn off" style="flex: none">Call a feast &mdash; you have 1 cask of 2</div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">What the day will cost either way</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+        <div class="card" style="display: flex; flex-direction: column; gap: 5px">
+          <div class="note">Rice and water for four men and two masters</div>
+          <div class="fig">7 rice &middot; 7 water</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 5px">
+          <div class="note">The infirmary</div>
+          <div class="fig">2 medicine</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 5px">
+          <div class="note">Lord Ii carries Ren's rice</div>
+          <div class="fig" style="color: var(--good)">&minus;1 rice saved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the market is also the junction: recruits and the pit -->
+    <div class="panel" style="width: 470px; display: flex; flex-direction: column; gap: 10px">
+      <div class="sec">Also in the town</div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>Take a recruit from chat</span><span class="fig">40 gold</span>
+        </div>
+        <div class="note">214 in the pool &middot; 9 have typed <span style="color: var(--ink)">!no</span></div>
+        <div class="note">The name is drawn at random and you may change it before he steps on the mat.</div>
+        <div class="btn off">The mat is full &mdash; six of six</div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>Hire a master</span><span class="fig">180 gold</span>
+        </div>
+        <div class="note">A wandering instructor. Training +8% while he stays, and he eats.</div>
+        <div class="btn">Hire him</div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">The pit behind the rice store</div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>A blind bout</span><span class="fig" style="color: var(--good)">310 gold</span>
+        </div>
+        <div class="note">You are not told who he is fighting. Choose the kit knowing nothing.</div>
+        <div class="note" style="color: var(--warning)">Lethal, like every fight that leaves the dojo.</div>
+        <div class="btn danger">Enter a man</div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">Sparring on the mat</div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div>Your own two against each other. No gold, no death &mdash; wounds, gains and a bruised mood.</div>
+        <div class="note">The only safe way to try a recruit, or a maimed man's new class.</div>
+        <div class="btn">Set a bout</div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="rule"></div>
+      <div class="note">
+        Prices move with the province. A village you have cleared sells cheaper for a while.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

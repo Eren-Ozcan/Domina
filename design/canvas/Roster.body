@@ -1,0 +1,231 @@
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 18px 24px 20px; gap: 14px">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--edge)">
+    <div class="tabs">
+      <div class="tab">Day</div>
+      <div class="tab on">Roster</div>
+      <div class="tab">Market</div>
+      <div class="tab">School</div>
+      <div class="tab">Armoury</div>
+      <div class="tab">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 7px">
+      <div style="display: flex; flex-direction: column; gap: 3px; width: 220px">
+        <div class="note" style="display: flex; justify-content: space-between">
+          <span>Hour of the Horse</span><span style="color: var(--ink)">Day 23 of 60</span>
+        </div>
+        <div class="meter"><i style="width: 38%"></i></div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <div class="btn" style="padding: 5px 11px">II</div>
+        <div class="btn off" style="padding: 5px 11px">1&times;</div>
+        <div class="btn" style="padding: 5px 11px; color: var(--heading); border-color: var(--heading)">2&times;</div>
+        <div class="btn off" style="padding: 5px 11px">4&times;</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 26px">The Roster</div>
+      <div class="note">Four of six places filled. A man leaves this list only by death, seppuku or retirement.</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="chip" style="min-width: 96px"><div class="fig">4</div><div class="cap">on the mat</div></div>
+    <div class="chip" style="min-width: 96px"><div class="fig" style="color: var(--warning)">1</div><div class="cap">wounded</div></div>
+    <div class="chip" style="min-width: 96px"><div class="fig">2</div><div class="cap">masters</div></div>
+    <div class="chip" style="min-width: 96px"><div class="fig">&minus;7</div><div class="cap">food / day</div></div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- the list. The same unit card as the day screen, the arena and the contract. -->
+    <div class="panel" style="width: 400px; display: flex; flex-direction: column; gap: 8px">
+      <div class="sec">On the mat</div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center; border-color: var(--heading)">
+        <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span style="color: var(--heading)">Hattori Sada</span><span class="note">Kensei &middot; 14</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 100%; background: var(--good)"></i></div>
+          <div class="note">148 / 148 &middot; 9 won, 2 lost</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center">
+        <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Kuroda Ren</span><span class="note">Sohei &middot; 11</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 74%; background: var(--pending)"></i></div>
+          <div class="note">92 / 124 &middot; left eye gone</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center">
+        <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Mori Ayame</span><span class="note">Yumi &middot; 9</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 100%; background: var(--good)"></i></div>
+          <div class="note">96 / 96 &middot; 3 won, 0 lost</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center">
+        <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--warning); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Saito Genji</span><span class="note">Ronin &middot; 7</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 22%; background: var(--warning)"></i></div>
+          <div class="note" style="color: var(--warning)">Infirmary &middot; right arm gone</div>
+        </div>
+      </div>
+
+      <div class="rule" style="margin: 4px 0"></div>
+      <div class="sec">Masters</div>
+      <div class="card" style="display: flex; gap: 10px; align-items: center; opacity: 0.8">
+        <div style="width: 36px; height: 36px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+          <div>Ishikawa Tora</div>
+          <div class="note">Retired, 21 victories &middot; training +12%</div>
+        </div>
+      </div>
+      <div class="card" style="display: flex; gap: 10px; align-items: center; opacity: 0.8">
+        <div style="width: 36px; height: 36px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+          <div>Nagai Hisa</div>
+          <div class="note">Retired, both legs gone &middot; medicine +1 / day</div>
+        </div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="btn off">Take a recruit &mdash; the mat is full at 6, and the pool is empty</div>
+    </div>
+
+    <!-- the man. Browsed from inside the panel, never by going back to the list. -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+          <div style="font-size: 20px; color: var(--heading)">Hattori Sada</div>
+          <div class="note">Kensei &middot; drawn from chat, day 4 &middot; two-hand blade</div>
+        </div>
+        <div style="flex-grow: 1"></div>
+        <div class="btn" style="padding: 5px 12px">&lsaquo;</div>
+        <div class="note">1 of 4</div>
+        <div class="btn" style="padding: 5px 12px">&rsaquo;</div>
+      </div>
+
+      <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+        <!-- the figure, the wound map and the honour bar -->
+        <div style="width: 300px; display: flex; flex-direction: column; gap: 12px">
+          <div class="card" style="height: 330px; display: flex; align-items: center; justify-content: center; background: #16171c">
+            <svg width="150" height="290" viewBox="0 0 150 290" aria-label="The warrior, drawn as paper pieces">
+              <g fill="#1d2030" stroke="#5c6ea8" stroke-width="2" stroke-linejoin="round">
+                <path d="M52 34h46l10 20H42z" />
+                <circle cx="75" cy="26" r="17" />
+                <path d="M50 58h50l8 76H42z" />
+                <path d="M34 62h20l-4 34H32z" />
+                <path d="M96 62h20l2 34h-18z" />
+                <path d="M36 96h16l4 56H38z" />
+                <path d="M98 96h16l-2 56H96z" />
+                <path d="M44 134h62l-4 34H48z" />
+                <path d="M50 168h22l-2 62H50z" />
+                <path d="M78 168h22l2 62H80z" />
+                <path d="M48 230h26l2 34H48z" />
+                <path d="M80 230h26l-2 34H80z" />
+              </g>
+            </svg>
+          </div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between">
+              <span class="note">Health</span><span>148 / 148</span>
+            </div>
+            <div class="meter" style="height: 10px"><i style="width: 100%; background: var(--good)"></i></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px">
+              <span class="note">Composure</span><span>He is content</span>
+            </div>
+            <div class="meter" style="height: 10px"><i style="width: 78%; background: var(--indigo)"></i></div>
+            <div class="note">The same bar reads a man's mood and a patron's regard.</div>
+          </div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 5px">
+            <div class="note">Scars</div>
+            <div style="font-size: 15px">A cut above the right eye &mdash; no penalty, it only shows.</div>
+            <div class="note">All four limbs. Nothing severed.</div>
+          </div>
+        </div>
+
+        <!-- training in two layers: the share of his day, then how far he has come -->
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+          <div class="sec">How he spends the day</div>
+          <div style="display: grid; grid-template-columns: 96px 1fr 56px 64px; gap: 8px 12px; align-items: center; font-size: 15px">
+            <span>Blade</span>
+            <div class="meter" style="height: 8px"><i style="width: 60%"></i></div>
+            <span style="text-align: right">14</span><span class="note" style="text-align: right">34 pts</span>
+
+            <span>Footwork</span>
+            <div class="meter" style="height: 8px"><i style="width: 20%"></i></div>
+            <span style="text-align: right">13</span><span class="note" style="text-align: right">62 pts</span>
+
+            <span>Guard</span>
+            <div class="meter" style="height: 8px"><i style="width: 20%"></i></div>
+            <span style="text-align: right">13</span><span class="note" style="text-align: right">49 pts</span>
+
+            <span>Strength</span>
+            <div class="meter" style="height: 8px"><i style="width: 0%"></i></div>
+            <span style="text-align: right">10</span><span class="note" style="text-align: right">148 hp</span>
+
+            <span>Meditation</span>
+            <div class="meter" style="height: 8px"><i style="width: 0%"></i></div>
+            <span style="text-align: right">4</span><span class="note" style="text-align: right">12 pts</span>
+          </div>
+          <div class="note">The five shares always add to one day. Raising one lowers the rest.</div>
+
+          <div class="rule"></div>
+          <div class="sec">How he fights</div>
+          <div style="display: flex; gap: 8px">
+            <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">79</div><div class="cap">aggression</div></div>
+            <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">21</div><div class="cap">guard up</div></div>
+            <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">56</div><div class="cap">footwork</div></div>
+            <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">50</div><div class="cap">stamina</div></div>
+            <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">18%</div><div class="cap">bind chance</div></div>
+          </div>
+          <div class="note">
+            Nothing here is hidden. The resolver reads these five numbers and nothing else about him.
+          </div>
+
+          <div class="rule"></div>
+          <div class="sec">His kit</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <div class="card" style="display: flex; justify-content: space-between">
+              <span>Nodachi, folded steel</span><span class="note">A +9 &middot; D +4</span>
+            </div>
+            <div class="card" style="display: flex; justify-content: space-between">
+              <span>Half iron, mixed set</span><span class="note">7 slots &middot; 2 bare</span>
+            </div>
+          </div>
+          <div class="note" style="color: var(--pending)">
+            Both forearms are bare. A blade that takes his sword arm takes fourteen levels with it.
+          </div>
+
+          <div style="flex-grow: 1"></div>
+          <div class="rule"></div>
+          <div style="display: flex; gap: 10px; align-items: center">
+            <div class="btn">Send him to the armoury</div>
+            <div class="btn">Set his day</div>
+            <div style="flex-grow: 1"></div>
+            <div class="btn off">Retire him &mdash; needs 15 victories, he has 9</div>
+            <div class="btn danger">Offer him the blade</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

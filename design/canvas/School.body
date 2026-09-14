@@ -1,0 +1,193 @@
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 18px 24px 20px; gap: 14px">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--edge)">
+    <div class="tabs">
+      <div class="tab">Day</div>
+      <div class="tab">Roster</div>
+      <div class="tab">Market</div>
+      <div class="tab on">School</div>
+      <div class="tab">Armoury</div>
+      <div class="tab">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 7px">
+      <div style="display: flex; flex-direction: column; gap: 3px; width: 220px">
+        <div class="note" style="display: flex; justify-content: space-between">
+          <span>Hour of the Horse</span><span style="color: var(--ink)">Day 23 of 60</span>
+        </div>
+        <div class="meter"><i style="width: 38%"></i></div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <div class="btn" style="padding: 5px 11px">II</div>
+        <div class="btn off" style="padding: 5px 11px">1&times;</div>
+        <div class="btn" style="padding: 5px 11px; color: var(--heading); border-color: var(--heading)">2&times;</div>
+        <div class="btn off" style="padding: 5px 11px">4&times;</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 26px">The School</div>
+      <div class="note">What the dojo teaches, and how each man spends his day. A locked door always says who holds the key.</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="chip" style="min-width: 108px"><div class="fig">412</div><div class="cap">gold</div></div>
+    <div class="chip" style="min-width: 128px"><div class="fig">+20%</div><div class="cap">training</div><div class="trend">two masters</div></div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- the tree. A door that opens a class is drawn as a door, not as one more node. -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+      <div class="sec">What the dojo can teach</div>
+
+      <div style="display: flex; gap: 26px; flex-grow: 1; min-height: 0">
+
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+          <div class="note">The blade</div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; border-color: var(--good)">
+            <span>Reading the guard</span><span class="note" style="color: var(--good)">taught</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; border-color: var(--good)">
+            <span>Winning the bind</span><span class="note" style="color: var(--good)">taught</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; border-color: var(--heading)">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span>The second cut</span>
+              <span class="note">A won bind is followed up in the same beat. Bind damage +30%.</span>
+            </div>
+            <span class="fig" style="color: var(--heading)">64g</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; opacity: 0.5">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span>Two blades</span>
+              <span class="note">Needs the second cut first.</span>
+            </div>
+            <span class="fig">110g</span>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+
+          <!-- a class door: bigger, bordered, and it says what it costs in days -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--heading); background: #22201a; padding: 14px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <span style="font-size: 20px; color: var(--heading)">Open the Kensei road</span>
+              <span class="fig" style="color: var(--heading)">460g</span>
+            </div>
+            <div class="note">A class, not a skill. Sixteen days of the masters' time, and every man on the mat may take it from then on.</div>
+            <div style="display: flex; gap: 10px; align-items: center">
+              <div class="meter" style="height: 8px; flex-grow: 1"><i style="width: 0%"></i></div>
+              <span class="note">16 days</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 1px; align-self: stretch; background: var(--edge)"></div>
+
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+          <div class="note">The body and the hut</div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; border-color: var(--good)">
+            <span>Breath and footwork</span><span class="note" style="color: var(--good)">taught</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span>Field dressing</span>
+              <span class="note">A wound closes a day sooner, and medicine goes further.</span>
+            </div>
+            <span class="fig">48g</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span>The stump and the strap</span>
+              <span class="note">A man who has lost an arm can still be taught to hold a line.</span>
+            </div>
+            <span class="fig">120g</span>
+          </div>
+          <div style="width: 1px; height: 12px; background: var(--edge); margin-left: 18px"></div>
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; opacity: 0.55">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <span>A private room</span>
+              <span class="note" style="color: var(--pending)">Locked: the dojo has no second floor. Build it in the Province screen.</span>
+            </div>
+            <span class="fig">200g</span>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 6px">
+            <div class="note">The masters</div>
+            <div style="display: flex; justify-content: space-between"><span>Ishikawa Tora</span><span class="note">training +12%</span></div>
+            <div style="display: flex; justify-content: space-between"><span>Nagai Hisa</span><span class="note">medicine +1 / day</span></div>
+            <div class="note">A retired man teaches. Neither takes the field again.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- each man's day -->
+    <div class="panel" style="width: 560px; display: flex; flex-direction: column; gap: 10px">
+      <div class="sec">How the mat spends tomorrow</div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px; border-color: var(--heading)">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="color: var(--heading)">Hattori Sada</span><span class="note">Kensei &middot; 14</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 90px 1fr 44px; gap: 6px 10px; align-items: center; font-size: 14px">
+          <span>Blade</span><div class="meter" style="height: 7px"><i style="width: 60%"></i></div><span style="text-align: right">60%</span>
+          <span>Footwork</span><div class="meter" style="height: 7px"><i style="width: 20%"></i></div><span style="text-align: right">20%</span>
+          <span>Guard</span><div class="meter" style="height: 7px"><i style="width: 20%"></i></div><span style="text-align: right">20%</span>
+          <span>Strength</span><div class="meter" style="height: 7px"><i style="width: 0%"></i></div><span style="text-align: right">0%</span>
+          <span>Meditation</span><div class="meter" style="height: 7px"><i style="width: 0%"></i></div><span style="text-align: right">0%</span>
+        </div>
+        <div class="note">At this share, blade 14 &rarr; 15 in three days.</div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>Kuroda Ren</span><span class="note">Sohei &middot; 11 &middot; left eye gone</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 90px 1fr 44px; gap: 6px 10px; align-items: center; font-size: 14px">
+          <span>Blade</span><div class="meter" style="height: 7px"><i style="width: 20%"></i></div><span style="text-align: right">20%</span>
+          <span>Footwork</span><div class="meter" style="height: 7px"><i style="width: 40%"></i></div><span style="text-align: right">40%</span>
+          <span>Guard</span><div class="meter" style="height: 7px"><i style="width: 40%"></i></div><span style="text-align: right">40%</span>
+          <span>Strength</span><div class="meter" style="height: 7px"><i style="width: 0%"></i></div><span style="text-align: right">0%</span>
+          <span>Meditation</span><div class="meter" style="height: 7px"><i style="width: 0%"></i></div><span style="text-align: right">0%</span>
+        </div>
+        <div class="note" style="color: var(--pending)">One eye. Footwork will not give him back the depth he lost.</div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>Mori Ayame</span><span class="note">Yumi &middot; 9</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 90px 1fr 44px; gap: 6px 10px; align-items: center; font-size: 14px">
+          <span>Bow</span><div class="meter" style="height: 7px"><i style="width: 50%"></i></div><span style="text-align: right">50%</span>
+          <span>Footwork</span><div class="meter" style="height: 7px"><i style="width: 10%"></i></div><span style="text-align: right">10%</span>
+          <span>Guard</span><div class="meter" style="height: 7px"><i style="width: 10%"></i></div><span style="text-align: right">10%</span>
+          <span>Strength</span><div class="meter" style="height: 7px"><i style="width: 30%"></i></div><span style="text-align: right">30%</span>
+          <span>Meditation</span><div class="meter" style="height: 7px"><i style="width: 0%"></i></div><span style="text-align: right">0%</span>
+        </div>
+        <div class="note">A heavier draw needs the strength before the bow is worth raising.</div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px; opacity: 0.6">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span>Saito Genji</span><span class="note" style="color: var(--warning)">Infirmary &middot; right arm gone</span>
+        </div>
+        <div class="note" style="color: var(--warning)">A man in the infirmary trains at nothing. Three days of medicine left.</div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="rule"></div>
+      <div style="display: flex; gap: 10px">
+        <div class="btn" style="flex-grow: 1">Even shares for everyone</div>
+        <div class="btn primary" style="flex-grow: 1">Keep these shares</div>
+      </div>
+    </div>
+  </div>
+</div>

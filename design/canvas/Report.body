@@ -1,0 +1,153 @@
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 26px 24px 20px; gap: 16px">
+
+  <!-- the one place the display face is spent. Everywhere else uses the same body type. -->
+  <div style="display: flex; align-items: flex-end; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 44px; letter-spacing: 0.16em; color: var(--heading)">THE ROAD IS CLEAR</div>
+      <div class="note">Day 23 &middot; the Ashigara toll road &middot; two of your three came home</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="chip" style="min-width: 132px">
+      <div class="fig" style="color: var(--good)">+274</div><div class="cap">gold</div>
+      <div class="trend">240 &times; 1.14</div>
+    </div>
+    <div class="chip" style="min-width: 132px">
+      <div class="fig">3 <span style="font-size: 14px; color: var(--muted)">/ 3</span></div>
+      <div class="cap">heads taken</div>
+      <div class="trend" style="color: var(--good)">the gate is open</div>
+    </div>
+    <div class="chip" style="min-width: 132px">
+      <div class="fig" style="color: var(--good)">61 &rarr; 66%</div><div class="cap">standing</div>
+      <div class="trend">a close fight</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- what the fight taught them: the fastest way to grow a man -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+      <div class="sec">What the fight taught them</div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center; border-color: var(--good)">
+        <div style="width: 56px; height: 56px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span style="font-size: 20px">Hattori Sada</span>
+            <span class="note">Kensei &middot; 10 won, 2 lost</span>
+          </div>
+          <div style="display: flex; gap: 14px; font-size: 15px; color: var(--good)">
+            <span>Blade +12</span><span>Footwork +7</span><span>Guard +5</span><span>Strength +3</span>
+          </div>
+          <div class="note">Took the arm off Genba and finished him. Two days of drilling in one afternoon.</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center">
+        <div style="width: 56px; height: 56px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--warning); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span style="font-size: 20px">Kuroda Ren</span>
+            <span class="note" style="color: var(--warning)">Carried home &middot; 8 days in the infirmary</span>
+          </div>
+          <div style="display: flex; gap: 14px; font-size: 15px; color: var(--good)">
+            <span>Guard +9</span><span>Footwork +6</span><span>Blade +2</span>
+          </div>
+          <div class="note" style="color: var(--vermilion)">
+            A spear went through the left thigh. The leg stays &mdash; he will limp for the season.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center; border-color: #5a2e29; background: #1e1614">
+        <div style="width: 56px; height: 56px; border-radius: 2px; background: #16171c; border: 1px solid #5a2e29; flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span style="font-size: 20px; color: var(--warning)">Mori Ayame</span>
+            <span class="note" style="color: var(--warning)">Killed at the pass</span>
+          </div>
+          <div class="note">
+            Nine levels of the bow, three victories, twenty days on the mat. The fog took her sight of
+            the flank and a tollman reached her.
+          </div>
+          <div class="note" style="color: var(--muted)">
+            Her name goes on the board by the door. She does not come back.
+          </div>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">Carried back</div>
+      <div style="display: flex; gap: 10px">
+        <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">274</div><div class="cap">gold</div></div>
+        <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">1</div><div class="cap">head</div></div>
+        <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">1</div><div class="cap">iron kote</div></div>
+        <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig">12</div><div class="cap">rice</div></div>
+        <div class="chip" style="min-width: 0; flex-grow: 1"><div class="fig" style="color: var(--warning)">&minus;18</div><div class="cap">spent</div></div>
+      </div>
+      <div class="note">
+        Genba's kote came off the field. It fits Sada's bare arm, and it cost you nothing.
+      </div>
+    </div>
+
+    <!-- the season, and what is still owed to it -->
+    <div class="panel" style="width: 540px; display: flex; flex-direction: column; gap: 12px">
+      <div class="sec">The season so far</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Days</div><div class="fig">23 <span class="note" style="font-size: 13px">of 60</span></div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Fights</div><div class="fig">12 won &middot; 3 lost</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Buried</div><div class="fig" style="color: var(--warning)">4</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Limbs lost</div><div class="fig">3</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Retired to teach</div><div class="fig">2</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 4px">
+          <div class="note">Drawn from chat</div><div class="fig">7</div>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">What the season still wants</div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px; border-color: var(--good)">
+        <div style="display: flex; justify-content: space-between">
+          <span>Three heads before the final</span><span style="color: var(--good)">done</span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 100%; background: var(--good)"></i></div>
+        <div class="note">The gate is open. The final is fought on day 60 with whoever can still stand.</div>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div style="display: flex; justify-content: space-between">
+          <span>The summons</span><span style="color: var(--pending)">4 days</span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 60%; background: var(--pending)"></i></div>
+        <div class="note">Refusing it costs standing, not gold. Two clean men would be enough.</div>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 7px">
+        <div style="display: flex; justify-content: space-between">
+          <span>The mat</span><span class="note">3 of 6</span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 50%; background: var(--indigo)"></i></div>
+        <div class="note" style="color: var(--pending)">
+          Thin, with 37 days to go. Every man you take on eats rice from the day he arrives.
+        </div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="rule"></div>
+      <div class="note">
+        The crowd was roused: 68 called it honourable against 32. The multiplier on this purse was theirs.
+      </div>
+      <div style="display: flex; gap: 10px">
+        <div class="btn" style="flex-grow: 1">Read the fight again</div>
+        <div class="btn primary" style="flex-grow: 1">Back to the dojo</div>
+      </div>
+    </div>
+  </div>
+</div>

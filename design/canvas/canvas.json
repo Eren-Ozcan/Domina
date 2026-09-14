@@ -1,0 +1,43 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",    "title": "The Day",      "x": 0,    "y": 0,    "w": 1920, "h": 1080 },
+    { "file": "Roster.dc.html",  "title": "The Roster",   "x": 2040, "y": 0,    "w": 1920, "h": 1080 },
+    { "file": "Arena.dc.html",   "title": "The Arena",    "x": 4080, "y": 0,    "w": 1920, "h": 1080 },
+    { "file": "Report.dc.html",  "title": "The Report",   "x": 6120, "y": 0,    "w": 1920, "h": 1080 },
+    { "file": "Armoury.dc.html", "title": "The Armoury",  "x": 0,    "y": 1260, "w": 1920, "h": 1080 },
+    { "file": "Market.dc.html",  "title": "The Market",   "x": 2040, "y": 1260, "w": 1920, "h": 1080 },
+    { "file": "School.dc.html",  "title": "The School",   "x": 4080, "y": 1260, "w": 1920, "h": 1080 },
+    { "file": "Crowd.dc.html",   "title": "The Crowd",    "x": 6120, "y": 1260, "w": 1920, "h": 1080 }
+  ],
+  "annotations": [
+    {
+      "id": "chrome",
+      "x": 0,
+      "y": -230,
+      "w": 900,
+      "text": "The chrome is lifted from src/Game/Scripts/UiKit.cs, value for value: ground #111215, surface #1c1c21, raised #25262b, edge #383941, ink #e0dfd7, muted #808188, ochre #b89e66. Panels 4px radius on a 1px edge, chips 3px, tabs 3px with a 2px ochre underline, type 26 / 20 / 16 / 14 / 13.\n\nTwo roles are new, and both come from GDD 12: indigo #5c6ea8 for your own side, vermilion #be3a22 for blood and nothing else."
+    },
+    {
+      "id": "fixes",
+      "x": 2040,
+      "y": -230,
+      "w": 900,
+      "text": "Six things the reference game got wrong, fixed here:\n\n1 - one unit card, the same on the day screen, the roster, the contract and the arena\n2 - the store shows the daily drain, not only the stock\n3 - the cost sits beside the decision it belongs to\n4 - a live party counter over a disabled confirm\n5 - a locked option always says who holds the key\n6 - an irreversible act is never dressed like Close"
+    },
+    {
+      "id": "arena-note",
+      "x": 4080,
+      "y": -230,
+      "w": 900,
+      "text": "The arena draws the resolver's event stream and decides nothing. Every line in the right-hand log is an event the core emitted, which is why the same fight can be run ten thousand times with no engine open.\n\nThe crowd bar along the bottom is the only thing chat touches mid-fight, and pulling a man out is the only order you may give."
+    },
+    {
+      "id": "crowd-note",
+      "x": 6120,
+      "y": 1500,
+      "w": 900,
+      "text": "The Crowd panel docks to the right of any screen rather than owning a tab. With nobody watching, the stream disappears and the reading bar stays - no invented usernames, per GDD 9."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

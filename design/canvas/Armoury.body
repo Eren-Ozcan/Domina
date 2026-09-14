@@ -1,0 +1,206 @@
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 18px 24px 20px; gap: 14px">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--edge)">
+    <div class="tabs">
+      <div class="tab">Day</div>
+      <div class="tab">Roster</div>
+      <div class="tab">Market</div>
+      <div class="tab">School</div>
+      <div class="tab on">Armoury</div>
+      <div class="tab">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 7px">
+      <div style="display: flex; flex-direction: column; gap: 3px; width: 220px">
+        <div class="note" style="display: flex; justify-content: space-between">
+          <span>Hour of the Horse</span><span style="color: var(--ink)">Day 23 of 60</span>
+        </div>
+        <div class="meter"><i style="width: 38%"></i></div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <div class="btn" style="padding: 5px 11px">II</div>
+        <div class="btn off" style="padding: 5px 11px">1&times;</div>
+        <div class="btn" style="padding: 5px 11px; color: var(--heading); border-color: var(--heading)">2&times;</div>
+        <div class="btn off" style="padding: 5px 11px">4&times;</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: flex-end; gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 26px">The Armoury</div>
+      <div class="note">Armour is worn slot by slot. A blow is read from the piece it lands on, not from an average.</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="chip" style="min-width: 108px"><div class="fig">412</div><div class="cap">gold</div></div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- the man, and where the iron sits on him -->
+    <div class="panel" style="width: 560px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div class="sec">Hattori Sada</div>
+        <div style="flex-grow: 1"></div>
+        <div class="btn" style="padding: 5px 12px">&lsaquo;</div>
+        <div class="note">1 of 4</div>
+        <div class="btn" style="padding: 5px 12px">&rsaquo;</div>
+      </div>
+
+      <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+        <div class="card" style="width: 250px; background: #16171c; display: flex; align-items: center; justify-content: center; position: relative">
+          <svg width="180" height="380" viewBox="0 0 180 380">
+            <g stroke-linejoin="round" stroke-width="2">
+              <!-- iron: filled. bare: outline only. -->
+              <circle cx="90" cy="34" r="22" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M56 62h68l12 22H44z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M60 92h60l10 96H50z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M32 96h26l-4 40H28z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M122 96h26l4 40h-26z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M30 138h22l4 56H32z" fill="none" stroke="#c26661" stroke-dasharray="5 4" />
+              <path d="M128 138h22l-2 56h-22z" fill="none" stroke="#c26661" stroke-dasharray="5 4" />
+              <path d="M52 188h76l-6 44H58z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M60 232h28l-4 68H60z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M96 232h28l4 68H98z" fill="#2b2f42" stroke="#5c6ea8" />
+              <path d="M58 300h30l2 56H58z" fill="none" stroke="#808188" />
+              <path d="M96 300h30l-2 56H96z" fill="none" stroke="#808188" />
+            </g>
+          </svg>
+          <div class="note" style="position: absolute; bottom: 10px; left: 12px; right: 12px; text-align: center">
+            Filled is iron &middot; dashed red is bare &middot; grey is cloth
+          </div>
+        </div>
+
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 15px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Kabuto</span><span class="note">iron, horned</span><span>D +6</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Cuirass</span><span class="note">half iron</span><span>D +9</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Sode, right</span><span class="note">iron plate</span><span>D +4</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Sode, left</span><span class="note">iron plate</span><span>D +4</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--warning)">
+            <span>Kote, right</span><span class="note" style="color: var(--warning)">bare</span><span>&mdash;</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; color: var(--warning)">
+            <span>Kote, left</span><span class="note" style="color: var(--warning)">bare</span><span>&mdash;</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Kusazuri</span><span class="note">boards on cord</span><span>D +3</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Suneate, right</span><span class="note">hemp</span><span>D +1</span>
+          </div>
+          <div class="rule"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span>Suneate, left</span><span class="note">hemp</span><span>D +1</span>
+          </div>
+          <div style="flex-grow: 1"></div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 5px">
+            <div class="note">What the set weighs on him</div>
+            <div>28 kg &middot; footwork &minus;6 &middot; stamina drain +11%</div>
+          </div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 5px; border-color: #5a2e29">
+            <div class="note" style="color: var(--warning)">Where he will lose a limb</div>
+            <div>Either arm, 9% a clean hit. He is a fourteen-level blade.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- what the smith has, and what the swap costs -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+      <div class="sec">The counter &mdash; kote, right</div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center; border-color: var(--heading)">
+        <div style="width: 52px; height: 52px; border-radius: 2px; background: #20242f; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Iron kote, riveted</span><span class="fig" style="color: var(--heading)">86 gold</span>
+          </div>
+          <div class="note">D +5 &middot; 2.1 kg &middot; limb loss on that arm 9% &rarr; 4%</div>
+          <div class="note">Footwork &minus;1. You keep 326 gold.</div>
+        </div>
+        <div class="btn primary" style="flex: none">Fit it</div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center">
+        <div style="width: 52px; height: 52px; border-radius: 2px; background: #201d18; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Boards on cord</span><span class="fig">22 gold</span>
+          </div>
+          <div class="note">D +2 &middot; 1.4 kg &middot; limb loss 9% &rarr; 7%</div>
+          <div class="note">Cheap, and it looks it. The silhouette goes lumpy.</div>
+        </div>
+        <div class="btn" style="flex: none">Fit it</div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 14px; align-items: center; opacity: 0.6">
+        <div style="width: 52px; height: 52px; border-radius: 2px; background: #201d18; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Lacquered kote, lord's work</span><span class="fig">410 gold</span>
+          </div>
+          <div class="note">D +8 &middot; 2.4 kg &middot; limb loss 9% &rarr; 2%</div>
+          <div class="note" style="color: var(--warning)">
+            You hold 412 gold and owe 96 in rice on the fourth day. Not while the chest is this thin.
+          </div>
+        </div>
+        <div class="btn off" style="flex: none">Fit it</div>
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">The blade</div>
+      <div class="card" style="display: flex; gap: 14px; align-items: center">
+        <div style="width: 52px; height: 52px; border-radius: 2px; background: #20242f; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Nodachi, folded steel &mdash; worn now</span><span class="note">A +9 &middot; D +4</span>
+          </div>
+          <div class="note">Two hands &middot; reach long &middot; bind 18% &middot; he is 14 in this</div>
+        </div>
+      </div>
+      <div class="card" style="display: flex; gap: 14px; align-items: center">
+        <div style="width: 52px; height: 52px; border-radius: 2px; background: #201d18; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Kanabo, iron-studded</span><span class="fig">140 gold</span>
+          </div>
+          <div class="note">A +13 &middot; D +1 &middot; bind 4% &middot; he is 2 in this</div>
+          <div class="note" style="color: var(--pending)">
+            Harder hitting, and he swings it like a farmhand. Twelve levels of blade go unused.
+          </div>
+        </div>
+        <div class="btn" style="flex: none">Put it in his hands</div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="rule"></div>
+      <div class="sec">What the set will look like</div>
+      <div style="display: flex; gap: 10px; align-items: flex-end">
+        <div class="card" style="flex-grow: 1; display: flex; gap: 18px; align-items: flex-end; justify-content: center; background: #16171c; padding: 14px 12px">
+          <svg width="58" height="104" viewBox="0 0 58 104"><g fill="#23242a" stroke="#5c6ea8" stroke-width="2"><circle cx="29" cy="12" r="9"/><path d="M18 24h22l4 34H14z"/><path d="M20 58h8l-2 40h-8z"/><path d="M30 58h8l2 40h-8z"/></g></svg>
+          <svg width="70" height="104" viewBox="0 0 70 104"><g fill="#23242a" stroke="#5c6ea8" stroke-width="2"><circle cx="35" cy="12" r="10"/><path d="M16 24h38l8 12H8z"/><path d="M18 38h34l4 26H14z"/><path d="M22 64h10l-2 36h-10z"/><path d="M38 64h10l2 36h-10z"/></g></svg>
+          <svg width="86" height="104" viewBox="0 0 86 104"><g fill="#2b2f42" stroke="#5c6ea8" stroke-width="2"><path d="M28 6h30l10 12H18z"/><circle cx="43" cy="14" r="11"/><path d="M14 26h58l10 16H4z"/><path d="M18 42h50l4 26H14z"/><path d="M24 68h14l-2 32h-14z"/><path d="M48 68h14l2 32h-14z"/></g></svg>
+        </div>
+        <div class="note" style="width: 220px">
+          Bare, boards, half iron. The tier is told by how much room he takes up, not by colour &mdash;
+          colour has to keep the two sides apart.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

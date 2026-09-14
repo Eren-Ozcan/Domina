@@ -1,0 +1,215 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --ground: #111215;   /* UiKit.Ground   */
+      --surface: #1c1c21;  /* UiKit.Surface  */
+      --raised: #25262b;   /* UiKit.Raised   */
+      --edge: #383941;     /* UiKit.Edge     */
+      --ink: #e0dfd7;      /* UiKit.Ink      */
+      --muted: #808188;    /* UiKit.Muted    */
+      --heading: #b89e66;  /* UiKit.Heading  */
+      --good: #7da878;     /* UiKit.Good     */
+      --pending: #ccad5c;  /* UiKit.Pending  */
+      --warning: #c26661;  /* UiKit.Warning  */
+      --indigo: #5c6ea8;   /* GDD 12 - the player's side  */
+      --vermilion: #be3a22;/* GDD 12 - blood and critical only */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: var(--ground); color: var(--ink);
+      font-family: "Open Sans", system-ui, sans-serif; font-size: 16px;
+    }
+    a { color: var(--heading); } a:hover { color: var(--pending); }
+    .panel { background: var(--surface); border: 1px solid var(--edge); border-radius: 4px; padding: 12px 14px; }
+    .sec { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--heading);
+           letter-spacing: 0.06em; text-transform: uppercase; }
+    .sec::before { content: ""; width: 2px; height: 12px; background: var(--heading); flex: none; }
+    .note { font-size: 13px; color: var(--muted); }
+    .fig { font-size: 20px; }
+    .btn { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+           padding: 7px 14px; font-size: 16px; color: var(--ink); text-align: center; }
+    .btn.primary { background: #384233; color: var(--good); }
+    .btn.danger { background: #2b1917; border-color: #5a2e29; color: var(--warning); }
+    .btn.off { background: #1c1c21; color: var(--muted); }
+    .rule { height: 1px; background: var(--edge); }
+    .chip { min-width: 84px; background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+            padding: 7px 10px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .chip .cap { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .chip .trend { font-size: 12px; color: var(--muted); }
+    .chip .state { height: 3px; align-self: stretch; }
+    .tabs { display: flex; gap: 6px; }
+    .tab { padding: 7px 14px; border-radius: 3px 3px 0 0; font-size: 16px; color: var(--muted); }
+    .tab.on { background: var(--raised); color: var(--heading); box-shadow: inset 0 -2px 0 var(--heading); }
+    .meter { background: #1a1a1f; border-radius: 2px; height: 8px; overflow: hidden; }
+    .meter > i { display: block; height: 100%; background: var(--heading); border-radius: 2px; }
+    .row { display: flex; }
+    .card { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px; padding: 10px 12px; }
+  </style>
+</helmet>
+<div style="position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0d0e11">
+
+  <!-- the field: light paper, dark figures. Value carries the read, not hue (GDD 12). -->
+  <div style="position: absolute; inset: 0; background:
+       linear-gradient(180deg, #2a2620 0%, #3b352b 42%, #554c3c 72%, #6a5f4b 100%)"></div>
+  <div style="position: absolute; left: 0; right: 0; top: 300px; height: 4px; background: rgba(0,0,0,0.22)"></div>
+
+  <!-- fog and mud, the two field features named on the contract -->
+  <div style="position: absolute; left: 0; right: 0; top: 210px; height: 260px;
+              background: linear-gradient(180deg, rgba(200,196,184,0.00), rgba(200,196,184,0.16), rgba(200,196,184,0.00))"></div>
+
+  <!-- the paper grain and the vignette the shader lays over the whole screen -->
+  <div style="position: absolute; inset: 0; pointer-events: none;
+       background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%)"></div>
+
+  <!-- the fighters, as paper cut-outs on the sand -->
+  <svg style="position: absolute; left: 560px; top: 430px" width="240" height="360" viewBox="0 0 240 360">
+    <ellipse cx="120" cy="348" rx="66" ry="10" fill="rgba(0,0,0,0.35)" />
+    <g fill="#1a1d2b" stroke="#3f4a6d" stroke-width="3" stroke-linejoin="round">
+      <path d="M74 60h74l16 30H58z" />
+      <circle cx="111" cy="44" r="26" />
+      <path d="M70 96h82l12 116H56z" />
+      <path d="M44 102h30l-6 52H40z" />
+      <path d="M150 102h30l4 52h-28z" />
+      <path d="M48 154h26l6 84H50z" />
+      <path d="M154 154h26l-4 84h-24z" />
+      <path d="M62 212h96l-6 52H68z" />
+      <path d="M72 264h34l-4 82H72z" />
+      <path d="M116 264h34l4 82h-34z" />
+    </g>
+    <path d="M176 120 L232 26" stroke="#c9c3b2" stroke-width="7" stroke-linecap="round" />
+  </svg>
+
+  <svg style="position: absolute; left: 940px; top: 452px" width="230" height="340" viewBox="0 0 230 340">
+    <ellipse cx="115" cy="330" rx="62" ry="9" fill="rgba(0,0,0,0.35)" />
+    <g fill="#211a10" stroke="#8a6f3c" stroke-width="3" stroke-linejoin="round">
+      <path d="M70 56h70l14 28H56z" />
+      <circle cx="105" cy="40" r="24" />
+      <path d="M66 90h78l12 110H54z" />
+      <path d="M42 96h28l-6 50H38z" />
+      <path d="M142 96h28l4 50h-26z" />
+      <path d="M46 146h24l6 80H48z" />
+      <path d="M146 146h24l-4 80h-22z" />
+      <path d="M58 200h92l-6 50H64z" />
+      <path d="M68 250h32l-4 78H68z" />
+      <path d="M110 250h32l4 78h-32z" />
+    </g>
+    <!-- the only vermilion on screen: a fresh cut -->
+    <circle cx="64" cy="112" r="9" fill="#be3a22" />
+    <path d="M60 120 q-4 26 2 44" stroke="#be3a22" stroke-width="5" fill="none" stroke-linecap="round" />
+  </svg>
+
+  <!-- your side, top left. The same unit card as the roster and the contract. -->
+  <div style="position: absolute; left: 28px; top: 24px; display: flex; flex-direction: column; gap: 8px; width: 400px">
+    <div class="panel" style="display: flex; gap: 10px; align-items: center; border-color: var(--indigo); background: rgba(17,18,21,0.88)">
+      <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <div style="display: flex; justify-content: space-between">
+          <span>Hattori Sada</span><span class="fig">122 <span class="note" style="font-size: 13px">/ 148</span></span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 82%; background: var(--good)"></i></div>
+        <div class="note">Pressing &middot; stamina 61</div>
+      </div>
+    </div>
+    <div class="panel" style="display: flex; gap: 10px; align-items: center; border-color: var(--indigo); background: rgba(17,18,21,0.88)">
+      <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <div style="display: flex; justify-content: space-between">
+          <span>Kuroda Ren</span><span class="fig" style="color: var(--warning)">31 <span class="note" style="font-size: 13px">/ 124</span></span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 25%; background: var(--warning)"></i></div>
+        <div class="note" style="color: var(--warning)">Bleeding &middot; guard broken</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- theirs, top right -->
+  <div style="position: absolute; right: 28px; top: 24px; display: flex; flex-direction: column; gap: 8px; width: 400px">
+    <div class="panel" style="display: flex; gap: 10px; align-items: center; border-color: #8a6f3c; background: rgba(17,18,21,0.88)">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <div style="display: flex; justify-content: space-between">
+          <span class="fig">84 <span class="note" style="font-size: 13px">/ 160</span></span><span>Genba the Ear</span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 52%; background: #8a6f3c"></i></div>
+        <div class="note" style="text-align: right">Half iron &middot; right arm gone</div>
+      </div>
+      <div style="width: 44px; height: 44px; border-radius: 2px; background: #241d13; border: 1px solid #8a6f3c; flex: none"></div>
+    </div>
+    <div class="panel" style="display: flex; gap: 10px; align-items: center; border-color: #8a6f3c; background: rgba(17,18,21,0.88)">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+        <div style="display: flex; justify-content: space-between">
+          <span class="fig">0 <span class="note" style="font-size: 13px">/ 96</span></span><span class="note">Two of the toll gang</span>
+        </div>
+        <div class="meter" style="height: 8px"><i style="width: 0%; background: #8a6f3c"></i></div>
+        <div class="note" style="text-align: right">Both down</div>
+      </div>
+      <div style="width: 44px; height: 44px; border-radius: 2px; background: #1a1a1f; border: 1px solid var(--edge); flex: none"></div>
+    </div>
+  </div>
+
+  <!-- the clock, centred and small -->
+  <div style="position: absolute; left: 50%; top: 26px; transform: translateX(-50%);
+              display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="font-size: 26px; color: var(--heading)">2:39</div>
+    <div class="note">Mud &middot; dawn fog &middot; no quarter asked</div>
+  </div>
+
+  <!-- the event stream: the same stream the balance runs read, printed as it arrives -->
+  <div class="panel" style="position: absolute; right: 28px; top: 196px; width: 400px; height: 610px;
+              display: flex; flex-direction: column; gap: 7px; background: rgba(17,18,21,0.9)">
+    <div class="sec">What is happening</div>
+    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4">
+      <div><span class="note">2:44</span> Sada steps in on the outside.</div>
+      <div><span class="note">2:43</span> Genba blocks. <span class="note">Blades bind.</span></div>
+      <div><span class="note">2:42</span> Sada wins the bind. <span style="color: var(--good)">Genba is open.</span></div>
+      <div><span class="note">2:41</span> Sada cuts the right shoulder &mdash; <span style="color: var(--vermilion)">the arm comes away.</span></div>
+      <div><span class="note">2:41</span> <span style="color: var(--vermilion)">Genba is bleeding.</span> He keeps his feet.</div>
+      <div><span class="note">2:40</span> A tollman takes Ren from the flank. 18 through the guard.</div>
+      <div><span class="note">2:40</span> Ren's guard breaks. <span style="color: var(--warning)">He gives ground.</span></div>
+      <div><span class="note">2:39</span> Ren kills the tollman. <span class="note">Two of six left standing.</span></div>
+      <div><span class="note">2:39</span> <span style="color: var(--pending)">The mud is telling on Ren's footwork.</span></div>
+      <div style="flex-grow: 1"></div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="rule"></div>
+    <div class="note">
+      This is the resolver's own event stream. The arena only draws it &mdash; nothing here is
+      decided on screen.
+    </div>
+  </div>
+
+  <!-- the crowd, along the bottom: one aggregate reading, and no invented usernames -->
+  <div class="panel" style="position: absolute; left: 28px; right: 456px; bottom: 24px;
+              display: flex; align-items: center; gap: 20px; background: rgba(17,18,21,0.9)">
+    <div style="display: flex; flex-direction: column; gap: 5px; width: 420px">
+      <div style="display: flex; justify-content: space-between; font-size: 15px">
+        <span>The crowd</span><span style="color: var(--heading)">Roused &middot; reward &times;1.21</span>
+      </div>
+      <div class="meter" style="height: 10px">
+        <i style="width: 68%; background: linear-gradient(90deg, var(--indigo), var(--heading))"></i>
+      </div>
+      <div class="note">Bushi 68 &middot; Ronin 32 &mdash; 214 in chat, 9 opted out</div>
+    </div>
+    <div style="width: 1px; align-self: stretch; background: var(--edge)"></div>
+    <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0">
+      <div class="note">The one thing you may do in a fight</div>
+      <div style="font-size: 15px">Pulling a man out costs standing, every time, at the same price.</div>
+    </div>
+    <div style="display: flex; gap: 10px; flex: none">
+      <div class="btn danger">Pull Ren out</div>
+      <div class="btn off">Pull Sada out &mdash; he is winning</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

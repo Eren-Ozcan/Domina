@@ -1,0 +1,279 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --ground: #111215;   /* UiKit.Ground   */
+      --surface: #1c1c21;  /* UiKit.Surface  */
+      --raised: #25262b;   /* UiKit.Raised   */
+      --edge: #383941;     /* UiKit.Edge     */
+      --ink: #e0dfd7;      /* UiKit.Ink      */
+      --muted: #808188;    /* UiKit.Muted    */
+      --heading: #b89e66;  /* UiKit.Heading  */
+      --good: #7da878;     /* UiKit.Good     */
+      --pending: #ccad5c;  /* UiKit.Pending  */
+      --warning: #c26661;  /* UiKit.Warning  */
+      --indigo: #5c6ea8;   /* GDD 12 - the player's side  */
+      --vermilion: #be3a22;/* GDD 12 - blood and critical only */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+      background: var(--ground); color: var(--ink);
+      font-family: "Open Sans", system-ui, sans-serif; font-size: 16px;
+    }
+    a { color: var(--heading); } a:hover { color: var(--pending); }
+    .panel { background: var(--surface); border: 1px solid var(--edge); border-radius: 4px; padding: 12px 14px; }
+    .sec { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--heading);
+           letter-spacing: 0.06em; text-transform: uppercase; }
+    .sec::before { content: ""; width: 2px; height: 12px; background: var(--heading); flex: none; }
+    .note { font-size: 13px; color: var(--muted); }
+    .fig { font-size: 20px; }
+    .btn { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+           padding: 7px 14px; font-size: 16px; color: var(--ink); text-align: center; }
+    .btn.primary { background: #384233; color: var(--good); }
+    .btn.danger { background: #2b1917; border-color: #5a2e29; color: var(--warning); }
+    .btn.off { background: #1c1c21; color: var(--muted); }
+    .rule { height: 1px; background: var(--edge); }
+    .chip { min-width: 84px; background: var(--raised); border: 1px solid var(--edge); border-radius: 3px;
+            padding: 7px 10px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .chip .cap { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .chip .trend { font-size: 12px; color: var(--muted); }
+    .chip .state { height: 3px; align-self: stretch; }
+    .tabs { display: flex; gap: 6px; }
+    .tab { padding: 7px 14px; border-radius: 3px 3px 0 0; font-size: 16px; color: var(--muted); }
+    .tab.on { background: var(--raised); color: var(--heading); box-shadow: inset 0 -2px 0 var(--heading); }
+    .meter { background: #1a1a1f; border-radius: 2px; height: 8px; overflow: hidden; }
+    .meter > i { display: block; height: 100%; background: var(--heading); border-radius: 2px; }
+    .row { display: flex; }
+    .card { background: var(--raised); border: 1px solid var(--edge); border-radius: 3px; padding: 10px 12px; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; height: 1080px; padding: 18px 24px 20px; gap: 14px">
+
+  <!-- the bar: navigation on the left, the season's clock on the right -->
+  <div style="display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--edge)">
+    <div class="tabs">
+      <div class="tab on">Day</div>
+      <div class="tab">Roster</div>
+      <div class="tab">Market</div>
+      <div class="tab">School</div>
+      <div class="tab">Armoury</div>
+      <div class="tab">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 7px">
+      <div style="display: flex; flex-direction: column; gap: 3px; width: 220px">
+        <div class="note" style="display: flex; justify-content: space-between">
+          <span>Hour of the Horse</span><span style="color: var(--ink)">Day 23 of 60</span>
+        </div>
+        <div class="meter"><i style="width: 38%"></i></div>
+      </div>
+      <div style="display: flex; gap: 6px">
+        <div class="btn" style="padding: 5px 11px">II</div>
+        <div class="btn off" style="padding: 5px 11px">1&times;</div>
+        <div class="btn" style="padding: 5px 11px; color: var(--heading); border-color: var(--heading)">2&times;</div>
+        <div class="btn off" style="padding: 5px 11px">4&times;</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 2px">
+    <div style="font-size: 26px">The Day</div>
+    <div class="note">What the road offers, who you send, and what it costs to wait another day.</div>
+  </div>
+
+  <!-- the store: the stock AND what it burns a day - the reference game shows only the stock -->
+  <div style="display: flex; gap: 8px; align-items: stretch">
+    <div class="chip" style="min-width: 108px">
+      <div class="fig">412</div><div class="cap">gold</div>
+      <div class="trend" style="color: var(--good)">+38 / day</div>
+    </div>
+    <div class="chip" style="min-width: 108px">
+      <div class="fig">96</div><div class="cap">food</div>
+      <div class="trend">&minus;7 / day</div>
+      <div class="state" style="background: var(--pending)"></div>
+    </div>
+    <div class="chip" style="min-width: 108px">
+      <div class="fig">140</div><div class="cap">water</div>
+      <div class="trend">&minus;7 / day</div>
+    </div>
+    <div class="chip" style="min-width: 108px">
+      <div class="fig">3</div><div class="cap">medicine</div>
+      <div class="trend">&minus;2 / day</div>
+      <div class="state" style="background: var(--warning)"></div>
+    </div>
+    <div class="chip" style="min-width: 108px">
+      <div class="fig">1</div><div class="cap">sake</div>
+      <div class="trend">kept for a feast</div>
+    </div>
+    <div style="width: 1px; align-self: stretch; background: var(--edge); margin: 0 8px"></div>
+    <div class="chip" style="min-width: 150px">
+      <div class="fig" style="color: var(--heading)">Bushi 61%</div><div class="cap">standing</div>
+      <div class="trend">reward &times;1.14</div>
+    </div>
+    <div class="chip" style="min-width: 124px">
+      <div class="fig">2 <span style="font-size: 14px; color: var(--muted)">/ 3</span></div>
+      <div class="cap">heads taken</div>
+      <div class="trend" style="color: var(--pending)">gate to the final</div>
+    </div>
+    <div class="chip" style="min-width: 124px">
+      <div class="fig" style="color: var(--pending)">4</div><div class="cap">days</div>
+      <div class="trend">until the summons</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 14px; flex-grow: 1; min-height: 0">
+
+    <!-- left: the contract on the board -->
+    <div class="panel" style="width: 636px; display: flex; flex-direction: column; gap: 10px">
+      <div class="sec">Today on the board</div>
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-size: 20px">The Ashigara toll road</div>
+        <div class="note">bounty &middot; sworn to Lord Ii Naomasa</div>
+      </div>
+      <div style="line-height: 1.5; font-size: 15px">
+        Six men have been shaking down the porters at the pass for a month. The
+        village headman will not say how many are still armed.
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="card" style="display: flex; flex-direction: column; gap: 6px">
+          <div class="note">You are paid</div>
+          <div class="fig" style="color: var(--good)">240 gold</div>
+          <div class="note">and the head of Genba the Ear &middot; standing &times;1.14</div>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; gap: 6px">
+          <div class="note">It costs you</div>
+          <div class="fig">18 food &middot; 12 water &middot; 2 days</div>
+          <div class="note">paid on setting out, not on winning</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px">
+        <div class="card" style="flex-grow: 1; display: flex; justify-content: space-between; align-items: center">
+          <span class="note">Threat</span>
+          <span style="color: var(--warning)">Bloodied &mdash; four to six, iron at the front</span>
+        </div>
+        <div class="card" style="display: flex; gap: 10px; align-items: center">
+          <span class="note">Field</span>
+          <span>Mud, dawn fog</span>
+        </div>
+      </div>
+      <div class="note">
+        Mud: speed and evasion drop, and drop further under iron. Fog: bows lose their reach.
+      </div>
+
+      <div class="rule"></div>
+      <div class="sec">The hut reads the road</div>
+      <div style="display: flex; gap: 10px; align-items: flex-end">
+        <div class="card" style="flex-grow: 1; display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; justify-content: space-between">
+            <span>Lord Ii Naomasa</span><span class="note">patron</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 72%; background: var(--indigo)"></i></div>
+          <div class="note">Content. He will carry one man's rice until that man falls.</div>
+        </div>
+        <div class="btn" style="font-size: 14px; flex: none">Send a gift (1 sake)</div>
+      </div>
+    </div>
+
+    <!-- middle: who goes -->
+    <div class="panel" style="width: 468px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <div class="sec">Who goes</div>
+        <div style="font-size: 14px">Party <span style="color: var(--pending)">2</span><span class="note"> / 3</span></div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center; border-color: var(--indigo)">
+        <div style="width: 40px; height: 40px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Hattori Sada</span><span class="note">Kensei &middot; 14</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 100%; background: var(--good)"></i></div>
+          <div class="note">148 / 148 &middot; fit</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center; border-color: var(--indigo)">
+        <div style="width: 40px; height: 40px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--indigo); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Kuroda Ren</span><span class="note">Sohei &middot; 11</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 74%; background: var(--pending)"></i></div>
+          <div class="note">92 / 124 &middot; left eye gone</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center">
+        <div style="width: 40px; height: 40px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Mori Ayame</span><span class="note">Yumi &middot; 9</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 100%; background: var(--good)"></i></div>
+          <div class="note">96 / 96 &middot; fit</div>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; gap: 10px; align-items: center; opacity: 0.55">
+        <div style="width: 40px; height: 40px; border-radius: 2px; background: #1a1d26; border: 1px solid var(--edge); flex: none"></div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+          <div style="display: flex; justify-content: space-between">
+            <span>Saito Genji</span><span class="note">Ronin &middot; 7</span>
+          </div>
+          <div class="meter" style="height: 6px"><i style="width: 22%; background: var(--warning)"></i></div>
+          <div class="note" style="color: var(--warning)">In the infirmary &mdash; medicine for 3 more days</div>
+        </div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div class="rule"></div>
+      <div class="note">Ayame is fit and idle. The fog will cost her most of her reach.</div>
+      <div class="btn primary">Take the bounty</div>
+      <div class="btn off">Take the offer &mdash; there is no second contract today</div>
+      <div class="btn">Skip to tomorrow</div>
+    </div>
+
+    <!-- right: the day's log and the standing -->
+    <div class="panel" style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+      <div class="sec">The day so far</div>
+      <div style="display: flex; flex-direction: column; gap: 7px; line-height: 1.45; font-size: 15px">
+        <div><span class="note">dawn</span> &nbsp;The store was drawn down: 7 food, 7 water.</div>
+        <div><span class="note">dawn</span> &nbsp;Saito Genji took his medicine. <span style="color: var(--good)">The wound is closing.</span></div>
+        <div><span class="note">morning</span> Hattori Sada trained the blade. <span style="color: var(--good)">Weapon 13 &rarr; 14.</span></div>
+        <div><span class="note">morning</span> Mori Ayame meditated. <span style="color: var(--good)">Composure +4.</span></div>
+        <div><span class="note">noon</span> &nbsp;A runner from the pass: the toll road bounty was posted.</div>
+        <div><span class="note">noon</span> &nbsp;<span style="color: var(--pending)">The medicine chest is nearly out</span> &mdash; two days at this rate.</div>
+        <div><span class="note">dusk</span> &nbsp;Kuroda Ren asked again for a blade worth his hand.</div>
+      </div>
+      <div class="rule" style="margin-top: 4px"></div>
+      <div class="sec">Standing</div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; font-size: 15px">
+          <span>Bushi</span><span>61%</span>
+        </div>
+        <div class="meter" style="height: 10px">
+          <i style="width: 61%; background: linear-gradient(90deg, var(--indigo), var(--heading))"></i>
+        </div>
+        <div class="note">The crowd calls you honourable. A close, clean fight moves this faster than a slaughter.</div>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div class="note" style="color: var(--warning)">
+        The summons comes in 4 days. Refusing it costs standing, not gold.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
