@@ -82,6 +82,41 @@ public sealed record EconomyTuning
     public double ArmorGoldPerDurability { get; init; } = 1.5;
 
     /// <summary>
+    /// The price of a thrown implement, per point of the damage its full quiver can deliver.
+    /// </summary>
+    /// <remarks>
+    /// The stall prices a throwing implement by what it can actually throw — damage times ammunition —
+    /// because that is the axis the four of them differ on: a shuriken is a handful of small cuts and
+    /// the yumi is ten arrows worth more than two stars each. Range and draw time are deliberately not
+    /// in the price: they are what the <b>class</b> is for, and paying for them at the stall would sell
+    /// the kyudo's payoff to a dojo that never built the hall.
+    ///
+    /// <b>Locked at 1.4 on 2026-09-13</b> — 68 gold for a handful of stars, 364 for a bow. Four seeds
+    /// × 1600 dojos × 180 days, every system on, against a control that fills no throwing slot at all:
+    /// the last night is won 17.3% (nobody throws) / 22.0 (1.1) / 20.5 (1.4) / 18.4 (1.65) / 17.0
+    /// (2.2), and the net per fight 28.2 / 31.7 / 30.1 / 28.2 / 25.8. <b>The trade turns at about
+    /// 1.65</b>, where the slot pays for itself and no more, and at 2.2 filling it is worse than
+    /// leaving it empty. 1.4 is one rung below the turn on purpose: at 1.1 the slot is so cheap that
+    /// buying it is not a decision, and at the turn the stall is decoration. At 1.4 it costs a dojo
+    /// about 536 gold a season, which puts it beside the temple's charms (693) as a real competitor
+    /// for the school's money.
+    /// </remarks>
+    public double ThrownGoldPerDamage { get; init; } = 1.4;
+
+    /// <summary>What a full dose of poison adds to a thrown implement's price, as a share.</summary>
+    /// <remarks>
+    /// A poisoned star carries half the ammunition of a clean one, so priced on the quiver alone it
+    /// would be the cheapest thing on the stall while being the thing the plate cannot read. The
+    /// premium is applied as a share of the implement's own price, so it stays proportional to what is
+    /// being poisoned.
+    ///
+    /// At exactly 1.0 the two stars cost the same to the gold — half the quiver, twice the price — and
+    /// a stall where the poisoned star is never the dearer of the two is a stall with no decision on
+    /// it. 1.5 puts it a quarter above the clean star it is made from.
+    /// </remarks>
+    public double ThrownPoisonPremium { get; init; } = 1.5;
+
+    /// <summary>
     /// The price of a repair, per wear point erased.
     /// </summary>
     /// <remarks>

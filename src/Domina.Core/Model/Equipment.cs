@@ -392,6 +392,20 @@ public sealed record ThrownWeapon(
     /// </remarks>
     public static ThrownWeapon Yumi() =>
         new("Yumi", WeaponClass.Piercing, 26, 1200, 1100, 10, 1.5) { UntrainedShare = 0.45 };
+
+    /// <summary>What the stall sells, cheapest first.</summary>
+    /// <remarks>
+    /// The list is here rather than in the shop because the shop is not the only side that needs it:
+    /// the measuring policy buys from the same four. The yumi is <b>not</b> gated on the class hall —
+    /// anybody may buy a bow, and an untrained hand simply wastes it (docs/GDD.md §4).
+    /// </remarks>
+    public static IReadOnlyList<ThrownWeapon> Catalogue { get; } =
+    [
+        PoisonedShuriken(),
+        Shuriken(),
+        ThrowingSpear(),
+        Yumi(),
+    ];
 }
 
 /// <summary>
@@ -518,6 +532,20 @@ public sealed record ArmorPiece(
 
     public static ArmorPiece Kabuto { get; } =
         new("Kabuto", 8, 0.55, 3, Durability: 90) { NeedsSmith = true };
+
+    /// <summary>What the stall offers for one region, lightest first.</summary>
+    /// <remarks>
+    /// <see cref="Bare"/> is not on the list: the stall sells armour, it does not sell taking it off.
+    /// The smith-gated pieces stay on the list and are refused at the counter instead of being hidden,
+    /// so the player can see what the plate works would open (docs/GDD.md §10).
+    /// </remarks>
+    public static IReadOnlyList<ArmorPiece> For(HitLocation slot) => slot switch
+    {
+        HitLocation.Head => [Kabuto],
+        HitLocation.Torso => [Keikogi, DoMaru, OYoroiCuirass],
+        HitLocation.SwordArm or HitLocation.OffArm => [Kote, HeavyKote],
+        _ => [Suneate, HeavySuneate],
+    };
 }
 
 /// <summary>
