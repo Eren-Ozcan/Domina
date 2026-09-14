@@ -104,8 +104,10 @@ Wine 80 · Next Battle 3 · Days Left 364`. **[V]**
     7-to-1, the stores that come off a single fight are worth roughly **5% of its fee in coin** but
     about **19 days of a five-gladiator roster's eating** — the spoils answer the *calendar*, not the
     treasury. Water comes in far smaller (12), which fits the market's own prices.
-  - It varies by fight: another panel in the same run shows **`Coin +150 · Wine 19 · Water 147`**
-    with **no food tile at all**, so the stores paid are not a fixed share of the fee. **[V]**
+  - It varies by fight, and the variation is in the **composition** rather than the size: a second
+    offer in the same run promises `Coin 131 · Food 166 · Water 155 · Wine 22` — less coin than the
+    first and 2× the food, 13× the water. The stores paid are not a share of the fee. **[V]**
+    (See §3a for both offers side by side.)
   - **This corrects an earlier reading of this file**, which listed the fight reward as coin. The
     correction matters to us directly: spoils paid in stores are not our own invention but the
     reference's own answer to the hunger channel, standing *beside* the Agricola's production
@@ -125,6 +127,121 @@ Wine 80 · Next Battle 3 · Days Left 364`. **[V]**
   price runs normally **one upgrade is suddenly expensive**, after which it is cheap again. The
   guide's exploit: have the **Faber do the expensive step for free**, then carry on with the
   cheap steps. **[T]**
+
+## 3a. The numbers, read off the video frame by frame (2026-09-15)
+
+Everything in this section was transcribed from the 2018 guide video at half-second granularity by
+six passes over its 948 seconds, and is marked **[V]** throughout: it is what the screen said, not
+what a guide claimed. Version tag on the menu: **v1.1.15**. Opening state: `Coin 1000 · Water 400 ·
+Food 800 · Wine 80 · Next Battle 3 · Days Left 364`.
+
+### The fight offer is a priced package, announced before it is accepted
+
+The pre-battle screen names the host, the shape of the fight and **what victory pays, itemised**:
+
+| | Fight A (t=664) | Fight B (t=820) |
+|---|---|---|
+| Host | The Emperor | The Emperor |
+| Game type | (2 v 1) | 1 vs 1 |
+| Coin | **213** | 131 |
+| Food | 75 | **166** |
+| Water | 12 | **155** |
+| Wine | 2 | 22 |
+| Slaves | 2 | 2 |
+| Participation cost | 6 days | None |
+| Surrender allowed | — | Yes |
+| Obstacles | — | Lions |
+
+The victory screen then pays **exactly** the promised package — Fight A's `Rewards` panel reads
+`Coin 213 · Food 75 · Wine 2 · Water 12`, plus the two slaves named (`Papirianus`, `Granius`), two
+perk cards and `Crowd Favour 73`. No tile carries a change indicator; these are amounts won.
+
+**The composition varies far more than the size does.** Fight B pays *less* coin than Fight A and
+2× the food, 13× the water. So the board is partly a **shopping** decision — a ludus short of water
+takes the water contract — and the offer's other fields (party size, participation cost, whether
+surrender is allowed, the obstacles on the field) are the rest of the decision. Our own board carries
+the same fields, but promises gold only and pays a flat rate of spoils; see the gap noted in
+`COMPARISON-DOMINA.md`.
+
+### The season's gate
+
+> "You need to defeat at least **3 Regional Champions** to be considered for the Final Championship
+> in Rome." — `1 / 9 have been defeated`, on the `Map of Games`.
+
+Three of nine, then a final. The same shape as our three heads and the last night, arrived at
+independently.
+
+### Staff: the price of a person
+
+| Role | Hire | Eats per day | Gives |
+|---|---|---|---|
+| Bard | 13 | 1 food, 1 water | Morale |
+| Agent | 13 | 1 food, 1 water | Dirty work, free pit fights |
+| **Agricultor** | **25** | 1 water | **+4 food/day** |
+| Educator | 30 | 1 food, 2 water | Morale, AI proficiency |
+| Medicus | 34 | 1 food, 1 water | Gladiator healing |
+| Emptor | 45 | 2 food, 1 water | Cheaper upgrades and resources |
+| Architect | 65 | 2 food, 1 water | Ludus upgrades |
+| Haruspex | 72 | 1 food, 1 water | Sacrifices to the gods |
+| Faber | 75 | 1 food, 1 water | Cheap upgrades, equipment repair |
+| Vintner | 100 | 1 food, 1 water | Wine, magistrate favour |
+
+### Buildings and research: everything costs gold **and time**, and some cost stores
+
+Every purchasable upgrade shows its price as **coin + an hourglass + sometimes a resource**. The
+hourglass is on the price tag, not hidden behind it.
+
+| Thing | Coin | Hourglass | Stores | Effect |
+|---|---|---|---|---|
+| Water Well | 30 | 30 | 15 water | +2 to 5 water/day |
+| Wine Cellar | 30 | 25 | 15 wine | +1 to 4 wine/day |
+| Wall Reinforcement | 10 | 22 | — | — |
+| Aquaduct Irrigation (Agricultor) | 10 | 12 | 10 water | **+4 food/day** |
+| Song of Juno (Bard) | 6 | 3 | 20 wine | +1 morale |
+| Focus (Educator) | 13 | 4 | 20 | all training time decreased |
+| Prayer to Neptune (Sacerdos) | 7 | 1 | ~10-20 food, 20 water | consume 1 water, give 1 wine/day |
+| Armour Blueprints (Faber) | 10 | 10 | 10 wine | cheaper armour upgrades |
+| Helmet Blueprints (Faber) | 20 | 10 | — | — |
+| Improved Furnace (Faber) | 35 | 10 | 10 wine | faster repair |
+
+### The Doctore's tree: a rule per node, priced in tens
+
+| Node | Coin | Hourglass | Rule |
+|---|---|---|---|
+| Automatic Yield | 1 | 3 | yields automatically below **10% HP** |
+| Humility | 1 | 2 | may surrender at any time, "potentially saving his life" |
+| Deep Breathing | 2 | 5 | slight HP recovery during battle |
+| Interpretive Dance | 4 | 6 | increases agility |
+| Aimed Defense | 17 | 7 | shield turns toward the incoming attack |
+| Mind Control | 31 | 6 | +10 food, +10 water; direct control of one gladiator |
+| Attack Vector | 37 | 7 | increased attack speed, all weapons |
+| **Blade Control** | **48** | 5 | **+25% attack damage, all weapons** |
+| Grip Techniques | 66 | 8 | less likely to lose weapons or armour |
+| Disarming Weapon | 67 | 6 | higher chance to disarm on a successful attack |
+| Weight Training | 77 | 8 | moves more quickly with heavy kit |
+| Attack Shuffle | 102 | 17 | can still move slightly during an attack |
+| Wolf Courage | 170 | 8 | +10 food, +10 water; fights for more victories before appealing for release |
+
+### Slaves, market and kit
+
+- Slave prices seen: **28** (Viriathus, HP 78/158, agility Lv39), **113** (The Knife, HP 135/150,
+  everything else at Lv1), **168** (Spurius, a "battle hardened" Thraex, HP 110/173). The stall's own
+  text: *"Buy healthy fighting men who are completely untrained in gladitorial arts"* [sic] against
+  *"Battle hardened slaves are well trained but are not very healthy."*
+- Market stock is small and counted: `Buy Food ×10 · Water ×5 · Wine ×0`.
+- **Selling food is 7 → 1 coin**, shown on the sell row itself.
+- Equipment upgrades are priced in tens: Centurion's Mail −23, Fancy Leather Skirt −20, Oak Short
+  Greaves −3, and a downgrade refunds (+7, +3).
+- Healing a wounded gladiator: **1 coin**.
+
+### What the scale means for us
+
+Domina's whole progression is denominated in **tens** against a purse of a thousand and a fight that
+pays 131-213. One won fight buys seven cheap slaves, seven wells, or half the Doctore's tree. Ours
+pays about 150 gold against a 150-gold recruit and a 150-700 gold facility: a fight buys **one**
+thing, and often not even that. The reference spends its season making many small decisions; we ask
+for a few large ones. This is not a number to copy — their season is 364 days against our 180 — but
+it is the ratio to keep in view when the school's cost and build time are re-measured.
 
 ## 4. The gladiator: stats
 
