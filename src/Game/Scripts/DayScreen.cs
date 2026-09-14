@@ -43,6 +43,7 @@ public sealed partial class DayScreen : DojoScreen
 
     private DojoState _dojo = null!;
     private Label _seasonLabel = null!;
+    private HFlowContainer _storeRow = null!;
     private Label _offerLabel = null!;
     private Label _readingLabel = null!;
     private VBoxContainer _patronRows = null!;
@@ -83,6 +84,12 @@ public sealed partial class DayScreen : DojoScreen
         // made against (docs/GDD.md §10).
         _seasonLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_seasonLabel);
+
+        // The store gets chips rather than a line of text, and each chip carries what the day takes off
+        // it. A stock with no trend is the thing the reference game's interface does worst: it writes
+        // "800 food" and never how much melts a day, which is the pressure the whole season is built on.
+        _storeRow = UiKit.ChipRow();
+        page.AddChild(_storeRow);
 
         _offerLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         page.AddChild(_offerLabel);
@@ -157,11 +164,10 @@ public sealed partial class DayScreen : DojoScreen
             "font_color",
             banner.AtRisk ? PendingColor : banner.GateOpen ? GoodColor : InkColor);
 
+        BuildStoreRow(purse);
+
         _offerLabel.Text = string.Join(
             '\n',
-            $"Day {_dojo.Day}  ·  Purse {purse.Gold} gold  ·  Food {purse.Food}" +
-            $"  ·  Water {purse.Water}  ·  Medicine {purse.Medicine}  ·  Sake {purse.Sake}" +
-            $"  ·  Spirits {RosterModel.Band(RosterModel.Summarize(_dojo).Morale).ToString().ToLowerInvariant()}",
             $"Offer: {offer.Sighting}",
             $"Threat: {ThreatName(offer.Threat)}  ·  Promised reward {offer.PromisedReward} gold",
             offer.RequiredPartySize is int size
@@ -252,6 +258,61 @@ public sealed partial class DayScreen : DojoScreen
         StandingTier.Pleased or StandingTier.Loyal => GoodColor,
         _ => InkColor,
     };
+
+    /// <summary>The store, as one chip an item, with what a day takes off it under the figure.</summary>
+    /// <remarks>
+    /// The draw comes from <see cref="DojoState.DailyDraw"/> — the same arithmetic the morning charges —
+    /// so the trend under a figure cannot drift from what the day actually takes. The state bar is lit
+    /// off the days the stock has left rather than off the figure: "3 medicine" says nothing until it is
+    /// set against two men in the infirmary.
+    /// </remarks>
+    private void BuildStoreRow(Resources purse)
+    {
+        Clear(_storeRow);
+        Resources draw = _dojo.DailyDraw();
+
+        _storeRow.AddChild(UiKit.Chip(
+            $"{purse.Gold}",
+            "gold",
+            draw.Gold > 0 && purse.Gold < draw.Gold * 3 ? UiKit.Warning : null,
+            Mark.Coin,
+            draw.Gold > 0 ? $"−{draw.Gold} / day" : "no wages owed"));
+
+        _storeRow.AddChild(StoreChip($"{purse.Food}", "food", purse.Food, draw.Food, Mark.Grain));
+        _storeRow.AddChild(StoreChip($"{purse.Water}", "water", purse.Water, draw.Water, Mark.Drop));
+        _storeRow.AddChild(StoreChip($"{purse.Medicine}", "medicine", purse.Medicine, draw.Medicine, Mark.Cross));
+
+        // Sake has no daily drain by design (GDD §11): it sits until a feast is called, so its line says
+        // what it is for rather than inventing a rate for it.
+        _storeRow.AddChild(UiKit.Chip($"{purse.Sake}", "sake", null, Mark.Cup, "kept for a feast"));
+
+        RosterSummary summary = RosterModel.Summarize(_dojo);
+        _storeRow.AddChild(UiKit.Chip(
+            $"{summary.Living}/{summary.Beds}",
+            "on the mat",
+            null,
+            Mark.Shield,
+            $"spirits {RosterModel.Band(summary.Morale).ToString().ToLowerInvariant()}"));
+    }
+
+    /// <summary>A stock chip whose state and trend are read off the days it has left.</summary>
+    private static Control StoreChip(string figure, string name, int stock, int draw, Mark mark)
+    {
+        if (draw <= 0)
+        {
+            return UiKit.Chip(figure, name, null, mark, "nothing drawn");
+        }
+
+        int days = stock / draw;
+        Color? state = days switch
+        {
+            <= 2 => UiKit.Warning,
+            <= 6 => UiKit.Pending,
+            _ => null,
+        };
+
+        return UiKit.Chip(figure, name, state, mark, $"−{draw} / day · {days}d");
+    }
 
     private void BuildPartyList()
     {
