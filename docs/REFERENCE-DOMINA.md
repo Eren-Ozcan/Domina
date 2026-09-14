@@ -96,6 +96,20 @@ Wine 80 · Next Battle 3 · Days Left 364`. **[V]**
 - Income items: the rewards from scheduled fights, the **pit fight** reward + betting, the
   **exhibition** reward (100-200 coin/fight **[T]**), regional champion rewards, **crowd favour**
   (below), and selling surplus slaves/horses/chariots.
+- **A won fight is not paid in coin alone — it is paid in stores too.** The victory screen opens a
+  panel headed **`Rewards`**, and the reward of one ordinary scheduled fight in the video reads
+  **`Coin 213 · Food 75 · Wine 2 · Water 12`**, beside two slaves taken (`Papirianus`, `Granius`),
+  two cards (`2X Production`, `Weapon Master`) and **`Crowd Favour 73`**. **[V]**
+  - The food is the striking figure: at **75 food against 213 coin**, and with food selling at
+    7-to-1, the stores that come off a single fight are worth roughly **5% of its fee in coin** but
+    about **19 days of a five-gladiator roster's eating** — the spoils answer the *calendar*, not the
+    treasury. Water comes in far smaller (12), which fits the market's own prices.
+  - It varies by fight: another panel in the same run shows **`Coin +150 · Wine 19 · Water 147`**
+    with **no food tile at all**, so the stores paid are not a fixed share of the fee. **[V]**
+  - **This corrects an earlier reading of this file**, which listed the fight reward as coin. The
+    correction matters to us directly: spoils paid in stores are not our own invention but the
+    reference's own answer to the hunger channel, standing *beside* the Agricola's production
+    (below), not instead of it.
 - Spending items: buying slaves, staff wages/hiring costs, research, equipment and repairs,
   healing, food/water, wine.
 - **The staff eat resources too:** every staff member has a daily **food/water consumption** (see
