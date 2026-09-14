@@ -348,7 +348,7 @@ public enum WarriorPath
     /// <summary>The blade path — Accuracy and Strength.</summary>
     Blade,
 
-    /// <summary>Kaya yolu — Savunma ve Can.</summary>
+    /// <summary>The stone path — Defence and Health.</summary>
     Stone,
 
     /// <summary>The shadow path — Evasion and Speed.</summary>

@@ -27,7 +27,7 @@ public enum Drill
     /// <summary>Footwork drill — Evasion, secondary Speed.</summary>
     Footwork,
 
-    /// <summary>Kondisyon — Can, ikincil Stamina.</summary>
+    /// <summary>Conditioning drill — Health, secondary Stamina.</summary>
     Conditioning,
 
     /// <summary>
