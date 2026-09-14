@@ -72,7 +72,7 @@ public enum RosterStatus
     /// <summary>Ready for an expedition.</summary>
     Ready,
 
-    /// <summary>Antrenmanda; sefere yine de gidebilir.</summary>
+    /// <summary>Training; he can still be sent on an expedition.</summary>
     Training,
 
     /// <summary>In the infirmary; cannot go on an expedition.</summary>
