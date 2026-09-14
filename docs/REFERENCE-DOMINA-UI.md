@@ -300,5 +300,33 @@ What will not be copied:
 
 ---
 
+---
+
+## What was built out of these conclusions (2026-09-14)
+
+A design pass drew all eight screens as a single canvas (`design/canvas/`, artboards assembled by
+`build.sh`; the canvas itself is a Claude Design artifact and its payload is gitignored). The chrome
+was lifted out of `src/Game/Scripts/UiKit.cs` value for value rather than reinvented, so the drawing
+and the running game are the same interface. Two colour roles that GDD §12 names and `UiKit` had no
+token for were added: **indigo** for the player's own side, and **vermilion** for blood and nothing
+else, kept apart from the interface's desaturated `Warning`.
+
+Then the conclusions above were built, not just noted:
+
+| Conclusion | Where it now lives |
+|---|---|
+| One unit card, the same everywhere | `UiKit.UnitCard` / `UnitButton` — the roster's rows and the day screen's party list |
+| The same widget for two concepts | `UiKit.Gauge` over `UiKit.Bar`; health, spirits and a patron's regard share one widget |
+| A live counter over a disabled confirm | `UiKit.Counter`, printed beside "Who goes on the expedition?" |
+| Browsing the roster from inside the panel | `UiKit.Browse` — the two arrows walk `RosterModel.Describe`'s own order |
+| A dangerous action set apart | `UiKit.Danger` — ending a term and retiring a man |
+| A resource indicator with no trend | `DojoState.DailyDraw` (a pure query) behind `UiKit.Chip`'s trend line, on the day screen's store row |
+| A fight view that gives no information | The arena HUD is coloured by side and prints the health figures |
+
+**Still open from these conclusions:** the cost of a decision is not yet printed beside every
+decision — the school's doors and the armoury's swaps say their price, the day screen's contract
+still says the reward without the setting-out cost. The armoury does not yet draw the slot map, and
+the crowd panel drawn on the canvas has no screen behind it (phase 5 work).
+
 *The source frames: `scratchpad/domina-ref/frames` and `.../ui` (session-scoped; they do not go
 into the repo).*
