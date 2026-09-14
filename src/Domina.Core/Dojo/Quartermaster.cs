@@ -1,4 +1,5 @@
 using Domina.Core.Combat;
+using Domina.Core.Dojo.Journal;
 using Domina.Core.Model;
 
 namespace Domina.Core.Dojo;
@@ -60,11 +61,24 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         int price = RepairPrice(warrior, slot);
         if (price > state.Resources.Gold)
         {
+            state.Record(
+                MoveKind.Repair,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("slot", slot),
+                MoveArg.Of("cost", price));
             return false;
         }
 
         state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
         warrior.ArmorWear = warrior.ArmorWear.With(slot, 0);
+        state.Record(
+            MoveKind.Repair,
+            true,
+            MoveArg.Of("warrior", warrior.Id.Value),
+            MoveArg.Of("slot", slot),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("name", warrior.Name));
         return true;
     }
 
@@ -87,18 +101,94 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         if (piece.NeedsSmith
             && (!state.School.Has(SchoolNodeId.PlateWorks) || !state.Staff.Has(StaffRole.Smith)))
         {
+            state.Record(
+                MoveKind.EquipArmor,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("slot", slot),
+                MoveArg.Of("piece", piece.Name),
+                MoveArg.Of("refused", "the plate works or the smith is missing"));
             return false;
         }
 
         int price = PiecePrice(piece);
         if (price > state.Resources.Gold)
         {
+            state.Record(
+                MoveKind.EquipArmor,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("slot", slot),
+                MoveArg.Of("piece", piece.Name),
+                MoveArg.Of("cost", price));
             return false;
         }
 
         state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
         warrior.Armor = warrior.Armor.With(slot, piece);
         warrior.ArmorWear = warrior.ArmorWear.With(slot, 0);
+        state.Record(
+            MoveKind.EquipArmor,
+            true,
+            MoveArg.Of("warrior", warrior.Id.Value),
+            MoveArg.Of("slot", slot),
+            MoveArg.Of("piece", piece.Name),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("name", warrior.Name));
+        return true;
+    }
+
+    /// <summary>The price of a thrown implement.</summary>
+    /// <remarks>
+    /// Priced on the quiver — damage times ammunition — with a share added for a dose of poison. See
+    /// <see cref="EconomyTuning.ThrownGoldPerDamage"/> for why range is deliberately not in the price.
+    /// </remarks>
+    public int ThrownPrice(ThrownWeapon thrown)
+    {
+        ArgumentNullException.ThrowIfNull(thrown);
+
+        double quiver = Math.Max(0, thrown.Damage) * Math.Max(0, thrown.Ammo);
+        double poison = 1 + (Math.Max(0, thrown.Poison) * Math.Max(0, Economy.ThrownPoisonPremium));
+
+        return (int)Math.Ceiling(quiver * Economy.ThrownGoldPerDamage * poison);
+    }
+
+    /// <summary>
+    /// Puts a thrown implement in the warrior's throwing slot; what he carried is <b>gone</b>.
+    /// </summary>
+    /// <remarks>
+    /// The same rule the armour counter works by: nothing is sold back, so swapping a yumi for a
+    /// handful of stars is a decision and not a shuffle. The bow is sold to anybody — an untrained hand
+    /// wastes it, which is the class's own business (docs/GDD.md §4).
+    /// </remarks>
+    /// <returns><c>true</c> if it was bought and carried.</returns>
+    public bool EquipThrown(DojoState state, Warrior warrior, ThrownWeapon thrown)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(warrior);
+        ArgumentNullException.ThrowIfNull(thrown);
+
+        int price = ThrownPrice(thrown);
+        if (price > state.Resources.Gold)
+        {
+            state.Record(
+                MoveKind.EquipThrown,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("thrown", thrown.Name),
+                MoveArg.Of("cost", price));
+            return false;
+        }
+
+        state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
+        warrior.Thrown = thrown;
+        state.Record(
+            MoveKind.EquipThrown,
+            true,
+            MoveArg.Of("warrior", warrior.Id.Value),
+            MoveArg.Of("thrown", thrown.Name),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("name", warrior.Name));
         return true;
     }
 
@@ -135,17 +225,35 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
             || !state.Staff.Has(StaffRole.Smith)
             || Weapon.IsForged(warrior.Weapon))
         {
+            state.Record(
+                MoveKind.ForgeWeapon,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("weapon", warrior.Weapon.Name));
             return false;
         }
 
         int price = ForgePrice(warrior);
         if (price > state.Resources.Gold)
         {
+            state.Record(
+                MoveKind.ForgeWeapon,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("weapon", warrior.Weapon.Name),
+                MoveArg.Of("cost", price));
             return false;
         }
 
         state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
         warrior.Weapon = Weapon.Forged(warrior.Weapon, state.School.Tuning.ForgedWeaponDamage);
+        state.Record(
+            MoveKind.ForgeWeapon,
+            true,
+            MoveArg.Of("warrior", warrior.Id.Value),
+            MoveArg.Of("weapon", warrior.Weapon.Name),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("name", warrior.Name));
         return true;
     }
 
@@ -153,7 +261,15 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
     /// Fills the store up to the level wanted; only <b>what is missing</b> is bought.
     /// </summary>
     /// <returns>The gold spent.</returns>
-    public int Restock(DojoState state, Resources target)
+    /// <param name="state">The dojo whose store is being filled.</param>
+    /// <param name="target">The level the store should be brought up to.</param>
+    /// <param name="journal">
+    /// Whether this counts as a move of its own. The day's own closing shops through here
+    /// (<see cref="DojoState.AdvanceDay"/>) and passes <c>false</c>: that shopping is part of the day
+    /// and is written into the day's bill, and recording it twice would put a move inside a move and
+    /// leave a replay shopping on its own.
+    /// </param>
+    public int Restock(DojoState state, Resources target, bool journal = true)
     {
         ArgumentNullException.ThrowIfNull(state);
 
@@ -178,6 +294,24 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
             Medicine = have.Medicine + m.Bought,
         };
 
+        // The level wanted is the argument, because that is what was asked for; what actually arrived
+        // is an observation, because the purse is what decides it.
+        if (!journal)
+        {
+            return spent;
+        }
+
+        state.Record(
+            MoveKind.Restock,
+            spent > 0,
+            MoveArg.Of("wantFood", target.Food),
+            MoveArg.Of("wantWater", target.Water),
+            MoveArg.Of("wantMedicine", target.Medicine),
+            MoveArg.Of("boughtFood", f.Bought),
+            MoveArg.Of("boughtWater", w.Bought),
+            MoveArg.Of("boughtMedicine", m.Bought),
+            MoveArg.Of("cost", spent));
+
         return spent;
     }
 
@@ -192,11 +326,20 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
 
         if (Economy.RecruitPrice > state.Resources.Gold || !state.HasRoomForAnother)
         {
+            state.Record(MoveKind.Hire, false, MoveArg.Of("name", name));
             return null;
         }
 
         RosterEntry entry = state.Roster.Recruit(name, stats, weapon, armor);
         state.Resources = state.Resources with { Gold = state.Resources.Gold - Economy.RecruitPrice };
+        state.Record(
+            MoveKind.Hire,
+            true,
+            MoveArg.Of("name", name),
+            MoveArg.Of("weapon", weapon?.Name),
+            MoveArg.Of("armor", armor?.Name),
+            MoveArg.Of("cost", Economy.RecruitPrice),
+            MoveArg.Of("warrior", entry.Id.Value));
         return entry;
     }
 
