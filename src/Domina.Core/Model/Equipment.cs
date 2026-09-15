@@ -242,7 +242,7 @@ public sealed record Weapon(
     /// </para>
     /// </remarks>
     public static Weapon PoisonedTanto() =>
-        Tanto() with { Name = "Zehirli tantō", Damage = 7, Poison = 1.0 };
+        Tanto() with { Name = "Poisoned tantō", Damage = 7, Poison = 1.0 };
 
     /// <summary>The fallback for being unarmed or after losing a limb.</summary>
     /// <summary>
@@ -275,7 +275,7 @@ public sealed record Weapon(
         return weapon.Name.StartsWith("Forged ", StringComparison.Ordinal);
     }
 
-    public static Weapon Fists() => new("Yumruk", WeaponClass.Blunt, 8, false, 0.80)
+    public static Weapon Fists() => new("Fists", WeaponClass.Blunt, 8, false, 0.80)
     {
         Catchable = false,
         BlockFactorOverride = 0.30,
@@ -615,7 +615,7 @@ public sealed record Armor(
 
     /// <summary>Cloth covering the torso only. Arms, legs and head are exposed.</summary>
     public static Armor Light() => new(
-        "Hafif keikogi",
+        "Light keikogi",
         Head: ArmorPiece.Bare,
         Torso: ArmorPiece.Keikogi,
         SwordArm: ArmorPiece.Bare,

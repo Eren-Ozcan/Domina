@@ -26,7 +26,7 @@ public class PoisonTests
 
     /// <summary>The poisoned implement: light on steel, its return is the dose.</summary>
     private static Weapon Fang { get; } =
-        new("Test-Zehirli", WeaponClass.Cutting, 5, TwoHanded: false, AttackSeconds: 1.0)
+        new("Test-Poisoned", WeaponClass.Cutting, 5, TwoHanded: false, AttackSeconds: 1.0)
         {
             Poison = 1.0,
         };

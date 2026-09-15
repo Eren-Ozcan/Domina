@@ -103,7 +103,7 @@ public sealed record MoveRow(IReadOnlyList<MoveArg> Args)
 /// One line of the file is one move:
 /// </para>
 /// <code>
-/// {"day":3,"move":"HireRecruit","index":1,"weapon":"Katana","armor":"Hafif keikogi","after":{"ok":true,"gold":412,"food":18,"living":4}}
+/// {"day":3,"move":"HireRecruit","index":1,"weapon":"Katana","armor":"Light keikogi","after":{"ok":true,"gold":412,"food":18,"living":4}}
 /// </code>
 /// </remarks>
 /// <param name="Day">The day the move was made on.</param>
