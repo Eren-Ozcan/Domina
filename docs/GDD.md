@@ -890,7 +890,7 @@ own axis:
 
 | | Was | Now | What it was measured against |
 |---|---|---|---|
-| `EncounterTuning.PowerPerDay` | 0.0072 | **0.011** | Deaths per warrior-fight back on the locked 4.7% (swept 0.0072-0.016: 2.6 / 4.2 / **4.9** / 5.3 / 6.0 / 7.0%) |
+| `EncounterTuning.PowerPerDay` | 0.0072 | **0.011** | Deaths per warrior-fight back on the locked 4.7% (swept 0.0072-0.016: 2.6 / 4.2 / **4.9** / 5.3 / 6.0 / 7.0%). *It went to 0.010 on 2026-09-13 with the offer queue and came back to 0.011 on 2026-09-15 — see §11's queue block.* |
 | `SeasonTuning.FinalRoundPowers` | 1.8-2.8 | **×1.30 → 2.34-3.64** | The five bouts are where a pool that binds pays most; swept ×1.15 / ×1.30 / ×1.45, nights won 14.2 / **9.7** / 6.0% with closures and deaths unmoved |
 
 The re-locked Master profile on the measuring bed: **30.4% of dojos closed, 10.1% of last nights won,
@@ -1730,7 +1730,18 @@ into an interruption.
   on the old curve the hard tier had a negative net and a 0.2% night, which was the season's second
   half removed; it is now a road that can be walked to the end (positive net, a man who ends at 10%
   mastery, one night in twenty won). The multipliers are therefore **unchanged** — 0.93/1.07/0.42,
-  1/1/0.5, 1.07/0.93/0.58 — and this paragraph's figures are the current ones.
+  1/1/0.5, 1.07/0.93/0.58 — and those figures held until the curve moved again.
+  **Swept a third time (2026-09-15) and still unchanged.** `PowerPerDay` went back to 0.011 and the
+  spoils round changed what a fight pays, so all three tiers were read again — **three seeds × 1600
+  dojos × 180 days** on the rich bed (the documented bed plus `--charms on --thrown-fit everyone
+  --retire maimed --class-fit torite --train-classes on`), which is why the Master column here does
+  not match the plain-bed figures elsewhere. Apprentice / Master / Legend read: last night won
+  **29.1% / 20.2% / 9.2%**, dojos closed **20.4% / 28.4% / 36.6%**, net per fight **+46.5 / +37.0 /
+  +22.4**, deaths per warrior-fight **2.9% / 3.8% / 5.2%**, mastery on the best man **39.4% / 28.4% /
+  15.0%**. Every column still separates cleanly and monotonically; the gap narrowed slightly with the
+  richer season (Apprentice is 1.44× Master's night, against 1.66× on the previous curve) and
+  **Legend's floor rose a second time** — a positive net of +22.4 and a best man at 15% mastery. The
+  multipliers stay where they are, and **this paragraph's figures are the current ones**.
 
 
 ### The end of the season: the bounty gate and the final tournament
@@ -1915,7 +1926,35 @@ the tiers stayed as upgrades and every node became a building:
 | Physician: a mortal wound turned around | **0.25** | 0 → 79.2% of dojos closed, 0.15 → 71.8%, **0.25 → 66.2%**, 0.40 → 60.0% |
 | Physician: no medicine bill | a gate | Needs the person; an empty infirmary still buys medicine |
 | Bone setter: a limb kept | 0.25, **measured as nothing** | Limbs are lost on ~5% of warrior-fights; a quarter of that is invisible in a season |
-| Class hall | 450 gold, 12 days | Not swept — the hall is the class's whole price and the training costs nothing further |
+| Class hall | 450 gold, 12 days | Swept on its own axis 2026-09-15 (`SchoolTuning.ClassHallPriceFactor`, `--class-price`) and **kept** — see the note below |
+
+> **The class hall's price is not the class branch's problem — measured 2026-09-15.** Step 5 left the
+> hall unswept, and the 2026-09-15 school round proposed the branch's weakness was **reach**: only 3.1
+> men of an eight-bed roster are ever classed, so the halls looked like the binding constraint. The
+> halls were therefore given a price factor of their own so the question could be asked without moving
+> the nineteen buildings that are not halls. Three seeds × 1600 dojos on the documented bed, every
+> development switch on, nothing else touched:
+>
+> | Hall price | Classed men a season | Won the last night |
+> |---|---|---|
+> | classes never trained | 0.00 | 19.1% |
+> | **×1.00** (450 gold) | **3.13** | **20.2%** |
+> | ×0.75 | 5.24 | 18.6% |
+> | ×0.50 | 7.14 | 20.3% |
+> | ×0.30 | 11.07 | 22.2% |
+>
+> **Reach was bought and almost nothing followed.** Three and a half times the classed men buys about
+> **+2 points** of last night, and the whole branch — halls at a third of their price, against a dojo
+> that never trains a class — is worth **+3.1**. For comparison the same round's ladder cut was worth
+> +7.5 on this bed. So the branch is weak per man rather than priced out, and the price is left where
+> it is: cutting it would sell more of something that does not pay. The class layer's own strength is
+> a **design** item (Phase 9), and `ClassHallPriceFactor` stays at 1.0 as a measuring instrument.
+
+> **Build time re-measured 2026-09-15 and kept at 6/10/14.** On the curve above, halving every
+> building's construction time is worth **+1.9 points** of last night (20.2% → 22.1%) and removing it
+> entirely **+2.9** (23.1%), with closures and deaths unmoved. It is second-order exactly as the
+> school-price round found, and what it buys in exchange is the design's own meaning: a facility
+> decided on is a facility that is not there yet.
 
 > **The infirmary trap, closed on the second attempt.** The branch was rebound to **limbs** first and
 > that measured as nothing at all — worse than an empty infirmary once the physician's wage was
@@ -2535,6 +2574,13 @@ on the field. The measurement is in §11.
     where it was (last night 16.4% against 17.1, dojos closed 25.6% against 26.8, deaths per
     warrior-fight 4.1% against 4.5, net per fight 27.8 against 28.1). The sweep is in
     `EncounterGenerator.PowerPerDay`.
+    - ⚠️ **Reverted 2026-09-15: `PowerPerDay` is back on 0.011.** The rung was bought with the death
+      rate to patch an **income** hole, and the spoils round filled that hole from the other side — a
+      won fight now leaves food behind and the school costs three quarters of what it did, so the same
+      bed pays **43.7** a fight against the 21.9 that made 0.010 necessary. The death rate is the one
+      number §11 anchors, so it is given back: swept over three seeds × 1600 dojos, deaths per
+      warrior-fight run 4.07 / **4.67** / 4.87 / 5.50% at 0.010 / 0.011 / 0.0115 / 0.013, and 0.011 is
+      the rung that lands on the locked 4.7% — and on the tenth round's 30.4% closure figure with it.
   - **Decided 2026-09-13, and the other way round: a standing job pays less, not more**
     (`EncounterTuning.StaleFeePerDay` 0.25 a day, floored at 0.4 of the posting-day fee). The open
     proposal had been that the clerk sweetens work nobody takes; it was **rejected**, because a posting
@@ -3277,7 +3323,8 @@ slot and a new measurement round.
 | ~~17~~ | ~~Rival dojos and the village~~ | **Closed (2026-09-10)** — the full decision is in §10, "The rival school and the settlements". In short: 12 settlements with a three-state allegiance and a 0-2 warning level; the rival moves every 7 days on the **same tick** as the compulsory-fight rule, which stays (the move counter was briefly written as a replacement for it — void 2026-09-10); settlements never pay gold or stores on a schedule (one guaranteed item on the day it comes over, and a wider offer queue as the real return); the rival stores one number only (deniability) and his strength is derived from the settlements he holds; the opposite-pole model comes back **only on his axis** and the three-party system is untouched. Rejected with it: passive income, per-settlement traits, rival doctrines, a rescue loan. **The numbers are proposals awaiting measurement** |
 | ~~**19**~~ | ~~**The catching implements are priced wrong**~~ | **Closed 2026-09-12 — one point of damage.** The jitte and the sai went from **14 to 15**, and both halves of the item closed with it: in a duel the catching warrior is now level whichever he carries (jitte **77.07%** against katana **76.13%**, 40.000 fights a row), and against a two-handed enemy the **brake is back** — jitte **33.39%** against the same warrior's katana at **32.46%** and the classless control's **30.37%**. The armoured enemy stays the katana's (38.31% against 56.24%), which is where §7 already put it, and the hard zero holds: a classless jitte is still 42.20%. The curve is steep enough that the number had to be found rather than reasoned — at 14 the implement loses the duel by 4.7 points, at 16 it wins it by 5.7. **The original finding:**  Measured 2026-09-10, and **not** caused by the stun-drop rule: with that rule switched off and 100.000 fights (the 20.000-fight bed cannot resolve a margin this thin — its standard error is ±0.34 points), `jitte-heavy` takes **34.65%** against `katana-heavy`'s **34.38%**. The catch round had locked the opposite as a brake — "the catching implement is still the wrong choice against an enemy carrying a nodachi" — and block later thinned that margin to 0.24 points; it has now crossed zero. `CatchTwoHandedFactor` (0.75) therefore no longer holds anything back. Nothing was re-locked on the strength of one measurement: this is a Phase 9 item, and the lesson is that a margin under ~0.5 points cannot be defended on a 20.000-fight bed. **Widened 2026-09-10 (build-order step 4):** with the class layer in, the comparison can be made between two warriors of the **same** class, and the catching implement then loses everywhere — the torite wins 81.07% with a katana against 78.65% with a jitte in a duel, 63.63% against 35.59% in front of ō-yoroi, 36.65% against 34.67% versus a two-handed enemy. The cause is that a catch pays **per event**, so the weak 0.10 floor collects most of its value while the jitte pays 8 damage a strike for the frequency. The item is now "the catching implements are priced wrong", and it is answered with their damage/speed/disarm share, not with the class numbers |
 | ~~**20**~~ | ~~**The temple's stall, after the two dead charms were given jobs**~~ | **Closed 2026-09-13 — the answer is a fair exchange rate, not one shelf price.** Opened 2026-09-12: will and stamina had been given jobs and had stopped being worse than wearing nothing, but neither paid for its 120 gold. Measured charm by charm on 2026-09-13 (six seeds × 1600 dojos, each seed against its own charmless control), the question turned out to be larger than those two: at 120 gold **steady hand is worse than wearing nothing** and at 40 gold **iron gate is a landslide**, so a single price is wrong at both ends. Each charm is now priced at the rung where it is clearly worth buying and never the only answer — **iron gate 120, swift foot 80, steady hand 40, long breath 40, quiet mind 30**, giving +3.4 / +3.8 / +3.7 / +3.7 / +2.8 points of last nights won against a charmless dojo's 13.7%. This **supersedes** the equal-price rule of §10: that rule assumed the points could do all the ranking, and three of the five stats cannot convert a bigger blessing at all (accuracy saturates, Will is clamped, the stamina pool outlives the fight). The design's own intent — five answers to five weaknesses, the man deciding which — needs prices proportional to strength, because at one price the strongest charm is the right answer for every man. Full table in §10 |
-| **18** | **Numbers that arrived with the round** | ~~the weapon-drop chance from stunning~~ (**locked 0.15 on 2026-09-10**, §7); ~~the `class × implement` multipliers~~ (**locked 2026-09-10**, §4: catch floor 0.10, classless dose 0.6, classless throw 0.85) and the rest, still awaiting measurement: the weapon mastery bonus, the reward band 0.75-1.25, ~~staff wages~~ (**locked 2026-09-10**: 6/day for a branch post, 4 for a situational one), ~~facility construction times~~ (**locked**: 6/10/14 by tier), ~~class facility prices~~ (**locked**: 450 gold, 12 days), the frequency of classed candidates in the market (0.05 in the code, still unmeasured — the campaign policy does not train classes), the reward multiplier of a surrender-forbidden contract, ~~the honour penalty for a missed mandatory fight~~ (**locked 2026-09-10**: 5 per living warrior, 1 grace week, charged only on a week the dojo had men standing for 4 days; §10) |
+| **21** | **The dojo cannot buy a melee weapon** | **Opened 2026-09-15 by the class-strength measurement.** A warrior fights for the whole season with the weapon he was hired with: the quartermaster sells armour pieces (`Equip`), throwing implements (`EquipThrown`) and repairs, and the sword forge only reworks the weapon already in the hand into a better one **of its own kind**. There is no way to put a jitte or a poisoned tantō into the hand of a man who was hired with a katana. The consequence is measured: on the battle bed the class layer is **strong** on its own implement (torite +15.5 points of victory with a jitte, dokushi +8.7 with the dose, kyūdō +5.2 with the yumi), yet in the campaign the whole branch reads **+1.1** — because only kyūdō can be armed by the dojo at all (the yumi is a thrown implement, and that slot **can** be bought). So the two melee classes are trained and then sent out holding the wrong thing, and their entire campaign worth flows through the soft edge (`UnskilledCatchImplementFactor` 0.10, `UnclassedPoisonFactor` 0.6), which is the opposite of what those factors are for. Three ways out, none chosen: **(a)** a weapon stall in the market (a price per point of damage, like armour's `ArmorGoldPerDurability`), **(b)** the class hall equips the man it trains (the implement comes with the training, no new screen), **(c)** the recruit market starts offering candidates with class implements, so arming is a hiring decision. This is a **design** decision, not a tuning one — it changes what gold is for — and it is Phase 9 work. Until then, no campaign figure should be read as the class layer's strength |
+| **18** | **Numbers that arrived with the round** | ~~the weapon-drop chance from stunning~~ (**locked 0.15 on 2026-09-10**, §7); ~~the `class × implement` multipliers~~ (**locked 2026-09-10**, §4: catch floor 0.10, classless dose 0.6, classless throw 0.85) and the rest, still awaiting measurement: the weapon mastery bonus, ~~the reward band 0.75-1.25~~ (**the band in the code is 0.5-1.5, and it is unmeasurable as things stand**: `CrowdVerdict.RewardMultiplier` is read by nothing outside its own tests — no fight fee is multiplied by it, so the crowd's verdict does not reach a payout until chat is wired in at Phase 5. It is a **wiring** item, not a number awaiting a sweep), ~~staff wages~~ (**locked 2026-09-10**: 6/day for a branch post, 4 for a situational one), ~~facility construction times~~ (**locked**: 6/10/14 by tier), ~~class facility prices~~ (**locked**: 450 gold, 12 days), ~~the frequency of classed candidates in the market~~ (**measured 2026-09-12 against a policy that does train classes** — `--train-classes on`: at 0 / 0.05 / 0.25 the night is won by 9.8 / 11.8 / 12.2% and 29.2 / 26.5 / 25.5% of dojos close, so the shortcut is real and saturates at **0.05**; the row above was stale, not open), the reward multiplier of a surrender-forbidden contract, ~~the honour penalty for a missed mandatory fight~~ (**locked 2026-09-10**: 5 per living warrior, 1 grace week, charged only on a week the dojo had men standing for 4 days; §10) |
 | ~~1~~ | ~~Party size~~ | **Locked (2026-08-29).** The upper bound is **4**, the number is the player's decision; encounters such as duels/raids can impose an exact number (§10). The core already supports N warriors. **Follow-up work:** a four-warrior arena will cause camera and readability problems in 2.2 |
 | ~~2~~ | ~~Expedition/map structure~~ | **Closed (2026-08-29).** An expedition is one room/one fight; **one encounter offer** per day, take it or leave it; no map screen. **No boss structure is being built** — difficulty rises on a single curve (§10). **Footnote (2026-09-10):** the settlement board of §10 does not reopen this. It is a **picture, not a screen you act on** — no travel, no routing, no fight started from it; contracts still arrive in the offer queue and the board only reads back what the season has done |
 | ~~3~~ | ~~Adversary behaviour~~ | **Closed 2026-09-13.** The behaviour is `Combat/TargetProfile.cs`: five multipliers over the target-selection weights of §4 — the road to be walked, the wounded man, the bare region, the teammate already on that target, and the cost of turning away. No kind has a code path of its own; a kind is numbers plus an appetite, and `TargetProfile.Default` (all ones) is the behaviour every figure measured before this existed was measured on. The six: **collector** halves the crowd penalty (he collects in numbers), **cutthroat** weighs a wound 1.8 and a bare region 1.5 and holds no loyalty to his fight (stickiness 0.6), **duelist** wants his own opponent (crowd 1.8, stickiness 1.6, wound 0.4 — the trial is the point, not the kill), **kabukimono** counts the road double (distance 2.0: a man at Speed 28 carrying a tetsubo spends a fight walking), **senior student** is taught to pick (distance 0.8 on the yari's reach, bare region 1.4), **Kurogane** takes the opening (wound 1.5, bare region 1.6). The dojo's own men carry no profile on purpose — the player directs his side, and a hired man who chose his opponent by temperament would be reading the field against him. **Measured at zero, deliberately kept:** six seeds × 1600 dojos × 180 days, profiles on against off, paired per seed — last nights won +0.07 ±0.84, dojos closed −0.17 ±1.14, net −0.07 ±0.41, deaths per warrior-fight +0.03 ±0.05, fight victory +0.00 ±0.06. It moves nothing a season can feel, which is what a character trait should cost; the fights themselves do come out differently (a test sweeps twelve seeds to prove the appetite reaches the field). The lever is now in place if a kind ever has to become a threat rather than a manner |

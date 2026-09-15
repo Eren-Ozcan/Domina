@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-15 (a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
+Last updated: 2026-09-15 (the difficulty numbers re-read against the bed that changed under them — the curve is back on 0.011, the night's powers keep their place and the class hall's price turns out not to be the class branch's problem; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1692,6 +1692,279 @@ roster ≠ day one's stall, save round trip).
 
 **Next up:** playing it yourself — is the infirmary branch a trap, is a seppuku threshold of 30 right,
 does a bounty show up within 60 days, is a ten-candidate stall too crowded.
+
+---
+
+## 2026-09-15 (fifth round) — Four seasons played by hand, and not one of them saw the last night
+
+**Four agents each played a full season through `--play` on a fresh seed at Master** (5202 aggressive,
+5303 school-first, 5101 balanced, 5404 cautious), with no guidance beyond the move vocabulary. The
+result is the round's finding and it is not a number:
+
+| Seed | Play | Outcome | Heads | Last night |
+|---|---|---|---|---|
+| 5202 | aggressive | closed day 50 | 6/3 | never |
+| 5303 | school-first | closed day 75 | 4/3 | never |
+| 5101 | balanced | closed day 118 | 7/3 | never |
+| 5404 | cautious | reached day 180 alive | **1/3** | never — the gate was shut |
+
+**The heads and survival pull against each other.** The three dojos that cleared the gate early (by
+days 20, 44, 48) all died of roster collapse with a full purse — 251, 867 and 82 gold on the table.
+The one that survived to day 180 did it by refusing combat for the last ~35 days, and therefore never
+took the heads the climax is gated on. The batch bed reads **20.2%** of last nights won on this build;
+four hand-played seasons read **0 of 4**. The bed's policy never waits for a better board and never
+times a build — but it also never has to rebuild a roster it has lost, because it is a distribution
+and not a season.
+
+**The board cannot be rebuilt from, and this is arithmetic, not luck.** `EncounterGenerator` never
+reads the roster — the offer is a function of the day and a ±`DailyVariance` (0.25) swing over the
+curve `0.9 + 0.011 × (day − 1)`. So with the thresholds at Faint < 1.1, Rising < 1.5, Heavy < 2.2:
+
+- past **day ~42** a Faint job is impossible (`curve − 0.25 ≥ 1.1`),
+- past **day ~78** a Rising job is impossible,
+- past **day ~120** the curve is clamped at `MaxPower` and every job is Dire.
+
+Two of the four deaths followed exactly that shape: one bad fight leaves one or two men, and there is
+no low job left on the board to earn the price of a replacement with. 5303 sent its last wounded man
+at a Heavy job because the board offered nothing else, and 5404 spent its last 35 days declining
+everything. **Written up as a design question, not patched** — three ways out were put to the user: a
+floor band (one job a day held below the curve, low-paying so it cannot be farmed), a variance that
+widens when the roster is thin (which would make the board read the roster, breaking the rule that it
+does not), or leaving the spiral in and giving the player an early-close instead.
+
+**The harness was the other half of the round, and eight things were fixed in it.** None of them touch
+the core; all of them were places where the game knew something and did not say it:
+
+- **a dated roll of the dead** — the printed log is a ten-day window, so a death older than that was
+  invisible; one agent reported four men vanishing with no cause, and the roll shows all four with
+  their days (`fallen 6: day 100: Warrior 1 · day 100: Warrior 4 · …`). **No deaths were ever
+  unlogged** — the claim was the window, not the bookkeeping;
+- **the tribunal names the man and his verdict** — seppuku was the one death that could happen on a
+  day nobody fought, and it printed as a bare "the tribunal sat";
+- **the rival's move is printed, and a sack says what it is** — `SACKED: -27 gold` had no cause on
+  screen because the raid that caused it was never shown (the game's own `DayLog` always said both);
+- **`WrongPartySize` says the number** (`this job takes exactly 1, 4 were sent`) — and the cause is
+  worth writing down: a slot's party rule changes when the slot is replaced overnight, so the rule the
+  player read is not always the rule his queued line meets;
+- **the gate line says what the gate is for** — `gate shut — 2 more head(s) or there is no last night,
+  38 days left`. 5404 played 180 correct days and learned only by typing `night` that there would be
+  no climax;
+- **a season that ends mid-script says so** — the runner used to stop at the death and print a
+  standing that looked like the end of the season rather than the middle of it;
+- **`wounded: … 1d left`** — the illness line rolls 3 days and the same day's medicine burns 2 of
+  them, so "3 days" and "1d" in one line read as a contradiction. Both numbers were right;
+- **the bounty verb tells three states apart** — nothing posted, posted and not accepted, accepted and
+  let expire.
+
+**Not bugs, though they were reported as such:** the REFUSED line that "persists forever" is the
+stateless replay doing its job (the refused line is still in the script, so it is refused again on
+every run), and a won fight that kills two men is the design — victory and casualty are resolved
+separately. Both are worth saying out loud: all four players read them as defects.
+
+**Two Turkish strings reached the screen and are gone:** `Armor.Light()` was `"Hafif keikogi"` (seen
+in the running Godot build on the roster screen) and the sample journal line in `Move.cs` carried it
+too. With the previous round's two, that is four; a sweep for Turkish string literals in `src/` now
+comes back empty.
+
+785 tests green; the Godot build runs clean headless (`--headless --quit-after 120`, no errors) and
+the dojo hub, the clock bar and the roster screen were checked in the running window.
+
+---
+
+## 2026-09-15 (fourth round) — The class layer is strong per man; the dojo just cannot arm him
+
+**The question was the second round's leftover: is the class × implement product too weak per man?**
+The three knobs it rides on already existed (`--class-catch-floor`, `--class-poison-share`,
+`--class-range-share`), so it was read where a class actually holds its implement — the **battle**
+bed, 100.000 fights a cell, `--policy losing:0.7`:
+
+| Class | With its own implement | Same fight, unclassed | The class is worth |
+|---|---|---|---|
+| torite (`jitte` vs `jitte-unclassed`) | 54.75% | 39.21% | **+15.5 points** |
+| dokushi (`poison` vs `poison-unclassed`) | 83.42% | 74.69% | **+8.7 points** |
+| kyūdō (`yumi` vs `yumi-unclassed`) | 82.95% | 77.77% | **+5.2 points** |
+| kyūdō on stars (`thrown-kyudo` vs `thrown`) | 77.06% | 75.81% | +1.25 points |
+
+**That is not a weak layer.** The second round measured the same branch at **+1.1 points** in the
+campaign and concluded the halls were priced wrong; the price was not it, and neither is the product.
+
+**The gap is that the dojo cannot arm the man it trains.** The quartermaster sells armour pieces,
+throwing implements and repairs; the sword forge only reworks the weapon already in the hand into a
+better one of its own kind. **There is no melee-weapon purchase anywhere in the dojo layer** — a
+warrior fights the whole season with what he was hired with, and the campaign policy hires from a
+scenario template. So a torite trained in the dojo's own hall never holds a jitte. The measurement
+that proves it: with `--class-catch-floor 0.00` the campaign bed returns **18.3 / 19.9 / 19.0%** of
+last nights on three seeds — **identical to the digit** to the same bed with classes never trained.
+The entire campaign worth of the catching class was flowing through the soft edge, the factor that
+is meant to be the class's blurred boundary rather than all of it.
+
+Only kyūdō escapes this, and only by an accident of slots: the yumi is a **thrown** implement, and
+the thrown slot can be bought (`FillThrowingSlots`). That is why the range class is the one that
+looks alive in campaign figures.
+
+**The three factors themselves, swept for the record** (same battle bed):
+
+- **Catch floor** (`torite-katana`, a torite holding a katana): 0.00 / 0.10 / 0.20 / 0.30 / 0.50 →
+  72.13 / 73.45 / 74.70 / 76.09 / 78.41%. Linear, about **+1.3 points per 0.1**, no knee. 0.10 is a
+  defensible edge — a disarmed torite keeps something, and it is nowhere near the +15.5 the implement
+  itself is worth.
+- **Poison share** (`poison-unclassed`): 0.00 / 0.30 / 0.60 / 0.85 / 1.00 → 4.04 / 50.99 / 74.69 /
+  80.99 / 83.41%. Violently non-linear and the **most sensitive number of the three** — at 0 the
+  matchup collapses (4%), which is the same scenario's way of saying the dose is the whole fight
+  there. 0.6 already buys 89.5% of the classed win rate, so the dokushi's edge is thin at this
+  setting and moving the number is a real lever if the class ever needs one.
+- **Range share** (`yumi-unclassed`): 0.45 / 0.60 / 0.85 / 1.00 → 76.36 / 76.87 / 77.77 / 78.34%.
+  Nearly **inert** — two points across the whole range, because the yumi's own `UntrainedShare`
+  (0.45) is what actually holds an untrained hand back. The knob is shallow by design and the
+  measurement confirms it is doing almost nothing.
+
+**Written up as GDD Open Decision #21, not fixed.** Arming a classed man is a design decision — a
+weapon stall, or the hall equipping the man it trains, or class implements appearing in the recruit
+market — and it changes what gold is for. A `--class-arm` policy knob was started and then **taken
+back out**: it needed a core weapon-purchase API, which is exactly the design decision above, and a
+measuring instrument is not the place to settle it.
+
+**Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
+named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
+language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-09-15 (third round) — The tier table swept a third time, and nothing moved
+
+**The last round re-read Master and left the other two ends where they were.** `PowerPerDay` went
+back to 0.011 and the spoils round changed what a fight pays, but Apprentice and Legend were last
+swept on 2026-09-13 — so the tier table was quoting a Master column the season no longer runs and
+two flanks nobody had checked against it. Three seeds × 1600 dojos × 180 days per tier, on the same
+rich bed as the second round (the documented bed plus `--charms on --thrown-fit everyone
+--retire maimed --class-fit torite --train-classes on`), `--difficulty` and `--seed` the only knobs
+moved:
+
+| Tier | last night won | dojos closed | net / fight | deaths / warrior-fight | mastery, best man |
+|---|---|---|---|---|---|
+| Apprentice | 29.1% (28.6 / 29.6 / 29.1) | 20.4% | +46.5 | 2.9% | 39.4% |
+| Master | 20.2% (19.5 / 20.6 / 20.4) | 28.4% | +37.0 | 3.8% | 28.4% |
+| Legend | 9.2% (8.4 / 10.2 / 9.1) | 36.6% | +22.4 | 5.2% | 15.0% |
+
+**The multipliers stand — 0.93/1.07/0.42, 1/1/0.5, 1.07/0.93/0.58 — and the reason is that every
+column still separates monotonically.** The one thing that changed is the *shape* of the spread: the
+season is richer than it was, so the soft end gained less than the hard end lost. Apprentice is now
+**1.44×** Master's night where it was 1.66× on the previous curve, and Legend **0.46×** where it was
+0.38×. A narrower ladder on a friendlier season, which is the direction a tier table is supposed to
+drift when the base game gets more generous — not a rung that stopped existing.
+
+**Legend's floor rose a second time.** The 2026-09-12 sweep had it at a negative net and a 0.2%
+night, i.e. the season's second half removed; 2026-09-13 lifted it to +19.0 and 5.2% when the
+stamina pool was made to bind; it now runs **+22.4** a fight with a best man at **15.0%** mastery and
+nearly one night in ten. Nothing was done to it in either round — the hard tier keeps inheriting the
+base game's improvements, which is exactly what deriving a tier by multipliers is for.
+
+**No code was retuned.** The change is documentation only: `Difficulty.Apprentice` and
+`Difficulty.Legend` each carry the third sweep in their remarks, and GDD §10's tier paragraph now
+quotes the 2026-09-15 figures with the bed named beside them — the second round's Master column was
+taken on the rich bed too, and the old table's numbers were not, which is the trap this entry exists
+to close.
+
+⏳ **Left for Phase 9:** the class layer's per-man strength (the class × implement multipliers
+themselves — catch base 0.10, the poison share 0.6, the range share 0.85), which the second round's
+hall-price sweep proved was the real weakness. Price was not it; strength is.
+
+---
+
+## 2026-09-15 (second round) — The difficulty numbers re-read against the bed that changed under them
+
+**The round's question was "which numbers are stale", and the answer was one of the four suspects.**
+The spoils and the school's price moved the season on 2026-09-15 without any difficulty number being
+re-read. Four were suspected; each was swept on the documented bed, three seeds × 1600 dojos × 180
+days, with every development switch on:
+
+```
+--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on
+--paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on
+--thrown-fit everyone --retire maimed --class-fit torite --train-classes on
+```
+
+> ⚠️ `--train-classes on` is **not** implied by `--class-fit`: without it the policy trains nobody and
+> the run reports `classed 0.00`. Two sweeps were thrown away to that before it was noticed. The bed
+> above is the one every figure in this entry was taken on, and it is richer than the plain documented
+> bed — where a figure is quoted against the plain one it says so.
+
+**`EncounterTuning.PowerPerDay` 0.010 → 0.011.** This was the one that had gone stale, and not in the
+direction the round expected. On the plain documented bed the death rate is **4.07%**, and it has been
+there since the queue round: 0.010 was chosen on 2026-09-13 to patch an **income** hole the offer
+queue opened (net per fight 28.1 → 21.9), and it was paid for out of the death rate, which is the one
+number GDD §11 anchors. The spoils round filled that hole from the other side — the same bed now pays
+**43.7** a fight. So the rung is given back:
+
+| `PowerPerDay` | Deaths / warrior-fight | Dojos closed | Won the night | Net / fight |
+|---|---|---|---|---|
+| 0.010 | 4.07% | 26.4% | 19.3% | 43.7 |
+| **0.011** | **4.67%** | **31.0%** | **16.0%** | **41.0** |
+| 0.0115 | 4.87% | 31.5% | 13.6% | 39.5 |
+| 0.013 | 5.50% | 34.6% | 11.0% | 35.9 |
+
+0.011 lands on the locked **4.7%** and on the tenth round's re-locked closure figure (30.4%) at the
+same time — the two anchors agree, which is the only reason to trust either.
+
+**`SeasonTuning.FinalRoundPowers` — kept, and its criterion rewritten.** The ×1.30 lock was justified
+by "nights won 9.7%", and that number has been void for two rounds: the queue, the spoils and the
+school's price each moved the night without touching the powers. Re-swept at ×0.85 / ×1.00 / ×1.15 of
+the current five: **28.2 / 20.2 / 10.4%**, with closures, deaths and net identical to the digit — the
+night's powers still touch the night alone. They are kept, because **20% is the right place for a
+measuring floor**: §11 puts a fully developed eight-man dojo at about 38.5%, and this policy never
+waits for a better board, never times a build and never picks the node it needs. Tuning the floor onto
+the design's own number would put the ceiling out of reach of losing.
+
+**The class hall's price — swept for the first time, and the round's real finding.** The 2026-09-15
+school round proposed that the class branch is weak because of **reach** (3.1 classed men of an
+eight-bed roster, the halls 450 gold each). `SchoolTuning.ClassHallPriceFactor` and `--class-price`
+were added so the halls could be scaled without moving the nineteen buildings that are not halls:
+
+| Hall price | Classed men a season | Won the night |
+|---|---|---|
+| classes never trained | 0.00 | 19.1% |
+| **×1.00** | **3.13** | **20.2%** |
+| ×0.75 | 5.24 | 18.6% |
+| ×0.50 | 7.14 | 20.3% |
+| ×0.30 | 11.07 | 22.2% |
+
+**Reach was bought and almost nothing followed.** Three and a half times the classed men is worth
+about +2 points, and the whole branch — cheap halls against a dojo that never trains a class — is
+worth **+3.1**, where the same round's ladder cut is worth +7.5 on this bed. The reach hypothesis is
+therefore **wrong**: the branch is weak per man, not priced out. The factor stays at 1.0 and the class
+layer's strength goes to Phase 9 as a design item. The knob is kept as a measuring instrument, which
+is what it turned out to be.
+
+**Build time — re-measured, kept at 6/10/14.** Halving every construction time is worth +1.9 points of
+night (20.2 → 22.1%), removing it entirely +2.9 (23.1%), closures and deaths unmoved. Second-order, as
+the school-price round said, and what the days buy is the design's own meaning: a facility decided on
+is a facility that is not there yet.
+
+**`SchoolTuning.PriceFactor` re-checked on the new curve and kept at 0.75.** ×1.00 / ×0.75 / ×0.50 give
+**12.7 / 20.2 / 30.7%** of nights with closures going 30.1 / 28.4 / 27.0 — the ladder is still the
+season's largest lever and still buys no tension as it falls. 0.75 remains the rung that leaves the
+measuring floor under the design's ceiling.
+
+**Two rows of GDD Open Decision #18 were stale rather than open.**
+
+- The **frequency of classed candidates** (0.05) says "still unmeasured — the campaign policy does not
+  train classes". It was measured on 2026-09-12 against a policy that does (`RecruitMarket`): at 0 /
+  0.05 / 0.25 the night is won by 9.8 / 11.8 / 12.2% and 29.2 / 26.5 / 25.5% of dojos close. The
+  shortcut is real and saturates at 0.05.
+- The **reward band** is listed as 0.75-1.25; in the code it is **0.5-1.5**, and it is not a number
+  awaiting a sweep at all: `CrowdVerdict.RewardMultiplier` is read by nothing outside its own tests.
+  No fight fee is multiplied by it, so the crowd's verdict cannot reach a payout until chat is wired
+  in at Phase 5. It is a **wiring** item, and #18 now says so.
+
+**A control worth keeping:** the same bed with the school, the paths and the staff switched off closes
+**87.2%** of dojos, wins no last night at all and runs 10.1% deaths per warrior-fight. The school is
+load-bearing, and the spread it carries is the one the design asked for.
+
+New: `SchoolTuning.ClassHallPriceFactor`, the `--class-price` sim knob. New tests:
+`SchoolTests.AClassHallCarriesItsOwnPriceFactor` (the factor reaches a hall and no other node) and the
+CLI parse test extended to both school factors.
+
+785 tests green (564 core + 163 presentation + 58 sim); `dotnet build` 0 errors / 0 warnings.
 
 ---
 
