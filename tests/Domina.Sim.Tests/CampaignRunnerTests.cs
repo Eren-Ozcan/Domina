@@ -236,6 +236,8 @@ public class CampaignRunnerTests
             "--power-per-day", "0.05",
             "--power-variance", "0.1",
             "--duel-chance", "0",
+            "--school-price", "0.5",
+            "--class-price", "0.25",
         ]);
 
         Assert.Null(parsed.Error);
@@ -248,5 +250,9 @@ public class CampaignRunnerTests
         Assert.Equal(0.05, campaign.Encounters.PowerPerDay);
         Assert.Equal(0.1, campaign.Encounters.DailyVariance);
         Assert.Equal(0, campaign.Encounters.DuelChance);
+
+        // The class halls scale on their own axis: the ladder's factor and the halls' are two knobs.
+        Assert.Equal(0.5, campaign.School!.PriceFactor);
+        Assert.Equal(0.25, campaign.School.ClassHallPriceFactor);
     }
 }

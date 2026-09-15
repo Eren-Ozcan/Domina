@@ -1372,6 +1372,20 @@ internal static class SimArgs
                     schoolTuning = schoolTuning with { PriceFactor = schoolPrice };
                     break;
 
+                case "--class-price":
+                    if (!double.TryParse(
+                            value,
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out double classPrice)
+                        || classPrice < 0)
+                    {
+                        return ParsedArgs.Fail($"--class-price must be a non-negative number: {value}");
+                    }
+
+                    schoolTuning = schoolTuning with { ClassHallPriceFactor = classPrice };
+                    break;
+
                 case "--build-days":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double buildDays)
@@ -2084,6 +2098,7 @@ internal static class SimArgs
         writer.WriteLine("  --offer-life <days>  How many days a posted job stands on the board (campaign, default 3)");
         writer.WriteLine("  --stale-fee <share> Fee a standing job loses per day of age (campaign, default 0.25)");
         writer.WriteLine("  --class-fit torite|dokushi|kyudo  Which class the policy trains first (campaign)");
+        writer.WriteLine("  --class-price N          Multiplier on a class hall's gold price (campaign)");
         writer.WriteLine("  --thrown-fit none|bow|everyone  Whose throwing slot the policy fills (campaign, default none)");
         writer.WriteLine("  --thrown-gold      The stall's price per point of a full quiver's damage");
         writer.WriteLine("  --thrown-poison    What a full dose adds to a thrown implement's price, as a share");

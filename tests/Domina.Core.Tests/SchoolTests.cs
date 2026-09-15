@@ -54,6 +54,23 @@ public class SchoolTests
         Assert.False(state.BuySchoolNode(SchoolNodeId.TrainingGround));
     }
 
+    /// <summary>
+    /// The class halls carry a price factor of their own, and it reaches them alone: the branch's reach
+    /// has to be askable as a question without moving the nineteen buildings that are not halls.
+    /// </summary>
+    [Fact]
+    public void AClassHallCarriesItsOwnPriceFactor()
+    {
+        SchoolNode hall = SchoolTree.Find(SchoolNodeId.ToriteHall);
+        SchoolNode ordinary = SchoolTree.Find(SchoolNodeId.TrainingGround);
+
+        DojoState plain = new(school: new SchoolTuning { ClassHallPriceFactor = 1.0 });
+        DojoState cheap = new(school: new SchoolTuning { ClassHallPriceFactor = 0.5 });
+
+        Assert.Equal(plain.School.PriceOf(hall) / 2, cheap.School.PriceOf(hall));
+        Assert.Equal(plain.School.PriceOf(ordinary), cheap.School.PriceOf(ordinary));
+    }
+
     /// <summary>The treasury does not go negative: a facility that cannot be afforded is not bought, and the tree does not change.</summary>
     [Fact]
     public void AFacilityBeyondThePurseChangesNothing()

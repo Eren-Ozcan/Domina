@@ -128,6 +128,19 @@ public sealed record SeasonTuning
     /// re-locked curve: nights won 14.2 / 9.7 / 6.0%, with closures and deaths unmoved — the night's
     /// powers touch the night alone.
     /// </para>
+    /// <para>
+    /// <b>Re-measured on 2026-09-15 and kept — but the 9.7% above is void as a criterion.</b> Two
+    /// rounds moved the night without touching these numbers: the offer queue
+    /// (<see cref="EncounterTuning.OfferLifeDays"/>) and then the spoils and the school's price. On the
+    /// documented bed with every development switch on, the same powers are now won <b>20.2%</b> of the
+    /// time (three seeds × 1600 dojos: 19.5 / 20.6 / 20.4), and 16.0% by the bed's plainer policy.
+    /// Swept again at ×0.85 / ×1.00 / ×1.15 of the numbers below: 28.2 / <b>20.2</b> / 10.4%, with
+    /// closures, deaths and net identical to the digit — the night is still the last day and nothing
+    /// else. They are kept where they are because <b>20% is the right place for a measuring floor</b>:
+    /// GDD §11 puts a fully developed eight-man dojo at about 38.5%, and this policy never waits for a
+    /// better board, never times a build and never picks the node it needs. Tuning the floor onto the
+    /// design's own number would put the ceiling out of reach of losing.
+    /// </para>
     /// </remarks>
     public IReadOnlyList<double> FinalRoundPowers { get; init; } = [2.34, 2.6, 2.86, 3.12, 3.64];
 

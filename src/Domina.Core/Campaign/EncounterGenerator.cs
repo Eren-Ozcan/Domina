@@ -36,8 +36,19 @@ public sealed record EncounterTuning
     /// deaths, 27.8 vs 28.1 net) <b>0.010 is the rung that puts the
     /// season back where it was</b> before the queue — everything below it buys the player a road that
     /// is simply easier.
+    ///
+    /// <b>Back on 0.011 on 2026-09-15</b>, once the spoils round filled the hole 0.010 was patching.
+    /// The queue's cost was <b>income</b> (28.1 net per fight to 21.9), and a won fight now leaves food
+    /// behind (<see cref="Dojo.EconomyTuning.VictoryFoodPerEnemy"/>) while the school costs three
+    /// quarters of what it did (<see cref="Dojo.SchoolTuning.PriceFactor"/>): the same bed pays 43.7 a
+    /// fight. The rung was bought with the death rate, and that is the one number GDD §11 anchors, so it
+    /// is given back. Swept on the documented bed (three seeds × 1600 dojos × 180 days): at 0.010 /
+    /// 0.011 / 0.0115 / 0.013 deaths per warrior-fight run 4.07 / <b>4.67</b> / 4.87 / 5.50%, dojos
+    /// close 26.4 / 31.0 / 31.5 / 34.6%, the last night is won 19.3 / 16.0 / 13.6 / 11.0% and the net
+    /// per fight 43.7 / 41.0 / 39.5 / 35.9. <b>0.011 is the rung that lands on the locked 4.7%</b>, and
+    /// it lands on the tenth round's re-locked closure figure (30.4%) with it — the two anchors agree.
     /// </remarks>
-    public double PowerPerDay { get; init; } = 0.010;
+    public double PowerPerDay { get; init; } = 0.011;
 
     /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>

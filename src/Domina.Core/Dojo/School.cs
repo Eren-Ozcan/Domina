@@ -195,6 +195,18 @@ public sealed record SchoolTuning
     /// </remarks>
     public double PriceFactor { get; init; } = 0.75;
 
+    /// <summary>What a class hall's gold price is multiplied by, on top of <see cref="PriceFactor"/>.</summary>
+    /// <remarks>
+    /// The three halls are their own branch and their own question. The class layer is worth about
+    /// <b>+1.1 points</b> of last night against the same dojo with the halls unused, and only 3.1 men of
+    /// an eight-bed roster are ever classed — so the branch's weakness has always read as reach rather
+    /// than strength, and reach is bought with the price. This scales the halls alone, so the question
+    /// can be asked without moving the nineteen buildings that are not halls.
+    ///
+    /// <b>1.0 since 2026-09-15</b>, i.e. the halls pay the ladder's own factor and nothing more.
+    /// </remarks>
+    public double ClassHallPriceFactor { get; init; } = 1.0;
+
     /// <summary>The training-speed multiplier of the training ground and the inner dojo.</summary>
     public double TrainingRateStep { get; init; } = 1.30;
 
@@ -362,7 +374,13 @@ public sealed class School
     public int PriceOf(SchoolNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
-        return (int)Math.Round(node.Cost * Tuning.PriceFactor);
+        double price = node.Cost * Tuning.PriceFactor;
+        if (node.Unlocks is not null)
+        {
+            price *= Tuning.ClassHallPriceFactor;
+        }
+
+        return (int)Math.Round(price);
     }
 
     /// <summary>The nodes that can be bought today — affording them is a separate question.</summary>
