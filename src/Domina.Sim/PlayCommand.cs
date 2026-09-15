@@ -115,6 +115,17 @@ internal static class PlayCommand
 
             if (session.Over)
             {
+                // The rest of the script is not played, and it used to go unmentioned: a player whose
+                // dojo died on line 40 of 90 saw a standing that looked like the end of his season
+                // rather than the middle of it.
+                int left = lines.Length - i - 1;
+                if (left > 0)
+                {
+                    notes.Add(
+                        $"the season ended on line {i + 1} — {left} further "
+                        + $"{(left == 1 ? "line was" : "lines were")} not played");
+                }
+
                 break;
             }
         }
@@ -130,6 +141,9 @@ internal static class PlayCommand
         private readonly int _days;
         private readonly ulong _seed;
         private readonly List<string> _log = [];
+
+        /// <summary>Every death of the season, dated — the printed log only reaches ten days back.</summary>
+        private readonly List<string> _deaths = [];
 
         public Session(ulong seed, int days, int gold)
         {
@@ -216,7 +230,10 @@ internal static class PlayCommand
                 }
                 else if (entry.RecoveryDaysRemaining > was.Infirmary)
                 {
-                    hurt.Add($"{was.Name} {entry.RecoveryDaysRemaining}d");
+                    // "left", because this is what remains after the day that has just been paid for —
+                    // not the length that was rolled. Without the word the two numbers read as a
+                    // contradiction in the same line.
+                    hurt.Add($"{was.Name} {entry.RecoveryDaysRemaining}d left");
                 }
             }
 
@@ -229,6 +246,14 @@ internal static class PlayCommand
             if (dead.Count > 0)
             {
                 toll.Append(CultureInfo.InvariantCulture, $" | DEAD: {string.Join(", ", dead)}");
+
+                // The printed log is a window on the last ten days, so a death older than that is
+                // unreadable by the time its consequences are felt. The roll is kept for the whole
+                // season: who fell, on which day, doing what.
+                foreach (string name in dead)
+                {
+                    _deaths.Add($"day {_state.Day}: {name}");
+                }
             }
 
             if (hurt.Count > 0)
@@ -243,6 +268,13 @@ internal static class PlayCommand
         {
             string[] word = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             string verb = word[0].ToLowerInvariant();
+
+            // A finished season used to swallow every further move without a word, so a script that
+            // ran past the end read as if it were still being played. It is refused out loud instead.
+            if (Over)
+            {
+                return $"the season is over ({_state.Season.Phase}) — no move is taken";
+            }
 
             switch (verb)
             {
@@ -337,7 +369,15 @@ internal static class PlayCommand
 
             if (Domina.Core.Campaign.Expedition.Refuse(_state, offer, party) is ExpeditionRefusal no)
             {
-                return $"the expedition was refused: {no}";
+                // A bare "WrongPartySize" leaves the player guessing, and the guess is hard: a job's
+                // party rule can change overnight when the slot is replaced, so the rule he read is
+                // not always the rule his queued line meets. The refusal says the number.
+                string why = no == ExpeditionRefusal.WrongPartySize
+                    ? offer.RequiredPartySize is int need
+                        ? $"WrongPartySize — this job takes exactly {need}, {party.Count} were sent"
+                        : $"WrongPartySize — this job takes 1-{EncounterOffer.MaxPartySize}, {party.Count} were sent"
+                    : no.ToString();
+                return $"the expedition was refused: {why}";
             }
 
             ExpeditionResult result = new Domina.Core.Campaign.Expedition().Send(
@@ -400,7 +440,13 @@ internal static class PlayCommand
         {
             if (_state.Bounty is not BountyContract contract)
             {
-                return "no bounty is accepted";
+                // Three different situations used to print the same sentence, and a player could not
+                // tell them apart: nothing posted, a contract posted but never accepted, and a
+                // contract accepted and then let expire while the days were spent elsewhere.
+                return _state.AcceptedBountyDay is int accepted
+                    ? $"the contract you accepted on day {accepted} is no longer on the board — "
+                        + "it ran out while the days went elsewhere"
+                    : "no contract is on the board today";
             }
 
             List<RosterEntry> party =
@@ -579,9 +625,19 @@ internal static class PlayCommand
                 line.Append(CultureInfo.InvariantCulture, $" | mishap: {happening.Description} ({happening.Gold} gold)");
             }
 
+            // The rival's own move is what a sack comes out of, and the harness used to print the
+            // theft without ever printing the raid — so the loss read as causeless. The game's day log
+            // (Domina.Presentation/DayLog.cs) has always said both; this says the same thing.
+            if (report.RivalMove is ProvinceMove move)
+            {
+                line.Append(CultureInfo.InvariantCulture, $" | the rival moved: {move.Kind}");
+            }
+
             if (report.Sacked is SackReport sack)
             {
-                line.Append(CultureInfo.InvariantCulture, $" | SACKED: -{sack.Gold} gold, -{sack.Food} food");
+                line.Append(
+                    CultureInfo.InvariantCulture,
+                    $" | SACKED (the raid was not answered): -{sack.Gold} gold, -{sack.Food} food");
             }
 
             if (report.MissedWeek)
@@ -589,9 +645,12 @@ internal static class PlayCommand
                 line.Append(" | a week closed with no fight filed");
             }
 
-            if (report.Tribunal is not null)
+            if (report.Tribunal is TribunalVerdict verdict)
             {
-                line.Append(" | the tribunal sat");
+                // The tribunal is the one way a man dies on a day nobody fought, so the line has to
+                // name him: without it a warrior simply disappears from the roster between two checks
+                // and the log gives the player nothing to read it from.
+                line.Append(CultureInfo.InvariantCulture, $" | the tribunal sat: {verdict.Name} — {verdict.Outcome}");
             }
 
             if (report.Opened is { Count: > 0 } opened)
@@ -614,8 +673,16 @@ internal static class PlayCommand
             Resources draw = _state.DailyDraw();
             output.WriteLine(
                 $"DRAW   today takes food {draw.Food}, water {draw.Water}, medicine {draw.Medicine}, gold {draw.Gold}");
+            // The gate used to be a bare fraction, and a player could reach day 180 alive without ever
+            // being told that the heads are what the season is for: surviving to the end with a shut
+            // gate closes the season with no last night at all.
+            int daysLeft = Math.Max(0, _days - _state.Day);
+            string gate = _state.Season.GateOpen
+                ? "gate open — the last night will be fought"
+                : $"gate shut — {3 - _state.Season.HeadsTaken} more head(s) or there is no last night, "
+                    + $"{daysLeft} days left";
             output.WriteLine(
-                $"SEASON heads {_state.Season.HeadsTaken}/3, gate {(_state.Season.GateOpen ? "open" : "shut")}, "
+                $"SEASON heads {_state.Season.HeadsTaken}/3, {gate}, "
                 + $"quiet weeks in a row {_state.Season.MissedStreak}");
 
             output.WriteLine();
@@ -632,7 +699,22 @@ internal static class PlayCommand
                     + $"{e.Warrior.Class}  str {s.Strength:F0} acc {s.Accuracy:F0} def {s.Defense:F0} eva {s.Evasion:F0}");
             }
 
+            if (living.Count == 0)
+            {
+                output.WriteLine("  (nobody is left standing)");
+            }
+
             output.WriteLine($"  beds {_state.Capacity}, fit for the field {_state.Roster.FitForCampaign.Count()}");
+
+            // The dead stay in the roster, and a closed dojo showed an empty table with no way to ask
+            // who had been in it. The roll is the post-mortem, and it is dated: the log window only
+            // reaches ten days back, which is how a collapse became invisible to a player who
+            // scripted a long block of days.
+            if (_deaths.Count > 0)
+            {
+                output.WriteLine($"  fallen {_deaths.Count}: {string.Join(" · ", _deaths.TakeLast(10))}"
+                    + (_deaths.Count > 10 ? " (last ten)" : string.Empty));
+            }
 
             output.WriteLine();
             output.WriteLine("BOARD (index  threat  enemies  promised  expires  party)");
