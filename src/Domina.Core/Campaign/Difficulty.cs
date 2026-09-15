@@ -63,6 +63,14 @@ public sealed record Difficulty(
     /// nights won against Master's 13.7%, 21.2% of dojos closed against 28.3%, net +41.3 against
     /// +31.4. A softer road on the same map, not a different game — the multipliers stand.
     /// </para>
+    /// <para>
+    /// <b>Swept a third time (2026-09-15, three seeds x 1600 dojos on the rich bed) after the curve
+    /// went back to 0.011 and the spoils round changed what a fight pays:</b> 29.1% of last nights won
+    /// against Master's 20.2%, 20.4% of dojos closed against 28.4%, net +46.5 against +37.0, deaths
+    /// 2.9% against 3.8% per warrior-fight. The gap narrowed with the richer season (1.44x Master's
+    /// night, against 1.66x on the previous curve) but every column still separates cleanly, so the
+    /// multipliers were not touched.
+    /// </para>
     /// </remarks>
     public static Difficulty Apprentice { get; } = new(DifficultyTier.Apprentice, 0.93, 1.07, 0.42);
 
@@ -82,6 +90,12 @@ public sealed record Difficulty(
     /// tier's floor — 5.2% of last nights won, 35.5% of dojos closed, net <b>+19.0</b> a fight and a
     /// best man who ends the season at 10.3% mastery. A road that can be walked to the end, which is
     /// what this tier failed to be before. The multipliers were not touched.
+    /// </para>
+    /// <para>
+    /// <b>The same third sweep (2026-09-15):</b> 9.2% of last nights won, 36.6% of dojos closed, net
+    /// <b>+22.4</b> a fight, deaths 5.2% per warrior-fight and a best man at 15.0% mastery. The floor
+    /// rose again with the season's new income, and the tier still sits at less than half Master's
+    /// night on nearly a third more closures. Unchanged.
     /// </para>
     /// </remarks>
     public static Difficulty Legend { get; } = new(DifficultyTier.Legend, 1.07, 0.93, 0.58);
