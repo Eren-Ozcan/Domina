@@ -72,10 +72,12 @@ Never replace it with MIT or any other permissive licence, and never leave a
 scaffold's own LICENSE file (Expo's, Unity's, a starter template's) in the repo
 root — that would publish this project under someone else's terms.
 
-No third-party fonts or asset packs are bundled; the only external packages are
-test-only (xunit, coverlet), which are not distributed. If that changes, keep
-the component's licence text in the repo and add a `THIRD-PARTY-NOTICES.md`
-listing it.
+Two OFL fonts are bundled — Shippori Mincho B1 and Zen Kaku Gothic New, under
+`src/Game/Fonts/`, subsetted to the glyphs the screens print. Their licence
+texts sit beside them and `THIRD-PARTY-NOTICES.md` in the root lists them. The
+only external packages are test-only (xunit, coverlet), which are not
+distributed. If another component is added, keep its licence text in the repo
+and list it in `THIRD-PARTY-NOTICES.md` the same way.
 
 ## Studio-wide information
 
