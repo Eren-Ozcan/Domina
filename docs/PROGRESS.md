@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-15 (the difficulty numbers re-read against the bed that changed under them — the curve is back on 0.011, the night's powers keep their place and the class hall's price turns out not to be the class branch's problem; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay — the stall guard leaves its fight behind it, every screen button is guarded and the purse door is shut; before it: the journal's holes closed — rename, chat votes, the pull-out key and the arena's seeds; before it: the move journal and its replay)
+Last updated: 2026-09-17 (the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,63 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-09-17 — The rack: the dojo can arm the man it trains, and the season says not to
+
+**Open Decision #21 is closed, and it closed by disproving itself.** The row was opened on 2026-09-15
+by the class-strength measurement: the quartermaster sold armour, the throwing slot and repairs, the
+forge only reworked the blade already in the hand, and **nothing anywhere sold a melee weapon** — so a
+torite trained in the dojo's own hall was sent out holding the katana he was hired with, and the whole
+campaign worth of the class ran through the untrained-hand factors. The row listed three ways out. A
+fourth was taken: the reference game sells the gladiator his weapon **from the gladiator panel**
+(`docs/REFERENCE-DOMINA-UI.md` §3, the PRIMARY slot), and arming a man is a decision about the man, so
+the rack hangs on **his own page** — the roster's detail column, under his path and beside his charms.
+The armoury counter stays what it is: six regions, their wear and the throwing stall.
+
+**What was built, core first.** `Quartermaster.WeaponPrice` / `EquipWeapon`, `EquipmentCatalogue.Rack`
+(every weapon but the fists), `MoveKind.EquipWeapon` with its replay case so a run that arms a man
+replays, `QuartermasterModel.Rack` → `RackCard` / `WeaponOffer` (which class an implement belongs to
+and whether this hand was taught it), and the rows on `RosterScreen`. The detail column now scrolls,
+because it carries the rack as well as everything it already had. Six tests on the model and the core,
+one on the replay.
+
+**The price is read off the weapon's output rate** — damage ÷ attack cycle — and not off damage, or the
+nodachi (34 a swing, 1.60 s) would be sold far above the katana (22, 1.10 s) when the two put out nearly
+the same work per second. What the rate cannot see is charged as a share: the grip that catches (0.5 ×
+catching skill) and the dose (1.5). At `WeaponGoldPerDamageRate` 8 that is a katana 160, a jitte 180, a
+sai 186, a poisoned tantō 165, against a man at 150 and a reforged katana at 264. Nothing is bought back
+and the mastery does not travel.
+
+**Then the measurement, and it is the entry's point.** Six seeds × 1600 dojos × 180 days, paired per
+seed, on the documented rich bed with `--train-classes on`, a policy that arms every taught hand
+(`--arm-fit class`, new) against a control that arms nobody:
+
+| Policy | Last night won | Dojos closed | Net / fight | Rack gold / dojo |
+|---|---|---|---|---|
+| Torite, nobody rearmed | **19.1%** | 28.8% | 35.7 | 0 |
+| Torite, armed with a jitte | **1.8%** | 34.2% | 20.6 | 771 |
+| Dokushi, nobody rearmed | **19.1%** | 28.9% | 35.6 | 0 |
+| Dokushi, armed with the dose | **3.7%** | 32.4% | 21.1 | 813 |
+
+**Arming the class is a catastrophe, and the price is not why.** Re-run at `--weapon-gold 0.01` — about
+**9 gold** for the whole season instead of ~780 — the collapse is unchanged: torite 0.8 / 1.2 / 2.1%,
+dokushi 3.4 / 3.1 / 3.8% of last nights. Per fight the difference is small and in the fight itself
+(victory 98.2% → 97.7%, deaths per warrior-fight 3.8% → 4.7%, fights per dojo 84.3 → 80.0); the final
+night, five rounds against the hardest enemies in the season, is where a weaker weapon is paid for.
+
+**So the premise of #21 was wrong.** The class layer's campaign weakness was never the missing counter —
+it is the implements' own combat numbers, which is **Open Decision #19 widened**, and #19 is therefore
+**reopened**: its gold price was closed on the battle bed on 2026-09-12, and the season disagrees with
+it. The jitte's and the sai's damage/speed/disarm share and the dose beside them are Phase 9 work.
+`WeaponGoldPerDamageRate` stands as a **proposal, not a locked number**: a price cannot be swept for a
+purchase nobody should make yet.
+
+**A trap found while measuring, worth writing down.** `Affordable` in `CampaignRunner` reads
+`price > 0`, so the first control — the rack made free with `--weapon-gold 0` — bought **nothing** and
+came back identical to the digit to the do-nothing bed. A control that reproduces its own control is not
+a control; the near-free run (0.01) is the one that carries the finding.
 
 ---
 
