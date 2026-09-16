@@ -55,6 +55,29 @@ public class DojoSaveTests
     }
 
     [Fact]
+    public void ARoundTripKeepsTheSchoolsName()
+    {
+        DojoState before = Populated();
+        before.Name = "The Ashigara dojo";
+
+        DojoState after = DojoSaveFile.Load(DojoSaveFile.Write(before)).State!;
+
+        Assert.Equal("The Ashigara dojo", after.Name);
+    }
+
+    [Fact]
+    public void ATermWrittenBeforeSchoolsWereNamedKeepsTheNameItAlwaysHad()
+    {
+        // A save written before the field existed carries no name at all; loading one must not leave
+        // the title screen printing an empty line where the term's name goes.
+        DojoSnapshot old = DojoSaveFile.Capture(Populated()) with { Name = null };
+
+        DojoState after = DojoSaveFile.Restore(old).State!;
+
+        Assert.False(string.IsNullOrWhiteSpace(after.Name));
+    }
+
+    [Fact]
     public void ARoundTripKeepsWhatTheBattleReadsFromAWarrior()
     {
         DojoState before = Populated();

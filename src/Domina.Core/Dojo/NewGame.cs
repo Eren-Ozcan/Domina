@@ -68,7 +68,8 @@ public static class NewGame
     public static DojoState Create(
         ulong seed,
         DojoTuning? tuning = null,
-        DifficultyTier tier = DifficultyTier.Master)
+        DifficultyTier tier = DifficultyTier.Master,
+        string? dojoName = null)
     {
         Difficulty difficulty = Difficulty.Of(tier);
 
@@ -81,6 +82,11 @@ public static class NewGame
         {
             Resources = new Resources(Gold: StartingGold),
         };
+
+        if (!string.IsNullOrWhiteSpace(dojoName))
+        {
+            dojo.Name = dojoName.Trim();
+        }
 
         // The province is dealt before the roster, off the run's own seed: how much of the map he
         // already holds is the other half of the run-to-run variety the design allows (docs/GDD.md §10).

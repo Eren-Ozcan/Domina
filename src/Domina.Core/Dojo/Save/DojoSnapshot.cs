@@ -66,7 +66,9 @@ public sealed record DojoSnapshot(
     IReadOnlyList<CharmStackSnapshot>? Charms = null,
     ProvinceSnapshot? Province = null,
     IReadOnlyList<StandingSnapshot>? Standing = null,
-    IReadOnlyList<int>? TakenOffers = null)
+    IReadOnlyList<int>? TakenOffers = null,
+    string? Name = null,
+    IReadOnlyList<TermMark>? Marks = null)
 {
     /// <summary>
     /// The version of the files written. It rises when the format changes in a <b>breaking</b> way;

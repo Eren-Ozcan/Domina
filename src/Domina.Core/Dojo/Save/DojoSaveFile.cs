@@ -86,7 +86,9 @@ public static class DojoSaveFile
                 state.Standing.Of(p),
                 state.Standing.GiftsTo(p),
                 state.Standing.LastFiled(p)))],
-            [.. state.TakenOffers]);
+            [.. state.TakenOffers],
+            state.Name,
+            [.. state.Marks]);
     }
 
     private static ProvinceSnapshot CaptureProvince(DojoState state) => new(
@@ -221,6 +223,14 @@ public static class DojoSaveFile
         state.RestoreSeed(snapshot.Seed);
         state.RestoreBounty(snapshot.AcceptedBountyDay, snapshot.ClaimedBountyDay);
         state.RestoreTakenOffers(snapshot.TakenOffers);
+
+        state.RestoreMarks(snapshot.Marks);
+
+        // A term written before the school could be named loads with the name it always had.
+        if (!string.IsNullOrWhiteSpace(snapshot.Name))
+        {
+            state.Name = snapshot.Name;
+        }
         state.RestoreSchool(
             snapshot.School ?? [],
             snapshot.Sites ?? []);

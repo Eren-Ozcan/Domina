@@ -30,6 +30,7 @@ public sealed class DojoState
     /// cannot grow with the season.
     /// </remarks>
     private readonly HashSet<int> _takenOffers = [];
+    private readonly List<TermMark> _marks = [];
     private IReadOnlyList<RecruitOffer>? _recruits;
     private BountyContract? _bounty;
     private bool _bountyRead;
@@ -241,6 +242,28 @@ public sealed class DojoState
     /// The expedition's seed. It lives in the save; offers are recomputed from it and the day.
     /// </summary>
     public ulong Seed { get; private set; }
+
+    /// <summary>
+    /// The days the term turned on, in the order they happened.
+    /// </summary>
+    /// <remarks>
+    /// The day's report is printed once and thrown away, and the move journal keeps what the player
+    /// did rather than what the term did to him. This keeps the handful of days a closing screen has
+    /// to be able to point at — the week nothing was filed, the day the store could not feed everyone,
+    /// the day the rival stood unanswered (design canvas → 9a, "where it turned").
+    /// </remarks>
+    public IReadOnlyList<TermMark> Marks => _marks;
+
+    /// <summary>
+    /// What the school is called — "the Ashigara dojo".
+    /// </summary>
+    /// <remarks>
+    /// It decides nothing and is spent on one thing: telling two terms apart wherever they are listed
+    /// beside each other, on the title screen and in a save. The player writes it when the term is
+    /// opened; a term opened without one is called by the name below, which is what the master's own
+    /// place was called before it was anybody's.
+    /// </remarks>
+    public string Name { get; set; } = "the dojo";
 
     public Roster Roster { get; } = new();
 
@@ -564,6 +587,8 @@ public sealed class DojoState
             MoveArg.Of("verdict", verdict is null ? null : $"{verdict.Name}: {verdict.Outcome}"),
             MoveArg.Of("sacked", sack is not null));
 
+        Mark(closed, season.MissedWeek, upkeep, broken, sack, verdict, move);
+
         return new DayReport(
             closed,
             recovered,
@@ -578,6 +603,80 @@ public sealed class DojoState
             verdict,
             move,
             sack);
+    }
+
+    /// <summary>
+    /// Writes down the parts of the day a closing screen will have to be able to point at.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is judged here and nothing is worded: the day's facts are kept as facts, and what they
+    /// are worth reading as is the closing screen's business (<c>Domina.Presentation</c>). Only the
+    /// first of each kind of week is kept for the missed week, because a term that files nothing for a
+    /// month would otherwise bury every other mark under itself.
+    /// </remarks>
+    private void Mark(
+        int day,
+        bool missedWeek,
+        UpkeepReport upkeep,
+        bool bountyBroken,
+        SackReport? sack,
+        TribunalVerdict? verdict,
+        ProvinceMove? move)
+    {
+        if (missedWeek)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.MissedWeek));
+        }
+
+        if (upkeep.Hungry.Count > 0)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.WentHungry, Count: upkeep.Hungry.Count));
+        }
+
+        if (upkeep.Walked is IReadOnlyList<StaffRole> walked && walked.Count > 0)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.StaffWalked, walked[0].ToString(), walked.Count));
+        }
+
+        if (sack is not null)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.Sacked));
+        }
+
+        if (bountyBroken)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.BountyBroken));
+        }
+
+        if (move is ProvinceMove taken
+            && taken.Kind == ProvinceMoveKind.Taken
+            && taken.Settlement is int index
+            && index >= 0
+            && index < Province.Settlements.Count)
+        {
+            _marks.Add(new TermMark(day, TermMarkKind.VillageLost, Province.Settlements[index].Name));
+        }
+
+        if (verdict is not null)
+        {
+            _marks.Add(new TermMark(
+                day,
+                verdict.Outcome == Domina.Core.Honor.SeppukuOutcome.Seppuku
+                    ? TermMarkKind.ManCondemned
+                    : TermMarkKind.ManPardoned,
+                verdict.Name));
+        }
+    }
+
+    /// <summary>Puts the marks back as a save is loaded.</summary>
+    internal void RestoreMarks(IEnumerable<TermMark>? marks)
+    {
+        _marks.Clear();
+
+        if (marks is not null)
+        {
+            _marks.AddRange(marks);
+        }
     }
 
     /// <summary>
