@@ -35,6 +35,13 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class DayScreen : DojoScreen
 {
+    /// <inheritdoc/>
+    protected override string SheetTitle => "the board";
+
+    /// <inheritdoc/>
+    protected override string SheetLine =>
+        "Work is posted here each morning. Take what the day offers, choose who walks it, and nothing else in this yard earns you anything.";
+
     /// <summary>The clock's hold while a party is being picked.</summary>
     private const string PartyHold = "party";
 
@@ -131,19 +138,22 @@ public sealed partial class DayScreen : DojoScreen
         buttons.AddThemeConstantOverride("separation", 12);
         page.AddChild(buttons);
 
-        _sendButton = new Button { Text = "Take the offer" };
+        // The one act the sheet exists for takes the indigo, and it is the only indigo on it: sending
+        // men out is what the board is for, and a second filled act would make the player choose twice
+        // (design canvas → 7a).
+        _sendButton = new Button { Text = "Send them out" };
         _sendButton.Pressed += Guarded(_dojo, SendToOffer);
-        buttons.AddChild(_sendButton);
+        buttons.AddChild(UiKit.Act(_sendButton));
 
         _bountyButton = new Button { Text = "Take the bounty" };
         _bountyButton.Pressed += Guarded(_dojo, SendToBounty);
-        buttons.AddChild(_bountyButton);
+        buttons.AddChild(UiKit.WayOut(_bountyButton));
 
         // With the clock running this is no longer how a day is spent — it is how a day is skipped.
         // The dojo works through the day either way; this only refuses to wait for it.
         _restButton = new Button { Text = "Skip to tomorrow" };
         _restButton.Pressed += Guarded(_dojo, Rest);
-        buttons.AddChild(_restButton);
+        buttons.AddChild(UiKit.WayOut(_restButton));
 
         _log = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _log.Text = Report ?? string.Empty;
@@ -422,14 +432,23 @@ public sealed partial class DayScreen : DojoScreen
             Text = "Who goes on the expedition?",
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         });
-        _partyHeading.AddChild(UiKit.Counter("Party", party.Count, _partyLimit));
+        _partyHeading.AddChild(UiKit.Counter("chosen", party.Count, _partyLimit));
 
-        _verdictLabel.Text = offer.Refusal is ExpeditionRefusal refusal
-            ? RefusalText(refusal)
-            : $"Party ready: {party.Count}.";
-        _verdictLabel.AddThemeColorOverride(
-            "font_color",
-            offer.CanSend ? GoodColor : WarningColor);
+        // A blocked act is never hidden and never brick: it stays where the act will be, pressed into
+        // the paper, and the line beside it says the number that refuses it (design canvas → 7a).
+        if (offer.Refusal is ExpeditionRefusal refusal)
+        {
+            _verdictLabel.Text = RefusalText(refusal);
+            _verdictLabel.AddThemeColorOverride("font_color", WarningColor);
+            UiKit.Refused(_sendButton, RefusalText(refusal));
+        }
+        else
+        {
+            _verdictLabel.Text = "The seats are full.";
+            _verdictLabel.AddThemeColorOverride("font_color", MutedColor);
+            UiKit.Act(_sendButton);
+            _sendButton.Disabled = false;
+        }
     }
 
     private void SendToOffer()

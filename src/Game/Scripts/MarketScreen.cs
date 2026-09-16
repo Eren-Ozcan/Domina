@@ -22,6 +22,13 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class MarketScreen : DojoScreen
 {
+    /// <inheritdoc/>
+    protected override string SheetTitle => "the cart";
+
+    /// <inheritdoc/>
+    protected override string SheetLine =>
+        "Who the cart brought, what he is asking, and what he would be worth on a road. It is gone when the season moves on.";
+
     private DojoState _dojo = null!;
     private VBoxContainer _list = null!;
     private Label _summary = null!;

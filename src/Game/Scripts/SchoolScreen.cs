@@ -20,6 +20,13 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class SchoolScreen : DojoScreen
 {
+    /// <inheritdoc/>
+    protected override string SheetTitle => "the post";
+
+    /// <inheritdoc/>
+    protected override string SheetLine =>
+        "A day given to the post is a day not earning. It is also how a man stops dying — and what the dojo builds for him to train against.";
+
     private DojoState _dojo = null!;
     private HBoxContainer _columns = null!;
     private Label _summary = null!;

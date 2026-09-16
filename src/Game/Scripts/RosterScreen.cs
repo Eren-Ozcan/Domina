@@ -23,6 +23,13 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class RosterScreen : DojoScreen
 {
+    /// <inheritdoc/>
+    protected override string SheetTitle => "the men";
+
+    /// <inheritdoc/>
+    protected override string SheetLine =>
+        "Everyone who sleeps in the hut: what he has become, what he is carrying it with, and what the season has taken out of him.";
+
     private static readonly Color ReadyColor = InkColor;
     private static readonly Color TrainingColor = PendingColor;
     private static readonly Color RecoveringColor = new(0.85f, 0.55f, 0.20f);

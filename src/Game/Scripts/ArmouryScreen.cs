@@ -42,7 +42,7 @@ public sealed partial class ArmouryScreen : DojoScreen
         _dojo = dojo;
 
         VBoxContainer page = BuildPage(
-            "Armoury",
+            "the rack",
             "One man at a time: what he wears on each of his six parts, what his kit costs to mend, "
             + "and what he carries to throw. Pick a man on the left, buy on the right. Nothing is bought back.");
 
@@ -290,10 +290,21 @@ public sealed partial class ArmouryScreen : DojoScreen
         }
 
         int price = _dojo.Quartermaster.RepairPrice(warrior, slot);
+        bool mended = _dojo.Quartermaster.Repair(_dojo, warrior, slot);
+
         Say(
-            _dojo.Quartermaster.Repair(_dojo, warrior, slot),
+            mended,
             $"{SlotName(slot)} mended for {price} gold.",
             "It could not be mended.");
+
+        if (!mended)
+        {
+            Undone(
+                $"{warrior.Name} · {SlotName(slot)} mended · {price} koku",
+                "The counter would not mend it: there is nothing worn enough to mend there, or the "
+                + "purse will not cover the work.",
+                $"He marches with the {SlotName(slot).ToLowerInvariant()} as it is.");
+        }
 
         After();
     }
@@ -309,10 +320,21 @@ public sealed partial class ArmouryScreen : DojoScreen
 
         // The mastery he built on the old blade does not come with the new one, and the screen says so
         // rather than letting a veteran lose it quietly (docs/GDD.md §10).
+        bool forged = _dojo.Quartermaster.Forge(_dojo, warrior);
+
         Say(
-            _dojo.Quartermaster.Forge(_dojo, warrior),
+            forged,
             $"Reforged for {price} gold — the years he spent on the old blade are gone with it.",
             "The forge would not take it.");
+
+        if (!forged)
+        {
+            Undone(
+                $"{warrior.Name} · the blade reforged · {price} koku",
+                "The forge would not take it: there is no sword forge with a smith in it, or the blade "
+                + "has been through the fire once already.",
+                "He marches with the blade he has.");
+        }
 
         After();
     }
@@ -351,6 +373,23 @@ public sealed partial class ArmouryScreen : DojoScreen
         _notice.Text = sold ? done : refused;
         _notice.AddThemeColorOverride("font_color", sold ? UiKit.Good : UiKit.Warning);
     }
+
+    /// <summary>
+    /// An order the counter took and then would not fill.
+    /// </summary>
+    /// <remarks>
+    /// A line of red text under the counter is what this used to be, and it is the one thing a player
+    /// does not read while he is looking at the rack. An order that came back undone is reported as
+    /// what it is (design canvas -> 10a): the order quoted, what struck it, and what is still in the
+    /// chest because of it.
+    /// </remarks>
+    private void Undone(string ordered, string struckBy, string cost) =>
+        Returned(
+            ordered,
+            struckBy,
+            cost,
+            "Nothing. The money never left the chest, no day of the term was spent on it, and the "
+            + "counter will take the same order again tomorrow.");
 
     private string ThrownName(WarriorId id) =>
         _dojo.Roster.Find(id)?.Warrior.Thrown?.Name ?? "nothing to throw";
