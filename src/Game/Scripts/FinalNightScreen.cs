@@ -25,6 +25,10 @@ namespace Domina.Game;
 /// </remarks>
 public sealed partial class FinalNightScreen : DojoScreen
 {
+    /// <inheritdoc/>
+    /// <remarks>The last night is the ground itself; there is nowhere to go back to until it is decided.</remarks>
+    protected override bool TakesTheStage => true;
+
     private readonly HashSet<WarriorId> _party = [];
     private readonly FinalNight _night = new();
 
@@ -34,6 +38,7 @@ public sealed partial class FinalNightScreen : DojoScreen
     private Label _verdictLabel = null!;
     private Button _sendButton = null!;
     private Label _log = null!;
+    private Label _headline = null!;
 
     /// <summary>The side that lets the bout be watched; <c>null</c> resolves it in the background.</summary>
     public Func<PendingBattle, bool>? Watcher { get; set; }
@@ -50,9 +55,22 @@ public sealed partial class FinalNightScreen : DojoScreen
         _dojo = dojo;
 
         VBoxContainer page = BuildPage(
-            "The last night",
-            "Five bouts, one after another, and the only decision left is who goes out for each. "
+            "the last night",
+            "Bouts one after another, and the only decision left is who goes out for each. "
             + "Nothing heals in between and there is no way back to the dojo.");
+
+        // The night is framed as the last thing the term does, so it is announced rather than listed:
+        // an eyebrow, one line the size of a headline, and then the business (design canvas → 6g).
+        page.AddChild(UiKit.SectionLabel("The final night · the last seat", onNight: true));
+
+        _headline = UiKit.OnNight(string.Empty, UiKit.PaperInk, UiKit.DisplaySize, display: true);
+        page.AddChild(_headline);
+
+        page.AddChild(UiKit.Body(
+            "The winner's school keeps the province's first seat for the next term. Nothing comes "
+            + "after this fight.",
+            UiKit.NightMuted,
+            UiKit.NoteSize + 1));
 
         VBoxContainer bout = UiKit.Section(page, "The bout in front of you");
         _boutLabel = UiKit.Body();
@@ -76,9 +94,9 @@ public sealed partial class FinalNightScreen : DojoScreen
         _verdictLabel = UiKit.Body();
         orders.AddChild(_verdictLabel);
 
-        _sendButton = UiKit.Primary(new Button
+        _sendButton = UiKit.Act(new Button
         {
-            Text = "Take the field",
+            Text = "Let them walk out",
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
         });
         _sendButton.Pressed += Guarded(_dojo, Send);
@@ -107,6 +125,10 @@ public sealed partial class FinalNightScreen : DojoScreen
                 : "Nothing heals between the bouts. A party of at most "
                   + $"{card.MaxPartySize}; withdrawing loses the night.");
         _boutLabel.AddThemeColorOverride("font_color", card.Last ? WarningColor : InkColor);
+
+        _headline.Text = card.Last
+            ? $"{_dojo.Name} against the man himself"
+            : $"{_dojo.Name} against {card.Sighting}";
 
         BuildPartyList();
         UpdateButton();
