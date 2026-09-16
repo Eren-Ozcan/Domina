@@ -5,7 +5,7 @@ using FileAccess = Godot.FileAccess;
 
 namespace Domina.Game;
 
-/// <summary>The save's single slot on disk.</summary>
+/// <summary>The terms kept on disk, one file each.</summary>
 /// <remarks>
 /// <para>
 /// The core produces and reads the save's <b>text</b> (<see cref="DojoSaveFile"/>); this class
@@ -20,10 +20,26 @@ namespace Domina.Game;
 /// </remarks>
 public static class SaveSlot
 {
-    /// <summary>The save's path — in the user's data folder.</summary>
-    public const string Path = "user://dojo.json";
+    /// <summary>How many terms may be kept at once (design canvas -> 6c).</summary>
+    public const int Slots = 3;
 
-    private const string TempPath = "user://dojo.json.new";
+    /// <summary>
+    /// The slot being played, and the one every write lands in.
+    /// </summary>
+    /// <remarks>
+    /// It is set when a term is loaded or opened and stays put for the term. Nothing asks the player
+    /// which slot to save into: a term writes itself into its own slot at every dawn, and the only
+    /// place a slot is chosen is when a term is opened or written over.
+    /// </remarks>
+    public static int Current { get; set; } = 1;
+
+    /// <summary>The save's path for a slot — in the user's data folder.</summary>
+    public static string PathOf(int slot) => $"user://dojo{Clamp(slot)}.json";
+
+    /// <summary>The slot being played.</summary>
+    public static string Path => PathOf(Current);
+
+    private static string TempPath => $"{Path}.new";
 
     /// <summary>
     /// Yesterday's copy. It is <b>not</b> an undo door (Open Decision #15).
@@ -33,7 +49,7 @@ public static class SaveSlot
     /// at all. Nothing in the game offers it: with permadeath, a "go back to the previous day" button
     /// would empty every other rule of its cost, so the door is not built rather than built and hidden.
     /// </remarks>
-    private const string BackupPath = "user://dojo.json.bak";
+    private static string BackupPath => $"{Path}.bak";
 
     /// <summary>
     /// The run's move journal — every decision the player made, in order.
@@ -44,7 +60,7 @@ public static class SaveSlot
     /// journal is enough to walk the whole run again in a test without opening the engine
     /// (<see cref="Domina.Core.Dojo.Journal.MoveReplay"/>).
     /// </remarks>
-    public const string JournalPath = "user://moves.jsonl";
+    public static string JournalPath => $"user://moves{Current}.jsonl";
 
     /// <summary>
     /// How many of the live journal's moves are already in the file.
@@ -56,8 +72,55 @@ public static class SaveSlot
     /// </remarks>
     private static int _writtenMoves;
 
-    /// <summary>Is there a save to load?</summary>
+    /// <summary>Is there a term kept in the slot being played?</summary>
     public static bool Exists() => FileAccess.FileExists(Path);
+
+    /// <summary>Is there a term kept in this slot?</summary>
+    public static bool Exists(int slot) => FileAccess.FileExists(PathOf(slot));
+
+    /// <summary>The first slot with nothing in it, or <c>null</c> when all three are kept.</summary>
+    /// <remarks>
+    /// A new term writes itself into an empty slot without asking. It is only when every slot holds a
+    /// term that the player is made to choose one to write over, and that choice is a cut act.
+    /// </remarks>
+    public static int? FirstEmpty()
+    {
+        for (int slot = 1; slot <= Slots; slot++)
+        {
+            if (!Exists(slot))
+            {
+                return slot;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Reads a slot without making it the one being played, for a list of kept terms.</summary>
+    public static LoadResult Peek(int slot)
+    {
+        if (!Exists(slot))
+        {
+            return LoadResult.Failed("The slot is empty.");
+        }
+
+        using FileAccess? file = FileAccess.Open(PathOf(slot), FileAccess.ModeFlags.Read);
+
+        return file is null
+            ? LoadResult.Failed($"The term could not be opened: {FileAccess.GetOpenError()}")
+            : DojoSaveFile.Load(file.GetAsText());
+    }
+
+    /// <summary>Takes a term out of its slot for good.</summary>
+    public static void Delete(int slot)
+    {
+        int was = Current;
+        Current = Clamp(slot);
+        Delete();
+        Current = was;
+    }
+
+    private static int Clamp(int slot) => Math.Clamp(slot, 1, Slots);
 
     /// <summary>Writes the dojo to disk; returns <c>false</c> if it cannot.</summary>
     public static bool Write(DojoState dojo)
@@ -100,7 +163,7 @@ public static class SaveSlot
         return DojoSaveFile.LoadWithBackup(file.GetAsText(), ReadBackup());
     }
 
-    /// <summary>Deletes the save — so a new game does not sit on top of the old one.</summary>
+    /// <summary>Deletes the term in the slot being played, with its backup and its journal.</summary>
     public static void Delete()
     {
         using DirAccess? dir = DirAccess.Open("user://");
