@@ -36,6 +36,22 @@ public static class EquipmentCatalogue
         Weapon.Fists(),
     ];
 
+    /// <summary>The melee weapons the rack sells — everything a hand can be armed with for gold.</summary>
+    /// <remarks>
+    /// <para>
+    /// It is <see cref="Weapons"/> without the fists: bare hands are what is left when a weapon is
+    /// dropped or an arm is gone, not something the dojo buys. A forged blade is not on the rack
+    /// either — the forge makes it out of the weapon already in the hand and the rack never sells one.
+    /// </para>
+    /// <para>
+    /// This is the list Open Decision #21 opened: a class hall could train a torite and a dokushi, and
+    /// there was no counter anywhere in the game that would put a jitte or a poisoned tantō in their
+    /// hands (docs/GDD.md §10).
+    /// </para>
+    /// </remarks>
+    public static IReadOnlyList<Weapon> Rack { get; } =
+        [.. Weapons.Where(w => w.Name != Weapon.Fists().Name)];
+
     /// <summary>The kits a warrior can be taken on in.</summary>
     public static IReadOnlyList<Armor> Armors { get; } =
     [

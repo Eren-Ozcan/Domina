@@ -192,6 +192,74 @@ public sealed class Quartermaster(EconomyTuning? economy = null)
         return true;
     }
 
+    /// <summary>What the rack asks for this melee weapon.</summary>
+    /// <remarks>
+    /// Priced on the weapon's output rate — damage divided by the attack cycle — with a share added for
+    /// the grip that catches and another for the dose on the blade. See
+    /// <see cref="EconomyTuning.WeaponGoldPerDamageRate"/> for why rate and not damage.
+    /// </remarks>
+    public int WeaponPrice(Weapon weapon)
+    {
+        ArgumentNullException.ThrowIfNull(weapon);
+
+        double seconds = Math.Max(0.01, weapon.AttackSeconds);
+        double rate = Math.Max(0, weapon.Damage) / seconds;
+        double grip = 1 + (Math.Max(0, weapon.CatchSkill) * Math.Max(0, Economy.WeaponCatchPremium));
+        double dose = 1 + (Math.Max(0, weapon.Poison) * Math.Max(0, Economy.WeaponPoisonPremium));
+
+        return (int)Math.Ceiling(rate * Economy.WeaponGoldPerDamageRate * grip * dose);
+    }
+
+    /// <summary>
+    /// Buys a melee weapon off the rack and puts it in the warrior's hand; the old one is <b>gone</b>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The counter Open Decision #21 was opened for. Until it existed a man fought the whole season
+    /// with the weapon he was hired with — the stall sold armour, the throwing slot and repairs, and
+    /// the forge only reworked the blade already in the hand into a better one of its own kind — so a
+    /// dojo could train a torite and never put a jitte in his hand, and the class layer's whole worth
+    /// ran through the untrained-hand factors instead (docs/GDD.md §4).
+    /// </para>
+    /// <para>
+    /// Nothing is bought back, like everywhere else on the counter, and <b>the mastery does not
+    /// travel</b>: mastery is kept per weapon name (<see cref="WeaponMastery"/>), so a veteran who
+    /// changes weapon gives up what he built on the old one — and gets it back untouched if he ever
+    /// buys that weapon again. The rack is ungated on purpose: an untrained hand wastes a jitte the
+    /// way it wastes a bow, and that is the class's business, not the counter's.
+    /// </para>
+    /// </remarks>
+    /// <returns><c>true</c> if it was bought and taken up.</returns>
+    public bool EquipWeapon(DojoState state, Warrior warrior, Weapon weapon)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(warrior);
+        ArgumentNullException.ThrowIfNull(weapon);
+
+        int price = WeaponPrice(weapon);
+        if (weapon.Name == warrior.Weapon.Name || price > state.Resources.Gold)
+        {
+            state.Record(
+                MoveKind.EquipWeapon,
+                false,
+                MoveArg.Of("warrior", warrior.Id.Value),
+                MoveArg.Of("weapon", weapon.Name),
+                MoveArg.Of("cost", price));
+            return false;
+        }
+
+        state.Resources = state.Resources with { Gold = state.Resources.Gold - price };
+        warrior.Weapon = weapon;
+        state.Record(
+            MoveKind.EquipWeapon,
+            true,
+            MoveArg.Of("warrior", warrior.Id.Value),
+            MoveArg.Of("weapon", weapon.Name),
+            MoveArg.Of("cost", price),
+            MoveArg.Of("name", warrior.Name));
+        return true;
+    }
+
     /// <summary>What reforging this warrior's weapon would cost.</summary>
     public int ForgePrice(Warrior warrior)
     {
