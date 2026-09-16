@@ -61,6 +61,50 @@ public sealed record EconomyTuning
     /// </remarks>
     public double CharmPriceFactor { get; init; } = 1.0;
 
+    /// <summary>
+    /// The price of a melee weapon on the rack, per point of the damage it deals in a second.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The rack prices a weapon by its <b>output rate</b> — damage divided by the attack cycle — and
+    /// not by damage alone, because damage alone would sell the nodachi (34 a swing, 1.60 s) far above
+    /// the katana (22, 1.10 s) when the two put out almost the same work per second. Rate is the axis
+    /// the fight is actually decided on, so it is the axis the price is read off.
+    /// </para>
+    /// <para>
+    /// The two implements whose return is not damage carry a premium of their own
+    /// (<see cref="WeaponCatchPremium"/>, <see cref="WeaponPoisonPremium"/>), for the same reason the
+    /// throwing stall charges one for a dose: priced on output alone, the jitte and the poisoned tantō
+    /// would be the cheapest things on the rack while being the things the plate cannot answer.
+    /// </para>
+    /// <para>
+    /// <b>A proposal awaiting measurement</b> (Open Decision #21). At 8 a katana is 160 gold and a sai
+    /// 186, which puts a change of weapon beside a new man (<see cref="RecruitPrice"/>, 150) and well
+    /// under reforging the blade already in the hand (a katana, 264). That ordering is the intent — the
+    /// rack must not be the cheap way past the forge — but the size has not been swept.
+    /// </para>
+    /// </remarks>
+    public double WeaponGoldPerDamageRate { get; init; } = 8;
+
+    /// <summary>What a full point of catching skill adds to a weapon's price, as a share.</summary>
+    /// <remarks>
+    /// The jitte and the sai buy their catching with damage they do not deal (15 against the katana's
+    /// 22), so the rack would sell the torite's own implement as the bargain of the season. The premium
+    /// is a share of the weapon's own price and scales with <see cref="Model.Weapon.CatchSkill"/>, so
+    /// the sai's better grip costs more than the jitte's hook, which is the only difference between
+    /// them the player can see.
+    /// </remarks>
+    public double WeaponCatchPremium { get; init; } = 0.5;
+
+    /// <summary>What a full dose of poison adds to a melee weapon's price, as a share.</summary>
+    /// <remarks>
+    /// The same premium the throwing stall charges (<see cref="ThrownPoisonPremium"/>) and for the same
+    /// reason: the dose is what carries the weapon, and the steel under it is almost harmless (7 against
+    /// a clean tantō's 13). It is set higher than the catch premium because poison goes <b>around</b>
+    /// armour rather than meeting it.
+    /// </remarks>
+    public double WeaponPoisonPremium { get; init; } = 1.5;
+
     /// <summary>What reforging a weapon costs, per point of the damage it already deals.</summary>
     /// <remarks>
     /// Priced off the weapon rather than flat, so the forge is worth most to the warrior carrying the
