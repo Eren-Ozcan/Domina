@@ -98,6 +98,7 @@ internal static class SimArgs
         bool acceptCountsCharms = false;
         CharmFit charmFit = CharmFit.IronGate;
         ThrownFit thrownFit = ThrownFit.None;
+        ArmFit armFit = ArmFit.None;
         WarriorClass? classFit = null;
         OfferPick offerPick = OfferPick.Newest;
         ProvinceTuning provinceTuning = new();
@@ -830,6 +831,25 @@ internal static class SimArgs
                             $"--thrown-fit must be none, bow or everyone: {value}");
                     }
 
+                    break;
+
+                case "--arm-fit":
+                    if (!Enum.TryParse(value, ignoreCase: true, out armFit))
+                    {
+                        return ParsedArgs.Fail($"--arm-fit must be none or class: {value}");
+                    }
+
+                    break;
+
+                case "--weapon-gold":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double weaponGold)
+                        || weaponGold < 0)
+                    {
+                        return ParsedArgs.Fail($"--weapon-gold must be a non-negative number: {value}");
+                    }
+
+                    economy = economy with { WeaponGoldPerDamageRate = weaponGold };
                     break;
 
                 case "--class-fit":
@@ -1889,6 +1909,7 @@ internal static class SimArgs
                 acceptCountsCharms,
                 charmFit,
                 thrownFit,
+                armFit,
                 classFit,
                 offerPick)
             : null;
@@ -2100,6 +2121,8 @@ internal static class SimArgs
         writer.WriteLine("  --class-fit torite|dokushi|kyudo  Which class the policy trains first (campaign)");
         writer.WriteLine("  --class-price N          Multiplier on a class hall's gold price (campaign)");
         writer.WriteLine("  --thrown-fit none|bow|everyone  Whose throwing slot the policy fills (campaign, default none)");
+        writer.WriteLine("  --arm-fit none|class  Whom the policy arms off the rack (campaign, default none)");
+        writer.WriteLine("  --weapon-gold      The rack's price per point of damage a weapon deals in a second");
         writer.WriteLine("  --thrown-gold      The stall's price per point of a full quiver's damage");
         writer.WriteLine("  --thrown-poison    What a full dose adds to a thrown implement's price, as a share");
         writer.WriteLine("  --enemy-profiles on|off  Whether each enemy kind reads the field its own way (default on)");

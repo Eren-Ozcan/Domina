@@ -79,6 +79,23 @@ internal enum ThrownFit
     Everyone,
 }
 
+/// <summary>Whom the measuring policy arms off the rack, and with what.</summary>
+/// <remarks>
+/// The rack arrived with Open Decision #21: until it existed a man fought the season with the weapon
+/// he was hired with, so a trained torite went out holding a katana and the class layer read +1.1 in
+/// the campaign against +15.5 on the battle bed. These are the two answers worth measuring — the bed
+/// every earlier number was locked on (nobody is rearmed), and the taught hand given its own
+/// implement.
+/// </remarks>
+internal enum ArmFit
+{
+    /// <summary>Nobody is rearmed. The bed every earlier measurement was taken on.</summary>
+    None,
+
+    /// <summary>The class gets its implement: a jitte for the torite, the dose for the dokushi.</summary>
+    Class,
+}
+
 /// <summary>How the measuring policy chooses which charm to buy for a warrior.</summary>
 internal enum CharmFit
 {
@@ -163,6 +180,7 @@ internal sealed record CampaignOptions(
     bool AcceptCountsCharms = false,
     CharmFit CharmFit = CharmFit.IronGate,
     ThrownFit ThrownFit = ThrownFit.None,
+    ArmFit ArmFit = ArmFit.None,
     WarriorClass? ClassFit = null,
     OfferPick OfferPick = OfferPick.Newest)
 {
@@ -313,6 +331,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             if (_options.ThrownFit != ThrownFit.None)
             {
                 row.GoldSpentOnThrown += FillThrowingSlots(state);
+            }
+
+            if (_options.ArmFit != ArmFit.None)
+            {
+                row.GoldSpentOnArms += ArmTheTaught(state);
             }
 
             if (_options.Retirement != RetirementPolicy.None)
@@ -1253,6 +1276,54 @@ internal sealed class CampaignRunner(CampaignOptions options)
         return before - state.Resources.Gold;
     }
 
+    /// <summary>
+    /// Puts the class implement in the hand of every man who was taught to hold one.
+    /// </summary>
+    /// <remarks>
+    /// The melee half of <see cref="FillThrowingSlots"/>, and the policy Open Decision #21 exists to
+    /// measure: the range class could always be armed because the yumi goes in the throwing slot, and
+    /// the other two could not be armed at all. Nothing is bought back and the mastery does not travel,
+    /// so a man is rearmed once and then carries it — the same shape as the throwing slot.
+    /// </remarks>
+    /// <returns>The gold spent.</returns>
+    private int ArmTheTaught(DojoState state)
+    {
+        int before = state.Resources.Gold;
+        int reserve = Reserve(state) + _options.Economy.RecruitPrice;
+
+        foreach (RosterEntry entry in state.Roster.Living)
+        {
+            Warrior warrior = entry.Warrior;
+            Weapon? wanted = WantedWeapon(warrior);
+
+            if (wanted is null || warrior.Weapon.Name == wanted.Name)
+            {
+                continue;
+            }
+
+            if (!Affordable(state, state.Quartermaster.WeaponPrice(wanted), reserve))
+            {
+                continue;
+            }
+
+            state.Quartermaster.EquipWeapon(state, warrior, wanted);
+        }
+
+        return before - state.Resources.Gold;
+    }
+
+    /// <summary>What this warrior is armed with off the rack, if anything.</summary>
+    /// <remarks>
+    /// The jitte and not the sai for the torite: the two carry the same damage and the jitte is the
+    /// cheaper grip, so it is the honest reading of "the class was armed" rather than the best one.
+    /// </remarks>
+    private static Weapon? WantedWeapon(Warrior warrior) => warrior.Class switch
+    {
+        WarriorClass.Torite => Weapon.Jitte(),
+        WarriorClass.Dokushi => Weapon.PoisonedTanto(),
+        _ => null,
+    };
+
     /// <summary>What this warrior is bought for his throwing slot, if anything.</summary>
     private ThrownWeapon? WantedThrown(Warrior warrior)
     {
@@ -1563,6 +1634,13 @@ internal sealed class CampaignRow
     /// </remarks>
     public int GoldSpentOnThrown { get; set; }
 
+    /// <summary>The gold that went to the rack — melee weapons bought for men already on the roster.</summary>
+    /// <remarks>
+    /// Its own line, apart from <see cref="GoldSpentOnGear"/>, because it is the spending Open Decision
+    /// #21 opened and the question it was written for is whether arming a class pays for itself.
+    /// </remarks>
+    public int GoldSpentOnArms { get; set; }
+
     /// <summary>The gold that went to warriors hired to replace the dead.</summary>
     /// <remarks>
     /// A separate item: because the economy's binding constraint is the roster (GDD §11), the
@@ -1831,6 +1909,9 @@ internal sealed class CampaignReport(int days)
     /// <summary>The gold that went to the throwing stall (per dojo).</summary>
     public double AverageThrownGold => Standing(r => r.GoldSpentOnThrown);
 
+    /// <summary>The gold that went to the rack (per dojo).</summary>
+    public double AverageArmsGold => Standing(r => r.GoldSpentOnArms);
+
     /// <summary>Warriors who chose a path (per dojo).</summary>
     public double AveragePaths => Standing(r => r.Paths);
 
@@ -1882,6 +1963,7 @@ internal sealed class CampaignReport(int days)
                     - r.GoldSpentOnSchool
                     - r.GoldSpentOnCharms
                     - r.GoldSpentOnThrown
+                    - r.GoldSpentOnArms
                     - r.GoldSpentOnHires);
             return (double)net / battles;
         }
