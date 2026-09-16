@@ -56,6 +56,8 @@ public sealed partial class RosterScreen : DojoScreen
     private bool _retireArmed;
     private Button _feastButton = null!;
     private Label _feastNotice = null!;
+    private Label _rackLabel = null!;
+    private VBoxContainer _rackRows = null!;
     private Label _charmLabel = null!;
     private VBoxContainer _charmRows = null!;
     private WarriorId? _selected;
@@ -81,7 +83,16 @@ public sealed partial class RosterScreen : DojoScreen
         _list = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         scroll.AddChild(_list);
 
-        split.AddChild(BuildDetailPanel());
+        // The detail column scrolls on its own: it now carries the rack as well as the path, the charms
+        // and the two irreversible buttons, and on a short window the bottom of it was going off the
+        // sheet with no way to reach it.
+        ScrollContainer detail = new()
+        {
+            CustomMinimumSize = new Vector2(580, 0),
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        detail.AddChild(BuildDetailPanel());
+        split.AddChild(detail);
 
         Refresh();
     }
@@ -92,7 +103,7 @@ public sealed partial class RosterScreen : DojoScreen
         // enough to read, and the space in between should go to the margin rather than to the list.
         VBoxContainer panel = new()
         {
-            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             CustomMinimumSize = new Vector2(560, 0),
         };
         panel.AddThemeConstantOverride("separation", 10);
@@ -152,6 +163,17 @@ public sealed partial class RosterScreen : DojoScreen
 
         _feastNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         panel.AddChild(_feastNotice);
+
+        // The rack hangs on the man's own page rather than at the armoury counter because arming him is
+        // a decision about the man, not about his kit: the weapon he carries and the mastery he built on
+        // it are already printed two lines above, and this is where a player asks "should he be holding
+        // that" (docs/GDD.md §10, Open Decision #21).
+        _rackLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_rackLabel);
+
+        _rackRows = new VBoxContainer();
+        _rackRows.AddThemeConstantOverride("separation", 4);
+        panel.AddChild(_rackRows);
 
         // The charms sit under the path because they are the other thing carried onto the field, and
         // unlike the path they can be moved from one man to another on any day (docs/GDD.md §10).
@@ -339,9 +361,107 @@ public sealed partial class RosterScreen : DojoScreen
         _drillPicker.Select(_drillPicker.GetItemIndex((int)row.Drill));
 
         BuildPathButtons(row);
+        BuildRackRows(row);
         BuildCharmRows(row);
         UpdateRenameControls();
     }
+
+    /// <summary>
+    /// The rack: every melee weapon the dojo can put in this man's hand, and what it costs him.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// What is for sale and why a row is refused is decided by <see cref="QuartermasterModel.Rack"/>
+    /// (engine-free, tested); the purchase goes through <see cref="Quartermaster.EquipWeapon"/>, so an
+    /// offered row and a refused purchase can never disagree.
+    /// </para>
+    /// <para>
+    /// The mastery is on the heading and not in a tooltip, because it is the real price of changing
+    /// weapon: the gold is printed on the button and the years are not (docs/GDD.md §10).
+    /// </para>
+    /// </remarks>
+    private void BuildRackRows(RosterRow row)
+    {
+        Clear(_rackRows);
+
+        if (QuartermasterModel.Rack(_dojo, row.Id) is not RackCard rack)
+        {
+            _rackLabel.Text = "The rack: nothing is put in a dead man's hand.";
+            _rackLabel.AddThemeColorOverride("font_color", MutedColor);
+            return;
+        }
+
+        _rackLabel.Text = rack.Mastery > 0
+            ? $"The rack — he carries {rack.Carrying.Name}, {rack.Mastery * 100:0}% mastered."
+              + " Changing weapon leaves that behind."
+            : $"The rack — he carries {rack.Carrying.Name}.";
+        _rackLabel.AddThemeColorOverride("font_color", InkColor);
+
+        bool armable = row.IsAlive && row.Status != RosterStatus.Freed;
+
+        foreach (WeaponOffer offer in rack.Offers)
+        {
+            HBoxContainer line = new();
+            line.AddThemeConstantOverride("separation", 6);
+
+            Weapon weapon = offer.Weapon;
+            Label name = new()
+            {
+                Text = $"{weapon.Name}  ·  {weapon.Damage:0} damage every {weapon.AttackSeconds:0.00}s"
+                    + (weapon.TwoHanded ? "  ·  two-handed" : string.Empty)
+                    + (offer.Wasted ? "  ·  wasted in an untrained hand" : string.Empty),
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            };
+            name.AddThemeColorOverride("font_color", offer.Wasted ? PendingColor : InkColor);
+            line.AddChild(name);
+
+            Button buy = new()
+            {
+                Text = $"Arm him ({offer.Price})",
+                Disabled = !offer.CanBuy || !armable,
+                TooltipText = RackReason(offer.Refusal),
+            };
+
+            WeaponOffer chosen = offer;
+            buy.Pressed += Guarded(_dojo, () => Arm(row.Id, chosen));
+            line.AddChild(buy);
+
+            _rackRows.AddChild(line);
+        }
+    }
+
+    /// <summary>Buys one weapon off the rack for this man; what he carried is gone.</summary>
+    private void Arm(WarriorId id, WeaponOffer offer)
+    {
+        if (_dojo.Roster.Find(id)?.Warrior is not Warrior warrior)
+        {
+            return;
+        }
+
+        string had = warrior.Weapon.Name;
+        if (_dojo.Quartermaster.EquipWeapon(_dojo, warrior, offer.Weapon))
+        {
+            Persist();
+        }
+        else
+        {
+            Returned(
+                $"{warrior.Name} · armed with {offer.Weapon.Name} · {offer.Price} koku",
+                "The rack would not sell it: the purse will not cover it, or it is the weapon already "
+                + $"in his hand ({had}).",
+                "He marches with the weapon he has.",
+                "Nothing. The money never left the chest, and the rack will take the same order tomorrow.");
+        }
+
+        Refresh();
+    }
+
+    private static string RackReason(CounterRefusal refusal) => refusal switch
+    {
+        CounterRefusal.TooExpensive => "The purse will not cover it.",
+        CounterRefusal.AlreadyCarried => "It is already in his hand.",
+        _ => string.Empty,
+    };
 
     /// <summary>
     /// The charms he wears, the slots he has left, and the temple's stall.
