@@ -290,6 +290,29 @@ public class MoveJournalTests
     }
 
     /// <summary>
+    /// A weapon bought off the rack replays into the same hand, for the same gold.
+    /// </summary>
+    /// <remarks>
+    /// The rack writes down the weapon's <b>name</b> and not its numbers, like everything else the
+    /// journal records, so a run taken before a balance pass replays against the new numbers rather
+    /// than measuring the patch that was thrown away.
+    /// </remarks>
+    [Fact]
+    public void AWeaponBoughtOffTheRackReplaysIntoTheSameHand()
+    {
+        DojoState dojo = Dojo();
+        RosterEntry man = dojo.Roster.Living.First();
+
+        Assert.True(dojo.Quartermaster.EquipWeapon(dojo, man.Warrior, Weapon.Jitte()));
+
+        ReplayReport report = MoveReplay.Run(MoveJournal.Parse(dojo.Journal.ToJsonl()));
+
+        Assert.True(report.Faithful, report.Describe());
+        Assert.Equal("Jitte", report.Dojo.Roster.Find(man.Id)!.Warrior.Weapon.Name);
+        Assert.Equal(dojo.Resources.Gold, report.Dojo.Resources.Gold);
+    }
+
+    /// <summary>
     /// Every move this build can write, this build can also read back. A kind that the journal writes
     /// but the replay has never heard of would be a silent hole in the run.
     /// </summary>

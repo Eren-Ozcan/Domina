@@ -25,6 +25,9 @@ public class QuartermasterModelTests
     private static CounterCard Counter(DojoState dojo, WarriorId id) =>
         QuartermasterModel.Describe(dojo, id) ?? throw new InvalidOperationException("no counter");
 
+    private static RackCard Rack(DojoState dojo, WarriorId id) =>
+        QuartermasterModel.Rack(dojo, id) ?? throw new InvalidOperationException("no rack");
+
     [Fact]
     public void TheCounterCoversEveryRegionAndTheWholeThrowingStall()
     {
@@ -152,6 +155,121 @@ public class QuartermasterModelTests
         Assert.Equal(
             CounterRefusal.AlreadyCarried,
             card.Thrown.Single(t => t.Thrown.Name == "Yumi").Refusal);
+    }
+
+    /// <summary>The rack sells every weapon a hand can hold, and never the bare fists.</summary>
+    [Fact]
+    public void TheRackSellsEveryWeaponButTheFists()
+    {
+        (DojoState dojo, WarriorId id) = Dojo();
+        RackCard rack = Rack(dojo, id);
+
+        Assert.Equal(EquipmentCatalogue.Rack.Count, rack.Offers.Count);
+        Assert.DoesNotContain(rack.Offers, o => o.Weapon.Name == Weapon.Fists().Name);
+        Assert.Contains(rack.Offers, o => o.Weapon.Name == "Jitte");
+        Assert.Contains(rack.Offers, o => o.Weapon.Name == "Poisoned tantō");
+    }
+
+    /// <summary>
+    /// The two class implements are priced above the output they deal, and the katana above the knife.
+    /// </summary>
+    /// <remarks>
+    /// This is the whole shape of <see cref="EconomyTuning.WeaponGoldPerDamageRate"/>: the rack reads
+    /// the rate and then pays for what the rate cannot see — the grip and the dose.
+    /// </remarks>
+    [Fact]
+    public void TheRackPricesTheGripAndTheDose()
+    {
+        (DojoState dojo, WarriorId id) = Dojo();
+        Quartermaster shop = dojo.Quartermaster;
+
+        int jitte = shop.WeaponPrice(Weapon.Jitte());
+        int sai = shop.WeaponPrice(Weapon.Sai());
+        int tanto = shop.WeaponPrice(Weapon.Tanto());
+        int poisoned = shop.WeaponPrice(Weapon.PoisonedTanto());
+
+        // The sai deals less than the jitte every second and still costs more: the grip is the price.
+        Assert.True(sai > jitte);
+
+        // Half the steel of the clean knife, and dearer than it — the dose is paid for, not given away.
+        Assert.True(poisoned > tanto);
+
+        // Neither implement is the bargain of the season: both stand above the knife they outdamage.
+        Assert.True(jitte > tanto);
+    }
+
+    /// <summary>The rack says which class an implement belongs to, and whether this hand was taught it.</summary>
+    [Fact]
+    public void TheRackSaysWhoWasTaughtToHoldIt()
+    {
+        (DojoState dojo, WarriorId id) = Dojo();
+
+        WeaponOffer untaught = Rack(dojo, id).Offers.Single(o => o.Weapon.Name == "Jitte");
+        Assert.Equal(WarriorClass.Torite, untaught.Class);
+        Assert.False(untaught.Trained);
+        Assert.True(untaught.Wasted);
+
+        dojo.Roster.Find(id)!.Warrior.Class = WarriorClass.Torite;
+
+        WeaponOffer taught = Rack(dojo, id).Offers.Single(o => o.Weapon.Name == "Jitte");
+        Assert.True(taught.Trained);
+        Assert.False(taught.Wasted);
+
+        // The rack sells it either way — being untaught is a warning, not a refusal (docs/GDD.md §4).
+        Assert.True(untaught.CanBuy);
+    }
+
+    /// <summary>The weapon in his hand is not sold to him again.</summary>
+    [Fact]
+    public void TheWeaponHeCarriesIsNotSoldTwice()
+    {
+        (DojoState dojo, WarriorId id) = Dojo();
+
+        Assert.Equal(
+            CounterRefusal.AlreadyCarried,
+            Rack(dojo, id).Offers.Single(o => o.Weapon.Name == "Katana").Refusal);
+
+        Assert.False(dojo.Quartermaster.EquipWeapon(dojo, dojo.Roster.Find(id)!.Warrior, Weapon.Katana()));
+    }
+
+    /// <summary>An empty purse refuses the rack, and the refusal is the one the core would give.</summary>
+    [Fact]
+    public void AnEmptyPurseRefusesTheRack()
+    {
+        (DojoState dojo, WarriorId id) = Dojo(gold: 10);
+
+        WeaponOffer offer = Rack(dojo, id).Offers.Single(o => o.Weapon.Name == "Nodachi");
+        Assert.Equal(CounterRefusal.TooExpensive, offer.Refusal);
+        Assert.False(dojo.Quartermaster.EquipWeapon(dojo, dojo.Roster.Find(id)!.Warrior, Weapon.Nodachi()));
+        Assert.Equal(10, dojo.Resources.Gold);
+    }
+
+    /// <summary>
+    /// Arming him charges the printed price, changes the hand, and leaves the mastery behind.
+    /// </summary>
+    /// <remarks>
+    /// The mastery is kept per weapon name, so what he built on the katana is still there when he buys
+    /// a katana again — the change costs him the mastery <b>while he carries the other thing</b>.
+    /// </remarks>
+    [Fact]
+    public void ArmingHimChargesThePrintedPriceAndCostsHimTheMastery()
+    {
+        (DojoState dojo, WarriorId id) = Dojo();
+        Warrior warrior = dojo.Roster.Find(id)!.Warrior;
+        warrior.Mastery.Set("Katana", 0.8);
+        warrior.Weapon = Weapon.Katana();
+        Assert.Equal(0.8, warrior.WeaponSkill, 3);
+
+        WeaponOffer offer = Rack(dojo, id).Offers.Single(o => o.Weapon.Name == "Jitte");
+        int before = dojo.Resources.Gold;
+
+        Assert.True(dojo.Quartermaster.EquipWeapon(dojo, warrior, offer.Weapon));
+        Assert.Equal(before - offer.Price, dojo.Resources.Gold);
+        Assert.Equal("Jitte", warrior.Weapon.Name);
+        Assert.Equal(0, warrior.WeaponSkill, 3);
+
+        Assert.True(dojo.Quartermaster.EquipWeapon(dojo, warrior, Weapon.Katana()));
+        Assert.Equal(0.8, warrior.WeaponSkill, 3);
     }
 
     /// <summary>Buying deducts the price the counter printed — one number, not two.</summary>
