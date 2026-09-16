@@ -1,3 +1,4 @@
+using Domina.Chat;
 using Domina.Core.Campaign;
 using Domina.Core.Dojo;
 using Domina.Core.Dojo.Save;
@@ -26,6 +27,9 @@ public enum DojoTab
 
     /// <summary>The province board — a picture of the season, with nothing to press.</summary>
     Province,
+
+    /// <summary>The hut: the infirmary, and the tribunal on the night a man is called.</summary>
+    Hut,
 }
 
 /// <summary>
@@ -68,6 +72,9 @@ public sealed partial class DojoHub : Node
     /// <summary>The clock's hold while the window is not the one being looked at.</summary>
     private const string FocusHold = "focus";
 
+    /// <summary>The clock's hold while the yard is introducing itself on the first day of a term.</summary>
+    private const string IntroductionHold = "introduction";
+
     /// <summary>The speed control, in the order it is printed.</summary>
     private static readonly (string Text, ClockSpeed Speed)[] Speeds =
     [
@@ -80,6 +87,25 @@ public sealed partial class DojoHub : Node
     private DojoState? _dojo;
     private TitleScreen? _title;
     private DojoScreen? _screen;
+    private NewTermScreen? _opening;
+    private SavesScreen? _saves;
+    private GateScreen? _gate;
+
+    /// <summary>
+    /// The viewers asking to be let into the yard.
+    /// </summary>
+    /// <remarks>
+    /// It lives for the term, like the clock: one man per viewer per term is the rule, and a gate
+    /// rebuilt on a screen change would hand the same viewer a second man. Nothing calls
+    /// <see cref="ViewerGate.Ask"/> yet — the chat transport is the part that is not written — so the
+    /// queue stands empty until it is (design canvas → 9b).
+    /// </remarks>
+    private readonly ViewerGate _viewers = new();
+    private PauseScreen? _stopped;
+    private AftermathScreen? _aftermath;
+    private SettingsScreen? _settings;
+    private YardScreen? _yard;
+    private CanvasLayer? _strip;
     private Node2D? _arena;
     private CanvasLayer? _arenaChrome;
     private DojoTab _tab = DojoTab.Day;
@@ -92,11 +118,14 @@ public sealed partial class DojoHub : Node
     /// </summary>
     private readonly DayClock _clock = new();
 
-    private Label? _clockLabel;
-    private ProgressBar? _clockBar;
+    private HBoxContainer? _stripRow;
+    private Control? _hourRun;
+    private Label? _hourLabel;
 
     public override void _Ready()
     {
+        GameSettings.Load();
+        GameSettings.Apply(GetTree().Root);
         ShowTitle(null);
     }
 
@@ -118,7 +147,7 @@ public sealed partial class DojoHub : Node
     /// </remarks>
     public override void _Process(double delta)
     {
-        UpdateClockBar();
+        UpdateHour();
 
         // Neither the last night nor the closing screen has a day to spend: the season's clock stops
         // being a clock the moment the run leaves its running phase.
@@ -179,12 +208,26 @@ public sealed partial class DojoHub : Node
             // The last night and the closing screen take the hub over; the days that turned into them
             // are printed on the screen that opens.
             _report = string.Join(System.Environment.NewLine, log);
-            Show(_tab);
+            ShowYard();
             return;
         }
 
         _screen?.Refresh();
+        RefreshStrip();
+        ShowGateIfAnyoneIsAsking();
         (_screen as DayScreen)?.Note(string.Join(System.Environment.NewLine, log));
+
+        // The same lines are set down at the edge of the yard, because the player is usually standing
+        // in it rather than on the board's sheet when a day turns (design canvas → 7b).
+        if (_yard is YardScreen yard && IsInstanceValid(yard))
+        {
+            string hour = $"day {dojo.Day.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+            foreach (string told in log)
+            {
+                yard.Post("The day closed", told, hour);
+            }
+        }
     }
 
     /// <summary>
@@ -219,13 +262,120 @@ public sealed partial class DojoHub : Node
     {
         CloseArena();
         CloseScreen();
+        CloseStrip();
+        CloseYard();
+        CloseStopped();
+        CloseSaves();
+
+        if (_opening is not null)
+        {
+            RemoveChild(_opening);
+            _opening.QueueFree();
+            _opening = null;
+        }
 
         TitleScreen title = new() { Warning = warning };
-        title.Continued += Continue;
-        title.Started += Start;
+        title.Continued = Continue;
+        title.Opening = ShowNewTerm;
+        title.Settings = ShowSettings;
+        title.Keeping = () => ShowSaves(choosingRoom: false);
 
         _title = title;
         AddChild(title);
+    }
+
+    /// <summary>
+    /// The sheet of kept terms: which one to go back into, or which one to write a new term over.
+    /// </summary>
+    private void ShowSaves(bool choosingRoom)
+    {
+        CloseTitle();
+        CloseSaves();
+
+        SavesScreen saves = new() { ChoosingRoom = choosingRoom };
+
+        saves.Closed = () =>
+        {
+            CloseSaves();
+            ShowTitle(null);
+        };
+
+        saves.Loaded = slot =>
+        {
+            SaveSlot.Current = slot;
+            CloseSaves();
+            Continue();
+        };
+
+        saves.Freed = slot =>
+        {
+            SaveSlot.Current = slot;
+            CloseSaves();
+            ShowNewTerm();
+        };
+
+        _saves = saves;
+        AddChild(saves);
+    }
+
+    private void CloseSaves()
+    {
+        if (_saves is not null)
+        {
+            RemoveChild(_saves);
+            _saves.QueueFree();
+            _saves = null;
+        }
+    }
+
+    private void CloseTitle()
+    {
+        if (_title is not null)
+        {
+            RemoveChild(_title);
+            _title.QueueFree();
+            _title = null;
+        }
+    }
+
+    /// <summary>
+    /// The sheet a term is opened on: a name, a province and a seed, with what the seed opens with.
+    /// </summary>
+    /// <remarks>
+    /// It takes the title's place rather than opening over it, because the title is not a place in the
+    /// world and there is no ground behind it to come back to (design canvas → 6a, 6b).
+    /// </remarks>
+    private void ShowNewTerm()
+    {
+        CloseTitle();
+
+        // A new term takes an empty slot without asking. When all of them are kept, the player is sent
+        // to choose which one is written over, and that choice is a cut act (design canvas -> 6c).
+        if (SaveSlot.FirstEmpty() is int free)
+        {
+            SaveSlot.Current = free;
+        }
+        else if (_saves is null)
+        {
+            ShowSaves(choosingRoom: true);
+            return;
+        }
+
+        NewTermScreen opening = new()
+        {
+            Closed = () => ShowTitle(null),
+        };
+
+        opening.Opened = (name, tier, seed) =>
+        {
+            RemoveChild(opening);
+            opening.QueueFree();
+            Start(name, tier, seed);
+        };
+
+        _title = null;
+        _opening = opening;
+        AddChild(opening);
     }
 
     /// <summary>Loads the saved expedition; if it cannot be loaded the title screen stays and the reason is written.</summary>
@@ -258,11 +408,11 @@ public sealed partial class DojoHub : Node
     /// The seed itself goes into the save (GDD §2), so when the expedition is loaded again the same days
     /// come back.
     /// </remarks>
-    private void Start()
+    private void Start(string name, DifficultyTier tier, ulong seed)
     {
         SaveSlot.Delete();
         _report = null;
-        Play(NewGame.Create(unchecked((ulong)Random.Shared.NextInt64())));
+        Play(NewGame.Create(seed, tier: tier, dojoName: name));
         Save();
     }
 
@@ -283,7 +433,100 @@ public sealed partial class DojoHub : Node
             _title = null;
         }
 
-        Show(_tab);
+        _opening = null;
+        BuildYard();
+        BuildStrip();
+        ShowYard();
+
+        // A term opened on its first day introduces the three things it turns on, once. A term loaded
+        // in the middle of itself does not — the player has been standing in this yard for weeks
+        // (design canvas → 8b).
+        if (dojo.Day == 1 && _yard is YardScreen yard)
+        {
+            _clock.Hold(IntroductionHold);
+            yard.Introduce(() =>
+            {
+                yard.AlwaysNamed = GameSettings.NameDestinations;
+                _clock.Release(IntroductionHold);
+            });
+        }
+    }
+
+    /// <summary>
+    /// Stands the yard up. It is built once per term and outlives every sheet opened over it.
+    /// </summary>
+    /// <remarks>
+    /// The yard is the hub and the hub is a place: rebuilding it when a sheet closes would throw away
+    /// the one thing on screen the player is meant to be learning by looking at it (design canvas → 7c).
+    /// </remarks>
+    private void BuildYard()
+    {
+        CloseYard();
+
+        YardScreen yard = new() { Layer = 0, Walked = Walk, AlwaysNamed = GameSettings.NameDestinations };
+        _yard = yard;
+        AddChild(yard);
+        yard.Build();
+    }
+
+    /// <summary>Walks to one of the things standing in the yard.</summary>
+    private void Walk(YardPlace place) => Show(place switch
+    {
+        YardPlace.Rack => DojoTab.Armoury,
+        YardPlace.Post => DojoTab.School,
+        YardPlace.Cart => DojoTab.Market,
+        YardPlace.Men => DojoTab.Roster,
+        YardPlace.Gate => DojoTab.Province,
+        YardPlace.Hut => DojoTab.Hut,
+        _ => DojoTab.Day,
+    });
+
+    /// <summary>
+    /// Closes whatever is open and leaves the player standing in the yard.
+    /// </summary>
+    /// <remarks>
+    /// Every sheet ends here, and so does a fight: there is no screen in the game whose way out is
+    /// another screen. The season is asked first, because a term that ended while a sheet was open has
+    /// no yard left to come back to.
+    /// </remarks>
+    private void ShowYard()
+    {
+        CloseArena();
+        CloseScreen();
+        CloseStopped();
+        CloseGate();
+
+        if (_aftermath is not null)
+        {
+            RemoveChild(_aftermath);
+            _aftermath.QueueFree();
+            _aftermath = null;
+        }
+
+        if (_dojo is not DojoState dojo)
+        {
+            return;
+        }
+
+        if (dojo.Season.Phase == SeasonPhase.FinalNight)
+        {
+            ShowNight(dojo);
+            return;
+        }
+
+        if (dojo.Season.IsOver)
+        {
+            ShowEnd(dojo);
+            return;
+        }
+
+        if (_yard is null)
+        {
+            BuildYard();
+        }
+
+        RefreshStrip();
+        ShowGateIfAnyoneIsAsking();
     }
 
     /// <summary>Writes the dojo as it now stands into the slot.</summary>
@@ -328,6 +571,7 @@ public sealed partial class DojoHub : Node
             DojoTab.School => new SchoolScreen(),
             DojoTab.Armoury => new ArmouryScreen(),
             DojoTab.Province => new ProvinceScreen(),
+            DojoTab.Hut => new HutScreen(),
             _ => new DayScreen(),
         };
 
@@ -340,7 +584,7 @@ public sealed partial class DojoHub : Node
             _report = null;
         }
 
-        screen.Chrome = BuildNav();
+        screen.Back = ShowYard;
         screen.Changed = Save;
         _screen = screen;
         AddChild(screen);
@@ -357,7 +601,7 @@ public sealed partial class DojoHub : Node
 
             // The night has no navigation: there is nowhere else to go until it is decided.
             Changed = Save,
-            Ended = () => Show(_tab),
+            Ended = ShowYard,
         };
 
         _report = null;
@@ -403,6 +647,26 @@ public sealed partial class DojoHub : Node
         if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Space })
         {
             _clock.Toggle();
+
+            // Stopping the world puts the four acts in the corner of the yard; letting it run on takes
+            // them away again. There is no third state and no word for either (design canvas → 6e).
+            if (_clock.Speed == ClockSpeed.Paused && _screen is null)
+            {
+                ShowStopped();
+            }
+            else
+            {
+                CloseStopped();
+            }
+
+            GetViewport().SetInputAsHandled();
+        }
+
+        // The way out of a sheet is always the same and it is always back to the ground it opened
+        // over — the corner of the paper says so, and the key agrees with the corner.
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _screen is not null)
+        {
+            ShowYard();
             GetViewport().SetInputAsHandled();
         }
     }
@@ -466,25 +730,82 @@ public sealed partial class DojoHub : Node
         return true;
     }
 
-    /// <summary>The single button that appears when the fight ends: back to the dojo.</summary>
+    /// <summary>
+    /// The one act that appears when the fight ends: walk back through the gate.
+    /// </summary>
+    /// <remarks>
+    /// The last frame of the fight is left standing behind it. A player whose man has just been killed
+    /// is not thrown into the yard before he has seen it happen — he leaves the field himself.
+    /// </remarks>
     private void ShowReturnButton()
     {
-        CanvasLayer chrome = new();
+        CanvasLayer chrome = new() { Layer = 2 };
         MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1 };
-        margin.AddThemeConstantOverride("margin_bottom", 32);
+        margin.AddThemeConstantOverride("margin_bottom", 54);
         chrome.AddChild(margin);
 
         Button back = new()
         {
-            Text = "Return to the dojo",
+            Text = "Back through the gate",
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
             SizeFlagsVertical = Control.SizeFlags.ShrinkEnd,
         };
-        back.Pressed += () => Show(DojoTab.Day);
-        margin.AddChild(back);
+        back.Pressed += ShowAftermath;
+        margin.AddChild(UiKit.Act(back));
 
         _arenaChrome = chrome;
         AddChild(chrome);
+    }
+
+    /// <summary>
+    /// The sheet the party walks back into the yard with: what the work paid and what it cost.
+    /// </summary>
+    /// <remarks>
+    /// The report was a paragraph at the top of the day's screen, which a player reached by pressing
+    /// something else first; it is the thing the fight was for, so it opens over the yard by itself
+    /// (design canvas → 5d).
+    /// </remarks>
+    private void ShowAftermath()
+    {
+        CloseArena();
+        CloseScreen();
+
+        if (_report is not string told || told.Length == 0)
+        {
+            ShowYard();
+            return;
+        }
+
+        _report = null;
+
+        if (_yard is null)
+        {
+            BuildYard();
+        }
+
+        RefreshStrip();
+
+        string[] lines = told.Split(
+            System.Environment.NewLine,
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        AftermathScreen aftermath = new()
+        {
+            Layer = 1,
+            Headline = lines.Length > 0 ? lines[0] : "They came back.",
+            Lines = lines.Length > 1 ? lines[1..] : [],
+        };
+
+        aftermath.Closed = () =>
+        {
+            RemoveChild(aftermath);
+            aftermath.QueueFree();
+            _aftermath = null;
+            ShowYard();
+        };
+
+        _aftermath = aftermath;
+        AddChild(aftermath);
     }
 
     private void CloseArena()
@@ -508,130 +829,314 @@ public sealed partial class DojoHub : Node
     }
 
     /// <summary>
-    /// The navigation bar, with the season's clock on the end of it.
+    /// The four acts that appear when the world stops.
     /// </summary>
     /// <remarks>
-    /// The clock sits in the chrome rather than on a layer of its own for the reason the tabs do
-    /// (<see cref="DojoScreen"/>): a bar laid over the screens would cover the top row of every one of
-    /// them. It is rebuilt with the bar on every screen change, so the labels are re-found each time
-    /// rather than kept across a screen that has been freed.
+    /// They are put up rather than opened: the yard is not covered and not dimmed to a sheet's weight,
+    /// because the player is still standing in it and is about to carry on standing in it.
     /// </remarks>
-    private Control BuildNav()
+    private void ShowStopped()
     {
-        // The bar is a panel of its own rather than two loose rows: it is the only thing on screen that
-        // does not change when the screen does, so it has to read as the frame around them.
-        PanelContainer frame = new();
-        frame.AddThemeStyleboxOverride("panel", UiKit.PanelStyle(UiKit.Surface));
-
-        VBoxContainer column = UiKit.Padded(frame, 12, 8);
-        column.AddThemeConstantOverride("separation", 8);
-
-        HBoxContainer nav = new();
-        nav.AddThemeConstantOverride("separation", 6);
-        column.AddChild(nav);
-
-        foreach (DojoTab tab in Enum.GetValues<DojoTab>())
-        {
-            bool current = tab == _tab;
-            Button button = UiKit.Tab(
-                new Button
-                {
-                    Text = TabName(tab),
-                    ToggleMode = true,
-                    ButtonPressed = current,
-                },
-                current);
-
-            // The open tab is lit rather than disabled, so it has to refuse its own press by hand:
-            // showing the screen again would rebuild it and throw away whatever row was selected on it.
-            DojoTab target = tab;
-            button.Pressed += () =>
-            {
-                if (target != _tab)
-                {
-                    Show(target);
-                }
-            };
-
-            nav.AddChild(button);
-        }
-
-        column.AddChild(UiKit.Rule());
-        column.AddChild(BuildClockBar());
-        return frame;
-    }
-
-    /// <summary>The clock's own row: what day it is, how far into it, and the speed control.</summary>
-    private Control BuildClockBar()
-    {
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 8);
-
-        row.AddChild(UiKit.Emblem(Mark.Sun, UiKit.Heading, UiKit.BodySize - 3));
-
-        _clockLabel = new Label();
-        _clockLabel.AddThemeFontSizeOverride("font_size", UiKit.BodySize);
-        _clockLabel.AddThemeColorOverride("font_color", UiKit.Ink);
-        row.AddChild(_clockLabel);
-
-        _clockBar = new ProgressBar
-        {
-            MinValue = 0,
-            MaxValue = 1,
-            Step = 0.001,
-            ShowPercentage = false,
-            CustomMinimumSize = new Vector2(200, 10),
-            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
-        row.AddChild(_clockBar);
-
-        foreach ((string text, ClockSpeed speed) in Speeds)
-        {
-            Button button = new() { Text = text };
-            ClockSpeed chosen = speed;
-            button.Pressed += () => _clock.Set(chosen);
-            row.AddChild(button);
-        }
-
-        UpdateClockBar();
-        return row;
-    }
-
-    /// <summary>Reprints the clock's row. Called every frame, so it touches nothing it need not.</summary>
-    private void UpdateClockBar()
-    {
-        if (_clockLabel is null || !IsInstanceValid(_clockLabel) || _dojo is not DojoState dojo)
+        if (_stopped is not null || _dojo is not DojoState dojo)
         {
             return;
         }
 
-        int left = Math.Max(0, dojo.Season.Tuning.Days - dojo.Day + 1);
-        string state = _clock.IsHeld
-            ? "held"
-            : _clock.Speed switch
-            {
-                ClockSpeed.Normal => "1x",
-                ClockSpeed.Fast => "2x",
-                ClockSpeed.Fastest => "4x",
-                _ => "paused",
-            };
-
-        _clockLabel.Text = $"Day {dojo.Day}  ·  {left} days left  ·  {state}";
-
-        if (_clockBar is not null && IsInstanceValid(_clockBar))
+        PauseScreen stopped = new()
         {
-            _clockBar.Value = _clock.Progress;
+            Dojo = dojo,
+            Layer = 1,
+            Resumed = () =>
+            {
+                CloseStopped();
+                _clock.Set(ClockSpeed.Normal);
+            },
+            Wrote = () =>
+            {
+                Save();
+                _yard?.Post("The term was written down", "It is kept in the one slot.", "now");
+                CloseStopped();
+                _clock.Set(ClockSpeed.Normal);
+            },
+            Settings = ShowSettings,
+            Abandoned = () =>
+            {
+                // The one act on the stack that cannot be taken back, and the only place the term is
+                // thrown away on purpose: the slot is freed and the title takes the yard's place.
+                SaveSlot.Delete();
+                _dojo = null;
+                CloseStopped();
+                ShowTitle(null);
+            },
+        };
+
+        _stopped = stopped;
+        AddChild(stopped);
+    }
+
+    private void CloseStopped()
+    {
+        if (_stopped is not null)
+        {
+            RemoveChild(_stopped);
+            _stopped.QueueFree();
+            _stopped = null;
         }
     }
 
-    private static string TabName(DojoTab tab) => tab switch
+    /// <summary>
+    /// Opens the gateway sheet if somebody is standing in it and nothing else is.
+    /// </summary>
+    /// <remarks>
+    /// It waits for the yard: a man asking to be let in while the player is halfway through choosing a
+    /// party would take the decision out from under him, and the gateway is patient.
+    /// </remarks>
+    private void ShowGateIfAnyoneIsAsking()
     {
-        DojoTab.Roster => "Roster",
-        DojoTab.Market => "Market",
-        DojoTab.School => "School",
-        DojoTab.Armoury => "Armoury",
-        DojoTab.Province => "Province",
-        _ => "Day",
-    };
+        if (_gate is not null || _screen is not null || _arena is not null
+            || _dojo is not DojoState dojo
+            || _viewers.Next() is not GateArrival arrival)
+        {
+            return;
+        }
+
+        GateScreen gate = new() { Arrival = arrival, Dojo = dojo, Layer = 1 };
+
+        gate.LetIn = () =>
+        {
+            _viewers.Take();
+            dojo.Roster.Recruit(arrival.Man.Name, arrival.Man.Stats);
+            Save();
+            CloseGate();
+            _yard?.Post(
+                "Someone was let in",
+                $"{arrival.Man.Name} sleeps in the hut tonight, and eats from the store tomorrow.",
+                "dusk");
+        };
+
+        gate.SentAway = () =>
+        {
+            _viewers.Take();
+            CloseGate();
+            _yard?.Post(
+                "Someone was sent away",
+                $"{arrival.Man.Name} walked back down the road. The store holds.",
+                "dusk");
+        };
+
+        _gate = gate;
+        AddChild(gate);
+    }
+
+    private void CloseGate()
+    {
+        if (_gate is not null)
+        {
+            RemoveChild(_gate);
+            _gate.QueueFree();
+            _gate = null;
+        }
+    }
+
+    /// <summary>The settings sheet, opened over whatever is on screen and closing back onto it.</summary>
+    private void ShowSettings()
+    {
+        if (_settings is not null)
+        {
+            return;
+        }
+
+        SettingsScreen settings = new() { Layer = 3 };
+        settings.Closed = () =>
+        {
+            RemoveChild(settings);
+            settings.QueueFree();
+            _settings = null;
+        };
+
+        settings.Changed = () =>
+        {
+            if (_yard is YardScreen yard && IsInstanceValid(yard))
+            {
+                yard.AlwaysNamed = GameSettings.NameDestinations;
+            }
+        };
+
+        _settings = settings;
+        AddChild(settings);
+    }
+
+    /// <summary>
+    /// The strip along the top of the world: the day, the stores, what is coming, and the hour.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It belongs to the hub because it is the one piece of interface that outlives every screen, and
+    /// it sits on a layer above them because it is printed onto the night over the top of the yard
+    /// rather than pushed into a screen's own first row (design canvas → 7a, 8a).
+    /// </para>
+    /// <para>
+    /// The speed control lives here with the hour: a pausable-real-time game is played with one hand on
+    /// the clock, and a clock the player has to walk to is a clock he will forget to stop.
+    /// </para>
+    /// </remarks>
+    private void BuildStrip()
+    {
+        CloseStrip();
+
+        CanvasLayer layer = new() { Layer = 2 };
+        Control page = new() { AnchorRight = 1, Theme = UiKit.Theme };
+        layer.AddChild(page);
+
+        PanelContainer band = new() { AnchorRight = 1 };
+        band.AddThemeStyleboxOverride("panel", UiKit.FlatStyle(new Color(UiKit.Ground, 0.82f)));
+        page.AddChild(band);
+
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 26);
+        UiKit.Padded(band, 96, 18).AddChild(row);
+
+        _stripRow = row;
+        _strip = layer;
+        AddChild(layer);
+        RefreshStrip();
+    }
+
+    /// <summary>Reprints the strip. The day, the stores and the hour are all read off the dojo.</summary>
+    private void RefreshStrip()
+    {
+        if (_stripRow is not HBoxContainer row || !IsInstanceValid(row) || _dojo is not DojoState dojo)
+        {
+            return;
+        }
+
+        foreach (Node child in row.GetChildren())
+        {
+            row.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        StripLine line = StripModel.Describe(dojo);
+
+        row.AddChild(UiKit.Figure(line.Day, line.Term, UiKit.TitleSize));
+        row.AddChild(Divider());
+
+        HBoxContainer stores = new();
+        stores.AddThemeConstantOverride("separation", 22);
+        row.AddChild(stores);
+
+        foreach (StripStore store in line.Stores)
+        {
+            stores.AddChild(UiKit.Figure(
+                store.Figure,
+                store.Name,
+                UiKit.FigureSize,
+                store.Pressing ? UiKit.BrickLit : null));
+        }
+
+        row.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        row.AddChild(Divider());
+        row.AddChild(BuildHour());
+    }
+
+    /// <summary>The hour of the day, as a run along a trough, with the speed control beside it.</summary>
+    private Control BuildHour()
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 10);
+
+        _hourLabel = UiKit.OnNight(string.Empty, UiKit.NightMuted, UiKit.NoteSize + 2);
+        row.AddChild(_hourLabel);
+
+        PanelContainer trough = new()
+        {
+            CustomMinimumSize = new Vector2(116, 10),
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+        };
+        trough.AddThemeStyleboxOverride("panel", UiKit.FlatStyle(UiKit.NightEdge));
+        row.AddChild(trough);
+
+        // The run is laid out by ratio inside the trough, so the hour keeps its place whatever the
+        // window does to the strip's width.
+        HBoxContainer split = new();
+        trough.AddChild(split);
+
+        ColorRect run = new() { Color = new Color(0.44f, 0.40f, 0.34f), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        Control rest = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore };
+        split.AddChild(run);
+        split.AddChild(rest);
+        _hourRun = run;
+
+        foreach ((string text, ClockSpeed speed) in Speeds)
+        {
+            Button button = new() { Text = text };
+            button.AddThemeFontSizeOverride("font_size", UiKit.NoteSize);
+            ClockSpeed chosen = speed;
+            button.Pressed += () => _clock.Set(chosen);
+            row.AddChild(UiKit.WayOut(button));
+        }
+
+        UpdateHour();
+        return row;
+    }
+
+    /// <summary>A hairline standing up between two runs of the strip.</summary>
+    private static Control Divider() =>
+        new ColorRect { Color = UiKit.NightEdge, CustomMinimumSize = new Vector2(1, 0) };
+
+    /// <summary>Moves the hour along. Called every frame, so it touches nothing it need not.</summary>
+    private void UpdateHour()
+    {
+        if (_hourLabel is null || !IsInstanceValid(_hourLabel))
+        {
+            return;
+        }
+
+        _hourLabel.Text = _clock.IsHeld
+            ? "the yard waits for you"
+            : _clock.Speed switch
+            {
+                ClockSpeed.Normal => "the hour turns",
+                ClockSpeed.Fast => "the hour turns · 2x",
+                ClockSpeed.Fastest => "the hour turns · 4x",
+                _ => "the hour is held",
+            };
+
+        if (_hourRun is Control run && IsInstanceValid(run))
+        {
+            run.SizeFlagsStretchRatio = Math.Max(0.001f, (float)_clock.Progress);
+
+            if (run.GetParent() is Control split && split.GetChildCount() > 1
+                && split.GetChild(1) is Control left)
+            {
+                left.SizeFlagsStretchRatio = Math.Max(0.001f, 1f - (float)_clock.Progress);
+            }
+        }
+    }
+
+    /// <summary>Takes the strip down — the term is over, or the player is back at the title.</summary>
+    private void CloseStrip()
+    {
+        _stripRow = null;
+        _hourLabel = null;
+        _hourRun = null;
+
+        if (_strip is not null)
+        {
+            RemoveChild(_strip);
+            _strip.QueueFree();
+            _strip = null;
+        }
+    }
+
+    /// <summary>Takes the yard down. Only the title screen and a finished term do this.</summary>
+    private void CloseYard()
+    {
+        if (_yard is not null)
+        {
+            RemoveChild(_yard);
+            _yard.QueueFree();
+            _yard = null;
+        }
+    }
 }
