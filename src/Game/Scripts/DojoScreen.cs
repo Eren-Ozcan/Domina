@@ -39,13 +39,15 @@ public abstract partial class DojoScreen : CanvasLayer
     protected static readonly Color WarningColor = UiKit.Warning;
 
     /// <summary>
-    /// The navigation bar to put at the top of the screen; <c>null</c> in a scene opened on its own.
+    /// The way back to the yard; <c>null</c> in a scene opened on its own.
     /// </summary>
     /// <remarks>
-    /// It must be given <b>before</b> <see cref="Build"/> is called. Because the screens can also be
-    /// can be opened on its own (each has its own scene), the bar is not compulsory.
+    /// It must be given <b>before</b> <see cref="Build"/> is called. There is no navigation bar any
+    /// more — a screen is a sheet opened over the yard, and the only way out of a sheet is back onto
+    /// the ground it opened over (design canvas → 7a). A screen opened on its own as a scene has
+    /// nowhere to go back to, so the way out is not compulsory.
     /// </remarks>
-    public Control? Chrome { get; set; }
+    public Action? Back { get; set; }
 
     /// <summary>
     /// Called when the screen changes the dojo; the side that writes the save listens to this.
@@ -82,49 +84,199 @@ public abstract partial class DojoScreen : CanvasLayer
     /// <param name="dojo">The dojo to show — the screen reads it and gives its commands to it.</param>
     public abstract void Build(DojoState dojo);
 
-    /// <summary>Builds the ground, the margin and the navigation bar; returns the content column.</summary>
-    protected VBoxContainer BuildPage()
-    {
-        ColorRect backdrop = new()
-        {
-            Color = UiKit.Ground,
-            AnchorRight = 1,
-            AnchorBottom = 1,
-        };
-        AddChild(backdrop);
-
-        MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
-        margin.AddThemeConstantOverride("margin_left", 28);
-        margin.AddThemeConstantOverride("margin_top", 18);
-        margin.AddThemeConstantOverride("margin_right", 28);
-        margin.AddThemeConstantOverride("margin_bottom", 18);
-        AddChild(margin);
-
-        VBoxContainer page = new();
-        page.AddThemeConstantOverride("separation", 10);
-        margin.AddChild(page);
-
-        if (Chrome is not null)
-        {
-            page.AddChild(Chrome);
-        }
-
-        return page;
-    }
+    /// <summary>
+    /// Whether the screen takes the whole stage instead of opening as a sheet over the yard.
+    /// </summary>
+    /// <remarks>
+    /// Two screens do, and only two: the province and the ground. They are places the player has
+    /// walked to, so there is no yard behind them to dim — only the strip, and a way back. Everything
+    /// else is a sheet, and a sheet never replaces the yard (design canvas → 7a).
+    /// </remarks>
+    protected virtual bool TakesTheStage => false;
 
     /// <summary>
-    /// The same page, with the screen's name and the one line saying what it is for at the top of it.
+    /// What the whole stage is painted with when the screen takes it.
     /// </summary>
-    /// <param name="title">The screen's name — the same word the navigation tab carries.</param>
+    /// <remarks>
+    /// The ground is the night; the province is a sheet of paper the size of the stage, because a map
+    /// is a drawn thing and carries no blood (design canvas → 5c, 7c).
+    /// </remarks>
+    protected virtual Color StageGround => UiKit.Ground;
+
+    /// <summary>The sheet's own head, in the object's words — "the board", "the rack".</summary>
+    protected virtual string SheetTitle => string.Empty;
+
+    /// <summary>The one line under the head: what is decided here, in the object's own terms.</summary>
+    protected virtual string SheetLine => string.Empty;
+
+    /// <summary>Opens the screen over the yard and returns the column its content goes in.</summary>
+    protected VBoxContainer BuildPage() => BuildPage(SheetTitle, SheetLine);
+
+    /// <summary>
+    /// The same, with the head named here rather than by the screen's own properties.
+    /// </summary>
+    /// <param name="title">The sheet's own head — the same word the thing in the yard is called.</param>
     /// <param name="purpose">
-    /// One line: what the screen shows and what the player can do here. It is not flavour text; the
-    /// screens are dense, and a player who arrives on one has to be told which decision it is holding.
+    /// One line: what the sheet shows and what the player can do here. It is not flavour text; a sheet
+    /// is dense, and a player who has just walked to it has to be told which decision it is holding.
     /// </param>
     protected VBoxContainer BuildPage(string title, string purpose)
     {
-        VBoxContainer page = BuildPage();
-        page.AddChild(UiKit.PageHeader(title, purpose));
-        return page;
+        Control page = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
+        AddChild(page);
+
+        if (TakesTheStage)
+        {
+            // Nothing is behind a place you have walked to, so the ground itself is painted rather than
+            // the yard dimmed — and the way back is the screen's own, not a sheet's corner.
+            ColorRect ground = new() { Color = StageGround, AnchorRight = 1, AnchorBottom = 1 };
+            page.AddChild(ground);
+
+            MarginContainer margin = new() { AnchorRight = 1, AnchorBottom = 1 };
+            margin.AddThemeConstantOverride("margin_left", 60);
+            margin.AddThemeConstantOverride("margin_right", 60);
+            margin.AddThemeConstantOverride("margin_top", 96);
+            margin.AddThemeConstantOverride("margin_bottom", 48);
+            page.AddChild(margin);
+
+            VBoxContainer stage = new();
+            stage.AddThemeConstantOverride("separation", 14);
+            margin.AddChild(stage);
+
+            HBoxContainer head = new();
+            head.AddThemeConstantOverride("separation", 16);
+            stage.AddChild(head);
+
+            VBoxContainer named = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            named.AddThemeConstantOverride("separation", 3);
+            bool onPaper = StageGround.Luminance > 0.4f;
+            named.AddChild(UiKit.OnPaper(
+                title,
+                onPaper ? UiKit.Ink : UiKit.PaperInk,
+                UiKit.TitleSize,
+                display: true));
+            named.AddChild(UiKit.Body(
+                purpose,
+                onPaper ? UiKit.Muted : UiKit.NightMuted,
+                UiKit.NoteSize));
+            head.AddChild(named);
+
+            if (Back is Action away)
+            {
+                Button back = new() { Text = "back to the yard" };
+                back.Pressed += away;
+                head.AddChild(UiKit.WayOut(back));
+            }
+
+            stage.AddChild(UiKit.Rule(onNight: true));
+            return stage;
+        }
+
+        page.AddChild(UiKit.Dim(0.72f));
+
+        Button close = new();
+
+        if (Back is Action back_)
+        {
+            close.Pressed += back_;
+        }
+        else
+        {
+            close.Disabled = true;
+        }
+
+        VBoxContainer sheet = UiKit.Sheet(page, title, close, purpose.Length > 0 ? purpose : null);
+
+        // The body scrolls inside the sheet: the sheet's own size is decided by the yard around it, and
+        // a screen that grows past it must not push its own act off the foot of the paper.
+        ScrollContainer scroll = new()
+        {
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+        };
+        sheet.AddChild(scroll);
+
+        VBoxContainer body = new()
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        body.AddThemeConstantOverride("separation", 12);
+        scroll.AddChild(body);
+        return body;
+    }
+
+    /// <summary>
+    /// An order that came back undone: what was asked for, what struck it, and what it cost.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The fourth shape of the set is not a decision but the report of one (design canvas -> 7a, 10a).
+    /// A command the core refused after it was given is exactly that: the player asked, the world said
+    /// no, and the screen owes him the order as he gave it, the reason, and — the part a refusal line
+    /// never says — what it did <b>not</b> cost, so that he can tell a setback from a disaster.
+    /// </para>
+    /// <para>
+    /// It opens over the screen it happened on rather than over the yard: the sheet is still open, the
+    /// order was given on it, and closing this puts him back where he was standing.
+    /// </para>
+    /// </remarks>
+    /// <param name="ordered">The order as it was given — the man, the thing, the price.</param>
+    /// <param name="struckBy">What struck it, in the world's own words rather than the interface's.</param>
+    /// <param name="cost">What the refusal cost: the thing he still does not have.</param>
+    /// <param name="notCost">What it did not cost — usually the money, and the day.</param>
+    protected void Returned(string ordered, string struckBy, string cost, string notCost)
+    {
+        Control page = new() { AnchorRight = 1, AnchorBottom = 1, Theme = UiKit.Theme };
+        AddChild(page);
+        page.AddChild(UiKit.Dim(0.5f));
+
+        CenterContainer centre = new() { AnchorRight = 1, AnchorBottom = 1 };
+        page.AddChild(centre);
+
+        PanelContainer sheet = new() { CustomMinimumSize = new Vector2(1180, 0) };
+        sheet.AddThemeStyleboxOverride("panel", UiKit.PaperStyle(UiKit.Surface, shadow: 12));
+        centre.AddChild(sheet);
+
+        VBoxContainer column = UiKit.Padded(sheet, 28, 24);
+        column.AddThemeConstantOverride("separation", 16);
+
+        column.AddChild(UiKit.Body("it came back undone, at the counter", UiKit.Muted, UiKit.NoteSize));
+        column.AddChild(UiKit.OnPaper("The work was not taken", UiKit.Ink, UiKit.TitleSize + 4, display: true));
+
+        UiKit.Returned(column, ordered, struckBy);
+
+        HBoxContainer cards = new();
+        cards.AddThemeConstantOverride("separation", 12);
+        column.AddChild(cards);
+
+        cards.AddChild(Told("WHAT IT COST", cost, UiKit.Brick));
+        cards.AddChild(Told("WHAT IT DID NOT COST", notCost, UiKit.Muted));
+
+        HBoxContainer acts = new() { Alignment = BoxContainer.AlignmentMode.End };
+        acts.AddThemeConstantOverride("separation", 10);
+        column.AddChild(acts);
+
+        Button again = new() { Text = "Ask again" };
+        again.Pressed += () => page.QueueFree();
+        acts.AddChild(UiKit.Act(again));
+
+        Button stand = new() { Text = "Let it stand" };
+        stand.Pressed += () => page.QueueFree();
+        acts.AddChild(UiKit.WayOut(stand));
+    }
+
+    /// <summary>One of the cards under a returned order.</summary>
+    private static Control Told(string label, string what, Color colour)
+    {
+        PanelContainer card = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        card.AddThemeStyleboxOverride("panel", UiKit.PaperStyle(UiKit.Raised, shadow: 5));
+
+        VBoxContainer said = UiKit.Padded(card, 15, 13);
+        said.AddThemeConstantOverride("separation", 4);
+        said.AddChild(UiKit.Body(string.Join(" ", label.ToCharArray()), UiKit.Muted, UiKit.NoteSize));
+        said.AddChild(UiKit.Body(what, colour, UiKit.BodySize));
+        return card;
     }
 
     /// <summary>The dojo changed; it tells the hub to write the save.</summary>
