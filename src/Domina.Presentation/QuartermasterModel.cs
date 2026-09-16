@@ -77,6 +77,42 @@ public readonly record struct ThrownOffer(
     public bool CanBuy => Refusal == CounterRefusal.None;
 }
 
+/// <summary>One melee weapon on the rack.</summary>
+/// <param name="Weapon">The weapon — handed straight back to the quartermaster.</param>
+/// <param name="Price">What the rack asks.</param>
+/// <param name="Refusal">Why it cannot be bought today.</param>
+/// <param name="Class">
+/// The class whose implement this is, or <c>null</c> for a weapon anybody carries. The rack sells it
+/// either way; the row says so, because it is the difference between a jitte bought for a torite and
+/// the same jitte bought for a man who was never taught to hold one (docs/GDD.md §4).
+/// </param>
+/// <param name="Trained">Is the man it is laid out for of that class?</param>
+public readonly record struct WeaponOffer(
+    Weapon Weapon,
+    int Price,
+    CounterRefusal Refusal,
+    WarriorClass? Class,
+    bool Trained)
+{
+    public bool CanBuy => Refusal == CounterRefusal.None;
+
+    /// <summary>Is this an implement the hand has to be taught, in a hand that was not?</summary>
+    public bool Wasted => Class is not null && !Trained;
+}
+
+/// <summary>The rack as it stands for one warrior.</summary>
+/// <param name="Id">The warrior it is laid out for.</param>
+/// <param name="Gold">The treasury, so the screen prints the number the prices were judged by.</param>
+/// <param name="Carrying">The weapon in his hand today.</param>
+/// <param name="Mastery">What he has learned on it — what changing weapon costs him.</param>
+/// <param name="Offers">Everything the rack would sell him.</param>
+public sealed record RackCard(
+    WarriorId Id,
+    int Gold,
+    Weapon Carrying,
+    double Mastery,
+    IReadOnlyList<WeaponOffer> Offers);
+
 /// <summary>The counter as it stands for one warrior.</summary>
 /// <param name="Id">The warrior it is laid out for.</param>
 /// <param name="Gold">The treasury, so the screen can print the same number the prices are judged by.</param>
@@ -163,6 +199,62 @@ public static class QuartermasterModel
             warrior.Thrown,
             [.. ThrownWeapon.Catalogue.Select(thrown => Offer(shop, thrown, warrior, gold))]);
     }
+
+    /// <summary>Lays the rack out for one warrior.</summary>
+    /// <remarks>
+    /// It is its own card rather than another field on <see cref="CounterCard"/> because it is read on
+    /// another screen: the rack hangs on the man's own page (the roster's detail column), beside the
+    /// charms, where the weapon he carries is already printed. The armoury's counter is about his
+    /// <b>kit</b> — six regions, their wear and the throwing slot — and arming him is a decision about
+    /// the man (docs/GDD.md §10, Open Decision #21).
+    /// </remarks>
+    public static RackCard? Rack(DojoState dojo, WarriorId id)
+    {
+        ArgumentNullException.ThrowIfNull(dojo);
+
+        RosterEntry? entry = dojo.Roster.Find(id);
+        if (entry is null || !entry.Warrior.IsAlive)
+        {
+            return null;
+        }
+
+        Warrior warrior = entry.Warrior;
+        Quartermaster shop = dojo.Quartermaster;
+        int gold = dojo.Resources.Gold;
+
+        return new RackCard(
+            id,
+            gold,
+            warrior.Weapon,
+            warrior.WeaponSkill,
+            [.. EquipmentCatalogue.Rack.Select(weapon => Offer(shop, weapon, warrior, gold))]);
+    }
+
+    private static WeaponOffer Offer(Quartermaster shop, Weapon weapon, Warrior warrior, int gold)
+    {
+        int price = shop.WeaponPrice(weapon);
+
+        CounterRefusal refusal = warrior.Weapon.Name == weapon.Name ? CounterRefusal.AlreadyCarried
+            : price > gold ? CounterRefusal.TooExpensive
+            : CounterRefusal.None;
+
+        WarriorClass? taught = ImplementOf(weapon);
+
+        return new WeaponOffer(weapon, price, refusal, taught, taught is not null && warrior.Class == taught);
+    }
+
+    /// <summary>
+    /// The class this weapon is the implement of, or <c>null</c> if any hand carries it as well as any other.
+    /// </summary>
+    /// <remarks>
+    /// It reads the weapon's own fields rather than a table: the catch factor is what the torite is
+    /// taught and the dose is what the dokushi is taught, so a weapon added later is classed by what it
+    /// is and not by being remembered here.
+    /// </remarks>
+    private static WarriorClass? ImplementOf(Weapon weapon) =>
+        weapon.CanCatch ? WarriorClass.Torite
+        : weapon.IsPoisoned ? WarriorClass.Dokushi
+        : null;
 
     private static ArmorOffer Offer(
         Quartermaster shop,
