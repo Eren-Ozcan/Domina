@@ -3,15 +3,22 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// The screens' shared look: the palette, the type sizes and the few boxes every screen is built out of.
+/// The paper theatre: the pigments, the two faces, and the few pieces of paper every screen is cut from.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The dojo screens were written as plain columns of labels, which reads as one grey paragraph the
-/// moment a screen carries more than a few lines. Everything readable about them — the type scale, the
-/// panel, the section heading, the chip — lives here rather than in the screens, so a screen cannot
-/// invent its own spacing and the four screens the player moves between during a day keep looking like
-/// one game.
+/// The screens were grey boxes on a grey ground, which is what a management game looks like when
+/// nobody has decided what it is made of. The design canvas decides: the world is a lit night, and
+/// everything the player reads is a piece of paper laid over it — a sheet for a decision, a slip for
+/// a single fact, a card for a thing on a sheet. Paper takes square corners and a hard cast shadow,
+/// never a rounded one; ink is printed on paper, and the palest paper colour is the only text allowed
+/// on the night.
+/// </para>
+/// <para>
+/// Three rules hold the whole set together, and every part here exists to keep one of them:
+/// the yard is never replaced, only dimmed (<see cref="Sheet"/>, <see cref="Slip"/>); a sheet has
+/// exactly one dominant act and it is indigo (<see cref="Act"/>); and an act that cannot be taken back
+/// is not indigo but cut out of the night with a brick edge (<see cref="Cut"/>).
 /// </para>
 /// <para>
 /// It is engine-side only. Nothing here decides what is shown or whether a command is allowed — that
@@ -20,68 +27,114 @@ namespace Domina.Game;
 /// </remarks>
 public static class UiKit
 {
-    /// <summary>The page behind everything.</summary>
-    public static readonly Color Ground = new(0.068f, 0.070f, 0.082f);
+    // ── The night ────────────────────────────────────────────────────────────────────────────────
 
-    /// <summary>A panel raised off the ground.</summary>
-    public static readonly Color Surface = new(0.108f, 0.111f, 0.128f);
+    /// <summary>The ground behind everything: the yard at night.</summary>
+    public static readonly Color Ground = Hex(0x14110D);
 
-    /// <summary>A panel raised off a panel — a card on a board, a row in a list.</summary>
-    public static readonly Color Raised = new(0.146f, 0.150f, 0.170f);
+    /// <summary>A deeper night — the title, and the ground a cut act is cut out of.</summary>
+    public static readonly Color Night = Hex(0x0D0B09);
 
-    /// <summary>The hairline between a panel and the ground.</summary>
-    public static readonly Color Edge = new(0.22f, 0.225f, 0.255f);
+    /// <summary>Text on the night: the strip's figures, a chalked name, a notice that changes the season.</summary>
+    public static readonly Color PaperInk = Hex(0xF0E7D2);
 
-    /// <summary>Ordinary text.</summary>
-    public static readonly Color Ink = new(0.88f, 0.877f, 0.845f);
+    /// <summary>Secondary text on the night — a unit, a note, the clause under a name.</summary>
+    public static readonly Color NightMuted = Hex(0xA89C8A);
 
-    /// <summary>Secondary text — a unit, a note, a past record.</summary>
-    public static readonly Color Muted = new(0.50f, 0.505f, 0.535f);
+    /// <summary>The hairline that divides the strip, and any rule drawn on the night.</summary>
+    public static readonly Color NightEdge = Hex(0x2E2720);
 
-    /// <summary>A heading's text, and the one accent the screens are allowed.</summary>
-    public static readonly Color Heading = new(0.72f, 0.62f, 0.40f);
+    // ── The paper ────────────────────────────────────────────────────────────────────────────────
+
+    /// <summary>A sheet: the paper a decision is printed on.</summary>
+    public static readonly Color Surface = Hex(0xE9DFC9);
+
+    /// <summary>A card on a sheet — a row in a list, a contract on the board.</summary>
+    public static readonly Color Raised = Hex(0xDCD0B6);
+
+    /// <summary>Paper pressed flat: a refused act, an inset block, a quotation of an order.</summary>
+    public static readonly Color Pressed = Hex(0xCFC1A4);
+
+    /// <summary>The hairline between two pieces of paper.</summary>
+    public static readonly Color Edge = Hex(0xC2B191);
+
+    /// <summary>Ink on paper.</summary>
+    public static readonly Color Ink = Hex(0x191512);
+
+    /// <summary>Second ink: a unit, a note, a past record.</summary>
+    public static readonly Color Muted = Hex(0x4F473D);
+
+    // ── The four spent colours ───────────────────────────────────────────────────────────────────
+
+    /// <summary>The eyebrow over a plate, and the one accent the night is allowed.</summary>
+    public static readonly Color Heading = Hex(0xA97F3F);
+
+    /// <summary>The one act a sheet exists for. Nothing else is indigo (GDD §12).</summary>
+    public static readonly Color Indigo = Hex(0x2F4468);
+
+    /// <summary>Text on indigo, when it is a clause under the act rather than the act itself.</summary>
+    public static readonly Color IndigoInk = Hex(0xC3CEE4);
+
+    /// <summary>The edge of a thing that cannot be undone, and a refusal printed on paper.</summary>
+    public static readonly Color Brick = Hex(0x7A3527);
+
+    /// <summary>The same, lit, for text on the night: the term lost, a cut act's own word.</summary>
+    public static readonly Color BrickLit = Hex(0xD98A76);
 
     /// <summary>Positive: buyable, sendable, won.</summary>
-    public static readonly Color Good = new(0.49f, 0.66f, 0.47f);
+    public static readonly Color Good = Hex(0x59613F);
 
     /// <summary>Pending: its turn has come but it cannot be afforded, its deadline is closing in.</summary>
-    public static readonly Color Pending = new(0.80f, 0.68f, 0.36f);
+    public static readonly Color Pending = Hex(0xA97F3F);
 
-    /// <summary>Warning: a refused command, a death, a broken promise.</summary>
-    public static readonly Color Warning = new(0.76f, 0.40f, 0.38f);
-
-    /// <summary>The player's own side (GDD §12 → the palette's seven roles).</summary>
-    /// <remarks>
-    /// The screens had no colour that meant "yours". A man of the dojo, a patron's regard and your
-    /// side of a fight are the same fact wearing three names, and until now each screen painted it
-    /// with whatever was nearest — usually the heading's ochre, which is also the accent. Indigo is
-    /// spent on nothing else, so a card with an indigo edge is read without a label.
-    /// </remarks>
-    public static readonly Color Indigo = new(0.36f, 0.43f, 0.66f);
+    /// <summary>Warning: a refused command, a death, a broken promise. On paper this is the brick.</summary>
+    public static readonly Color Warning = Brick;
 
     /// <summary>Blood, and a limb coming away. Nowhere else (GDD §12).</summary>
     /// <remarks>
-    /// <see cref="Warning"/> is the interface's red — a refusal, an empty chest, a button you must not
-    /// press by accident — and it is desaturated so it can sit in a row of text. Vermilion is the
-    /// scene's red and it is not an interface colour at all: if it is on screen, something has been
-    /// cut. Keeping the two apart is what stops a dwindling food stock from reading as a wound.
+    /// <see cref="Warning"/> is the interface's red — a refusal, an empty chest, an act that cannot be
+    /// taken back — and it is the brick of a roof tile, not of a wound. Vermilion is the scene's red
+    /// and it is not an interface colour at all: if it is on screen, something has been cut.
     /// </remarks>
-    public static readonly Color Vermilion = new(0.745f, 0.227f, 0.133f);
+    public static readonly Color Vermilion = Hex(0xBE3A22);
 
-    /// <summary>The screen's own title.</summary>
-    public const int TitleSize = 26;
+    // ── The type scale ───────────────────────────────────────────────────────────────────────────
 
-    /// <summary>A section heading.</summary>
-    public const int SectionSize = 14;
+    /// <summary>A plate's own headline — the one line that names what the screen is about.</summary>
+    public const int DisplaySize = 44;
 
-    /// <summary>A figure meant to be read at a glance — a purse, a fee.</summary>
-    public const int FigureSize = 20;
+    /// <summary>The screen's own title, and a chalked name in the yard.</summary>
+    public const int TitleSize = 28;
+
+    /// <summary>A sheet's head, and the name on a card that is the card's subject.</summary>
+    public const int HeadSize = 22;
+
+    /// <summary>A figure meant to be read at a glance — a purse, a fee, a count.</summary>
+    public const int FigureSize = 22;
+
+    /// <summary>A section heading: letterspaced, uppercase, and never loud.</summary>
+    public const int SectionSize = 17;
 
     /// <summary>Body text.</summary>
-    public const int BodySize = 16;
+    public const int BodySize = 17;
 
     /// <summary>A note under a line of body text.</summary>
-    public const int NoteSize = 13;
+    public const int NoteSize = 16;
+
+    // ── The two faces ────────────────────────────────────────────────────────────────────────────
+
+    /// <summary>The display face: names, figures, acts, anything the eye lands on first.</summary>
+    /// <remarks>
+    /// A mincho with brush-cut serifs. It carries the period without a single decorative frame, which
+    /// is what lets every panel in the game be a plain rectangle of paper.
+    /// </remarks>
+    public static Font? Display { get; } = LoadFace("ShipporiMinchoB1-Regular");
+
+    /// <summary>The display face, one weight up, for a head that has to hold a whole sheet.</summary>
+    public static Font? DisplayStrong { get; } = LoadFace("ShipporiMinchoB1-SemiBold");
+
+    /// <summary>The body face: the clause under a name, a note, the day's log.</summary>
+    public static Font? BodyFace { get; } = LoadFace("ZenKakuGothicNew-Regular");
 
     /// <summary>
     /// The theme every screen hangs on its page, so the defaults are readable without a per-label override.
@@ -93,132 +146,362 @@ public static class UiKit
     public static Theme Theme { get; } = BuildTheme();
 
     /// <summary>
-    /// The screen's own name, with one line under it saying what the screen is for.
+    /// The strip along the top of the world: the day, the stores, what is coming, the hour.
     /// </summary>
     /// <remarks>
-    /// Every screen carries one. The navigation bar says which tab is lit, but a tab is four
-    /// characters wide and the screens are dense; the player arriving on a screen has to be told, on
-    /// the screen, what he is looking at and what he can do with it.
+    /// <para>
+    /// The one piece of interface that is always on screen, and the only one that is not paper: it is
+    /// printed straight onto the night over the top of the yard, so the yard is never pushed down by it.
+    /// </para>
+    /// <para>
+    /// On the ground and on the map it carries less — the day, the place and the hour — because the
+    /// stores are a thing you read at home. The caller decides that by what it puts in
+    /// <paramref name="figures"/>.
+    /// </para>
     /// </remarks>
-    public static Control PageHeader(string title, string purpose)
+    /// <param name="day">The day and its term — <c>"Day 23"</c>, <c>"of 60"</c>.</param>
+    /// <param name="figures">Each store as a figure and its name — <c>("96", "rice · 13 days")</c>.</param>
+    /// <param name="coming">What is due, and when — <c>("the summons", "in 4 days")</c>. Empty for none.</param>
+    public static Control Strip(
+        (string Figure, string Name) day,
+        IReadOnlyList<(string Figure, string Name, Color? Colour)> figures,
+        (string Name, string When)? coming = null,
+        Control? hour = null)
     {
-        VBoxContainer column = new();
-        column.AddThemeConstantOverride("separation", 2);
+        ArgumentNullException.ThrowIfNull(figures);
 
-        Label name = new() { Text = title };
-        name.AddThemeFontSizeOverride("font_size", TitleSize);
-        name.AddThemeColorOverride("font_color", Ink);
-        column.AddChild(name);
+        PanelContainer band = new();
+        band.AddThemeStyleboxOverride("panel", FlatStyle(new Color(Ground, 0.82f)));
 
-        Label line = new() { Text = purpose, AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        line.AddThemeFontSizeOverride("font_size", NoteSize);
-        line.AddThemeColorOverride("font_color", Muted);
-        column.AddChild(line);
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 26);
+        Padded(band, 40, 14).AddChild(row);
 
+        row.AddChild(Figure(day.Figure, day.Name, TitleSize));
+        row.AddChild(StripRule());
+
+        HBoxContainer stores = new();
+        stores.AddThemeConstantOverride("separation", 22);
+        row.AddChild(stores);
+
+        foreach ((string figure, string name, Color? colour) in figures)
+        {
+            stores.AddChild(Figure(figure, name, FigureSize, colour));
+        }
+
+        row.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+
+        if (coming is (string what, string when))
+        {
+            HBoxContainer due = new();
+            due.AddThemeConstantOverride("separation", 10);
+            due.AddChild(OnNight(what, NightMuted, NoteSize + 2));
+            due.AddChild(OnNight(when, PaperInk, FigureSize, display: true));
+            row.AddChild(due);
+        }
+
+        if (hour is not null)
+        {
+            row.AddChild(StripRule());
+            row.AddChild(hour);
+        }
+
+        return band;
+    }
+
+    /// <summary>
+    /// A sheet: the common case. Paper laid over the yard, with the yard still visible around it.
+    /// </summary>
+    /// <remarks>
+    /// The head names the sheet and offers the way back, and that is the only way out a sheet has —
+    /// there is no navigation bar, because every sheet closes onto the ground it opened over. The
+    /// column returned is the body; the caller fills it and puts its one act along the foot.
+    /// </remarks>
+    /// <param name="parent">The layer the sheet opens over. It is dimmed by <see cref="Dim"/>.</param>
+    /// <param name="title">The sheet's own head, in the object's own words — "the rack", "the board".</param>
+    /// <param name="back">The way back, wired by the caller. Its text is set here.</param>
+    public static VBoxContainer Sheet(Control parent, string title, Button back, string? line = null)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+        ArgumentNullException.ThrowIfNull(back);
+
+        MarginContainer margin = new();
+        margin.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        margin.AddThemeConstantOverride("margin_left", 60);
+        margin.AddThemeConstantOverride("margin_right", 60);
+        margin.AddThemeConstantOverride("margin_top", 96);
+        margin.AddThemeConstantOverride("margin_bottom", 60);
+        parent.AddChild(margin);
+
+        PanelContainer paper = new();
+        paper.AddThemeStyleboxOverride("panel", PaperStyle(Surface, shadow: 10));
+        margin.AddChild(paper);
+
+        VBoxContainer column = Padded(paper, 28, 24);
+        column.AddThemeConstantOverride("separation", 16);
+
+        HBoxContainer head = new();
+        head.AddThemeConstantOverride("separation", 16);
+        column.AddChild(head);
+
+        VBoxContainer named = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        named.AddThemeConstantOverride("separation", 2);
+        named.AddChild(OnPaper(title, Ink, HeadSize + 4, display: true));
+
+        if (line is not null)
+        {
+            named.AddChild(Note(line));
+        }
+
+        head.AddChild(named);
+
+        back.Text = "back to the yard ✕";
+        head.AddChild(WayOut(back));
+
+        column.AddChild(Rule());
         return column;
     }
 
-    /// <summary>A row of chips, spaced and wrapping when the window is narrow.</summary>
-    public static HFlowContainer ChipRow()
-    {
-        HFlowContainer row = new();
-        row.AddThemeConstantOverride("h_separation", 6);
-        row.AddThemeConstantOverride("v_separation", 6);
-        return row;
-    }
-
-    /// <summary>A note: small, dim, and never the thing being read first.</summary>
-    public static Label Note(string text = "", Color? color = null, bool wrap = true) =>
-        Body(text, color ?? Muted, NoteSize, wrap);
-
     /// <summary>
-    /// A row in a list: a panel the player can pick, marked when it is the one selected.
+    /// A slip: one fact and one act, on a piece of paper smaller than the thing behind it.
     /// </summary>
     /// <remarks>
-    /// A list of toggle buttons all wearing the same grey is the thing that made the market and the
-    /// school unreadable — nothing said which row the detail panel below was describing. The selected
-    /// row is given the heading's colour as an edge, which is the one border on screen.
+    /// The yard barely dims for a slip. It is what the well, a runner's message and a single choice
+    /// about a single man are worth — anything that needs a second column is a <see cref="Sheet"/>.
     /// </remarks>
-    public static Button ListRow(string text, bool selected, Color? color = null)
+    public static VBoxContainer Slip(Control parent, string where, string what)
     {
-        Button button = new()
-        {
-            Text = text,
-            Alignment = HorizontalAlignment.Left,
-            ToggleMode = true,
-            ButtonPressed = selected,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
+        ArgumentNullException.ThrowIfNull(parent);
 
-        button.AddThemeColorOverride("font_color", color ?? Ink);
-        button.AddThemeColorOverride("font_hover_color", color ?? Ink);
-        button.AddThemeColorOverride("font_pressed_color", color ?? Ink);
+        CenterContainer centre = new();
+        centre.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        parent.AddChild(centre);
 
-        if (selected)
-        {
-            button.AddThemeStyleboxOverride("normal", ButtonStyle(new Color(0.20f, 0.19f, 0.17f), Heading));
-            button.AddThemeStyleboxOverride("hover", ButtonStyle(new Color(0.24f, 0.22f, 0.19f), Heading));
-            button.AddThemeStyleboxOverride("pressed", ButtonStyle(new Color(0.20f, 0.19f, 0.17f), Heading));
-        }
+        PanelContainer paper = new() { CustomMinimumSize = new Vector2(440, 0) };
+        paper.AddThemeStyleboxOverride("panel", PaperStyle(Surface, shadow: 8));
+        centre.AddChild(paper);
 
-        return button;
+        VBoxContainer column = Padded(paper, 18, 16);
+        column.AddThemeConstantOverride("separation", 6);
+        column.AddChild(Note(where));
+        column.AddChild(OnPaper(what, Ink, HeadSize, display: true));
+        return column;
     }
 
-    /// <summary>Marks a navigation tab as the screen being shown.</summary>
+    /// <summary>The dimming the yard takes while something is open over it.</summary>
+    /// <param name="weight">
+    /// How much of the ground is left: a slip takes about a third, a sheet nearly three quarters. The
+    /// ground is never taken to black — a screen the yard cannot be seen through is a screen that has
+    /// replaced the yard, and only the ground and the map may do that.
+    /// </param>
+    public static Control Dim(float weight)
+    {
+        ColorRect veil = new() { Color = new Color(Ground, weight), MouseFilter = Control.MouseFilterEnum.Stop };
+        veil.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        return veil;
+    }
+
+    /// <summary>
+    /// A notice: a slip of paper set down at the edge of the yard, reporting something that happened.
+    /// </summary>
     /// <remarks>
-    /// The bar used to mark the open tab by disabling it, which paints it in the disabled colour —
-    /// the one tab the player is on was the dimmest thing in the bar, saying "unavailable" where it
-    /// meant "you are here". It is lit instead, and left clickable so nothing about it reads as refused.
+    /// Nothing pops. A notice never blocks the yard, never needs dismissing and never carries a
+    /// button — the ledger keeps them all, and three at most are on screen, oldest gone first. The bar
+    /// down its left says what kind of thing it is: indigo for the day's own business, brick for a
+    /// store running out, ochre for something that changes the season.
     /// </remarks>
-    public static Button Tab(Button button, bool current)
+    /// <param name="ofTheSeason">
+    /// A notice that changes the season is printed on ink instead of paper, so the two are told apart
+    /// at the edge of the eye without reading either.
+    /// </param>
+    public static Control Notice(string title, string line, string hour, Color? bar = null, bool ofTheSeason = false)
+    {
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(520, 0) };
+        panel.AddThemeStyleboxOverride(
+            "panel",
+            ofTheSeason ? PaperStyle(Ink, shadow: 5) : PaperStyle(Raised, shadow: 5));
+
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 12);
+        Padded(panel, 14, 12).AddChild(row);
+
+        row.AddChild(new ColorRect
+        {
+            Color = bar ?? (ofTheSeason ? Heading : Indigo),
+            CustomMinimumSize = new Vector2(5, 0),
+        });
+
+        VBoxContainer column = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        column.AddThemeConstantOverride("separation", 2);
+        column.AddChild(ofTheSeason
+            ? OnNight(title, PaperInk, HeadSize - 3, display: true)
+            : OnPaper(title, Ink, HeadSize - 3, display: true));
+        column.AddChild(Body(line, ofTheSeason ? NightMuted : Muted, NoteSize));
+        row.AddChild(column);
+
+        row.AddChild(Body(hour, ofTheSeason ? NightMuted : Muted, NoteSize, wrap: false));
+        return panel;
+    }
+
+    /// <summary>
+    /// The act the sheet exists for: indigo ground, one per sheet, with the cost of it underneath.
+    /// </summary>
+    /// <remarks>
+    /// Indigo is spent on nothing else in the game, so the player never has to look for the thing the
+    /// screen is for. A sheet with two indigo acts is a sheet that has not decided what it is.
+    /// </remarks>
+    /// <param name="clause">
+    /// What taking the act costs or does, in the terms of the thing spent — "18 rice, 12 water on
+    /// setting out". Never a restatement of the act's own word.
+    /// </param>
+    public static Button Act(Button button, string clause = "")
     {
         ArgumentNullException.ThrowIfNull(button);
 
-        // An unlit tab is stripped back to a word on the bar: six filled boxes in a row are six things
-        // competing with the screen under them, and only one of them is telling the player anything.
-        if (!current)
+        Dress(button, Indigo, PaperInk, border: null);
+
+        if (clause.Length > 0)
         {
-            button.AddThemeStyleboxOverride("normal", TabStyle(new Color(0, 0, 0, 0), null));
-            button.AddThemeStyleboxOverride("hover", TabStyle(Raised, null));
-            button.AddThemeStyleboxOverride("pressed", TabStyle(Raised, null));
-            button.AddThemeColorOverride("font_color", Muted);
-            return button;
+            button.TooltipText = clause;
         }
 
-        StyleBoxFlat lit = TabStyle(Raised, Heading);
-        button.AddThemeStyleboxOverride("normal", lit);
-        button.AddThemeStyleboxOverride("hover", TabStyle(new Color(0.19f, 0.19f, 0.21f), Heading));
-        button.AddThemeStyleboxOverride("pressed", lit);
-        button.AddThemeStyleboxOverride("disabled", lit);
-        button.AddThemeColorOverride("font_color", Heading);
-        button.AddThemeColorOverride("font_hover_color", Heading);
-        button.AddThemeColorOverride("font_disabled_color", Heading);
         return button;
     }
 
-    /// <summary>A tab's ground: no edge at all, and a bar under the one that is open.</summary>
-    private static StyleBoxFlat TabStyle(Color background, Color? underline)
+    /// <summary>The way out: outlined paper, never filled, never coloured.</summary>
+    public static Button WayOut(Button button)
     {
-        StyleBoxFlat style = new()
-        {
-            BgColor = background,
-            CornerRadiusTopLeft = 3,
-            CornerRadiusTopRight = 3,
-            BorderColor = underline ?? Edge,
-        };
+        ArgumentNullException.ThrowIfNull(button);
+        Dress(button, Raised, Ink, border: Ink);
+        return button;
+    }
 
-        style.SetBorderWidthAll(0);
-        style.BorderWidthBottom = underline is null ? 0 : 2;
-        style.ContentMarginLeft = 14;
-        style.ContentMarginRight = 14;
-        style.ContentMarginTop = 7;
-        style.ContentMarginBottom = 7;
-        return style;
+    /// <summary>
+    /// An act that is refused: pressed flat into the paper, still where the act will be, saying the
+    /// number that refuses it.
+    /// </summary>
+    /// <remarks>
+    /// A blocked act is never hidden and never brick. Brick is for what cannot be taken back; a thing
+    /// the player cannot afford yet is not dangerous, it is simply not ready, and hiding it teaches
+    /// the player nothing about what to save for.
+    /// </remarks>
+    public static Button Refused(Button button, string because)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+
+        Dress(button, Pressed, Muted, border: null);
+        button.Disabled = true;
+        button.AddThemeColorOverride("font_disabled_color", Muted);
+        button.TooltipText = because;
+        return button;
+    }
+
+    /// <summary>
+    /// An act that cannot be taken back: cut out of the night, edged in brick, its corners cut off.
+    /// </summary>
+    /// <remarks>
+    /// The shape itself is the warning, so the words never have to be "are you sure" — they name what
+    /// is lost in the terms of the thing lost. A cut shape never carries the word <i>Close</i>, and
+    /// <i>Close</i> is never cut.
+    /// </remarks>
+    public static Button Cut(Button button)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+
+        Dress(button, Night, BrickLit, border: Brick, borderWidth: 2);
+        return button;
+    }
+
+    /// <summary>
+    /// The count beside a blocked act — <c>2 of 3 chosen</c> — that moves as the player chooses.
+    /// </summary>
+    /// <remarks>
+    /// The refusal text already says why a command cannot be given, but it says it in a sentence the
+    /// player has to read. The count says the same thing in two characters, and it is the one piece of
+    /// the reference game's gating that we had in the model and never put on screen.
+    /// </remarks>
+    public static Control Counter(string label, int count, int limit, Color? color = null)
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 7);
+        row.AddChild(OnPaper(
+            count.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            color ?? (count == limit ? Ink : Muted),
+            FigureSize,
+            display: true));
+        row.AddChild(Note($"of {limit.ToString(System.Globalization.CultureInfo.InvariantCulture)} {label}"));
+        return row;
+    }
+
+    /// <summary>
+    /// The fourth shape: not a decision but the report of one — an order that came back undone.
+    /// </summary>
+    /// <remarks>
+    /// Paper ground, a brick rule along the top, the order quoted as it was given and then struck. It
+    /// is drawn in full on board 10a: what was attempted, what went wrong, what it cost and what it
+    /// did not, and what may be done about it now.
+    /// </remarks>
+    public static VBoxContainer Returned(Control parent, string ordered, string struckBy)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 10);
+        parent.AddChild(column);
+
+        column.AddChild(new ColorRect { Color = Brick, CustomMinimumSize = new Vector2(0, 3) });
+
+        PanelContainer quoted = new();
+        quoted.AddThemeStyleboxOverride("panel", FlatStyle(Pressed));
+        column.AddChild(quoted);
+
+        VBoxContainer inside = Padded(quoted, 14, 12);
+        inside.AddThemeConstantOverride("separation", 4);
+        inside.AddChild(Letterspaced("what was ordered", Muted, NoteSize));
+        inside.AddChild(OnPaper(ordered, Brick, HeadSize - 2, display: true));
+        inside.AddChild(Body(struckBy, Muted, NoteSize));
+        return column;
+    }
+
+    /// <summary>
+    /// A name chalked beside the thing it names, with the one clause the thing is for.
+    /// </summary>
+    /// <remarks>
+    /// The yard has no tooltips and no floating cards: an object under the cursor lifts a step out of
+    /// the dark and writes its own name on the ground beside its post. A name may add exactly one
+    /// clause, and it is the single thing the object does — if a destination needs a second line to
+    /// explain itself, the destination is wrong.
+    /// </remarks>
+    public static Control Chalk(string name, string clause)
+    {
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 4);
+
+        // Chalk is written across the ground, never down it: the label is laid out at the object's own
+        // position with no container to give it a width, and a wrapping label with no width comes out
+        // as one letter a line.
+        column.AddChild(OnNight(name, PaperInk, TitleSize, display: true));
+        column.AddChild(OnNight(clause, NightMuted, NoteSize + 2, display: false));
+
+        column.MouseFilter = Control.MouseFilterEnum.Ignore;
+        return column;
+    }
+
+    /// <summary>
+    /// The screen's own name, with one line under it saying what the screen is for.
+    /// </summary>
+    public static Control PageHeader(string title, string purpose)
+    {
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 3);
+        column.AddChild(OnPaper(title, Ink, TitleSize, display: true));
+        column.AddChild(Note(purpose));
+        return column;
     }
 
     /// <summary>A section: a titled panel with a column inside it. Returns the column to fill.</summary>
     /// <param name="title">
-    /// The heading, printed small and in the heading colour; <c>null</c> for a panel with no heading.
+    /// The heading, letterspaced and in the second ink; <c>null</c> for a panel with no heading.
     /// </param>
     /// <param name="fill">
     /// Whether the panel should take the height left over in its parent — a section holding a list
@@ -239,11 +522,11 @@ public static class UiKit
             SizeFlagsVertical = fill ? Control.SizeFlags.ExpandFill : Control.SizeFlags.ShrinkBegin,
             SizeFlagsStretchRatio = ratio,
         };
-        panel.AddThemeStyleboxOverride("panel", PanelStyle(Surface));
+        panel.AddThemeStyleboxOverride("panel", PaperStyle(Raised, shadow: 5));
         parent.AddChild(panel);
 
-        VBoxContainer column = Padded(panel, 14, 12);
-        column.AddThemeConstantOverride("separation", 8);
+        VBoxContainer column = Padded(panel, 16, 14);
+        column.AddThemeConstantOverride("separation", 9);
         column.SizeFlagsVertical = fill ? Control.SizeFlags.ExpandFill : Control.SizeFlags.ShrinkBegin;
 
         if (title is not null)
@@ -254,31 +537,14 @@ public static class UiKit
         return column;
     }
 
-    /// <summary>A heading for a section: a small accent tick, then the words, never loud.</summary>
-    /// <remarks>
-    /// The tick is what separates one section from the next when a screen carries five of them. It is
-    /// the only place the accent colour is spent on decoration, and it is two pixels wide.
-    /// </remarks>
-    public static Control SectionLabel(string text)
-    {
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 7);
-
-        ColorRect tick = new()
-        {
-            Color = Heading,
-            CustomMinimumSize = new Vector2(2, SectionSize - 2),
-            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-        };
-        row.AddChild(tick);
-
-        Label label = new() { Text = text.ToUpperInvariant() };
-        label.AddThemeFontSizeOverride("font_size", SectionSize);
-        label.AddThemeColorOverride("font_color", Heading);
-        row.AddChild(label);
-
-        return row;
-    }
+    /// <summary>A heading for a section: letterspaced small caps, and no rule, no tick, no colour.</summary>
+    /// <param name="onNight">
+    /// Whether the heading sits on the night rather than on paper. On the night it takes the ochre,
+    /// which is the only accent the night is allowed; on paper it takes the second ink, because ochre
+    /// on paper is a stain rather than an accent.
+    /// </param>
+    public static Control SectionLabel(string text, bool onNight = false) =>
+        Letterspaced(text, onNight ? Heading : Muted, SectionSize, display: true);
 
     /// <summary>A line of body text, wrapping unless it is told not to.</summary>
     /// <param name="wrap">
@@ -296,30 +562,74 @@ public static class UiKit
         };
         label.AddThemeFontSizeOverride("font_size", size);
         label.AddThemeColorOverride("font_color", color ?? Ink);
+
+        if (BodyFace is Font face)
+        {
+            label.AddThemeFontOverride("font", face);
+        }
+
         return label;
     }
 
+    /// <summary>A note: small, in the second ink, and never the thing being read first.</summary>
+    public static Label Note(string text = "", Color? color = null, bool wrap = true) =>
+        Body(text, color ?? Muted, NoteSize, wrap);
+
+    /// <summary>A line set in the display face on paper.</summary>
+    public static Label OnPaper(string text, Color? color = null, int size = BodySize, bool display = false)
+    {
+        Label label = Body(text, color ?? Ink, size, wrap: false);
+
+        if (display && Display is Font face)
+        {
+            label.AddThemeFontOverride("font", size >= TitleSize && DisplayStrong is Font strong ? strong : face);
+        }
+
+        return label;
+    }
+
+    /// <summary>The same, on the night.</summary>
+    public static Label OnNight(string text, Color? color = null, int size = BodySize, bool display = false) =>
+        OnPaper(text, color ?? PaperInk, size, display);
+
+    /// <summary>A figure with its name beside it, the way the strip prints a store.</summary>
+    public static Control Figure(string figure, string name, int size = FigureSize, Color? nameColour = null)
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 7);
+        row.AddChild(OnNight(figure, PaperInk, size, display: true));
+        row.AddChild(OnNight(name, nameColour ?? NightMuted, NoteSize + 2));
+        return row;
+    }
+
+    /// <summary>A row of chips, spaced and wrapping when the window is narrow.</summary>
+    public static HFlowContainer ChipRow()
+    {
+        HFlowContainer row = new();
+        row.AddThemeConstantOverride("h_separation", 8);
+        row.AddThemeConstantOverride("v_separation", 8);
+        return row;
+    }
+
     /// <summary>
-    /// A chip: one figure with its name and emblem under it, on its own small panel.
+    /// A chip: one figure with its name and emblem under it, on its own small card.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The purse used to be a single run of "gold · food · water · medicine" text, which is the one
-    /// thing on the day screen a player reads at a glance and the one thing that run of text makes
-    /// slowest to read. A chip gives each figure its own box, and the number is set larger than its name.
+    /// thing a player reads at a glance and the one thing that run of text makes slowest to read. A
+    /// chip gives each figure its own card, and the number is set larger than its name.
     /// </para>
     /// <para>
-    /// The figure itself stays in the ordinary ink whatever state the chip is in, and the state is
-    /// carried by a bar along the bottom instead. A row of eight chips each painting its own number
-    /// green, amber or red is the thing that made the day screen read as confetti: with the numbers
-    /// steady the row scans as one instrument, and the bar still says which figure wants attention.
+    /// The figure itself stays in ink whatever state the chip is in, and the state is carried by a bar
+    /// along the bottom instead. A row of eight chips each painting its own number green, amber or red
+    /// is the thing that made the day screen read as confetti.
     /// </para>
     /// </remarks>
     /// <param name="trend">
     /// What the figure is doing — <c>"−7 / day"</c>, <c>"13 days left"</c>. A stock with no trend is the
-    /// reference game's own worst habit: it writes "800 food" and never what melts a day, so the one
-    /// pressure the whole game is built on is the one thing not on the bar. Left empty for a figure that
-    /// does not move on its own, like a headcount.
+    /// reference game's own worst habit: it writes "800 food" and never what melts a day. Left empty
+    /// for a figure that does not move on its own, like a headcount.
     /// </param>
     public static Control Chip(
         string figure,
@@ -328,16 +638,15 @@ public static class UiKit
         Mark mark = Mark.None,
         string trend = "")
     {
-        PanelContainer panel = new() { CustomMinimumSize = new Vector2(84, 0) };
-        panel.AddThemeStyleboxOverride("panel", PanelStyle(Raised, radius: 3));
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(92, 0) };
+        panel.AddThemeStyleboxOverride("panel", PaperStyle(Raised, shadow: 4));
 
-        VBoxContainer column = Padded(panel, 10, 7);
+        VBoxContainer column = Padded(panel, 12, 9);
         column.AddThemeConstantOverride("separation", 2);
         column.SizeFlagsVertical = Control.SizeFlags.ShrinkBegin;
 
-        Label value = new() { Text = figure, HorizontalAlignment = HorizontalAlignment.Center };
-        value.AddThemeFontSizeOverride("font_size", FigureSize);
-        value.AddThemeColorOverride("font_color", Ink);
+        Label value = OnPaper(figure, Ink, FigureSize, display: true);
+        value.HorizontalAlignment = HorizontalAlignment.Center;
         column.AddChild(value);
 
         HBoxContainer caption = new() { Alignment = BoxContainer.AlignmentMode.Center };
@@ -345,20 +654,17 @@ public static class UiKit
 
         if (mark != Mark.None)
         {
-            caption.AddChild(Emblem(mark, Muted, NoteSize + 1));
+            caption.AddChild(Emblem(mark, Muted, NoteSize));
         }
 
-        Label name_ = new() { Text = name.ToUpperInvariant() };
-        name_.AddThemeFontSizeOverride("font_size", NoteSize - 1);
-        name_.AddThemeColorOverride("font_color", Muted);
-        caption.AddChild(name_);
+        Label named = Body(name.ToUpperInvariant(), Muted, NoteSize - 2, wrap: false);
+        caption.AddChild(named);
         column.AddChild(caption);
 
         if (trend.Length > 0)
         {
-            Label moving = new() { Text = trend, HorizontalAlignment = HorizontalAlignment.Center };
-            moving.AddThemeFontSizeOverride("font_size", NoteSize - 1);
-            moving.AddThemeColorOverride("font_color", color ?? Muted);
+            Label moving = Body(trend, color ?? Muted, NoteSize - 1);
+            moving.HorizontalAlignment = HorizontalAlignment.Center;
             column.AddChild(moving);
         }
 
@@ -388,12 +694,12 @@ public static class UiKit
     /// <para>
     /// <paramref name="fraction"/> is deliberately unnamed: in the arena it is health, on the roster it
     /// is composure, on a patron it is regard. They are one concept in the fiction — how much of him is
-    /// left to spend — and giving them one widget is what makes the three screens read as one game.
+    /// left to spend — and giving them one widget is what makes the screens read as one game.
     /// </para>
     /// </remarks>
     /// <param name="ours">
-    /// Whether the man belongs to the dojo. <see cref="Indigo"/> on the edge and the portrait is the
-    /// only thing that separates your side from theirs in the arena, where both are dark paper figures.
+    /// Whether the man belongs to the dojo. <see cref="Indigo"/> down his edge is the only thing that
+    /// separates your side from theirs in the arena, where both are dark paper figures.
     /// </param>
     public static Control UnitCard(
         string name,
@@ -408,18 +714,16 @@ public static class UiKit
         PanelContainer panel = new();
         panel.AddThemeStyleboxOverride(
             "panel",
-            PanelStyle(Raised, radius: 3, border: selected ? Heading : ours ? Indigo : Edge));
+            PaperStyle(selected ? Surface : Raised, shadow: selected ? 6 : 4, border: selected ? Ink : null));
 
         HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 10);
-        Padded(panel, 12, 10).AddChild(row);
+        row.AddThemeConstantOverride("separation", 12);
+        Padded(panel, 14, 11).AddChild(row);
 
         // The portrait is a hole in the card until the rig can draw a head into it. An empty framed
         // square reads as "a man goes here"; a placeholder drawing would read as a bug.
-        PanelContainer portrait = new() { CustomMinimumSize = new Vector2(40, 40) };
-        portrait.AddThemeStyleboxOverride(
-            "panel",
-            PanelStyle(new Color(0.102f, 0.113f, 0.149f), radius: 2, border: ours ? Indigo : Edge));
+        PanelContainer portrait = new() { CustomMinimumSize = new Vector2(44, 44) };
+        portrait.AddThemeStyleboxOverride("panel", FlatStyle(Pressed, border: ours ? Indigo : null, borderWidth: ours ? 3 : 0));
         portrait.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         row.AddChild(portrait);
 
@@ -431,13 +735,9 @@ public static class UiKit
         heading.AddThemeConstantOverride("separation", 8);
         column.AddChild(heading);
 
-        Label named = new()
-        {
-            Text = name,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            ClipText = true,
-        };
-        named.AddThemeColorOverride("font_color", nameColor ?? (selected ? Heading : Ink));
+        Label named = OnPaper(name, nameColor ?? Ink, HeadSize - 3, display: true);
+        named.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        named.ClipText = true;
         heading.AddChild(named);
 
         if (trade.Length > 0)
@@ -478,18 +778,85 @@ public static class UiKit
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
 
-        StyleBoxFlat flat = PanelStyle(new Color(0, 0, 0, 0), radius: 3, border: new Color(0, 0, 0, 0));
-        button.AddThemeStyleboxOverride("normal", flat);
-        button.AddThemeStyleboxOverride("hover", flat);
-        button.AddThemeStyleboxOverride("pressed", flat);
-        button.AddThemeStyleboxOverride("focus", flat);
+        StyleBoxEmpty empty = new();
+        button.AddThemeStyleboxOverride("normal", empty);
+        button.AddThemeStyleboxOverride("hover", empty);
+        button.AddThemeStyleboxOverride("pressed", empty);
+        button.AddThemeStyleboxOverride("focus", empty);
 
         Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor);
         card.MouseFilter = Control.MouseFilterEnum.Ignore;
         card.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         button.AddChild(card);
-        button.CustomMinimumSize = new Vector2(0, 62);
+        button.CustomMinimumSize = new Vector2(0, 70);
 
+        return button;
+    }
+
+    /// <summary>
+    /// A row in a list: a card the player can pick, marked when it is the one the detail is describing.
+    /// </summary>
+    /// <remarks>
+    /// A list of toggle buttons all wearing the same grey is the thing that made the market and the
+    /// school unreadable — nothing said which row the detail panel below was describing. The picked
+    /// row is lifted onto the brighter paper and given the one ink edge on the sheet.
+    /// </remarks>
+    public static Button ListRow(string text, bool selected, Color? color = null)
+    {
+        Button button = new()
+        {
+            Text = text,
+            Alignment = HorizontalAlignment.Left,
+            ToggleMode = true,
+            ButtonPressed = selected,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+
+        Dress(
+            button,
+            selected ? Surface : Raised,
+            color ?? Ink,
+            border: selected ? Ink : null,
+            shadow: selected ? 5 : 3);
+
+        return button;
+    }
+
+    /// <summary>Marks a navigation tab as the screen being shown.</summary>
+    /// <remarks>
+    /// The yard replaced the tab bar — a destination is an object you walk to, not a word in a strip —
+    /// but a sheet that browses a set of its own (the plates, the settings pages) still needs to say
+    /// which of them is open. It is a name with a rule under it, and nothing else.
+    /// </remarks>
+    public static Button Tab(Button button, bool current)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+
+        StyleBoxFlat quiet = FlatStyle(new Color(0, 0, 0, 0));
+        quiet.ContentMarginLeft = quiet.ContentMarginRight = 14;
+        quiet.ContentMarginTop = quiet.ContentMarginBottom = 8;
+
+        if (!current)
+        {
+            button.AddThemeStyleboxOverride("normal", quiet);
+            button.AddThemeStyleboxOverride("hover", quiet);
+            button.AddThemeStyleboxOverride("pressed", quiet);
+            button.AddThemeColorOverride("font_color", Muted);
+            return button;
+        }
+
+        StyleBoxFlat lit = FlatStyle(new Color(0, 0, 0, 0), border: Ink, borderWidth: 0);
+        lit.BorderWidthBottom = 2;
+        lit.ContentMarginLeft = lit.ContentMarginRight = 14;
+        lit.ContentMarginTop = lit.ContentMarginBottom = 8;
+
+        button.AddThemeStyleboxOverride("normal", lit);
+        button.AddThemeStyleboxOverride("hover", lit);
+        button.AddThemeStyleboxOverride("pressed", lit);
+        button.AddThemeStyleboxOverride("disabled", lit);
+        button.AddThemeColorOverride("font_color", Ink);
+        button.AddThemeColorOverride("font_hover_color", Ink);
+        button.AddThemeColorOverride("font_disabled_color", Ink);
         return button;
     }
 
@@ -510,20 +877,19 @@ public static class UiKit
         line.AddThemeConstantOverride("separation", 8);
         column.AddChild(line);
 
-        Label named = new() { Text = label, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        named.AddThemeFontSizeOverride("font_size", NoteSize);
-        named.AddThemeColorOverride("font_color", Muted);
+        Label named = Note(label, wrap: false);
+        named.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         line.AddChild(named);
 
-        Label read = new() { Text = reading, HorizontalAlignment = HorizontalAlignment.Right };
-        read.AddThemeColorOverride("font_color", Ink);
+        Label read = OnPaper(reading, Ink, BodySize, display: true);
+        read.HorizontalAlignment = HorizontalAlignment.Right;
         line.AddChild(read);
 
         column.AddChild(Bar(fraction, fill ?? Indigo, height: 10));
         return column;
     }
 
-    /// <summary>A bare bar: a dark trough with a filled run in it.</summary>
+    /// <summary>A bare bar: a trough pressed into the paper with a filled run in it.</summary>
     /// <remarks>
     /// Godot's <c>ProgressBar</c> would do this, and it brings a minimum height, a centred percentage
     /// label to switch off and a value range to keep in step with whatever is being shown. Two
@@ -532,9 +898,7 @@ public static class UiKit
     public static Control Bar(double fraction, Color fill, int height = 8)
     {
         PanelContainer trough = new() { CustomMinimumSize = new Vector2(0, height) };
-        trough.AddThemeStyleboxOverride(
-            "panel",
-            PanelStyle(new Color(0.102f, 0.102f, 0.122f), radius: 2, border: new Color(0, 0, 0, 0)));
+        trough.AddThemeStyleboxOverride("panel", FlatStyle(Pressed));
 
         // A run is laid out by ratio rather than by pixels: the card is stretched by its container and
         // a pixel width measured now would be wrong by the time the screen is drawn.
@@ -544,13 +908,12 @@ public static class UiKit
         float part = Math.Clamp((float)fraction, 0f, 1f);
         if (part > 0f)
         {
-            ColorRect run = new()
+            split.AddChild(new ColorRect
             {
                 Color = fill,
                 SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
                 SizeFlagsStretchRatio = part,
-            };
-            split.AddChild(run);
+            });
         }
 
         if (part < 1f)
@@ -564,40 +927,6 @@ public static class UiKit
         }
 
         return trough;
-    }
-
-    /// <summary>
-    /// A live count against its limit — <c>Party 2 / 3</c> — for a command that stays refused until it reads full.
-    /// </summary>
-    /// <remarks>
-    /// The refusal text already says why a command cannot be given, but it says it in a sentence the
-    /// player has to read. A counter beside the button says the same thing in two characters, and it
-    /// is the one piece of the reference game's gating that we had in the model and never put on screen.
-    /// </remarks>
-    public static Control Counter(string label, int count, int limit, Color? color = null)
-    {
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 6);
-
-        Label named = new() { Text = label };
-        named.AddThemeFontSizeOverride("font_size", SectionSize);
-        named.AddThemeColorOverride("font_color", Muted);
-        row.AddChild(named);
-
-        Label now = new() { Text = count.ToString(System.Globalization.CultureInfo.InvariantCulture) };
-        now.AddThemeFontSizeOverride("font_size", SectionSize);
-        now.AddThemeColorOverride("font_color", color ?? (count == limit ? Good : Pending));
-        row.AddChild(now);
-
-        Label of = new()
-        {
-            Text = $"/ {limit.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
-        };
-        of.AddThemeFontSizeOverride("font_size", SectionSize);
-        of.AddThemeColorOverride("font_color", Muted);
-        row.AddChild(of);
-
-        return row;
     }
 
     /// <summary>
@@ -618,72 +947,75 @@ public static class UiKit
 
         previous.Text = "‹";
         next.Text = "›";
-        row.AddChild(previous);
+        row.AddChild(WayOut(previous));
         row.AddChild(Note(position, wrap: false));
-        row.AddChild(next);
+        row.AddChild(WayOut(next));
         return row;
     }
 
-    /// <summary>Marks a button as the one that cannot be taken back.</summary>
+    /// <summary>Marks a button as the one that cannot be taken back. The same shape as <see cref="Cut"/>.</summary>
     /// <remarks>
     /// In the reference game <c>Put to Death</c> is the same grey box as <c>Close</c> and sits beside
-    /// it. Seppuku, sending a man off and closing the dojo are ours, and they are given a red ground
-    /// and a red edge so the hand slows down before the click, not after it.
+    /// it. Seppuku, sending a man off and abandoning the term are ours, and they are cut out of the
+    /// night with a brick edge so the hand slows down before the click, not after it.
     /// </remarks>
-    public static Button Danger(Button button)
-    {
-        ArgumentNullException.ThrowIfNull(button);
+    public static Button Danger(Button button) => Cut(button);
 
-        Color edge = new(0.353f, 0.180f, 0.161f);
-        button.AddThemeStyleboxOverride("normal", ButtonStyle(new Color(0.169f, 0.098f, 0.090f), edge));
-        button.AddThemeStyleboxOverride("hover", ButtonStyle(new Color(0.235f, 0.125f, 0.114f), edge));
-        button.AddThemeStyleboxOverride("pressed", ButtonStyle(new Color(0.129f, 0.075f, 0.071f), edge));
-        button.AddThemeColorOverride("font_color", Warning);
-        button.AddThemeColorOverride("font_hover_color", Warning);
-        button.AddThemeColorOverride("font_pressed_color", Warning);
-        return button;
-    }
+    /// <summary>Marks a button as the screen's main command. The same shape as <see cref="Act"/>.</summary>
+    public static Button Primary(Button button) => Act(button);
 
     /// <summary>
     /// A small drawn emblem: a coin, a grain, a drop.
     /// </summary>
     /// <remarks>
-    /// The marks are drawn out of circles and polygons rather than written as text. Godot's built-in
-    /// font carries the Latin alphabet and little else, so a "◆" or a "✚" would come out as an empty
-    /// box on a machine whose fallback font happens to lack it — and the alternative, shipping an icon
-    /// font, is a dependency for twelve shapes worth a dozen lines each.
+    /// The marks are drawn out of circles and polygons rather than written as text. The bundled faces
+    /// are subsetted to what the screens print, and an emblem drawn as a character would be one more
+    /// glyph to keep in that set on every machine — a dozen lines of geometry each is cheaper and
+    /// cannot come out as an empty box.
     /// </remarks>
     public static Control Emblem(Mark mark, Color? color = null, int size = 12) =>
         new MarkIcon { Mark = mark, Tint = color ?? Muted, CustomMinimumSize = new Vector2(size, size) };
 
     /// <summary>A horizontal rule — the cheapest way to end a block without adding another panel.</summary>
-    public static Control Rule()
-    {
-        ColorRect rule = new()
+    public static Control Rule(bool onNight = false) =>
+        new ColorRect
         {
-            Color = Edge,
+            Color = onNight ? NightEdge : Edge,
             CustomMinimumSize = new Vector2(0, 1),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
 
-        return rule;
+    /// <summary>
+    /// A piece of paper: square corners, and a hard shadow cast down and to the right.
+    /// </summary>
+    /// <remarks>
+    /// The shadow is offset rather than centred and takes no blur at all. A soft glow under a panel is
+    /// how a web page floats a card; a sheet of paper on a table casts an edge, and the whole look of
+    /// the game rests on the difference.
+    /// </remarks>
+    public static StyleBoxFlat PaperStyle(Color background, int shadow = 6, Color? border = null)
+    {
+        StyleBoxFlat style = FlatStyle(background, border, border is null ? 0 : 1);
+        style.ShadowColor = new Color(0.04f, 0.03f, 0.02f, 0.45f);
+        style.ShadowSize = shadow;
+        style.ShadowOffset = new Vector2(shadow, shadow);
+        return style;
     }
 
-    /// <summary>A panel's ground: a flat box with a hairline edge.</summary>
-    public static StyleBoxFlat PanelStyle(Color background, int radius = 4, Color? border = null)
+    /// <summary>A flat box with no shadow: a trough, a bar, the strip's ground.</summary>
+    public static StyleBoxFlat FlatStyle(Color background, Color? border = null, int borderWidth = 1)
     {
-        StyleBoxFlat style = new()
-        {
-            BgColor = background,
-            CornerRadiusTopLeft = radius,
-            CornerRadiusTopRight = radius,
-            CornerRadiusBottomLeft = radius,
-            CornerRadiusBottomRight = radius,
-            BorderColor = border ?? Edge,
-        };
-
-        style.SetBorderWidthAll(border is null ? 1 : 1);
+        StyleBoxFlat style = new() { BgColor = background, BorderColor = border ?? Edge };
+        style.SetCornerRadiusAll(0);
+        style.SetBorderWidthAll(border is null ? 0 : borderWidth);
         return style;
+    }
+
+    /// <summary>Kept for the screens that still ask for a panel by its old name.</summary>
+    public static StyleBoxFlat PanelStyle(Color background, int radius = 0, Color? border = null)
+    {
+        _ = radius;
+        return PaperStyle(background, shadow: 5, border);
     }
 
     /// <summary>Wraps a margin around a child column and returns the column.</summary>
@@ -703,48 +1035,120 @@ public static class UiKit
         return column;
     }
 
-    /// <summary>Marks a button as the screen's main command: filled, rather than outlined.</summary>
-    public static Button Primary(Button button)
+    /// <summary>A letterspaced line in small caps — a section's name, a label over a quoted order.</summary>
+    private static Label Letterspaced(string text, Color colour, int size, bool display = false)
     {
-        ArgumentNullException.ThrowIfNull(button);
-
-        button.AddThemeStyleboxOverride("normal", ButtonStyle(new Color(0.22f, 0.26f, 0.20f)));
-        button.AddThemeStyleboxOverride("hover", ButtonStyle(new Color(0.27f, 0.33f, 0.24f)));
-        button.AddThemeStyleboxOverride("pressed", ButtonStyle(new Color(0.18f, 0.22f, 0.17f)));
-        button.AddThemeColorOverride("font_color", Good);
-        return button;
+        // Godot's label has no letter-spacing, and the design's small caps are spaced wide enough that
+        // the absence shows. A space between the characters is the same thing done by hand, and it
+        // costs nothing — these lines are two or three words long and never wrap.
+        string spaced = string.Join(" ", text.ToUpperInvariant().ToCharArray());
+        return OnPaper(spaced, colour, size, display);
     }
 
-    private static StyleBoxFlat ButtonStyle(Color background, Color? border = null)
+    /// <summary>Paints a button: a ground, a word, and an edge when it is the way out.</summary>
+    private static void Dress(Button button, Color ground, Color word, Color? border, int borderWidth = 1, int shadow = 4)
     {
-        StyleBoxFlat style = PanelStyle(background, radius: 3, border: border ?? Edge);
-        style.ContentMarginLeft = 14;
-        style.ContentMarginRight = 14;
-        style.ContentMarginTop = 7;
-        style.ContentMarginBottom = 7;
-        return style;
+        StyleBoxFlat normal = FlatStyle(ground, border, borderWidth);
+        normal.ShadowColor = new Color(0.04f, 0.03f, 0.02f, 0.45f);
+        normal.ShadowSize = shadow;
+        normal.ShadowOffset = new Vector2(shadow, shadow);
+        normal.ContentMarginLeft = normal.ContentMarginRight = 18;
+        normal.ContentMarginTop = normal.ContentMarginBottom = 11;
+
+        StyleBoxFlat hover = (StyleBoxFlat)normal.Duplicate();
+        hover.BgColor = ground.Lightened(0.08f);
+
+        // Pressed means pressed: the paper goes down onto the table and the shadow it was casting goes
+        // with it, which is the whole of the click's feedback.
+        StyleBoxFlat down = (StyleBoxFlat)normal.Duplicate();
+        down.BgColor = ground.Darkened(0.08f);
+        down.ShadowSize = 0;
+
+        button.AddThemeStyleboxOverride("normal", normal);
+        button.AddThemeStyleboxOverride("hover", hover);
+        button.AddThemeStyleboxOverride("pressed", down);
+        button.AddThemeStyleboxOverride("disabled", normal);
+        button.AddThemeStyleboxOverride("focus", FlatStyle(new Color(0, 0, 0, 0), border ?? word, borderWidth));
+        button.AddThemeColorOverride("font_color", word);
+        button.AddThemeColorOverride("font_hover_color", word);
+        button.AddThemeColorOverride("font_pressed_color", word);
+        button.AddThemeColorOverride("font_disabled_color", word);
+
+        if (Display is Font face)
+        {
+            button.AddThemeFontOverride("font", face);
+        }
+
+        button.AddThemeFontSizeOverride("font_size", HeadSize - 2);
     }
+
+    /// <summary>A hairline standing up between two runs of the strip.</summary>
+    private static Control StripRule() =>
+        new ColorRect { Color = NightEdge, CustomMinimumSize = new Vector2(1, 0) };
+
+    /// <summary>
+    /// Loads one of the bundled faces, or gives back nothing and lets the engine's own font stand in.
+    /// </summary>
+    /// <remarks>
+    /// The faces are imported resources, and a headless or half-imported project has none of them. A
+    /// missing face must not take the screen down with it: every label asks for its face and carries on
+    /// without one, which is also what keeps the presentation tests free of the engine.
+    /// </remarks>
+    private static Font? LoadFace(string name)
+    {
+        string path = $"res://Fonts/{name}.ttf";
+        return ResourceLoader.Exists(path) ? ResourceLoader.Load<Font>(path) : null;
+    }
+
+    private static Color Hex(uint rgb) =>
+        new(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f);
 
     private static Theme BuildTheme()
     {
         Theme theme = new() { DefaultFontSize = BodySize };
 
+        if (BodyFace is Font body)
+        {
+            theme.DefaultFont = body;
+        }
+
         theme.SetColor("font_color", "Label", Ink);
 
-        theme.SetFontSize("font_size", "Button", BodySize);
+        theme.SetFontSize("font_size", "Button", HeadSize - 2);
         theme.SetColor("font_color", "Button", Ink);
-        theme.SetColor("font_hover_color", "Button", new Color(1, 1, 0.95f));
-        theme.SetColor("font_pressed_color", "Button", Heading);
+        theme.SetColor("font_hover_color", "Button", Ink);
+        theme.SetColor("font_pressed_color", "Button", Ink);
         theme.SetColor("font_disabled_color", "Button", Muted);
-        theme.SetStylebox("normal", "Button", ButtonStyle(Raised));
-        theme.SetStylebox("hover", "Button", ButtonStyle(new Color(0.21f, 0.21f, 0.25f)));
-        theme.SetStylebox("pressed", "Button", ButtonStyle(new Color(0.14f, 0.14f, 0.17f)));
-        theme.SetStylebox("disabled", "Button", ButtonStyle(new Color(0.11f, 0.11f, 0.13f)));
-        theme.SetStylebox("focus", "Button", PanelStyle(new Color(0, 0, 0, 0), radius: 3, border: Heading));
 
-        theme.SetStylebox("panel", "PanelContainer", PanelStyle(Surface));
-        theme.SetStylebox("background", "ProgressBar", PanelStyle(new Color(0.10f, 0.10f, 0.12f), radius: 2));
-        theme.SetStylebox("fill", "ProgressBar", PanelStyle(Heading, radius: 2, border: Heading));
+        if (Display is Font display)
+        {
+            theme.SetFont("font", "Button", display);
+        }
+
+        StyleBoxFlat rest = PaperStyle(Raised, shadow: 4);
+        rest.ContentMarginLeft = rest.ContentMarginRight = 18;
+        rest.ContentMarginTop = rest.ContentMarginBottom = 11;
+
+        StyleBoxFlat over = (StyleBoxFlat)rest.Duplicate();
+        over.BgColor = Surface;
+
+        StyleBoxFlat down = (StyleBoxFlat)rest.Duplicate();
+        down.BgColor = Pressed;
+        down.ShadowSize = 0;
+
+        StyleBoxFlat off = (StyleBoxFlat)rest.Duplicate();
+        off.BgColor = Pressed;
+        off.ShadowSize = 0;
+
+        theme.SetStylebox("normal", "Button", rest);
+        theme.SetStylebox("hover", "Button", over);
+        theme.SetStylebox("pressed", "Button", down);
+        theme.SetStylebox("disabled", "Button", off);
+        theme.SetStylebox("focus", "Button", FlatStyle(new Color(0, 0, 0, 0), Ink));
+
+        theme.SetStylebox("panel", "PanelContainer", PaperStyle(Surface));
+        theme.SetStylebox("background", "ProgressBar", FlatStyle(Pressed));
+        theme.SetStylebox("fill", "ProgressBar", FlatStyle(Indigo));
 
         theme.SetFontSize("font_size", "CheckBox", BodySize);
         theme.SetColor("font_color", "CheckBox", Ink);
