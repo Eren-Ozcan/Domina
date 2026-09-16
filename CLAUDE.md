@@ -32,6 +32,10 @@ Read before starting any work on this project:
   what we did the same, what we changed on purpose, what we never did (⚪ marks an open gap).
 - **`docs/DESIGN-REFERENCES.md`** — the externally verifiable grounds for the decisions
   (established design practice, source links) and the places where the sources proved us wrong.
+- **`docs/UI-PAPER-THEATRE.md`** — how the interface design canvas (the paper theatre:
+  the yard as the hub, sheets over it, the four decision shapes) landed in the build, what
+  the build deliberately does differently, and what is still a gap. The canvas itself is
+  kept at `design/paper-theatre/Main.dc.html`.
 - **`docs/GLOSSARY.md`** — Japanese weapon/armour terms and the core's mechanical
   vocabulary (bind chance, lock, etc.); if a term is unfamiliar, look here first.
 
