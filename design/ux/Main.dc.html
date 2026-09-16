@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #f1efea;
+      --sheet: #ffffff;
+      --sheet-2: #faf9f6;
+      --line: #cfccc4;
+      --line-2: #e5e2da;
+      --ink: #23211d;
+      --mid: #6f6b62;
+      --faint: #9a958b;
+      --block: #e2dfd7;
+      --bad: #a8412c;
+      --ok: #35664b;
+      --warn: #8a6a25;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+           color: var(--ink); font-family: var(--sans); font-size: 15px; }
+    a { color: var(--bad); } a:hover { color: #7d2f1f; }
+    .panel { background: var(--sheet); border: 1px solid var(--line); }
+    .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+    .h2 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+    .note { font-size: 13px; color: var(--mid); line-height: 1.5; }
+    .tag { font-family: var(--mono); font-size: 11px; padding: 3px 7px; border: 1px solid var(--line);
+           color: var(--mid); background: var(--sheet-2); white-space: nowrap; }
+    .fix { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ok);
+           border: 1px dashed var(--ok); padding: 2px 6px; white-space: nowrap; }
+    .bar { position: relative; height: 10px; background: var(--block); }
+    .bar > i { display: block; height: 100%; background: var(--ink); }
+    .btn { border: 1px solid var(--ink); padding: 12px 16px; background: var(--sheet); }
+    .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .btn.dead { border-color: var(--line); color: var(--faint); background: var(--sheet-2); }
+    .btn .t { font-size: 17px; font-weight: 600; }
+    .btn .s { font-family: var(--mono); font-size: 11.5px; margin-top: 5px; opacity: 0.8; }
+    .row { display: flex; align-items: center; gap: 10px; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { text-align: left; padding: 6px 0; font-size: 14px; border-bottom: 1px solid var(--line-2); }
+    th { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+         color: var(--faint); font-weight: 400; }
+  </style>
+</helmet>
+
+<div style="width: 1920px; height: 1080px; padding: 24px 32px; display: flex; flex-direction: column; gap: 14px">
+
+  <!-- shell: where you are, and how fast time runs -->
+  <div style="display: flex; align-items: center; gap: 10px; height: 40px">
+    <div style="display: flex; gap: 4px">
+      <div style="padding: 9px 18px; background: var(--ink); color: #fff; font-weight: 600; font-size: 14px">Day</div>
+      <div style="padding: 9px 18px; border: 1px solid var(--line); background: var(--sheet); font-size: 14px">Roster</div>
+      <div style="padding: 9px 18px; border: 1px solid var(--line); background: var(--sheet); font-size: 14px">Market</div>
+      <div style="padding: 9px 18px; border: 1px solid var(--line); background: var(--sheet); font-size: 14px">School</div>
+      <div style="padding: 9px 18px; border: 1px solid var(--line); background: var(--sheet); font-size: 14px">Armoury</div>
+      <div style="padding: 9px 18px; border: 1px solid var(--line); background: var(--sheet); font-size: 14px">Province</div>
+    </div>
+    <div style="flex-grow: 1"></div>
+    <div class="lbl">hour of the horse</div>
+    <div style="display: flex; gap: 4px">
+      <div style="width: 40px; height: 32px; border: 1px solid var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px">II</div>
+      <div style="width: 40px; height: 32px; border: 1px solid var(--line); color: var(--faint); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px">1x</div>
+      <div style="width: 40px; height: 32px; border: 1px solid var(--ink); background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px">2x</div>
+      <div style="width: 40px; height: 32px; border: 1px solid var(--line); color: var(--faint); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 12px">4x</div>
+    </div>
+  </div>
+
+  <!-- the season, in one strip: everything that is closing in lives here and nowhere else -->
+  <div class="panel" style="padding: 14px 18px; display: flex; align-items: center; gap: 26px; height: 86px">
+    <div style="flex: none">
+      <div class="lbl">the season</div>
+      <div style="font-size: 26px; font-weight: 700; margin-top: 2px">Day 23 <span style="color: var(--faint); font-weight: 400">of 60</span></div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0">
+      <div style="display: flex; align-items: flex-end; gap: 2px; height: 22px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="60">
+          <i style="width: 100%; height: {{d.h}}; background: {{d.c}}"></i>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <span class="lbl">spring</span>
+        <span class="lbl" style="color: var(--bad)">summons, day 27</span>
+        <span class="lbl">the final, day 60</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; flex: none">
+      <div style="border-left: 3px solid var(--bad); padding-left: 10px; width: 150px">
+        <div style="font-size: 19px; font-weight: 700">4 days</div>
+        <div class="note" style="font-size: 12px">to the summons &middot; refusing costs standing</div>
+      </div>
+      <div style="border-left: 3px solid var(--warn); padding-left: 10px; width: 150px">
+        <div style="font-size: 19px; font-weight: 700">2 of 3 heads</div>
+        <div class="note" style="font-size: 12px">the gate to the final</div>
+      </div>
+      <div style="border-left: 3px solid var(--line); padding-left: 10px; width: 176px">
+        <div style="font-size: 19px; font-weight: 700">Bushi 61% <span style="font-size: 13px; color: var(--mid); font-weight: 400">&middot; reward x1.14</span></div>
+        <div class="bar" style="height: 6px; margin-top: 5px"><i style="width: 61%"></i></div>
+      </div>
+      <div class="fix" style="align-self: flex-start">fixes 7, 8</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 16px; flex-grow: 1; min-height: 0">
+
+    <!-- the decision itself, and it is sized like one -->
+    <div class="panel" style="width: 806px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+      <div class="row">
+        <div class="lbl">today's offer &middot; 1 of 1 &middot; gone at dusk</div>
+        <div style="flex-grow: 1"></div>
+        <div class="fix">fixes 1</div>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <div style="font-size: 36px; font-weight: 700; letter-spacing: -0.015em">The Ashigara toll road</div>
+        <div class="tag">bounty</div>
+        <div class="tag">Lord Ii Naomasa</div>
+      </div>
+      <div style="font-size: 16px; line-height: 1.55; color: var(--mid); max-width: 700px">
+        Six men have been shaking down the porters at the pass for a month. The village headman will not
+        say how many are still armed.
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+        <div style="border: 1px solid var(--ink); padding: 14px 16px">
+          <div class="lbl">you are paid</div>
+          <div style="font-size: 30px; font-weight: 700; margin: 6px 0 4px">240 gold</div>
+          <div class="note">plus the head of Genba the Ear &mdash; the third of three.<br>Standing x1.14 already counted.</div>
+        </div>
+        <div style="border: 1px solid var(--line); padding: 14px 16px">
+          <div class="lbl">it costs you, on setting out</div>
+          <div style="font-size: 30px; font-weight: 700; margin: 6px 0 4px">2 days &middot; 18 rice &middot; 12 water</div>
+          <div class="note">You are back on the evening of day 25, two days before the summons.</div>
+        </div>
+      </div>
+
+      <div style="height: 1px; background: var(--line-2)"></div>
+
+      <div class="row">
+        <div class="h2">The fight ahead</div>
+        <div style="flex-grow: 1"></div>
+        <div class="fix">fixes 2, 3</div>
+      </div>
+
+      <!-- threat as a scale you can place yourself on, not an adjective -->
+      <div>
+        <div style="position: relative; height: 34px">
+          <div style="display: flex; height: 16px">
+            <div style="flex: 1; background: var(--block); border-right: 1px solid var(--sheet)"></div>
+            <div style="flex: 1; background: #d3cfc4; border-right: 1px solid var(--sheet)"></div>
+            <div style="flex: 1; background: #bdb8aa; border-right: 1px solid var(--sheet)"></div>
+            <div style="flex: 1; background: #a29c8c; border-right: 1px solid var(--sheet)"></div>
+            <div style="flex: 1; background: #857f6f"></div>
+          </div>
+          <div style="position: absolute; left: 58%; top: -4px; width: 3px; height: 24px; background: var(--bad)"></div>
+          <div style="position: absolute; left: 58%; top: 22px; transform: translateX(-50%);
+               font-family: var(--mono); font-size: 11px; color: var(--bad)">this contract</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 16px">
+          <span class="lbl">rabble</span><span class="lbl">armed</span><span class="lbl">bloodied</span>
+          <span class="lbl">hardened</span><span class="lbl">grim</span>
+        </div>
+      </div>
+      <div class="note" style="margin-top: -4px">Four to six men, iron at the front. The headman's count is
+        a guess &mdash; scouting would narrow it, and you have no scout.</div>
+
+      <div style="display: flex; gap: 12px">
+        <div style="flex: 1; border: 1px solid var(--line); padding: 11px 13px">
+          <div class="row" style="gap: 8px"><span class="h2">Mud</span><span class="tag">every man</span></div>
+          <div class="note" style="margin-top: 5px">Speed and evasion down; worse under iron, so it costs
+            Sada more than it costs Ayame.</div>
+        </div>
+        <div style="flex: 1; border: 1px solid var(--bad); padding: 11px 13px">
+          <div class="row" style="gap: 8px"><span class="h2">Dawn fog</span><span class="tag" style="border-color: var(--bad); color: var(--bad)">hits Mori Ayame</span></div>
+          <div class="note" style="margin-top: 5px">Bows lose their reach. Your only archer spends the fight
+            at a range she was not built for.</div>
+        </div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+      <div style="height: 1px; background: var(--line-2)"></div>
+      <div class="row" style="gap: 14px">
+        <div style="flex-grow: 1">
+          <div class="row" style="gap: 8px"><span class="h2">Lord Ii Naomasa</span><span class="lbl">patron &middot; content</span></div>
+          <div class="bar" style="margin-top: 7px"><i style="width: 72%"></i></div>
+          <div class="note" style="margin-top: 5px">He will carry one man's rice until that man falls.</div>
+        </div>
+        <div class="btn" style="padding: 10px 14px; font-size: 14px; flex: none">Send a gift &middot; 1 sake</div>
+      </div>
+    </div>
+
+    <!-- who goes, and whether they are enough -->
+    <div class="panel" style="width: 642px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px">
+      <div class="row">
+        <div class="h2" style="font-size: 17px">Who goes</div>
+        <div class="tag">2 of 3 chosen</div>
+        <div style="flex-grow: 1"></div>
+        <div class="fix">fixes 2</div>
+      </div>
+
+      <sc-for list="{{men}}" as="m" hint-placeholder-count="4">
+        <div style="display: flex; gap: 12px; align-items: center; padding: 11px 12px;
+             border: 1px solid {{m.edge}}; border-left: 4px solid {{m.edge}}; background: {{m.bg}}; opacity: {{m.fade}}">
+          <div style="width: 40px; height: 56px; background: var(--block); border: 1px solid var(--line); flex: none"></div>
+          <div style="flex-grow: 1; min-width: 0">
+            <div class="row" style="justify-content: space-between">
+              <span style="font-size: 17px; font-weight: 600">{{m.name}}</span>
+              <span class="lbl">{{m.school}}</span>
+            </div>
+            <div class="bar" style="margin: 7px 0 5px"><i style="width: {{m.hp}}; background: {{m.hpc}}"></i></div>
+            <div class="note" style="font-size: 12px">{{m.state}}</div>
+          </div>
+          <div style="flex: none; width: 128px; text-align: right">
+            <div class="tag" style="display: inline-block; border-color: {{m.fitEdge}}; color: {{m.fitEdge}}">{{m.fit}}</div>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="border: 1px solid var(--ink); padding: 14px 16px">
+        <div class="row"><div class="lbl">your three against four to six</div></div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin: 10px 0 8px">
+          <div class="row" style="gap: 10px">
+            <span class="lbl" style="width: 86px">your line</span>
+            <div class="bar" style="flex-grow: 1; height: 14px"><i style="width: 54%"></i></div>
+          </div>
+          <div class="row" style="gap: 10px">
+            <span class="lbl" style="width: 86px">theirs</span>
+            <div class="bar" style="flex-grow: 1; height: 14px"><i style="width: 58%; background: var(--bad)"></i></div>
+          </div>
+        </div>
+        <div class="note"><b style="color: var(--ink)">Even, and the fog is on their side.</b> Expect wounds.
+          Pulling a man out mid-fight costs standing, and you are four days from the summons.</div>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+
+      <div class="row"><div style="flex-grow: 1"></div><div class="fix">fixes 4</div></div>
+      <div class="btn primary">
+        <div class="t">Send these two out</div>
+        <div class="s">-18 rice, -12 water &middot; back the evening of day 25 &middot; the third slot stays empty</div>
+      </div>
+      <div class="btn">
+        <div class="t">Keep them home, work the day</div>
+        <div class="s">train, treat, buy &middot; this offer is gone at dusk and tomorrow's is unknown</div>
+      </div>
+      <div class="btn dead">
+        <div class="t">No second contract today</div>
+        <div class="s">one offer a day &mdash; the board fills again at dawn</div>
+      </div>
+    </div>
+
+    <!-- the house: only what you can act on today -->
+    <div class="panel" style="flex-grow: 1; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0">
+      <div class="row">
+        <div class="h2" style="font-size: 17px">The house</div>
+        <div style="flex-grow: 1"></div>
+        <div class="fix">fixes 5, 6</div>
+      </div>
+
+      <table>
+        <tr><th>store</th><th style="text-align: right">have</th><th style="text-align: right">a day</th><th style="text-align: right">lasts</th></tr>
+        <sc-for list="{{store}}" as="s" hint-placeholder-count="5">
+          <tr>
+            <td style="color: {{s.c}}; font-weight: {{s.w}}">{{s.name}}</td>
+            <td style="text-align: right; font-family: var(--mono); color: {{s.c}}; font-weight: {{s.w}}">{{s.have}}</td>
+            <td style="text-align: right; font-family: var(--mono); color: var(--mid)">{{s.day}}</td>
+            <td style="text-align: right; font-family: var(--mono); color: {{s.c}}; font-weight: {{s.w}}">{{s.left}}</td>
+          </tr>
+        </sc-for>
+      </table>
+      <div class="note" style="margin-top: -6px; color: var(--bad)">Medicine runs out on day 25 &mdash; the day
+        this party would come home wounded.</div>
+
+      <div style="height: 1px; background: var(--line-2)"></div>
+
+      <div class="lbl">waiting on you</div>
+      <div style="display: flex; flex-direction: column; gap: 9px">
+        <div style="border-left: 3px solid var(--warn); padding-left: 10px">
+          <div style="font-size: 14px; font-weight: 600">Kuroda Ren wants a better blade</div>
+          <div class="note" style="font-size: 12px">asked twice &middot; the armoury has one at 96 gold</div>
+        </div>
+        <div style="border-left: 3px solid var(--line); padding-left: 10px">
+          <div style="font-size: 14px; font-weight: 600">Saito Genji is in the infirmary</div>
+          <div class="note" style="font-size: 12px">3 more days at 2 medicine a day</div>
+        </div>
+        <div style="border-left: 3px solid var(--line); padding-left: 10px">
+          <div style="font-size: 14px; font-weight: 600">The instructor's post is still vacant</div>
+          <div class="note" style="font-size: 12px">training yields a third less until it is filled</div>
+        </div>
+      </div>
+
+      <div style="height: 1px; background: var(--line-2)"></div>
+
+      <div class="lbl">since yesterday</div>
+      <div class="note" style="line-height: 1.6">
+        Sada's blade 13 &rarr; 14. Ayame's composure +4. Genji's wound closing.<br>
+        <span style="color: var(--bad)">Medicine down to 3.</span>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div class="btn" style="padding: 9px 12px; font-size: 13px; text-align: center">Open the full day log</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const days = [];
+    for (let i = 1; i <= 60; i++) {
+      const played = i < 23, today = i === 23, summons = i === 27, final = i === 60;
+      days.push({
+        h: today ? '22px' : (summons || final ? '18px' : (played ? '12px' : '7px')),
+        c: today ? '#23211d' : (summons || final ? '#a8412c' : (played ? '#9a958b' : '#e2dfd7')),
+      });
+    }
+    const men = [
+      { name: 'Hattori Sada', school: 'Kensei 14', hp: '100%', state: '148 of 148 - fit, no wounds',
+        fit: 'mud: -speed', chosen: true, hpc: '#23211d', fitEdge: '#8a6a25' },
+      { name: 'Kuroda Ren', school: 'Sohei 11', hp: '74%', state: '92 of 124 - left eye gone, permanent',
+        fit: 'fights close', chosen: true, hpc: '#6f6b62', fitEdge: '#35664b' },
+      { name: 'Mori Ayame', school: 'Yumi 9', hp: '100%', state: '96 of 96 - fit and idle',
+        fit: 'fog: -reach', chosen: false, hpc: '#23211d', fitEdge: '#a8412c' },
+      { name: 'Saito Genji', school: 'Ronin 7', hp: '22%', state: 'in the infirmary, 3 more days',
+        fit: 'cannot go', chosen: false, hpc: '#a8412c', fitEdge: '#9a958b', out: true },
+    ];
+    const store = [
+      { name: 'Gold', have: '412', day: '+38', left: 'rising', c: '#23211d', w: '400' },
+      { name: 'Rice', have: '96', day: '-7', left: '13 days', c: '#23211d', w: '400' },
+      { name: 'Water', have: '140', day: '-7', left: '20 days', c: '#23211d', w: '400' },
+      { name: 'Medicine', have: '3', day: '-2', left: '2 days', c: '#a8412c', w: '600' },
+      { name: 'Sake', have: '1', day: '0', left: 'kept', c: '#6f6b62', w: '400' },
+    ];
+    return {
+      days, store,
+      men: men.map((m) => ({
+        ...m,
+        edge: m.chosen ? '#23211d' : '#cfccc4',
+        bg: m.chosen ? '#faf9f6' : '#ffffff',
+        fade: m.out ? '0.55' : '1',
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

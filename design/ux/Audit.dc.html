@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #f1efea;
+      --sheet: #ffffff;
+      --line: #cfccc4;
+      --line-2: #e5e2da;
+      --ink: #23211d;
+      --mid: #6f6b62;
+      --faint: #9a958b;
+      --block: #e2dfd7;
+      --bad: #a8412c;
+      --ok: #35664b;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+           color: var(--ink); font-family: var(--sans); font-size: 15px; }
+    a { color: var(--bad); } a:hover { color: #7d2f1f; }
+    .blk { background: var(--block); border: 1px solid var(--line); }
+    .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+    .pin { width: 26px; height: 26px; border-radius: 50%; background: var(--bad); color: #fff;
+           font-family: var(--mono); font-weight: 600; font-size: 13px;
+           display: flex; align-items: center; justify-content: center; flex: none; }
+    .prob { display: flex; gap: 12px; align-items: flex-start; }
+    .prob p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--mid); }
+    .prob b { color: var(--ink); font-weight: 600; }
+  </style>
+</helmet>
+
+<div style="width: 1920px; height: 1080px; padding: 34px 40px; display: flex; flex-direction: column; gap: 22px">
+
+  <div style="display: flex; align-items: flex-end; gap: 24px">
+    <div>
+      <div class="lbl">step 1 of 3 &middot; what is wrong today</div>
+      <div style="font-size: 34px; font-weight: 700; letter-spacing: -0.01em; margin-top: 6px">The Day screen, audited</div>
+    </div>
+    <div style="max-width: 760px; color: var(--mid); font-size: 15px; line-height: 1.5; padding-bottom: 4px">
+      The screen holds the right information. It just does not tell you which decision you are here to
+      make, so everything on it reads at the same volume &mdash; which is why it feels like a menu of text.
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 26px; flex-grow: 1; min-height: 0">
+
+    <!-- the screen as it stands, schematic -->
+    <div style="width: 1030px; background: var(--sheet); border: 1px solid var(--line); padding: 18px; position: relative">
+      <div style="display: flex; flex-direction: column; gap: 10px; height: 100%">
+
+        <div style="display: flex; gap: 8px; align-items: center">
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div class="blk" style="width: 72px; height: 30px"></div>
+          <div style="flex-grow: 1"></div>
+          <div class="blk" style="width: 210px; height: 30px; position: relative">
+            <div class="pin" style="position: absolute; right: -13px; top: -13px">7</div>
+          </div>
+          <div class="blk" style="width: 120px; height: 30px"></div>
+        </div>
+
+        <div style="height: 44px; display: flex; align-items: center">
+          <div class="blk" style="width: 200px; height: 26px; background: #cfccc4"></div>
+        </div>
+
+        <div style="display: flex; gap: 7px; position: relative">
+          <div class="pin" style="position: absolute; left: -13px; top: 20px">6</div>
+          <div class="blk" style="width: 92px; height: 62px"></div>
+          <div class="blk" style="width: 92px; height: 62px"></div>
+          <div class="blk" style="width: 92px; height: 62px"></div>
+          <div class="blk" style="width: 92px; height: 62px"></div>
+          <div class="blk" style="width: 92px; height: 62px"></div>
+          <div class="blk" style="width: 120px; height: 62px"></div>
+          <div class="blk" style="width: 104px; height: 62px; position: relative">
+            <div class="pin" style="position: absolute; right: -13px; top: -13px">7</div>
+          </div>
+          <div class="blk" style="width: 96px; height: 62px"></div>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-grow: 1; min-height: 0">
+
+          <div style="width: 380px; border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 9px; position: relative">
+            <div class="pin" style="position: absolute; left: -13px; top: 40px">1</div>
+            <div class="lbl">today on the board</div>
+            <div class="blk" style="height: 22px; background: #cfccc4"></div>
+            <div class="blk" style="height: 46px"></div>
+            <div style="display: flex; gap: 8px">
+              <div class="blk" style="flex-grow: 1; height: 62px"></div>
+              <div class="blk" style="flex-grow: 1; height: 62px"></div>
+            </div>
+            <div style="display: flex; gap: 8px; position: relative">
+              <div class="pin" style="position: absolute; right: -13px; top: -6px">3</div>
+              <div class="blk" style="flex-grow: 1; height: 34px"></div>
+              <div class="blk" style="width: 120px; height: 34px"></div>
+            </div>
+            <div class="blk" style="height: 26px"></div>
+            <div style="height: 1px; background: var(--line-2)"></div>
+            <div class="lbl">the hut reads the road</div>
+            <div class="blk" style="height: 60px"></div>
+            <div style="flex-grow: 1"></div>
+          </div>
+
+          <div style="width: 290px; border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative">
+            <div class="pin" style="position: absolute; left: -13px; top: 40px">2</div>
+            <div class="lbl">who goes</div>
+            <div class="blk" style="height: 54px"></div>
+            <div class="blk" style="height: 54px"></div>
+            <div class="blk" style="height: 54px"></div>
+            <div class="blk" style="height: 54px; opacity: 0.5"></div>
+            <div style="flex-grow: 1"></div>
+            <div style="position: relative">
+              <div class="pin" style="position: absolute; right: -13px; top: 22px">4</div>
+              <div class="blk" style="height: 30px; background: #cfccc4"></div>
+            </div>
+            <div class="blk" style="height: 30px"></div>
+            <div class="blk" style="height: 30px"></div>
+          </div>
+
+          <div style="flex-grow: 1; border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative">
+            <div class="pin" style="position: absolute; right: -13px; top: 40px">5</div>
+            <div class="lbl">the day so far</div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div class="blk" style="height: 15px"></div>
+            <div style="height: 1px; background: var(--line-2); margin: 4px 0"></div>
+            <div class="lbl">standing</div>
+            <div class="blk" style="height: 40px; position: relative">
+              <div class="pin" style="position: absolute; right: -13px; top: -13px">8</div>
+            </div>
+            <div style="flex-grow: 1"></div>
+            <div class="blk" style="height: 34px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the findings -->
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 17px; min-width: 0">
+      <div class="lbl">eight findings, in the order they cost you</div>
+
+      <div class="prob"><div class="pin">1</div><p><b>No primary decision.</b> Three panels of equal
+        weight, equal borders, equal density. The screen's whole job is one choice &mdash; take this contract
+        or spend the day another way &mdash; and nothing on it is sized like that choice.</p></div>
+
+      <div class="prob"><div class="pin">2</div><p><b>The party list is not a judgement.</b> It says who
+        is fit; it never says whether these three beat what is waiting. The player has to hold the threat
+        band in their head while reading a second column.</p></div>
+
+      <div class="prob"><div class="pin">3</div><p><b>The field is written, not felt.</b> "Mud, dawn fog"
+        plus a sentence of rules. Which of my men does that hurt, and by how much? The answer exists in
+        the core and is never shown.</p></div>
+
+      <div class="prob"><div class="pin">4</div><p><b>Buttons with no consequence.</b> Three stacked
+        buttons of the same size. Taking the bounty spends two days, 18 food and 12 water, and returns on
+        day 25 &mdash; none of that is attached to the button that does it.</p></div>
+
+      <div class="prob"><div class="pin">5</div><p><b>The log eats a third of the screen</b> to report
+        things that already happened and that you cannot act on. Its useful part is two or three lines:
+        what changed since yesterday.</p></div>
+
+      <div class="prob"><div class="pin">6</div><p><b>Eight numbers, no thresholds.</b> The store row
+        treats gold, sake and the nearly-empty medicine chest as equals. Only one of them should be
+        shouting today.</p></div>
+
+      <div class="prob"><div class="pin">7</div><p><b>Season pressure is scattered.</b> The clock is top
+        right, heads taken is in the store row, the summons is bottom right, standing is in two places.
+        These are one thing: how the campaign is going and what is closing in.</p></div>
+
+      <div class="prob"><div class="pin">8</div><p><b>Two readings of honour.</b> Standing appears as a
+        store chip and again as a gauge with a paragraph. One of them is enough.</p></div>
+
+      <div style="margin-top: 4px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--mid);
+           font-size: 14px; line-height: 1.55">
+        <b style="color: var(--ink)">What holds up:</b> the information architecture is right &mdash; offer,
+        party, dojo, season. Nothing needs removing from the game, only re-ranking on the screen. The fix
+        is hierarchy and consequence, not new systems.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
