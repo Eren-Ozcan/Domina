@@ -124,6 +124,9 @@ public enum MoveKind
     /// <summary>A thrown weapon was bought.</summary>
     EquipThrown,
 
+    /// <summary>A melee weapon was bought off the rack and taken up.</summary>
+    EquipWeapon,
+
     /// <summary>A weapon was taken to the forge.</summary>
     ForgeWeapon,
 

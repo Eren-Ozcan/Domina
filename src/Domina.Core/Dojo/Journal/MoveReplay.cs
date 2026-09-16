@@ -419,6 +419,14 @@ public static class MoveReplay
 
                 return OnWarrior(dojo, move, w => done.Ok = dojo.Quartermaster.EquipThrown(dojo, w, thrown));
 
+            case MoveKind.EquipWeapon:
+                if (EquipmentCatalogue.FindWeapon(move.Text("weapon")) is not Weapon bought)
+                {
+                    return $"this build sells no weapon called {move.Text("weapon")}";
+                }
+
+                return OnWarrior(dojo, move, w => done.Ok = dojo.Quartermaster.EquipWeapon(dojo, w, bought));
+
             case MoveKind.ForgeWeapon:
                 return OnWarrior(dojo, move, w => done.Ok = dojo.Quartermaster.Forge(dojo, w));
 
