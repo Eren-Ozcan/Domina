@@ -1,0 +1,537 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+  <style>
+    :root {
+      --paper: #e7dcc3;
+      --paper-2: #d5c7a6;
+      --paper-3: #bdad89;
+      --ink: #15120e;
+      --ink-2: #4a4136;
+      --ink-3: #7c7161;
+      --night: #0b0a09;
+      --indigo: #36446b;
+      --indigo-2: #5c6ea8;
+      --ochre: #a8834a;
+      --ochre-2: #d9b46a;
+      --earth: #6a5033;
+      --moss: #59613f;
+      --violet: #453450;
+      --brick: #8f4d38;
+      --vermilion: #c0301b;
+      --metal: #8a8579;
+      --display: "Shippori Mincho B1", "Hiragino Mincho ProN", Georgia, serif;
+      --body: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 2240px; height: 1660px; overflow: hidden;
+           background: var(--night); color: var(--ink);
+           font-family: var(--body); font-size: 15px; }
+    a { color: var(--ochre); } a:hover { color: var(--ochre-2); }
+    .torn-a { clip-path: polygon(0 5px, 34% 1px, 71% 4px, 100% 0, calc(100% - 4px) 38%, 100% 74%,
+              calc(100% - 3px) 100%, 46% calc(100% - 5px), 9% 100%, 3px 63%, 0 26%); }
+    .sheet { position: relative; }
+    .sheet > .drop { position: absolute; inset: 0; background: #000; opacity: 0.6; transform: translate(8px, 10px); }
+    .sheet > .face { position: absolute; inset: 0; background: var(--paper); }
+    .sheet > .body { position: relative; padding: 22px 24px; }
+    .cap { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+    .note { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+    .sec { display: flex; align-items: center; gap: 9px; font-family: var(--display); font-weight: 700;
+           font-size: 19px; letter-spacing: 0.04em; margin-bottom: 14px; }
+    .gauge { position: relative; height: 10px; background: var(--paper-3); }
+    .gauge > i { display: block; height: 100%; background: var(--ink); }
+    .gauge > u { position: absolute; inset: 0;
+                 background: repeating-linear-gradient(90deg, transparent 0 12px, var(--paper) 12px 15px); }
+    .stamp { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
+             padding: 9px 15px; text-align: center; border: 2px solid var(--ink); color: var(--ink); }
+    .stamp.solid { background: var(--ink); color: var(--paper); }
+    .stamp.off { border-color: #a99a79; color: #8d815f; }
+    .stamp.danger { border-color: var(--vermilion); color: var(--vermilion); border-width: 3px; }
+    .slat { background: var(--paper-2); border: 1px solid #a89871; padding: 8px 11px; }
+    .num { font-family: var(--display); font-weight: 700; font-size: 12px; fill: #a8834a; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 2240px; height: 1660px; background: var(--night); overflow: hidden">
+
+  <div style="position: relative; padding: 34px 36px; display: flex; flex-direction: column; gap: 24px">
+
+    <!-- the plate's title, printed twice a hair apart, as a block that slipped -->
+    <div style="display: flex; align-items: flex-end; gap: 30px">
+      <div style="position: relative">
+        <div style="position: absolute; left: 3px; top: 3px; font-family: var(--display); font-weight: 800;
+             font-size: 46px; line-height: 1.1; color: var(--vermilion); opacity: 0.4">Dark Woodblock Print<br>&times; Paper Theater</div>
+        <div style="position: relative; font-family: var(--display); font-weight: 800; font-size: 46px;
+             line-height: 1.1; color: var(--paper)">Dark Woodblock Print<br>&times; Paper Theater</div>
+      </div>
+      <div style="max-width: 760px; color: #9a927f; font-size: 15px; line-height: 1.6; padding-bottom: 6px">
+        A dark Edo-period Japanese woodblock print brought to life as a layered paper theater: flat ink
+        shapes, limited muted pigments, strong side-profile silhouettes, and physically separated
+        cut-paper character pieces.
+        <div style="margin-top: 8px; color: #6f685a; font-size: 13px">
+          Ukiyo-e is where the look comes from. Paper theater is how it is built and animated &mdash; so the
+          15-piece rig, the severed limb and the parallax are the style, not exceptions to it.
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 24px; align-items: flex-start">
+
+      <!-- column one: pigment and type -->
+      <div style="display: flex; flex-direction: column; gap: 24px; width: 660px">
+
+        <div class="sheet">
+          <div class="drop"></div><div class="face torn-a"></div>
+          <div class="body">
+            <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>Pigment</div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+              <sc-for list="{{pigments}}" as="p" hint-placeholder-count="8">
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <div style="width: 56px; height: 56px; background: {{p.hex}}; border: 2px solid #15120e; flex: none"></div>
+                  <div style="min-width: 0">
+                    <div style="font-family: var(--display); font-weight: 700; font-size: 16px">{{p.name}}</div>
+                    <div class="cap" style="margin: 2px 0 3px">{{p.hex}}</div>
+                    <div class="note" style="font-size: 12px">{{p.use}}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top: 16px; border-left: 4px solid var(--vermilion); padding-left: 12px">
+              <div class="note">
+                <strong>Vermilion is blood and nothing else.</strong> A warning, a locked door or an urgent
+                counter uses brick or ochre. The world stays dirty and desaturated so that one red reads
+                across the room.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <div class="drop"></div><div class="face torn-a"></div>
+          <div class="body">
+            <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>Type</div>
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span style="font-family: var(--display); font-weight: 800; font-size: 52px; line-height: 1">The Day</span>
+                <span class="cap">mincho 52 / 800 &middot; screen title</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span style="font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1">The Ashigara toll road</span>
+                <span class="cap">mincho 30 / 700 &middot; the thing itself</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span style="font-family: var(--display); font-weight: 700; font-size: 19px; line-height: 1">Today on the board</span>
+                <span class="cap">mincho 19 / 700 &middot; section</span>
+              </div>
+              <div style="height: 2px; background: var(--ink); opacity: 0.25"></div>
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span style="font-size: 16px">Six men have been shaking down the porters at the pass.</span>
+                <span class="cap">gothic 16 &middot; body</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span class="note" style="font-size: 13px">paid on setting out, not on winning</span>
+                <span class="cap">gothic 13 &middot; consequence</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 16px">
+                <span class="cap">it costs you</span>
+                <span class="cap">gothic 11 / 0.16em &middot; label</span>
+              </div>
+            </div>
+            <div class="note" style="margin-top: 14px">
+              Mincho carries every name and number &mdash; it is the carved face. Gothic carries running
+              text, where a mincho would fight the reader. Two faces, no third.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- column two: surfaces and controls -->
+      <div style="display: flex; flex-direction: column; gap: 24px; width: 700px">
+
+        <div class="sheet">
+          <div class="drop"></div><div class="face torn-a"></div>
+          <div class="body">
+            <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>How a sheet is cut</div>
+            <div style="display: flex; gap: 22px; align-items: flex-start">
+              <svg width="300" height="196" viewBox="0 0 300 196" style="flex: none">
+                <polygon points="40,52 260,44 268,164 34,172" fill="#000" opacity="0.6"></polygon>
+                <polygon points="30,42 250,34 258,154 24,162" fill="#e7dcc3"></polygon>
+                <rect x="44" y="56" width="120" height="9" fill="#15120e"></rect>
+                <rect x="44" y="76" width="176" height="6" fill="#4a4136"></rect>
+                <rect x="44" y="90" width="150" height="6" fill="#4a4136"></rect>
+                <rect x="44" y="112" width="86" height="26" fill="#15120e"></rect>
+                <line x1="262" y1="60" x2="292" y2="46" stroke="#a8834a" stroke-width="2"></line>
+                <line x1="270" y1="150" x2="294" y2="168" stroke="#a8834a" stroke-width="2"></line>
+                <line x1="150" y1="20" x2="150" y2="36" stroke="#a8834a" stroke-width="2"></line>
+                <text x="152" y="16" class="num">the sheet</text>
+                <text x="276" y="42" class="num">torn edge</text>
+                <text x="250" y="186" class="num">its shadow, offset 8 by 10</text>
+              </svg>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div class="note"><strong>Three layers, never one box.</strong> A hard black shadow, the paper
+                  face with an irregular cut edge, and the content riding on top. No rounded corners, no soft
+                  shadow &mdash; the depth comes from one sheet sitting over another.</div>
+                <div class="note"><strong>Every sheet is off-square</strong> by a third of a degree, and no two
+                  by the same amount.</div>
+                <div class="note"><strong>The block grains the whole plate.</strong> One noise pass over the
+                  finished screen at 42% overlay, so paper and night share the same print.</div>
+                <div style="display: flex; gap: 10px; margin-top: 2px">
+                  <div style="width: 88px; height: 44px; background: var(--paper)"></div>
+                  <div style="width: 88px; height: 44px; background: var(--paper-2)"></div>
+                  <div style="width: 88px; height: 44px; background: var(--paper-3)"></div>
+                  <div style="width: 88px; height: 44px; background: var(--night); border: 1px solid #2a2721"></div>
+                </div>
+                <div class="cap">bright washi &middot; aged &middot; kraft &middot; the night behind everything</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <div class="drop"></div><div class="face torn-a"></div>
+          <div class="body">
+            <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>Controls</div>
+            <div style="display: flex; flex-direction: column; gap: 16px">
+
+              <div style="display: flex; gap: 10px; align-items: center">
+                <div class="stamp solid">Take the bounty</div>
+                <div class="stamp">Skip to tomorrow</div>
+                <div class="stamp off">Locked &middot; the Doctore holds the key</div>
+                <div class="stamp danger">End his term</div>
+              </div>
+              <div class="note" style="margin-top: -6px">
+                Ink-filled is the one thing this screen is for. Outlined is everything else. A dead option
+                stays on the page and says who holds the key. An irreversible act is the only control that
+                ever borrows the blood red &mdash; and it is never shaped like Close.
+              </div>
+
+              <div style="height: 2px; background: var(--ink); opacity: 0.25"></div>
+
+              <div style="display: flex; gap: 26px; align-items: flex-start">
+                <div style="width: 270px">
+                  <div class="cap" style="margin-bottom: 7px">gauge &middot; notched, never smooth</div>
+                  <div class="gauge" style="height: 13px"><i style="width: 74%"></i><u></u></div>
+                  <div class="note" style="margin-top: 6px">92 of 124 &mdash; the notches let you count, the ink
+                    does not glow. Health, spirits and a patron's regard are one widget.</div>
+                </div>
+                <div style="width: 150px">
+                  <div class="cap" style="margin-bottom: 7px">the day's slat</div>
+                  <div class="slat" style="text-align: center">
+                    <div style="font-family: var(--display); font-weight: 700; font-size: 26px">96</div>
+                    <div class="cap" style="margin-top: 4px">food</div>
+                    <div class="note" style="margin-top: 3px; display: flex; gap: 4px; justify-content: center; align-items: center">
+                      <svg width="8" height="8" viewBox="0 0 8 8"><polygon points="0,0 8,0 4,8" fill="#4a4136"></polygon></svg>7 a day
+                    </div>
+                  </div>
+                  <div class="note" style="margin-top: 6px">the stock and what drains it</div>
+                </div>
+                <div style="flex-grow: 1">
+                  <div class="cap" style="margin-bottom: 7px">the season, cut into 60</div>
+                  <div style="display: flex; align-items: flex-end; gap: 2px; height: 18px">
+                    <sc-for list="{{days}}" as="d" hint-placeholder-count="60">
+                      <i style="width: 3px; height: {{d.h}}; background: {{d.c}}"></i>
+                    </sc-for>
+                  </div>
+                  <div class="note" style="margin-top: 8px">No bar fills: a season is a row of notches, and
+                    today is the tall bright one.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- column three: the rig -->
+      <div class="sheet" style="width: 748px">
+        <div class="drop"></div><div class="face torn-a"></div>
+        <div class="body">
+          <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>The man is cut paper</div>
+          <div style="display: flex; gap: 20px">
+            <svg width="360" height="520" viewBox="0 0 360 520" style="flex: none">
+              <!-- exploded: every piece sits apart, the way it is drawn and stored -->
+              <polygon points="96,54 176,54 190,84 82,84" fill="#15120e"></polygon>
+              <polygon points="112,26 160,26 152,50 120,50" fill="#15120e"></polygon>
+              <polygon points="104,96 168,96 164,142 108,142" fill="#2a241c"></polygon>
+              <polygon points="82,158 190,158 202,278 70,278" fill="#15120e"></polygon>
+              <rect x="196" y="160" width="62" height="86" fill="#15120e"></rect>
+              <rect x="30" y="168" width="44" height="72" fill="#4a4136"></rect>
+              <polygon points="80,292 192,292 184,348 88,348" fill="#15120e"></polygon>
+              <rect x="112" y="286" width="48" height="10" fill="#4a4136"></rect>
+              <polygon points="266,168 304,168 312,232 274,238" fill="#15120e"></polygon>
+              <polygon points="276,250 314,250 328,306 292,314" fill="#15120e"></polygon>
+              <polygon points="298,322 330,322 334,346 302,348" fill="#15120e"></polygon>
+              <polygon points="336,180 348,186 306,306 296,300" fill="#8a8579"></polygon>
+              <polygon points="92,362 146,362 140,424 88,424" fill="#15120e"></polygon>
+              <polygon points="90,436 138,436 132,488 88,488" fill="#15120e"></polygon>
+              <polygon points="80,498 146,498 146,514 74,514" fill="#15120e"></polygon>
+              <polygon points="158,362 210,362 206,424 152,424" fill="#4a4136"></polygon>
+              <polygon points="154,436 202,436 198,488 150,488" fill="#4a4136"></polygon>
+              <polygon points="146,498 212,498 212,514 140,514" fill="#4a4136"></polygon>
+              <!-- the numbers, ochre, small -->
+              <text x="66" y="44" class="num">1 helm</text>
+              <text x="66" y="118" class="num">2 head</text>
+              <text x="36" y="152" class="num">3 sode, far</text>
+              <text x="212" y="156" class="num">4 sode, near</text>
+              <text x="40" y="228" class="num">5 torso</text>
+              <text x="40" y="300" class="num">6 hip</text>
+              <text x="40" y="330" class="num">7 kusazuri</text>
+              <text x="262" y="162" class="num">8 upper arm</text>
+              <text x="276" y="332" class="num">9 forearm</text>
+              <text x="298" y="366" class="num">10 hand</text>
+              <text x="316" y="172" class="num">11 weapon</text>
+              <text x="58" y="392" class="num">12</text>
+              <text x="58" y="462" class="num">13</text>
+              <text x="52" y="510" class="num">14</text>
+              <text x="222" y="392" class="num">15 the far leg</text>
+            </svg>
+            <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 4px">
+              <div class="note">
+                <strong>Full side profile, always.</strong> No three-quarter view. At 256 px the weapon's
+                direction, the arm, the leg, the missing limb and the armour's bulk all have to read from
+                the outline alone.
+              </div>
+              <div class="note">
+                <strong>Flat, unlit pieces.</strong> No gradient, no rim light, no baked highlight or shadow
+                anywhere on a piece &mdash; one flat colour and an ink contour, so a rotating arm never carries
+                the wrong light with it. Where a second value is needed, it is one hard block, not a ramp.
+              </div>
+              <div class="note">
+                <strong>The far limbs are drawn in ink-2</strong>, not in a darkened copy of the near ones.
+                Depth comes from two flat values, the way a second block would print.
+              </div>
+              <div style="height: 2px; background: var(--ink); opacity: 0.25"></div>
+              <div style="display: flex; gap: 14px; align-items: flex-start">
+                <svg width="128" height="128" viewBox="0 0 128 128" style="flex: none">
+                  <rect width="128" height="128" fill="#ddd2b8"></rect>
+                  <polygon points="52,30 108,30 116,96 44,96" fill="#15120e"></polygon>
+                  <polygon points="96,44 126,44 130,110 100,116" fill="#4a4136"></polygon>
+                  <rect x="86" y="26" width="34" height="52" fill="#15120e"></rect>
+                  <circle cx="103" cy="52" r="4" fill="#a8834a"></circle>
+                  <line x1="103" y1="52" x2="18" y2="18" stroke="#a8834a" stroke-width="2"></line>
+                  <text x="6" y="14" class="num">pivot</text>
+                </svg>
+                <div class="note">
+                  <strong>The joint hides under armour.</strong> The shoulder pivot sits beneath the sode and
+                  the hip pivot beneath the kusazuri, so the rig's one weak point is the exact place a
+                  samurai already wears a plate. Every limb also carries surplus material at its top end,
+                  tucked under its parent &mdash; pieces never have to meet, they only have to overlap.
+                </div>
+              </div>
+              <div class="note" style="color: var(--ink-3)">
+                22 nodes in the tree; 15 carry art. Root and the four limb groups are transform-only, the hip
+                hides under the kusazuri, and the second weapon stays empty unless the man carries one.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the bottom band: tiers, blood, depth, yokai -->
+    <div style="display: flex; gap: 24px; align-items: flex-start">
+
+      <div class="sheet" style="width: 730px">
+        <div class="drop"></div><div class="face torn-a"></div>
+        <div class="body">
+          <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>Armour is a silhouette, not a colour</div>
+          <div style="display: flex; gap: 10px; align-items: flex-end; justify-content: space-between">
+            <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 9px; width: 168px">
+                <svg width="150" height="250" viewBox="0 0 120 200" style="display: block">
+                  <rect width="120" height="200" fill="#ddd2b8"></rect>
+                  <polygon points="{{t.legFar}}" fill="#15120e"></polygon>
+                  <polygon points="{{t.legNear}}" fill="#15120e"></polygon>
+                  <polygon points="{{t.skirt}}" fill="#15120e"></polygon>
+                  <polygon points="{{t.torso}}" fill="#15120e"></polygon>
+                  <rect x="{{t.sodeX}}" y="{{t.sodeY}}" width="{{t.sodeW}}" height="{{t.sodeH}}" fill="#15120e"></rect>
+                  <polygon points="{{t.arm}}" fill="#15120e"></polygon>
+                  <circle cx="{{t.headX}}" cy="{{t.headY}}" r="{{t.headR}}" fill="#15120e"></circle>
+                  <polygon points="{{t.helm}}" fill="#15120e"></polygon>
+                  <polygon points="{{t.crest}}" fill="#15120e"></polygon>
+                </svg>
+                <div style="font-family: var(--display); font-weight: 700; font-size: 17px">{{t.name}}</div>
+                <div class="note" style="text-align: center; font-size: 12px">{{t.tell}}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div class="note" style="margin-top: 14px">
+            The test: strip every colour, fill all four with flat black, and the tier still has to be
+            obvious. Robe is narrow with a bare shoulder; leather thickens the torso and adds a small
+            guard; partial lamellar brings a real sode, a chest plate and a kusazuri; o-yoroi is
+            box-shouldered, wide-skirted and heavy-helmed. The player's side then tints indigo and the
+            enemy's ochre &mdash; but the tint is the last cue, never the first.
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet" style="width: 640px">
+        <div class="drop"></div><div class="face torn-a"></div>
+        <div class="body">
+          <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>What a limb costs</div>
+          <div style="display: flex; gap: 18px; align-items: flex-start">
+            <svg width="290" height="236" viewBox="0 0 290 236" style="flex: none">
+              <rect width="290" height="236" fill="#ddd2b8"></rect>
+              <polygon points="40,30 122,30 134,138 28,138" fill="#15120e"></polygon>
+              <rect x="112" y="26" width="40" height="58" fill="#15120e"></rect>
+              <polygon points="40,150 128,150 120,206 48,206" fill="#15120e"></polygon>
+              <polygon points="126,36 158,34 162,74 130,78" fill="#c0301b"></polygon>
+              <polygon points="130,38 156,37 158,50 132,52" fill="#8f2415"></polygon>
+              <circle cx="145" cy="46" r="4" fill="#ddd2b8"></circle>
+              <polygon points="196,86 232,80 244,132 206,142" fill="#15120e"></polygon>
+              <polygon points="196,86 232,80 234,96 198,102" fill="#c0301b"></polygon>
+              <circle cx="214" cy="92" r="4" fill="#ddd2b8"></circle>
+              <polygon points="206,142 244,132 258,178 220,190" fill="#15120e"></polygon>
+              <circle cx="176" cy="120" r="5" fill="#c0301b"></circle>
+              <circle cx="188" cy="152" r="4" fill="#c0301b"></circle>
+              <circle cx="168" cy="176" r="6" fill="#c0301b"></circle>
+              <circle cx="192" cy="198" r="3" fill="#c0301b"></circle>
+              <line x1="162" y1="56" x2="196" y2="40" stroke="#a8834a" stroke-width="2"></line>
+              <text x="198" y="38" class="num">the cut face</text>
+              <text x="196" y="216" class="num">the arm is now its own sheet</text>
+            </svg>
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <div class="note">
+                <strong>It breaks at the shoulder and at the hip</strong> &mdash; the two joints the armour was
+                already hiding. The piece leaves the chain and falls as a separate sheet of paper, which is
+                why losing an arm never looks like a different game.
+              </div>
+              <div class="note">
+                <strong>The cut face is graphic, not anatomical.</strong> A dark contour, one flat meat tone,
+                one pale dot of bone. Nothing else. At 256 px it only has to say "this arm is gone".
+              </div>
+              <div class="note">
+                <strong>Blood is the loudest thing on the screen</strong> and the rarest. A handful of flat
+                vermilion shapes &mdash; never a spray, never a filter over the frame.
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center; margin-top: 2px">
+                <div style="width: 42px; height: 42px; background: var(--vermilion); border: 2px solid #15120e"></div>
+                <div class="cap">#c0301b &middot; blood only</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet" style="flex-grow: 1">
+        <div class="drop"></div><div class="face torn-a"></div>
+        <div class="body">
+          <div class="sec"><svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>Depth is six sheets</div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <sc-for list="{{layers}}" as="l" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <div style="width: 210px; height: 30px; background: {{l.hex}}; border: 1px solid #15120e;
+                     display: flex; align-items: center; padding-left: 10px; color: {{l.fg}};
+                     font-family: var(--display); font-weight: 700; font-size: 13px">{{l.name}}</div>
+                <div style="width: 52px; font-family: var(--display); font-weight: 700; font-size: 14px">{{l.speed}}</div>
+                <div class="note" style="font-size: 12px; flex-grow: 1">{{l.rule}}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div class="note" style="margin-top: 12px">
+            The fighting plane moves at 1. Everything behind it moves slower, the one sheet in front of it
+            moves faster, and nothing behind is ever allowed to eat a fighter's outline: contrast falls off
+            with distance, and the foreground stays dark and shapeless.
+          </div>
+          <div style="height: 2px; background: var(--ink); opacity: 0.25; margin: 14px 0 12px"></div>
+          <div class="cap" style="margin-bottom: 10px">a yokai is one shape, readable at 128</div>
+          <div style="display: flex; gap: 10px; justify-content: space-between">
+            <sc-for list="{{yokai}}" as="y" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 7px">
+                <svg width="104" height="112" viewBox="0 0 104 112">
+                  <rect width="104" height="112" fill="#ddd2b8"></rect>
+                  <polygon points="{{y.shape}}" fill="{{y.hex}}"></polygon>
+                  <polygon points="{{y.mark}}" fill="#15120e"></polygon>
+                </svg>
+                <div style="font-family: var(--display); font-weight: 700; font-size: 14px">{{y.name}}</div>
+                <div class="note" style="font-size: 11px; text-align: center; max-width: 104px">{{y.tell}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <svg width="2240" height="1660" style="position: absolute; inset: 0; pointer-events: none; opacity: 0.4; mix-blend-mode: overlay">
+    <filter id="grain-sys"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3"></feTurbulence>
+      <feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    <rect width="2240" height="1660" filter="url(#grain-sys)"></rect>
+  </svg>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":2240,"height":1660}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pigments = [
+      { name: 'Paper', hex: '#e7dcc3', use: 'every sheet, and the only true light in the game' },
+      { name: 'Sumi ink', hex: '#15120e', use: 'contour, silhouette, the night behind the theatre' },
+      { name: 'Indigo', hex: '#36446b', use: 'your side - men, patron, your own marks' },
+      { name: 'Ochre', hex: '#a8834a', use: 'the other side, and the one live accent in the interface' },
+      { name: 'Earth', hex: '#6a5033', use: 'leather, wood, rope, a carved seal' },
+      { name: 'Moss', hex: '#59613f', use: 'a yokai that grew out of the ground; a gain in the log' },
+      { name: 'Violet', hex: '#453450', use: 'a yokai that did not; night interiors' },
+      { name: 'Vermilion', hex: '#c0301b', use: 'blood, a severed limb, an irreversible act' },
+    ];
+    const days = [];
+    for (let i = 1; i <= 60; i++) {
+      const played = i < 23, today = i === 23;
+      days.push({ h: today ? '18px' : (played ? '12px' : '7px'),
+                  c: today ? '#a8834a' : (played ? '#4a4136' : '#bdad89') });
+    }
+    // four tiers, drawn only as bulk: the outline is the whole message
+    const tiers = [
+      { name: 'Robe', tell: 'narrow, bare shoulder, cloth to the knee',
+        torso: '46,58 72,58 76,110 42,110', sodeX: 68, sodeY: 58, sodeW: 8, sodeH: 14,
+        skirt: '44,108 78,108 76,132 46,132', arm: '72,64 82,64 88,104 78,106',
+        legNear: '46,130 62,130 58,178 44,178', legFar: '62,130 78,130 76,178 60,178',
+        headX: 60, headY: 40, headR: 13, helm: '47,30 73,30 75,38 45,38', crest: '56,20 64,20 63,30 57,30',
+        legShoe: '' },
+      { name: 'Leather', tell: 'thicker body, a small guard, bracers',
+        torso: '42,56 76,56 82,110 38,110', sodeX: 70, sodeY: 54, sodeW: 14, sodeH: 22,
+        skirt: '40,108 82,108 79,134 43,134', arm: '76,68 88,68 94,106 82,108',
+        legNear: '44,132 62,132 58,178 42,178', legFar: '62,132 80,132 78,178 60,178',
+        headX: 60, headY: 38, headR: 14, helm: '44,26 76,26 80,36 40,36', crest: '54,16 66,16 64,26 56,26' },
+      { name: 'Partial lamellar', tell: 'a real sode, a chest plate, a kusazuri',
+        torso: '36,54 80,54 88,110 30,110', sodeX: 74, sodeY: 50, sodeW: 20, sodeH: 30,
+        skirt: '34,108 88,108 84,140 38,140', arm: '84,72 96,72 100,108 88,110',
+        legNear: '42,138 62,138 58,178 40,178', legFar: '62,138 84,138 82,178 60,178',
+        headX: 60, headY: 36, headR: 14, helm: '38,22 80,22 88,34 32,34', crest: '48,8 72,8 68,22 52,22' },
+      { name: 'O-yoroi', tell: 'box shoulders, wide skirt, a helm you see first',
+        torso: '30,52 84,52 94,112 22,112', sodeX: 78, sodeY: 46, sodeW: 26, sodeH: 40,
+        skirt: '28,110 94,110 90,148 34,148', arm: '92,78 104,78 108,110 96,112',
+        legNear: '40,146 62,146 58,178 38,178', legFar: '62,146 88,146 86,178 60,178',
+        headX: 60, headY: 34, headR: 15, helm: '30,18 86,18 98,32 22,32', crest: '40,2 78,2 72,18 46,18' },
+    ];
+    const layers = [
+      { name: 'Sky', hex: '#1b1f29', fg: '#e7dcc3', speed: '0.05', rule: 'one flat value, a moon, nothing else' },
+      { name: 'Distant ridge', hex: '#222733', fg: '#e7dcc3', speed: '0.15', rule: 'outline only, lowest contrast' },
+      { name: 'Buildings', hex: '#191c24', fg: '#e7dcc3', speed: '0.35', rule: 'roofs and lanterns, no windows worth reading' },
+      { name: 'Trees and dojo', hex: '#2b2b25', fg: '#e7dcc3', speed: '0.6', rule: 'the last layer allowed any detail' },
+      { name: 'Combat plane', hex: '#6a5f47', fg: '#15120e', speed: '1.0', rule: 'the fighters live here and are the sharpest thing on screen' },
+      { name: 'Foreground', hex: '#0b0a09', fg: '#e7dcc3', speed: '1.6', rule: 'near-black, shapeless, crosses the frame and the panels' },
+    ];
+    const yokai = [
+      { name: 'Oni', hex: '#8f4d38', tell: 'mass first, horns uneven',
+        shape: '24,104 20,52 34,30 68,26 84,50 80,104', mark: '30,26 40,6 46,26 62,26 74,10 74,28' },
+      { name: 'Tengu', hex: '#453450', tell: 'bird over warrior, long legs',
+        shape: '40,104 34,54 8,34 40,40 60,16 78,40 96,32 70,56 66,104', mark: '52,60 62,60 58,88 54,88' },
+      { name: 'Kappa', hex: '#59613f', tell: 'shell, and the dish on its head',
+        shape: '18,96 22,52 52,36 84,54 88,96', mark: '38,30 68,30 64,18 42,18' },
+      { name: 'Kitsune', hex: '#a8834a', tell: 'a person carrying a tail of smoke',
+        shape: '44,104 40,44 54,22 70,44 66,104', mark: '66,96 88,60 100,26 96,74 80,102' },
+      { name: 'Yuki-onna', hex: '#7c8a9c', tell: 'a storm the shape of a woman',
+        shape: '30,104 36,46 52,18 70,46 76,104', mark: '18,58 34,40 24,74 40,66 26,96' },
+    ];
+    return { pigments, days, tiers, layers, yokai };
+  }
+}
+</script>
+</body>
+</html>

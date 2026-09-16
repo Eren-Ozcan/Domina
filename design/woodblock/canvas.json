@@ -1,0 +1,23 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "The Day", "x": 0, "y": 0, "w": 1920, "h": 1080 },
+    { "file": "System.dc.html", "title": "The System Plate", "x": 2060, "y": 0, "w": 2240, "h": 1660 }
+  ],
+  "annotations": [
+    {
+      "id": "day-note",
+      "x": 0,
+      "y": -250,
+      "w": 900,
+      "text": "The Day, re-cut in the art direction. Same information as the built screen - the contract, the party, the store, the log, the standing - but nothing is carried by text alone any more:\n\n- every panel is three sheets (shadow, torn paper face, content), each off-square by a fraction of a degree\n- the men are cut-paper side profiles, and the armour tier is visible in the silhouette before the name is read\n- the season is 60 notches, the heads taken are three drawn heads, the field is drawn as mud and fog\n- the night behind is the theatre's back sheets: moon, two ridges, two roofs; the foreground strip crosses the panels along the bottom edge\n- vermilion appears nowhere on this screen: the medicine warning and the summons use brick."
+    },
+    {
+      "id": "system-note",
+      "x": 2060,
+      "y": -250,
+      "w": 900,
+      "text": "The system plate: pigment, type, how a sheet is cut, the controls, the 15-piece rig with its hidden joints, the four armour silhouettes, what a severed limb looks like, the six parallax sheets and the yokai shape keys.\n\nOpen question for the next pass: the tier silhouettes and the yokai keys are blocked-in shapes, not final art - they fix the proportions and the reading test, not the drawing."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

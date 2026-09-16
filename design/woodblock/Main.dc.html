@@ -1,0 +1,469 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+  <style>
+    :root {
+      --paper: #e7dcc3;
+      --paper-2: #d5c7a6;
+      --paper-3: #bdad89;
+      --ink: #15120e;
+      --ink-2: #4a4136;
+      --ink-3: #7c7161;
+      --night: #0b0a09;
+      --indigo: #36446b;
+      --indigo-2: #5c6ea8;
+      --ochre: #a8834a;
+      --ochre-2: #d9b46a;
+      --earth: #6a5033;
+      --moss: #59613f;
+      --brick: #8f4d38;
+      --vermilion: #c0301b;
+      --metal: #8a8579;
+      --display: "Shippori Mincho B1", "Hiragino Mincho ProN", Georgia, serif;
+      --body: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+           background: var(--night); color: var(--ink);
+           font-family: var(--body); font-size: 16px; }
+    a { color: var(--ochre); } a:hover { color: var(--ochre-2); }
+    .torn-a { clip-path: polygon(0 5px, 34% 1px, 71% 4px, 100% 0, calc(100% - 4px) 38%, 100% 74%,
+              calc(100% - 3px) 100%, 46% calc(100% - 5px), 9% 100%, 3px 63%, 0 26%); }
+    .torn-b { clip-path: polygon(0 2px, 22% 5px, 58% 0, 100% 3px, calc(100% - 3px) 45%, 100% 82%,
+              calc(100% - 5px) 100%, 62% calc(100% - 3px), 17% 100%, 4px 55%, 0 19%); }
+    .drop { position: absolute; inset: 0; background: #000; opacity: 0.62; }
+    .cap { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+    .fig { font-family: var(--display); font-weight: 700; font-size: 27px; line-height: 1; }
+    .note { font-size: 13px; color: var(--ink-2); }
+    .sec { display: flex; align-items: center; gap: 9px; font-family: var(--display);
+           font-weight: 700; font-size: 17px; letter-spacing: 0.04em; }
+    .gauge { position: relative; height: 9px; background: var(--paper-3); }
+    .gauge > i { display: block; height: 100%; background: var(--ink); }
+    .gauge > u { position: absolute; inset: 0;
+                 background: repeating-linear-gradient(90deg, transparent 0 12px, var(--paper) 12px 15px); }
+    .stamp { font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: 0.04em;
+             padding: 10px 16px; text-align: center; border: 2px solid var(--ink); color: var(--ink);
+             background: transparent; }
+    .stamp.solid { background: var(--ink); color: var(--paper); }
+    .stamp.off { border-color: #a99a79; color: #8d815f; }
+    .slat { background: var(--paper-2); border: 1px solid #a89871; padding: 9px 12px; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 1920px; height: 1080px; background: var(--night); overflow: hidden">
+
+  <svg width="1920" height="372" viewBox="0 0 1920 372" style="position: absolute; top: 0; left: 0">
+    <rect width="1920" height="372" fill="#14161d"></rect>
+    <circle cx="1548" cy="84" r="38" fill="#e7dcc3" opacity="0.88"></circle>
+    <circle cx="1533" cy="74" r="38" fill="#14161d"></circle>
+    <polygon points="0,214 210,132 352,186 520,104 706,190 892,128 1084,198 1280,120 1468,196 1660,134 1920,206 1920,372 0,372" fill="#1b1f29"></polygon>
+    <polygon points="0,268 176,206 338,262 512,198 690,258 858,212 1046,266 1238,204 1432,262 1622,214 1808,264 1920,238 1920,372 0,372" fill="#222733"></polygon>
+    <polygon points="0,318 1920,318 1920,372 0,372" fill="#191c24"></polygon>
+    <polygon points="196,318 420,318 386,276 230,276" fill="#0f1116"></polygon>
+    <polygon points="214,276 402,276 308,240" fill="#0f1116"></polygon>
+    <rect x="252" y="240" width="8" height="10" fill="#0f1116"></rect>
+    <polygon points="1392,318 1560,318 1534,282 1418,282" fill="#0f1116"></polygon>
+    <polygon points="1404,282 1548,282 1476,252" fill="#0f1116"></polygon>
+    <rect x="0" y="300" width="1920" height="72" fill="#0b0a09" opacity="0.72"></rect>
+  </svg>
+
+  <div style="position: relative; display: flex; flex-direction: column; height: 1080px; gap: 16px; padding: 18px 28px 56px">
+
+    <div style="display: flex; align-items: flex-end; gap: 28px; height: 56px">
+      <div style="display: flex; gap: 5px; align-items: flex-end">
+        <div class="torn-b" style="background: var(--paper); font-family: var(--display); font-weight: 700;
+             font-size: 17px; padding: 13px 24px 12px; color: var(--ink)">Day</div>
+        <div class="torn-b" style="background: var(--paper-3); font-size: 16px; padding: 10px 20px; color: #4f4634">Roster</div>
+        <div class="torn-b" style="background: var(--paper-3); font-size: 16px; padding: 10px 20px; color: #4f4634">Market</div>
+        <div class="torn-b" style="background: var(--paper-3); font-size: 16px; padding: 10px 20px; color: #4f4634">School</div>
+        <div class="torn-b" style="background: var(--paper-3); font-size: 16px; padding: 10px 20px; color: #4f4634">Armoury</div>
+        <div class="torn-b" style="background: var(--paper-3); font-size: 16px; padding: 10px 20px; color: #4f4634">Province</div>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div style="display: flex; align-items: flex-end; gap: 22px; padding-bottom: 4px">
+        <div style="display: flex; flex-direction: column; gap: 7px; width: 430px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <span style="font-family: var(--display); font-size: 15px; color: var(--ochre-2); letter-spacing: 0.08em">Hour of the Horse</span>
+            <span style="font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--paper)">Day 23 of 60</span>
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 2px; height: 16px">
+            <sc-for list="{{days}}" as="d" hint-placeholder-count="60">
+              <i style="width: 5px; height: {{d.h}}; background: {{d.c}}"></i>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; gap: 5px">
+          <div style="width: 38px; height: 34px; border: 2px solid var(--paper-3); color: var(--paper);
+               font-family: var(--display); font-size: 15px; display: flex; align-items: center; justify-content: center">II</div>
+          <div style="width: 38px; height: 34px; border: 2px solid #4b4535; color: #6d6550;
+               font-family: var(--display); font-size: 15px; display: flex; align-items: center; justify-content: center">1&times;</div>
+          <div style="width: 38px; height: 34px; background: var(--ochre); border: 2px solid var(--ochre-2); color: #15120e;
+               font-family: var(--display); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center">2&times;</div>
+          <div style="width: 38px; height: 34px; border: 2px solid #4b4535; color: #6d6550;
+               font-family: var(--display); font-size: 15px; display: flex; align-items: center; justify-content: center">4&times;</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: flex-end; gap: 30px; height: 104px">
+      <div style="display: flex; align-items: flex-end; gap: 16px">
+        <svg width="46" height="90" viewBox="0 0 46 90" style="flex: none">
+          <rect x="1" y="1" width="44" height="88" fill="none" stroke="#a8834a" stroke-width="2"></rect>
+          <rect x="9" y="12" width="28" height="5" fill="#a8834a"></rect>
+          <rect x="9" y="24" width="28" height="5" fill="#a8834a"></rect>
+          <rect x="20" y="17" width="6" height="40" fill="#a8834a"></rect>
+          <rect x="9" y="52" width="28" height="5" fill="#a8834a"></rect>
+          <polygon points="12,62 34,62 23,78" fill="#a8834a"></polygon>
+        </svg>
+        <div style="position: relative">
+          <div style="position: absolute; left: 3px; top: 3px; font-family: var(--display); font-weight: 800;
+               font-size: 52px; line-height: 1; color: var(--indigo-2); opacity: 0.55">The Day</div>
+          <div style="position: relative; font-family: var(--display); font-weight: 800; font-size: 52px;
+               line-height: 1; color: var(--paper)">The Day</div>
+          <div style="margin-top: 10px; font-size: 14px; color: #9a927f; max-width: 430px">
+            What the road offers, who you send, and what it costs to wait another day.
+          </div>
+        </div>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div style="position: relative">
+        <div class="torn-a drop" style="transform: translate(7px, 8px)"></div>
+        <div class="torn-a" style="position: absolute; inset: 0; background: var(--paper-2)"></div>
+        <div style="position: relative; display: flex; align-items: stretch; gap: 10px; padding: 12px 16px">
+          <div class="slat" style="min-width: 104px; text-align: center">
+            <div class="fig">412</div><div class="cap" style="margin-top: 4px">gold</div>
+            <div class="note" style="margin-top: 3px; display: flex; gap: 4px; justify-content: center; align-items: center">
+              <svg width="8" height="8" viewBox="0 0 8 8"><polygon points="4,0 8,8 0,8" fill="#59613f"></polygon></svg>38 a day
+            </div>
+          </div>
+          <div class="slat" style="min-width: 104px; text-align: center; border-bottom: 4px solid var(--ochre)">
+            <div class="fig">96</div><div class="cap" style="margin-top: 4px">food</div>
+            <div class="note" style="margin-top: 3px; display: flex; gap: 4px; justify-content: center; align-items: center">
+              <svg width="8" height="8" viewBox="0 0 8 8"><polygon points="0,0 8,0 4,8" fill="#4a4136"></polygon></svg>7 a day
+            </div>
+          </div>
+          <div class="slat" style="min-width: 104px; text-align: center">
+            <div class="fig">140</div><div class="cap" style="margin-top: 4px">water</div>
+            <div class="note" style="margin-top: 3px; display: flex; gap: 4px; justify-content: center; align-items: center">
+              <svg width="8" height="8" viewBox="0 0 8 8"><polygon points="0,0 8,0 4,8" fill="#4a4136"></polygon></svg>7 a day
+            </div>
+          </div>
+          <div class="slat" style="min-width: 104px; text-align: center; border-bottom: 4px solid var(--brick)">
+            <div class="fig" style="color: var(--brick)">3</div><div class="cap" style="margin-top: 4px">medicine</div>
+            <div class="note" style="margin-top: 3px; color: var(--brick)">two days left</div>
+          </div>
+          <div class="slat" style="min-width: 104px; text-align: center">
+            <div class="fig">1</div><div class="cap" style="margin-top: 4px">sake</div>
+            <div class="note" style="margin-top: 3px">for a feast</div>
+          </div>
+          <div style="width: 2px; background: #a89871; margin: 2px 6px"></div>
+          <div class="slat" style="min-width: 138px; text-align: center">
+            <div class="fig" style="color: var(--indigo)">Bushi 61%</div><div class="cap" style="margin-top: 4px">standing</div>
+            <div class="note" style="margin-top: 3px">reward &times;1.14</div>
+          </div>
+          <div class="slat" style="min-width: 116px; text-align: center">
+            <div style="display: flex; gap: 5px; justify-content: center; align-items: flex-end">
+              <svg width="18" height="22" viewBox="0 0 18 22"><circle cx="9" cy="9" r="8" fill="#15120e"></circle><polygon points="3,17 15,17 12,22 6,22" fill="#15120e"></polygon></svg>
+              <svg width="18" height="22" viewBox="0 0 18 22"><circle cx="9" cy="9" r="8" fill="#15120e"></circle><polygon points="3,17 15,17 12,22 6,22" fill="#15120e"></polygon></svg>
+              <svg width="18" height="22" viewBox="0 0 18 22"><circle cx="9" cy="9" r="8" fill="none" stroke="#a89871" stroke-width="2"></circle></svg>
+            </div>
+            <div class="cap" style="margin-top: 5px">heads taken</div>
+            <div class="note" style="margin-top: 3px">gate to the final</div>
+          </div>
+          <div class="slat" style="min-width: 110px; text-align: center">
+            <div class="fig" style="color: var(--ochre)">4</div><div class="cap" style="margin-top: 4px">days</div>
+            <div class="note" style="margin-top: 3px">to the summons</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 18px; height: 814px">
+
+      <div style="position: relative; width: 648px; transform: rotate(-0.3deg)">
+        <div class="torn-a drop" style="transform: translate(9px, 11px)"></div>
+        <div class="torn-a" style="position: absolute; inset: 0; background: var(--paper)"></div>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 13px; padding: 26px 28px 24px; height: 814px">
+          <svg width="14" height="14" viewBox="0 0 14 14" style="position: absolute; left: 16px; top: 14px"><circle cx="7" cy="7" r="5" fill="#15120e"></circle></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" style="position: absolute; right: 16px; top: 14px"><circle cx="7" cy="7" r="5" fill="#15120e"></circle></svg>
+
+          <div class="sec">
+            <svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>
+            Today on the board
+          </div>
+          <div style="display: flex; gap: 14px; align-items: baseline">
+            <div style="font-family: var(--display); font-weight: 700; font-size: 30px">The Ashigara toll road</div>
+            <div class="note">bounty &middot; sworn to Lord Ii Naomasa</div>
+          </div>
+          <div style="font-size: 16px; line-height: 1.6; max-width: 560px; text-wrap: pretty">
+            Six men have been shaking down the porters at the pass for a month. The village
+            headman will not say how many are still armed.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="border: 2px solid var(--ink); padding: 14px 16px; display: flex; flex-direction: column; gap: 7px">
+              <div class="cap">you are paid</div>
+              <div class="fig" style="font-size: 32px">240 gold</div>
+              <div class="note">and the head of Genba the Ear &middot; standing &times;1.14</div>
+            </div>
+            <div style="border: 2px solid var(--ink-3); padding: 14px 16px; display: flex; flex-direction: column; gap: 7px">
+              <div class="cap">it costs you</div>
+              <div class="fig" style="font-size: 32px">18 rice &middot; 12 water</div>
+              <div class="note">two days on the road, paid on setting out, not on winning</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px">
+            <div class="slat" style="flex-grow: 1; display: flex; justify-content: space-between; align-items: center">
+              <span class="cap">threat</span>
+              <span style="font-family: var(--display); font-weight: 700; color: var(--brick)">Bloodied &mdash; four to six, iron at the front</span>
+            </div>
+            <div class="slat" style="display: flex; gap: 12px; align-items: center">
+              <span class="cap">field</span>
+              <span style="font-family: var(--display); font-weight: 700">Mud, dawn fog</span>
+            </div>
+          </div>
+
+          <div style="position: relative; height: 158px; border: 2px solid var(--ink-3); overflow: hidden; background: #cfc2a2">
+            <svg width="588" height="154" viewBox="0 0 588 154" style="display: block">
+              <polygon points="0,96 92,44 168,84 252,30 356,88 448,40 528,90 588,58 588,154 0,154" fill="#b3a483"></polygon>
+              <polygon points="0,116 104,86 214,118 330,84 430,116 540,88 588,104 588,154 0,154" fill="#8d8163"></polygon>
+              <polygon points="0,134 588,134 588,154 0,154" fill="#6a5f47"></polygon>
+              <rect x="0" y="52" width="588" height="26" fill="#e7dcc3" opacity="0.5"></rect>
+              <rect x="0" y="82" width="588" height="18" fill="#e7dcc3" opacity="0.34"></rect>
+              <polygon points="122,134 138,134 132,110 128,110" fill="#3b3428"></polygon>
+              <polygon points="470,134 486,134 480,106 476,106" fill="#3b3428"></polygon>
+              <polygon points="296,134 316,134 312,98 300,98" fill="#3b3428"></polygon>
+            </svg>
+            <div style="position: absolute; left: 12px; bottom: 10px; font-size: 13px; color: #2e281f; max-width: 540px">
+              Mud: speed and evasion drop, and drop further under iron. Fog: bows lose their reach.
+            </div>
+          </div>
+
+          <div style="height: 2px; background: var(--ink); opacity: 0.35"></div>
+
+          <div class="sec">
+            <svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>
+            The hut reads the road
+          </div>
+          <div style="display: flex; gap: 14px; align-items: stretch">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; border-left: 4px solid var(--indigo); padding-left: 14px">
+              <div style="display: flex; justify-content: space-between; align-items: baseline">
+                <span style="font-family: var(--display); font-weight: 700; font-size: 19px">Lord Ii Naomasa</span>
+                <span class="cap">patron</span>
+              </div>
+              <div class="gauge" style="height: 11px"><i style="width: 72%; background: var(--indigo)"></i><u></u></div>
+              <div class="note">Content. He will carry one man's rice until that man falls.</div>
+            </div>
+            <div class="stamp" style="align-self: center; font-size: 15px; padding: 12px 16px">Send a gift &middot; 1 sake</div>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+          <svg width="92" height="92" viewBox="0 0 92 92" style="position: absolute; right: 22px; bottom: 18px; opacity: 0.85">
+            <rect x="2" y="2" width="88" height="88" fill="none" stroke="#6a5033" stroke-width="5"></rect>
+            <rect x="16" y="18" width="26" height="8" fill="#6a5033"></rect>
+            <rect x="50" y="18" width="26" height="8" fill="#6a5033"></rect>
+            <rect x="16" y="36" width="60" height="8" fill="#6a5033"></rect>
+            <rect x="38" y="26" width="8" height="46" fill="#6a5033"></rect>
+            <rect x="16" y="56" width="18" height="8" fill="#6a5033"></rect>
+            <rect x="56" y="56" width="20" height="8" fill="#6a5033"></rect>
+          </svg>
+        </div>
+      </div>
+
+      <div style="position: relative; width: 482px; transform: rotate(0.25deg)">
+        <div class="torn-b drop" style="transform: translate(9px, 11px)"></div>
+        <div class="torn-b" style="position: absolute; inset: 0; background: #ded4bd"></div>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 11px; padding: 24px 22px; height: 814px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div class="sec">
+              <svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>
+              Who goes
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 6px">
+              <span class="cap">party</span>
+              <span style="font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--indigo)">2</span>
+              <span class="note">of 3</span>
+            </div>
+          </div>
+
+          <sc-for list="{{party}}" as="w" hint-placeholder-count="4">
+            <div style="position: relative; display: flex; gap: 14px; align-items: center; padding: 12px 14px;
+                 background: {{w.bg}}; border: 2px solid {{w.edge}}; opacity: {{w.fade}}">
+              <svg width="58" height="104" viewBox="0 0 60 108" style="flex: none">
+                <polygon points="30,72 44,72 42,92 28,92" fill="#4a4136"></polygon>
+                <polygon points="28,90 42,90 41,102 27,102" fill="#4a4136"></polygon>
+                <polygon points="24,100 46,100 46,106 22,106" fill="#4a4136"></polygon>
+                <rect x="9" y="44" width="13" height="21" fill="#4a4136"></rect>
+                <polygon points="16,72 30,72 28,92 14,92" fill="{{w.ink}}"></polygon>
+                <polygon points="14,90 28,90 27,102 13,102" fill="{{w.ink}}"></polygon>
+                <polygon points="10,100 32,100 32,106 8,106" fill="{{w.ink}}"></polygon>
+                <polygon points="16,{{w.skirt}} 48,{{w.skirt}} 46,76 18,76" fill="{{w.ink}}"></polygon>
+                <polygon points="{{w.torso}}" fill="{{w.ink}}"></polygon>
+                <rect x="{{w.sodeX}}" y="42" width="{{w.sodeW}}" height="{{w.sodeH}}" fill="{{w.ink}}"></rect>
+                <polygon points="42,48 50,48 54,68 46,70" fill="{{w.ink}}"></polygon>
+                <polygon points="46,66 54,66 62,80 55,84" fill="{{w.ink}}"></polygon>
+                <polygon points="{{w.blade}}" fill="{{w.steel}}"></polygon>
+                <polygon points="22,30 42,30 40,44 24,44" fill="#2a241c"></polygon>
+                <polygon points="{{w.helm}}" fill="{{w.ink}}"></polygon>
+                <polygon points="{{w.crest}}" fill="{{w.ink}}"></polygon>
+              </svg>
+              <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0">
+                <div style="display: flex; justify-content: space-between; align-items: baseline">
+                  <span style="font-family: var(--display); font-weight: 700; font-size: 21px">{{w.name}}</span>
+                  <span class="cap">{{w.school}}</span>
+                </div>
+                <div class="gauge"><i style="width: {{w.hp}}; background: {{w.hpc}}"></i><u></u></div>
+                <div class="note" style="color: {{w.noteC}}">{{w.state}}</div>
+              </div>
+              <sc-if value="{{w.chosen}}" hint-placeholder-val="{{ true }}">
+                <svg width="26" height="26" viewBox="0 0 26 26" style="position: absolute; right: -9px; top: -9px">
+                  <rect x="1" y="1" width="24" height="24" fill="#36446b"></rect>
+                  <polygon points="6,13 11,19 20,7 17,5 11,14 8,11" fill="#e7dcc3"></polygon>
+                </svg>
+              </sc-if>
+            </div>
+          </sc-for>
+
+          <div style="flex-grow: 1"></div>
+          <div style="height: 2px; background: var(--ink); opacity: 0.3"></div>
+          <div class="note">Ayame is fit and idle. The fog will cost her most of her reach.</div>
+          <div class="stamp solid">Take the bounty</div>
+          <div class="stamp off" style="font-family: var(--body); font-weight: 400; font-size: 14px; padding: 9px 14px">
+            There is no second contract today
+          </div>
+          <div class="stamp" style="font-size: 15px">Skip to tomorrow</div>
+        </div>
+      </div>
+
+      <div style="position: relative; flex-grow: 1; transform: rotate(-0.15deg)">
+        <div class="torn-a drop" style="transform: translate(9px, 11px)"></div>
+        <div class="torn-a" style="position: absolute; inset: 0; background: #ece2cb"></div>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 12px; padding: 24px 24px; height: 814px">
+          <div class="sec">
+            <svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>
+            The day so far
+          </div>
+          <div style="display: flex; gap: 14px">
+            <div style="width: 2px; background: var(--ink); opacity: 0.4"></div>
+            <div style="display: flex; flex-direction: column; gap: 13px; font-size: 15px; line-height: 1.45">
+              <div><span class="cap" style="margin-right: 10px">dawn</span>The store was drawn down: 7 rice, 7 water.</div>
+              <div><span class="cap" style="margin-right: 10px">dawn</span>Saito Genji took his medicine. <span style="color: var(--moss); font-weight: 700">The wound is closing.</span></div>
+              <div><span class="cap" style="margin-right: 10px">morning</span>Hattori Sada trained the blade. <span style="color: var(--moss); font-weight: 700">Weapon 13 to 14.</span></div>
+              <div><span class="cap" style="margin-right: 10px">morning</span>Mori Ayame meditated. <span style="color: var(--moss); font-weight: 700">Composure +4.</span></div>
+              <div><span class="cap" style="margin-right: 10px">noon</span>A runner from the pass: the toll road bounty was posted.</div>
+              <div><span class="cap" style="margin-right: 10px">noon</span><span style="color: var(--brick); font-weight: 700">The medicine chest is nearly out</span> &mdash; two days at this rate.</div>
+              <div><span class="cap" style="margin-right: 10px">dusk</span>Kuroda Ren asked again for a blade worth his hand.</div>
+            </div>
+          </div>
+
+          <div style="height: 2px; background: var(--ink); opacity: 0.35; margin-top: 4px"></div>
+          <div class="sec">
+            <svg width="14" height="14" viewBox="0 0 14 14"><rect width="14" height="14" fill="#15120e"></rect></svg>
+            Standing
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <span style="font-family: var(--display); font-weight: 700; font-size: 21px">Bushi</span>
+              <span style="font-family: var(--display); font-weight: 800; font-size: 24px">61%</span>
+            </div>
+            <div style="position: relative">
+              <div class="gauge" style="height: 15px"><i style="width: 61%; background: var(--indigo)"></i><u></u></div>
+              <div style="position: absolute; left: 61%; top: -5px; width: 3px; height: 25px; background: var(--ink)"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between">
+              <span class="cap">ronin</span><span class="cap">bushi</span>
+            </div>
+            <div class="note">The crowd calls you honourable. A close, clean fight moves this faster than a slaughter.</div>
+          </div>
+
+          <div style="flex-grow: 1"></div>
+
+          <div style="border: 3px solid var(--brick); padding: 16px 18px; display: flex; gap: 16px; align-items: center">
+            <svg width="44" height="44" viewBox="0 0 44 44" style="flex: none">
+              <circle cx="22" cy="22" r="20" fill="none" stroke="#8f4d38" stroke-width="3"></circle>
+              <rect x="20" y="10" width="4" height="16" fill="#8f4d38"></rect>
+              <rect x="20" y="30" width="4" height="4" fill="#8f4d38"></rect>
+            </svg>
+            <div>
+              <div style="font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--brick)">The summons comes in four days</div>
+              <div class="note" style="margin-top: 4px">Refusing it costs standing, not gold.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <svg width="1920" height="72" viewBox="0 0 1920 72" style="position: absolute; left: 0; bottom: 0">
+    <polygon points="0,26 72,8 140,34 214,4 292,30 366,12 448,36 520,10 604,32 690,6 768,30 852,14 938,34 1022,8 1104,30 1190,12 1272,34 1358,6 1442,30 1528,12 1610,34 1698,8 1782,30 1864,14 1920,28 1920,72 0,72" fill="#0b0a09"></polygon>
+    <polygon points="118,72 134,72 130,18 122,18" fill="#0b0a09"></polygon>
+    <polygon points="1596,72 1612,72 1608,14 1600,14" fill="#0b0a09"></polygon>
+  </svg>
+
+  <svg width="1920" height="1080" style="position: absolute; inset: 0; pointer-events: none; opacity: 0.42; mix-blend-mode: overlay">
+    <filter id="grain-day"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3"></feTurbulence>
+      <feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    <rect width="1920" height="1080" filter="url(#grain-day)"></rect>
+  </svg>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // the season clock: 60 notches, the played days inked, today taller and bright
+    const days = [];
+    for (let i = 1; i <= 60; i++) {
+      const played = i < 23, today = i === 23;
+      days.push({
+        h: today ? '16px' : (played ? '11px' : '7px'),
+        c: today ? '#d9b46a' : (played ? '#a8834a' : '#3b3831'),
+      });
+    }
+    // one cut-paper figure per man: the armour tier is the silhouette, not a label
+    const tiers = {
+      robe:  { torso: '20,44 42,44 46,76 16,76', sodeX: 38, sodeW: 12, sodeH: 18, skirt: 92,
+               helm: '22,20 42,20 46,32 18,32', crest: '28,12 34,12 33,20 29,20' },
+      mail:  { torso: '18,44 44,44 48,76 14,76', sodeX: 37, sodeW: 16, sodeH: 24, skirt: 90,
+               helm: '19,18 45,18 50,32 14,32', crest: '26,8 36,8 34,18 28,18' },
+      yoroi: { torso: '15,42 47,42 52,76 10,76', sodeX: 35, sodeW: 21, sodeH: 30, skirt: 88,
+               helm: '15,16 49,16 56,32 8,32', crest: '22,4 40,4 36,16 26,16' },
+    };
+    const men = [
+      { name: 'Hattori Sada', school: 'Kensei 14', hp: '100%', state: '148 of 148 - fit',
+        tier: 'yoroi', chosen: true },
+      { name: 'Kuroda Ren', school: 'Sohei 11', hp: '74%', state: '92 of 124 - left eye gone',
+        tier: 'mail', chosen: true },
+      { name: 'Mori Ayame', school: 'Yumi 9', hp: '100%', state: '96 of 96 - fit',
+        tier: 'robe', chosen: false },
+      { name: 'Saito Genji', school: 'Ronin 7', hp: '22%', state: 'In the infirmary - medicine for 3 more days',
+        tier: 'robe', chosen: false, hurt: true, idle: true },
+    ];
+    const party = men.map((m) => {
+      const t = tiers[m.tier];
+      const pct = parseInt(m.hp, 10);
+      return {
+        ...m, ...t,
+        bg: m.chosen ? '#d7d2c4' : '#d9cfb6',
+        edge: m.chosen ? '#36446b' : '#b3a483',
+        fade: m.idle ? '0.62' : '1',
+        ink: m.chosen ? '#1d2338' : '#15120e',
+        steel: '#8a8579',
+        blade: m.tier === 'robe' ? '54,72 58,66 78,34 82,38' : '58,80 62,74 88,44 92,50',
+        hpc: pct > 85 ? '#59613f' : (pct > 40 ? '#a8834a' : '#c0301b'),
+        noteC: m.hurt ? '#8f4d38' : '#4a4136',
+      };
+    });
+    return { days, party };
+  }
+}
+</script>
+</body>
+</html>
