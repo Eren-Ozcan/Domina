@@ -88,7 +88,8 @@ public static class DojoSaveFile
                 state.Standing.LastFiled(p)))],
             [.. state.TakenOffers],
             state.Name,
-            [.. state.Marks]);
+            [.. state.Marks],
+            state.Instructor);
     }
 
     private static ProvinceSnapshot CaptureProvince(DojoState state) => new(
@@ -230,6 +231,12 @@ public static class DojoSaveFile
         if (!string.IsNullOrWhiteSpace(snapshot.Name))
         {
             state.Name = snapshot.Name;
+        }
+
+        // And a term written before the instructor could be named loads kept by the post.
+        if (!string.IsNullOrWhiteSpace(snapshot.Instructor))
+        {
+            state.Instructor = snapshot.Instructor;
         }
         state.RestoreSchool(
             snapshot.School ?? [],

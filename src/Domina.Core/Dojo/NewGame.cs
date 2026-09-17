@@ -65,11 +65,14 @@ public static class NewGame
     /// The difficulty tier. Master is the measured one and the default — every number in the docs is
     /// literally the number the game runs at Master.
     /// </param>
+    /// <param name="dojoName">What the school is called; the master's own name for it if not given.</param>
+    /// <param name="instructor">What the instructor is called; kept by the post if not given.</param>
     public static DojoState Create(
         ulong seed,
         DojoTuning? tuning = null,
         DifficultyTier tier = DifficultyTier.Master,
-        string? dojoName = null)
+        string? dojoName = null,
+        string? instructor = null)
     {
         Difficulty difficulty = Difficulty.Of(tier);
 
@@ -86,6 +89,11 @@ public static class NewGame
         if (!string.IsNullOrWhiteSpace(dojoName))
         {
             dojo.Name = dojoName.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(instructor))
+        {
+            dojo.Instructor = instructor.Trim();
         }
 
         // The province is dealt before the roster, off the run's own seed: how much of the map he

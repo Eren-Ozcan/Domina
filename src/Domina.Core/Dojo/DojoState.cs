@@ -265,6 +265,18 @@ public sealed class DojoState
     /// </remarks>
     public string Name { get; set; } = "the dojo";
 
+    /// <summary>
+    /// What the instructor is called — the player's own name on the term.
+    /// </summary>
+    /// <remarks>
+    /// It decides nothing, exactly as <see cref="Name"/> decides nothing, and it is spent on the two
+    /// places the term addresses somebody rather than something: the letter the province writes when a
+    /// term closes, and the card a save is listed by. The design canvas asks for it at 6b — the school
+    /// is named and the man who keeps it is not — and a term opened without one is kept by the post
+    /// rather than by a man.
+    /// </remarks>
+    public string Instructor { get; set; } = "the instructor";
+
     public Roster Roster { get; } = new();
 
     /// <summary>
