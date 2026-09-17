@@ -145,6 +145,17 @@ internal static class PlayCommand
         /// <summary>Every death of the season, dated — the printed log only reaches ten days back.</summary>
         private readonly List<string> _deaths = [];
 
+        /// <summary>
+        /// The day the last line of the log belongs to.
+        /// </summary>
+        /// <remarks>
+        /// The toll cannot read the day off the dojo: a fight closes the day it was fought on, so by
+        /// the time the dead are counted the dojo has already turned over to the next one. The roll
+        /// used to be written with that later day and a player read his own log as two different
+        /// deaths — the line said day 17, the roll said day 18.
+        /// </remarks>
+        private int _loggedDay;
+
         public Session(ulong seed, int days, int gold)
         {
             _seed = seed;
@@ -203,6 +214,15 @@ internal static class PlayCommand
             return refusal;
         }
 
+        /// <summary>
+        /// Something the move did that is neither a refusal nor a day's event.
+        /// </summary>
+        /// <remarks>
+        /// A refusal means nothing happened; these are moves that happened <b>partly</b>, which is the
+        /// harder thing to notice and the one the player pays for later.
+        /// </remarks>
+        private void Note(string said) => _log.Add($"day {_state.Day} — {said}");
+
         /// <summary>Says what the move just made cost the roster.</summary>
         private void Toll(Dictionary<WarriorId, (string Name, int Infirmary, bool Alive)> before)
         {
@@ -252,7 +272,7 @@ internal static class PlayCommand
                 // season: who fell, on which day, doing what.
                 foreach (string name in dead)
                 {
-                    _deaths.Add($"day {_state.Day}: {name}");
+                    _deaths.Add($"day {_loggedDay}: {name}");
                 }
             }
 
@@ -288,7 +308,7 @@ internal static class PlayCommand
                     return _state.AcceptBounty() is not null ? null : "no bounty could be accepted";
 
                 case "bounty":
-                    return Bounty();
+                    return Bounty(word);
 
                 case "night":
                     return Night(word);
@@ -309,7 +329,7 @@ internal static class PlayCommand
                     return Staff(word);
 
                 case "feast":
-                    return _state.Feast() ? null : "the feast was refused";
+                    return Feast();
 
                 case "gift":
                     return Gift(word);
@@ -344,6 +364,46 @@ internal static class PlayCommand
             return null;
         }
 
+        /// <summary>
+        /// The order the player would have given with his hand on the key: pull everybody out.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The game's fight is watched and the pull-out is a key (GDD §5: the order is the party's, not
+        /// one man's). A script has no hand on that key, so a played season could only ever fight every
+        /// fight to the last man — which is how two played seasons ended, with a whole party dying in
+        /// one engagement that a watching player would have broken off.
+        /// </para>
+        /// <para>
+        /// So the script states the order in advance: <c>pull:0.5</c> on the move means "pull out when
+        /// we are outnumbered and the party is under half health". It is the core's own
+        /// <see cref="RetreatWhenLosing"/> — the batch bed's stand-in for a player — and it costs what
+        /// the key costs, in honour and in the fee.
+        /// </para>
+        /// </remarks>
+        private static RetreatWhenLosing? PullOut(string[] word)
+        {
+            foreach (string token in word)
+            {
+                if (!token.StartsWith("pull:", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (double.TryParse(
+                        token["pull:".Length..],
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out double share)
+                    && share is > 0 and <= 1)
+                {
+                    return new RetreatWhenLosing(share);
+                }
+            }
+
+            return null;
+        }
+
         private string? Expedition(string[] word)
         {
             IReadOnlyList<EncounterOffer> board = _state.Board;
@@ -359,7 +419,9 @@ internal static class PlayCommand
             }
 
             EncounterOffer offer = board[pick];
-            int want = word.Length > 2 ? Number(word[2]) : EncounterOffer.MaxPartySize;
+            int want = word.Length > 2 && !word[2].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
+                ? Number(word[2])
+                : EncounterOffer.MaxPartySize;
             List<RosterEntry> party =
             [
                 .. _state.Roster.FitForCampaign
@@ -380,16 +442,21 @@ internal static class PlayCommand
                 return $"the expedition was refused: {why}";
             }
 
+            RetreatWhenLosing? pull = PullOut(word);
             ExpeditionResult result = new Domina.Core.Campaign.Expedition().Send(
                 _state,
                 offer,
                 party,
                 _seed + (ulong)_state.Day,
-                new CombatTuning());
+                new CombatTuning(),
+                pull);
 
-            string told = result.Battle.Outcome == BattleOutcome.PlayerVictory
-                ? $"won the fight, {result.Reward} gold"
-                : "lost the fight";
+            string told = result.Battle.Outcome switch
+            {
+                BattleOutcome.PlayerVictory => $"won the fight, {result.Reward} gold",
+                BattleOutcome.PlayerWithdrawal => $"pulled out, {result.Reward} gold",
+                _ => "lost the fight",
+            };
             Record(result.Day, $"expedition {pick}: {told} (the fight closed the day)");
             return null;
         }
@@ -408,7 +475,9 @@ internal static class PlayCommand
                 return $"the last night is not open (the season is {_state.Season.Phase})";
             }
 
-            int want = word.Length > 1 ? Number(word[1]) : EncounterOffer.MaxPartySize;
+            int want = word.Length > 1 && !word[1].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
+                ? Number(word[1])
+                : EncounterOffer.MaxPartySize;
             List<RosterEntry> party =
             [
                 .. _state.Roster.Living
@@ -428,7 +497,7 @@ internal static class PlayCommand
                 party,
                 new SeededRandom(_seed + 7_777_777 + (ulong)round),
                 new CombatTuning(),
-                retreat: null);
+                PullOut(word));
 
             _log.Add(
                 $"the last night, bout {round}: {(result.Won ? "won" : "LOST")} "
@@ -436,7 +505,7 @@ internal static class PlayCommand
             return null;
         }
 
-        private string? Bounty()
+        private string? Bounty(string[] word)
         {
             if (_state.Bounty is not BountyContract contract)
             {
@@ -449,9 +518,18 @@ internal static class PlayCommand
                     : "no contract is on the board today";
             }
 
+            // The hunt used to send the top four and nothing else could be asked of it, so a failed
+            // hunt could take the whole roster in one line — and it did, in two played seasons. The
+            // party is sized the way an expedition's is.
+            int want = word.Length > 1 && !word[1].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
+                ? Number(word[1])
+                : EncounterOffer.MaxPartySize;
+
             List<RosterEntry> party =
             [
-                .. _state.Roster.FitForCampaign.OrderByDescending(Score).Take(EncounterOffer.MaxPartySize),
+                .. _state.Roster.FitForCampaign
+                    .OrderByDescending(Score)
+                    .Take(Math.Clamp(want, 1, EncounterOffer.MaxPartySize)),
             ];
 
             if (party.Count == 0)
@@ -464,10 +542,38 @@ internal static class PlayCommand
                 contract,
                 party,
                 new SeededRandom(_seed + 5_000_011 + (ulong)_state.Day),
-                new CombatTuning());
+                new CombatTuning(),
+                PullOut(word));
 
             Record(result.Day, $"bounty: {(result.Claimed ? "head taken" : "the hunt failed")} (the hunt closed the day)");
             return null;
+        }
+
+        /// <summary>Calls a feast, or says which of its three conditions is not met.</summary>
+        /// <remarks>
+        /// "the feast was refused" was the one refusal in a played season that gave no reason at all,
+        /// and the reason is never guessable: sake is bought, not drawn, and the cooldown is invisible.
+        /// </remarks>
+        private string? Feast()
+        {
+            if (!_state.Roster.Living.Any())
+            {
+                return "the feast was refused — there is nobody in the yard to hold it for";
+            }
+
+            if (_state.Resources.Sake < _state.FeastSake)
+            {
+                return $"the feast was refused — it drinks {_state.FeastSake} sake "
+                    + $"({_state.Resources.Sake} in the store)";
+            }
+
+            if (!_state.CanFeast)
+            {
+                return $"the feast was refused — the last one was on day {_state.LastFeastDay}, "
+                    + $"and they stand {_state.Tuning.Morale.FeastCooldownDays} days apart";
+            }
+
+            return _state.Feast() ? null : "the feast was refused";
         }
 
         private string? Restock(string[] word)
@@ -477,13 +583,43 @@ internal static class PlayCommand
                 return "restock needs food, water and medicine";
             }
 
-            int spent = _state.Quartermaster.Restock(
-                _state,
-                new Resources(Food: Number(word[1]), Water: Number(word[2]), Medicine: Number(word[3])));
+            Resources want = new(Food: Number(word[1]), Water: Number(word[2]), Medicine: Number(word[3]));
+            Resources before = _state.Resources;
+            int spent = _state.Quartermaster.Restock(_state, want);
+            Resources after = _state.Resources;
 
-            return spent > 0
-                ? null
-                : "nothing was bought - restock tops the store UP TO the levels given, and it already holds that much";
+            if (spent <= 0)
+            {
+                return "nothing was bought - restock tops the store UP TO the levels given, "
+                    + "and it already holds that much";
+            }
+
+            // The purse buys food first, then water, then medicine, and a thin purse simply stops
+            // part-way. A player who asked for water and got none was never told which line the gold
+            // ran out on — it showed up days later as a store that flatlined.
+            List<string> short_ = [];
+            if (after.Food < want.Food)
+            {
+                short_.Add($"food {after.Food} of {want.Food}");
+            }
+
+            if (after.Water < want.Water)
+            {
+                short_.Add($"water {after.Water} of {want.Water}");
+            }
+
+            if (after.Medicine < want.Medicine)
+            {
+                short_.Add($"medicine {after.Medicine} of {want.Medicine}");
+            }
+
+            if (short_.Count > 0)
+            {
+                Note($"restock spent {spent} gold and came up short: {string.Join(", ", short_)} "
+                    + $"({after.Gold} gold left; it buys food, then water, then medicine)");
+            }
+
+            return null;
         }
 
         private string? Hire(string[] word)
@@ -493,7 +629,37 @@ internal static class PlayCommand
                 return "hire needs a candidate";
             }
 
-            return _state.HireRecruit(Number(word[1])) is not null ? null : "the candidate was not taken on";
+            int pick = Number(word[1]);
+
+            // "the candidate was not taken on" is true and useless: the three things that refuse a
+            // hire are a full roster, an empty purse and an index that is not on the stall, and the
+            // player cannot tell them apart by looking at the standing. The refusal names the one.
+            if (pick < 0 || pick >= _state.Recruits.Count)
+            {
+                return $"the stall has no candidate {pick}";
+            }
+
+            RecruitOffer candidate = _state.Recruits[pick];
+
+            if (_state.HiredToday.Contains(pick))
+            {
+                return $"the candidate was not taken on — {candidate.Name} was already taken on today "
+                    + "(the stall regenerates tomorrow; another candidate may still be hired now)";
+            }
+
+            if (_state.Roster.Living.Count() >= _state.Capacity)
+            {
+                return $"the candidate was not taken on — the roster is full "
+                    + $"({_state.Capacity} beds; build quarters or release a man)";
+            }
+
+            if (_state.Resources.Gold < candidate.Price)
+            {
+                return $"the candidate was not taken on — he costs {candidate.Price} gold and "
+                    + $"{_state.Resources.Gold} is in the chest";
+            }
+
+            return _state.HireRecruit(pick) is not null ? null : "the candidate was not taken on";
         }
 
         private string? Drill(string[] word)
@@ -533,22 +699,35 @@ internal static class PlayCommand
 
         private string? Gift(string[] word)
         {
+            // No screen in the standing ever printed a patron's name, so the verb was unusable: a
+            // wrong guess said only that the guess was wrong. The refusal lists the whole set.
             if (word.Length < 2 || !Enum.TryParse(word[1], ignoreCase: true, out Patron patron))
             {
-                return $"there is no patron called {(word.Length > 1 ? word[1] : "?")}";
+                return $"there is no patron called {(word.Length > 1 ? word[1] : "?")} — "
+                    + $"they are {string.Join(", ", Enum.GetNames<Patron>())}";
             }
 
-            return _state.SendGift(patron) ? null : "the gift was refused";
+            int price = _state.Standing.Tuning.GiftPrice;
+
+            return _state.SendGift(patron)
+                ? null
+                : $"the gift was refused — it costs {price} gold and {_state.Resources.Gold} is in the chest";
         }
 
         private string? Charm(string[] word)
         {
             if (word.Length < 2 || !Enum.TryParse(word[1], ignoreCase: true, out OmamoriKind kind))
             {
-                return $"there is no charm called {(word.Length > 1 ? word[1] : "?")}";
+                return $"there is no charm called {(word.Length > 1 ? word[1] : "?")} — "
+                    + $"they are {string.Join(", ", Enum.GetNames<OmamoriKind>())}";
             }
 
-            return _state.BuyCharm(kind) ? null : "the charm was not bought";
+            if (!_state.School.Has(SchoolNodeId.Shrine))
+            {
+                return "the charm was not bought — the omamori are the temple's supply and there is no shrine";
+            }
+
+            return _state.BuyCharm(kind) ? null : "the charm was not bought — the gold was not there";
         }
 
         private string? Fit(string[] word)
@@ -631,6 +810,13 @@ internal static class PlayCommand
             if (report.RivalMove is ProvinceMove move)
             {
                 line.Append(CultureInfo.InvariantCulture, $" | the rival moved: {move.Kind}");
+
+                // A move name is not a consequence. A raid in particular reads as flavour until the
+                // day it costs the treasury, so the one move that has a price says its price here.
+                if (move.Kind == ProvinceMoveKind.Raid)
+                {
+                    line.Append(" — he stands on the board until he is fought; a day that closes with him unanswered is a sacking");
+                }
             }
 
             if (report.Sacked is SackReport sack)
@@ -643,6 +829,15 @@ internal static class PlayCommand
             if (report.MissedWeek)
             {
                 line.Append(" | a week closed with no fight filed");
+            }
+
+            // The payroll failing empties every post in one day. The core reports who walked; the
+            // harness printed nothing, so six hires vanished from the standing with no line to read it
+            // from — the buildings stay, and it looks like nothing happened until the work slows.
+            if (report.Upkeep.Walked is { Count: > 0 } walked)
+            {
+                line.Append(CultureInfo.InvariantCulture,
+                    $" | the payroll could not be met and they walked: {string.Join(", ", walked)}");
             }
 
             if (report.Tribunal is TribunalVerdict verdict)
@@ -659,6 +854,7 @@ internal static class PlayCommand
             }
 
             _log.Add(line.ToString());
+            _loggedDay = report.Day;
         }
 
         /// <summary>Prints where the season stands, and what can be done about it.</summary>
@@ -677,12 +873,17 @@ internal static class PlayCommand
             // being told that the heads are what the season is for: surviving to the end with a shut
             // gate closes the season with no last night at all.
             int daysLeft = Math.Max(0, _days - _state.Day);
+            // "heads 18/3" reads as an overflow rather than as a requirement long since met, so once
+            // the gate is open the fraction goes and the count stands on its own.
             string gate = _state.Season.GateOpen
                 ? "gate open — the last night will be fought"
                 : $"gate shut — {3 - _state.Season.HeadsTaken} more head(s) or there is no last night, "
                     + $"{daysLeft} days left";
+            string heads = _state.Season.GateOpen
+                ? $"heads {_state.Season.HeadsTaken} (3 were needed)"
+                : $"heads {_state.Season.HeadsTaken}/3";
             output.WriteLine(
-                $"SEASON heads {_state.Season.HeadsTaken}/3, {gate}, "
+                $"SEASON {heads}, {gate}, "
                 + $"quiet weeks in a row {_state.Season.MissedStreak}");
 
             output.WriteLine();
@@ -718,6 +919,17 @@ internal static class PlayCommand
 
             output.WriteLine();
             output.WriteLine("BOARD (index  threat  enemies  promised  expires  party)");
+
+            // A raid stands on the board like any other job, and a player who does not know that reads
+            // it as one and lets it expire — then the day closes with a sacking whose cause was never
+            // on the screen. The game's own board says he is at the gate (OfferModel.IsRaid); this
+            // said nothing, so it says it here, with the price of leaving it standing.
+            if (_state.UnderRaid)
+            {
+                output.WriteLine(
+                    "  HE IS AT THE GATE — the job below is Kurogane's raid and it stands alone. "
+                    + "Fighting it answers him; letting the day close unanswered is a sacking.");
+            }
             IReadOnlyList<EncounterOffer> board = _state.Board;
             for (int i = 0; i < board.Count; i++)
             {
