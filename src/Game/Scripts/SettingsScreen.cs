@@ -64,6 +64,13 @@ public sealed partial class SettingsScreen : CanvasLayer
             () => GameSettings.Borderless ? "borderless, the whole screen" : "a window",
             () => GameSettings.Borderless = !GameSettings.Borderless));
 
+        panel.AddChild(Toggle(
+            "The paper",
+            () => GameSettings.PaperGrain ? "grained, and the hour washed over it" : "flat",
+            () => GameSettings.PaperGrain = !GameSettings.PaperGrain,
+            "The grain, the inked edges and the colour the hour puts over the yard. Taking it off "
+            + "changes nothing the game does — only what it looks like."));
+
         panel.AddChild(UiKit.Note(
             "The yard is drawn at 1920 × 1080 and the engine stretches it; nothing is cut off at "
             + "another size."));

@@ -50,6 +50,17 @@ public static class GameSettings
     /// <summary>Whether the window is borderless and fills the screen.</summary>
     public static bool Borderless { get; set; }
 
+    /// <summary>
+    /// Whether the paper is grained, its edges inked and the hour washed over the world.
+    /// </summary>
+    /// <remarks>
+    /// On by default, because it is the look the game is drawn for (GDD §12). It is a switch rather
+    /// than a fixture because the whole of it sits over the text: a small screen, a projector or an
+    /// eye that wants the page flat is a reason to take it off, and taking it off costs nothing but
+    /// the look.
+    /// </remarks>
+    public static bool PaperGrain { get; set; } = true;
+
     /// <summary>Reads the settings back, or leaves the defaults standing when there is no file yet.</summary>
     public static void Load()
     {
@@ -65,6 +76,7 @@ public static class GameSettings
         ReducedMotion = (bool)file.GetValue(Section, "reduced_motion", ReducedMotion);
         LogHold = (double)file.GetValue(Section, "log_hold", LogHold);
         Borderless = (bool)file.GetValue(Section, "borderless", Borderless);
+        PaperGrain = (bool)file.GetValue(Section, "paper_grain", PaperGrain);
     }
 
     /// <summary>Writes them down. Called whenever one of them is changed, because there is no OK button.</summary>
@@ -76,6 +88,7 @@ public static class GameSettings
         file.SetValue(Section, "reduced_motion", ReducedMotion);
         file.SetValue(Section, "log_hold", LogHold);
         file.SetValue(Section, "borderless", Borderless);
+        file.SetValue(Section, "paper_grain", PaperGrain);
         file.Save(Path);
     }
 
