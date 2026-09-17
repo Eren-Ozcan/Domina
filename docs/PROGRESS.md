@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-17 (the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay)
+Last updated: 2026-09-17 (three more seasons played by hand, none of them reaching the last night — and the reason turned out to be the harness: a played season could not give the one order the game gives, so the pull-out is now a move; before it: the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1829,6 +1829,85 @@ named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching 
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
 
 ---
+
+## 2026-09-17 (second round) — Three more seasons played by hand, and the order the script could not give
+
+**Three agents each played a full season through `--play` at Master**, on fresh seeds, with no guidance
+beyond the move vocabulary: 6101 aggressive, 6202 school-first, 6303 a first-time player. The result
+repeats the first round's and sharpens it:
+
+| Seed | Play | Outcome | Heads | Gate opened | Last night |
+|---|---|---|---|---|---|
+| 6101 | aggressive | closed day 96 | 9/3 | day 14 | never |
+| 6202 | school-first | closed day 156 | 8/3 | day 26 | never |
+| 6303 | first-timer | closed day 129 | 18/3 | day 11 | never |
+
+**0 of 3 again, and 0 of 7 across both rounds.** Every one of them died the same way: a whole party in
+one engagement. 6101 lost four men on day 93 and the remaining three on day 95; 6202 lost three on day
+156; 6303 lost four on day 128 — and 6303 had already lost four of six in a single failed hunt on day
+109. The batch bed reads about 20% of last nights won; seven hand-played seasons read none.
+
+**The round's finding is what the script could not say.** The game's fight is watched and the pull-out
+is a key (GDD §5). `--play` hard-coded `retreat: null` on every fight, so a played season could only
+ever fight to the last man — which is exactly how all seven ended. **A played season was measuring a
+player with no hand on the key.** The move now states the order in advance:
+
+```
+expedition 0 4 pull:0.6      bounty 2 pull:0.5      night 3 pull:0.4
+```
+
+It is the core's own `RetreatWhenLosing` — the batch bed's stand-in for a player, no new rule — and it
+costs what the key costs. Verified on seed 36: one man sent against a larger band came home with six
+days of infirmary instead of in the roll, and the line reads `pulled out, 0 gold`. Before any further
+conclusion is drawn from a hand-played season, it should be replayed with the order available.
+
+**And the hunt can be sized.** `bounty` sent the top four and nothing else could be asked of it, so a
+failed hunt could take the whole roster in one line — twice, it did. `bounty 2` now scopes it the way
+an expedition is scoped.
+
+**Nine things the game knew and did not say, all closed.** None touches the core:
+
+- **the raid says it is a raid** — a raid stands alone on the board and fighting it answers him
+  (`DojoState.Board`, `RecordFight` → `RaidSettled`), but the harness printed it as an ordinary job.
+  All three players read the sacking as causeless and two went looking for a "defend" verb that does
+  not exist because it does not need to. The board now says `HE IS AT THE GATE`, and the rival's move
+  line says what leaving it costs;
+- **the roll of the dead was a day out** — the log said `day 17`, the roll said `day 18`, because a
+  fight closes the day it was fought on and the toll was reading the dojo's day afterwards. One player
+  read it as two different men;
+- **`hire` names its constraint** — a full roster with its bed count, the price against the purse, an
+  index that is not on the stall, or the same candidate twice in one day (which one player inferred as
+  a hidden one-a-day cap; it is per candidate);
+- **`feast` names its constraint** — the sake it drinks against the store, or the cooldown and the day
+  of the last one. It was the only refusal in a played season with no reason at all;
+- **`gift` and `charm` list their sets** — no screen ever printed a patron or an omamori kind, so both
+  verbs were unusable by anything but guessing;
+- **`charm` says the shrine is the gate** — the omamori are the temple's supply;
+- **a short restock says what it could not buy** — the purse buys food, then water, then medicine, and
+  simply stops; a player asked for water, got none, and found out days later from a flat store;
+- **the payroll failing is printed** — `UpkeepReport.Walked` has always carried it; the harness said
+  nothing, so six posts emptied in one day with nothing to read it from;
+- **`heads 18/3` reads as an overflow** — once the gate is open the fraction goes: `heads 18 (3 were
+  needed)`.
+
+**What is left as a design question, not patched.** Three of them, and the first two are the same
+question the fifth round asked:
+
+1. **The board does not read the roster.** All three ran out of small work exactly when they needed it
+   — 6202 sent its last three at a Dire job because nothing else stood. The fifth round diagnosed this
+   and the sixth dismissed it as the blunt bed's artefact, on the grounds that the documented policy
+   declines 49.4% of offers. Three more hand-played seasons say the counter-move is available and does
+   not help: declining does not feed a roster.
+2. **The heads gate stops measuring on day 26.** Every season cleared it inside a month and then
+   carried an open gate, uselessly, for a hundred days or more. The climax is gated on a thing the
+   early game hands out.
+3. **A won fight kills men with no forward signal.** Reported as a defect by all three, as it was by
+   all four of the fifth round. It is the design (victory and casualty resolve separately), but seven
+   of seven players have now read it as a bug, which is a statement about the report rather than the
+   rule.
+
+**Not bugs, though reported as such:** the wrong party size refusing without spending a day (the
+refusal is the point), and `WrongPartySize` on a queued line (the slot's rule can change overnight).
 
 ## 2026-09-17 — The rack: the dojo can arm the man it trains, and the season says not to
 
