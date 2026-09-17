@@ -334,8 +334,13 @@ a `seed`. The same seed + the same inputs = the same result. That gives three th
 ### 2.2 Art and polish — ⬜ can start
 - [x] The visual style decision — **made (2026-08-13):** dark Edo woodblock × layered paper
       theatre. The full rule is in GDD §12
-- [ ] A full-screen texture overlay (`CanvasLayer`: paper grain + ink bleed) and the day-cycle
-      tint (`CanvasModulate`, apart from the blood tint)
+- [x] A full-screen texture overlay (paper grain + ink bleed) and the day-cycle tint —
+      **done (2026-09-17):** `PaperOverlay.cs` on two layers. The grain and the inked edge sit over
+      everything; the hour's wash (`DayTint` in `Domina.Presentation`, capped at 0.15 and tested for
+      it) sits over the yard and **under** every sheet, so no sheet the player reads is ever tinted by
+      the time of day. It is one switch on the settings sheet, and the yard moved to layer −1 to make
+      room for the wash above it. `CanvasModulate` was not used: it tints a whole canvas including the
+      interface printed on it, which is the one thing the design forbids
 - [ ] Hanging the real art assets on the bones
 - [ ] Cut-surface assets: the shoulder stump, the hip stump, the severed limb's cut end
 - [ ] The camera, the arena scene, hit effects, sound

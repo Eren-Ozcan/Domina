@@ -35,8 +35,9 @@ the account of the build.
 | The strip along the top (day, stores in days, the hour, the clock's speed) | `DojoHub.BuildStrip`, `StripModel` in `Domina.Presentation` |
 | Sheets over the yard; the two screens that take the whole stage | `DojoScreen.BuildPage`, `TakesTheStage` |
 | Title, the yard at night (6a) | `TitleScreen.cs` |
-| Opening a school — province, name, seed, what the seed opens with (6b) | `NewTermScreen.cs`, `NewTermModel` |
+| Opening a school — province, the two names, seed, what the seed opens with (6b) | `NewTermScreen.cs`, `NewTermModel` |
 | Settings (6d) | `SettingsScreen.cs`, `GameSettings.cs` |
+| The paper itself: grain, inked edges, and the hour washed over the yard | `PaperOverlay.cs`, `DayTint` in `Domina.Presentation` |
 | The world stopped, and the four acts about it (6e) | `PauseScreen.cs` |
 | The fight: two sides in pips, the stream in English, the one order (5a) | `BattleHud.cs`, `FightLog` in `Domina.Presentation` |
 | The pull-out, with its cost stated first (5b) | `BattleHud.Confirm` |
@@ -73,7 +74,6 @@ The two faces the canvas uses are bundled, subsetted to the glyphs the screens p
   over the yard. Nothing calls `Ask` yet, because there is no Twitch or Kick connection in this build,
   so the gate stands empty and the crowd panels in 6b and 6d say so rather than offering switches.
 - **Sound.** There is none, so the settings sheet names the panel and leaves it unwired.
-- **The instructor's own name (6b).** The school is named; the player is not.
 - **Carrying a term into the next one (6h).** The closing sheet counts what a next term would inherit,
   but the core ends a term and frees the slot; nothing yet opens a second term with the first one's
   men. The panel says so plainly.
