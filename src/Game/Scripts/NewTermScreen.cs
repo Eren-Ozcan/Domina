@@ -24,12 +24,13 @@ public sealed partial class NewTermScreen : CanvasLayer
     private ulong _seed = unchecked((ulong)Random.Shared.NextInt64());
     private DifficultyTier _tier = DifficultyTier.Master;
     private LineEdit _name = null!;
+    private LineEdit _instructor = null!;
     private VBoxContainer _provinces = null!;
     private VBoxContainer _opening = null!;
     private Label _seedLabel = null!;
 
-    /// <summary>The term is opened: the name the player wrote, the province and the seed.</summary>
-    public Action<string, DifficultyTier, ulong>? Opened { get; set; }
+    /// <summary>The term is opened: the two names the player wrote, the province and the seed.</summary>
+    public Action<string, string, DifficultyTier, ulong>? Opened { get; set; }
 
     /// <summary>Back to the title, with nothing written.</summary>
     public Action? Closed { get; set; }
@@ -76,7 +77,7 @@ public sealed partial class NewTermScreen : CanvasLayer
         BuildOpening();
 
         Button open = new() { Text = "Open the gates on day 1" };
-        open.Pressed += () => Opened?.Invoke(DojoName, _tier, _seed);
+        open.Pressed += () => Opened?.Invoke(DojoName, Instructor, _tier, _seed);
         sheet.AddChild(Foot(UiKit.Act(open), "one term, one save, and the ledger starts empty"));
     }
 
@@ -166,6 +167,19 @@ public sealed partial class NewTermScreen : CanvasLayer
         _name.AddThemeStyleboxOverride("normal", UiKit.FlatStyle(UiKit.Pressed));
         _name.AddThemeStyleboxOverride("focus", UiKit.FlatStyle(UiKit.Pressed, UiKit.Ink));
         section.AddChild(_name);
+
+        section.AddChild(Field("The instructor", "the province writes to him by name when the term closes"));
+
+        _instructor = new LineEdit
+        {
+            Text = "Master Ashigara",
+            PlaceholderText = "the instructor",
+        };
+        _instructor.AddThemeFontSizeOverride("font_size", UiKit.HeadSize);
+        _instructor.AddThemeColorOverride("font_color", UiKit.Ink);
+        _instructor.AddThemeStyleboxOverride("normal", UiKit.FlatStyle(UiKit.Pressed));
+        _instructor.AddThemeStyleboxOverride("focus", UiKit.FlatStyle(UiKit.Pressed, UiKit.Ink));
+        section.AddChild(_instructor);
 
         section.AddChild(Field("The seed", "the same seed gives the same province and the same men"));
 
@@ -265,6 +279,12 @@ public sealed partial class NewTermScreen : CanvasLayer
         string.IsNullOrWhiteSpace(_name.Text)
             ? _name.PlaceholderText
             : _name.Text.Trim();
+
+    /// <summary>What the instructor will be called; never empty.</summary>
+    public string Instructor =>
+        string.IsNullOrWhiteSpace(_instructor.Text)
+            ? _instructor.PlaceholderText
+            : _instructor.Text.Trim();
 
     /// <summary>Which province was chosen.</summary>
     public DifficultyTier Province => _tier;

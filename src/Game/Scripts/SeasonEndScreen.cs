@@ -132,6 +132,13 @@ public sealed partial class SeasonEndScreen : DojoScreen
             "THE CLERK'S OFFICE, BY LETTER, ON THE LAST DAY",
             UiKit.NightMuted,
             UiKit.NoteSize));
+
+        // The letter is addressed, because this is the one place in the term the province speaks to
+        // the player rather than about the school (design canvas → 6b).
+        said.AddChild(UiKit.Body(
+            $"To {dojo.Instructor}, who keeps {dojo.Name}",
+            UiKit.NightMuted,
+            UiKit.BodySize));
         said.AddChild(UiKit.Body(Verdict(tier), UiKit.PaperInk, UiKit.HeadSize - 2));
         row.AddChild(said);
     }

@@ -112,6 +112,10 @@ public sealed partial class SavesScreen : CanvasLayer
 
         said.AddChild(UiKit.OnPaper(kept.Name, UiKit.Ink, UiKit.HeadSize + 4, display: true));
 
+        // Two terms of the same school are told apart by the man keeping it, so the card names him
+        // under the school (design canvas → 6b).
+        said.AddChild(UiKit.Body($"kept by {kept.Instructor}", UiKit.Muted, UiKit.NoteSize, wrap: false));
+
         HBoxContainer figures = new();
         figures.AddThemeConstantOverride("separation", 26);
         said.AddChild(figures);

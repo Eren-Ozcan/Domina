@@ -118,6 +118,15 @@ public sealed partial class DojoHub : Node
     /// </summary>
     private readonly DayClock _clock = new();
 
+    /// <summary>
+    /// The paper the world is printed on: grain, inked edges and the hour's wash.
+    /// </summary>
+    /// <remarks>
+    /// It belongs to the hub for the same reason the clock does — it outlives every screen change, and
+    /// one rebuilt per screen would regenerate its noise field each time the player opened the market.
+    /// </remarks>
+    private PaperOverlay? _paper;
+
     private HBoxContainer? _stripRow;
     private Control? _hourRun;
     private Label? _hourLabel;
@@ -126,6 +135,7 @@ public sealed partial class DojoHub : Node
     {
         GameSettings.Load();
         GameSettings.Apply(GetTree().Root);
+        ApplyPaper();
         ShowTitle(null);
     }
 
@@ -148,6 +158,13 @@ public sealed partial class DojoHub : Node
     public override void _Process(double delta)
     {
         UpdateHour();
+
+        if (_paper is PaperOverlay paper && IsInstanceValid(paper))
+        {
+            // The wash is the world's way of saying the clock is running, so it reads the same
+            // progress the strip's hour does rather than a second clock of its own.
+            paper.Hour = _clock.Progress;
+        }
 
         // Neither the last night nor the closing screen has a day to spend: the season's clock stops
         // being a clock the moment the run leaves its running phase.
@@ -366,11 +383,11 @@ public sealed partial class DojoHub : Node
             Closed = () => ShowTitle(null),
         };
 
-        opening.Opened = (name, tier, seed) =>
+        opening.Opened = (name, instructor, tier, seed) =>
         {
             RemoveChild(opening);
             opening.QueueFree();
-            Start(name, tier, seed);
+            Start(name, instructor, tier, seed);
         };
 
         _title = null;
@@ -408,11 +425,11 @@ public sealed partial class DojoHub : Node
     /// The seed itself goes into the save (GDD §2), so when the expedition is loaded again the same days
     /// come back.
     /// </remarks>
-    private void Start(string name, DifficultyTier tier, ulong seed)
+    private void Start(string name, string instructor, DifficultyTier tier, ulong seed)
     {
         SaveSlot.Delete();
         _report = null;
-        Play(NewGame.Create(seed, tier: tier, dojoName: name));
+        Play(NewGame.Create(seed, tier: tier, dojoName: name, instructor: instructor));
         Save();
     }
 
@@ -463,7 +480,10 @@ public sealed partial class DojoHub : Node
     {
         CloseYard();
 
-        YardScreen yard = new() { Layer = 0, Walked = Walk, AlwaysNamed = GameSettings.NameDestinations };
+        // The yard is the ground and everything stands on it — including the hour's wash, which is
+        // laid on layer 0 so the world takes the colour of the time of day and the sheets over it
+        // never do (see PaperOverlay).
+        YardScreen yard = new() { Layer = -1, Walked = Walk, AlwaysNamed = GameSettings.NameDestinations };
         _yard = yard;
         AddChild(yard);
         yard.Build();
@@ -960,6 +980,8 @@ public sealed partial class DojoHub : Node
             {
                 yard.AlwaysNamed = GameSettings.NameDestinations;
             }
+
+            ApplyPaper();
         };
 
         _settings = settings;
@@ -1078,6 +1100,35 @@ public sealed partial class DojoHub : Node
 
         UpdateHour();
         return row;
+    }
+
+    /// <summary>
+    /// Hangs the paper over the world, or takes it away — whichever the settings ask for.
+    /// </summary>
+    /// <remarks>
+    /// Called when the term opens and whenever the switch is moved, so the change lands on the screen
+    /// the player is looking at rather than on the next one.
+    /// </remarks>
+    private void ApplyPaper()
+    {
+        if (GameSettings.PaperGrain)
+        {
+            if (_paper is null || !IsInstanceValid(_paper))
+            {
+                _paper = new PaperOverlay { Hour = _clock.Progress };
+                AddChild(_paper);
+            }
+
+            return;
+        }
+
+        if (_paper is PaperOverlay paper && IsInstanceValid(paper))
+        {
+            RemoveChild(paper);
+            paper.QueueFree();
+        }
+
+        _paper = null;
     }
 
     /// <summary>A hairline standing up between two runs of the strip.</summary>
