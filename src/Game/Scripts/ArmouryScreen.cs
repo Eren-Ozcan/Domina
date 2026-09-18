@@ -32,6 +32,7 @@ public sealed partial class ArmouryScreen : DojoScreen
     private HFlowContainer _summaryRow = null!;
     private VBoxContainer _list = null!;
     private VBoxContainer _counter = null!;
+    private SlotMap _map = null!;
     private Label _notice = null!;
     private WarriorId? _selected;
 
@@ -67,6 +68,13 @@ public sealed partial class ArmouryScreen : DojoScreen
         _list = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _list.AddThemeConstantOverride("separation", 4);
         names.AddChild(_list);
+
+        // The rows say what is on each part; the figure says where he is bare, which is the question
+        // that is actually asked before a man is sent out.
+        men.AddChild(UiKit.Rule());
+        men.AddChild(UiKit.SectionLabel("Where he is covered"));
+        _map = new SlotMap();
+        men.AddChild(_map);
 
         VBoxContainer kit = UiKit.Section(split, "His kit", fill: true);
 
@@ -138,6 +146,7 @@ public sealed partial class ArmouryScreen : DojoScreen
 
         if (QuartermasterModel.Describe(_dojo, _selected!.Value) is CounterCard card)
         {
+            _map.Slots = card.Slots;
             BuildCounter(card);
         }
     }
