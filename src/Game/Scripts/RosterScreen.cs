@@ -56,6 +56,8 @@ public sealed partial class RosterScreen : DojoScreen
     private bool _retireArmed;
     private Button _feastButton = null!;
     private Label _feastNotice = null!;
+    private VBoxContainer _statTerms = null!;
+    private VBoxContainer _gearTerms = null!;
     private Label _rackLabel = null!;
     private VBoxContainer _rackRows = null!;
     private Label _charmLabel = null!;
@@ -122,11 +124,27 @@ public sealed partial class RosterScreen : DojoScreen
         browseRow.AddChild(UiKit.Browse(_previousButton, _nextButton, string.Empty));
         panel.AddChild(browseRow);
 
+        // The reference game's gladiator panel is the densest screen it has, and it earns the density by
+        // putting the man on the left and what he carries on the right rather than running one column
+        // down the middle (docs/REFERENCE-DOMINA-UI.md §3). Ours ran one column and left the other half
+        // of the sheet empty.
+        HBoxContainer body = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        body.AddThemeConstantOverride("separation", 14);
+        panel.AddChild(body);
+
+        VBoxContainer man = UiKit.Section(body, "the man", fill: true);
+        VBoxContainer kit = UiKit.Section(body, "what he carries", fill: true);
+
         _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_detail);
+        man.AddChild(_detail);
+
+        // The numbers were printed as a block of padded text, which only lines up while the face is
+        // monospaced. An aligned pair of columns says the same thing and cannot drift.
+        _statTerms = new VBoxContainer();
+        man.AddChild(_statTerms);
 
         HBoxContainer renameRow = new();
-        panel.AddChild(renameRow);
+        man.AddChild(renameRow);
 
         _nameEdit = new LineEdit
         {
@@ -141,7 +159,7 @@ public sealed partial class RosterScreen : DojoScreen
         renameRow.AddChild(_renameButton);
 
         _renameNotice = new Label();
-        panel.AddChild(_renameNotice);
+        man.AddChild(_renameNotice);
 
         _drillPicker = new OptionButton();
         foreach (Drill drill in Enum.GetValues<Drill>())
@@ -150,62 +168,69 @@ public sealed partial class RosterScreen : DojoScreen
         }
 
         _drillPicker.ItemSelected += index => AssignDrill((Drill)_drillPicker.GetItemId((int)index));
-        panel.AddChild(_drillPicker);
+        man.AddChild(_drillPicker);
 
         _pathRow = new HBoxContainer();
-        panel.AddChild(_pathRow);
+        man.AddChild(_pathRow);
 
         // The feast is the roster's lever, not one warrior's, so it sits with the summary's business
         // rather than in a man's detail: one measure of sake per living head, and then a week's wait.
         _feastButton = new Button { Text = "Hold a feast" };
         _feastButton.Pressed += Guarded(_dojo, Feast);
-        panel.AddChild(_feastButton);
+        man.AddChild(_feastButton);
 
         _feastNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_feastNotice);
+        man.AddChild(_feastNotice);
 
         // The rack hangs on the man's own page rather than at the armoury counter because arming him is
         // a decision about the man, not about his kit: the weapon he carries and the mastery he built on
         // it are already printed two lines above, and this is where a player asks "should he be holding
         // that" (docs/GDD.md §10, Open Decision #21).
+        _gearTerms = new VBoxContainer();
+        kit.AddChild(_gearTerms);
+
+        kit.AddChild(UiKit.Rule());
+
         _rackLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_rackLabel);
+        kit.AddChild(_rackLabel);
 
         _rackRows = new VBoxContainer();
         _rackRows.AddThemeConstantOverride("separation", 4);
-        panel.AddChild(_rackRows);
+        kit.AddChild(_rackRows);
 
         // The charms sit under the path because they are the other thing carried onto the field, and
         // unlike the path they can be moved from one man to another on any day (docs/GDD.md §10).
         _charmLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_charmLabel);
+        kit.AddChild(_charmLabel);
 
         _charmRows = new VBoxContainer();
         _charmRows.AddThemeConstantOverride("separation", 4);
-        panel.AddChild(_charmRows);
+        kit.AddChild(_charmRows);
+
+        kit.AddChild(UiKit.Rule());
 
         // Releasing a man is the one thing on this screen that cannot be undone and costs nothing to
         // press, so it asks twice — the same courtesy the rest of the dojo owes an irreversible move.
         _releaseButton = UiKit.Danger(new Button { Text = "End his term" });
         _releaseButton.Pressed += Guarded(_dojo, Release);
-        panel.AddChild(_releaseButton);
+        kit.AddChild(_releaseButton);
 
         _releaseNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_releaseNotice);
+        kit.AddChild(_releaseNotice);
 
         // Retirement is the other irreversible move, and it asks twice for the same reason releasing
         // does: what the dojo gets back is a man who eats nothing and can hold a post, and what it
         // loses is a sword it cannot have back.
         _retireButton = UiKit.Danger(new Button { Text = "Retire him" });
         _retireButton.Pressed += Guarded(_dojo, Retire);
-        panel.AddChild(_retireButton);
+        kit.AddChild(_retireButton);
 
         _retireNotice = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_retireNotice);
+        kit.AddChild(_retireNotice);
 
         _postRow = new HBoxContainer();
         _postRow.AddThemeConstantOverride("separation", 6);
-        panel.AddChild(_postRow);
+        kit.AddChild(_postRow);
 
         return panel;
     }
@@ -336,23 +361,10 @@ public sealed partial class RosterScreen : DojoScreen
                 : "This warrior died — the record stays on the roster.",
             row.RecoveryDaysRemaining > 0
                 ? $"Infirmary: {row.RecoveryDaysRemaining} days"
-                : "Ready",
-            string.Empty,
-            $"Health      {Pair(raw.MaxHealth, live.MaxHealth)}",
-            $"Aggression  {Pair(raw.Aggression, live.Aggression)}",
-            $"Defence     {Pair(raw.Defense, live.Defense)}",
-            $"Evasion     {Pair(raw.Evasion, live.Evasion)}",
-            $"Strength    {Pair(raw.Strength, live.Strength)}",
-            $"Accuracy    {Pair(raw.Accuracy, live.Accuracy)}",
-            $"Stamina     {Pair(raw.MaxStamina, live.MaxStamina)}",
-            $"Speed       {Pair(raw.Speed, live.Speed)}",
-            string.Empty,
-            row.WeaponSkill > 0
-                ? $"Weapon: {row.WeaponName} (mastery {row.WeaponSkill * 100:0}%)"
-                  + $"   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})"
-                : $"Weapon: {row.WeaponName}   Armour: {row.ArmorName} (wear {row.ArmorWear:0.0})",
-            $"Limb loss: {LostText(row.Lost)}",
-            $"Path: {PathName(row.Path)}");
+                : "Ready");
+
+        ShowStats(raw, live);
+        ShowGear(row);
 
         _nameEdit.Editable = row.IsAlive && row.Status != RosterStatus.Freed;
         _drillPicker.Disabled = !row.IsFitForCampaign;
@@ -364,6 +376,43 @@ public sealed partial class RosterScreen : DojoScreen
         BuildRackRows(row);
         BuildCharmRows(row);
         UpdateRenameControls();
+    }
+
+    /// <summary>The man's numbers, as the reference prints them: a name, and the figure beside it.</summary>
+    /// <remarks>
+    /// Both figures stand on the same line when a wound has moved one: what he was built to, and what
+    /// he would fight at today. The block was padded text before, which only lines up while the face
+    /// is monospaced — ours is not.
+    /// </remarks>
+    private void ShowStats(WarriorStats raw, WarriorStats live)
+    {
+        Clear(_statTerms);
+        GridContainer grid = UiKit.Terms(_statTerms);
+
+        UiKit.Term(grid, "health", Pair(raw.MaxHealth, live.MaxHealth));
+        UiKit.Term(grid, "aggression", Pair(raw.Aggression, live.Aggression));
+        UiKit.Term(grid, "defence", Pair(raw.Defense, live.Defense));
+        UiKit.Term(grid, "evasion", Pair(raw.Evasion, live.Evasion));
+        UiKit.Term(grid, "strength", Pair(raw.Strength, live.Strength));
+        UiKit.Term(grid, "accuracy", Pair(raw.Accuracy, live.Accuracy));
+        UiKit.Term(grid, "stamina", Pair(raw.MaxStamina, live.MaxStamina));
+        UiKit.Term(grid, "speed", Pair(raw.Speed, live.Speed));
+    }
+
+    /// <summary>What he is holding, printed above the rack he would change it at.</summary>
+    private void ShowGear(RosterRow row)
+    {
+        Clear(_gearTerms);
+        GridContainer grid = UiKit.Terms(_gearTerms);
+
+        UiKit.Term(
+            grid,
+            "weapon",
+            row.WeaponSkill > 0 ? $"{row.WeaponName} — mastery {row.WeaponSkill * 100:0}%" : row.WeaponName,
+            Mark.Blade);
+        UiKit.Term(grid, "armour", $"{row.ArmorName} — wear {row.ArmorWear:0.0}", Mark.Shield);
+        UiKit.Term(grid, "limbs", LostText(row.Lost), Mark.None, MutedColor);
+        UiKit.Term(grid, "path", PathName(row.Path), Mark.None);
     }
 
     /// <summary>
