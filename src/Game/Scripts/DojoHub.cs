@@ -13,7 +13,7 @@ public enum DojoTab
     /// <summary>The day's offer, the contract and the party.</summary>
     Day,
 
-    /// <summary>Kadro.</summary>
+    /// <summary>The roster.</summary>
     Roster,
 
     /// <summary>The slave market.</summary>
@@ -356,7 +356,7 @@ public sealed partial class DojoHub : Node
     }
 
     /// <summary>
-    /// The sheet a term is opened on: a name, a province and a seed, with what the seed opens with.
+    /// The sheet a term is opened on: a name, an instructor, a province and a seed.
     /// </summary>
     /// <remarks>
     /// It takes the title's place rather than opening over it, because the title is not a place in the
