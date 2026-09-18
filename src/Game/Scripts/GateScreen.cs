@@ -91,15 +91,15 @@ public sealed partial class GateScreen : CanvasLayer
         said.AddChild(UiKit.OnNight(sheet.Name, UiKit.PaperInk, UiKit.DisplaySize - 6, display: true));
         said.AddChild(UiKit.Body(sheet.Line, UiKit.NightMuted, UiKit.NoteSize + 1));
 
-        // The figure in the gateway, cut out of the same paper the yard's men are.
-        Control man = new() { CustomMinimumSize = new Vector2(120, 216) };
-        man.Draw += () =>
-        {
-            foreach ((Color fill, Vector2[] points) in YardArt.Man())
-            {
-                man.DrawColoredPolygon(points, fill);
-            }
-        };
+        // The figure in the gateway is this man and not a silhouette: the same rig the arena will fight
+        // him with, drawn from his name, so the face the player decides on is the face that comes back
+        // through the gate. The yard's cut-out said "a man"; it could not say "this man".
+        WarriorPortrait man = new(
+            PortraitCrop.Full,
+            new Vector2(120, 216),
+            framed: false,
+            ink: new Color(0.74f, 0.70f, 0.62f));
+        man.Print(default, sheet.Name);
         said.AddChild(man);
 
         PanelContainer from = new();

@@ -1,3 +1,4 @@
+using Domina.Core.Model;
 using Godot;
 
 namespace Domina.Game;
@@ -744,6 +745,8 @@ public static class UiKit
     /// Whether the man belongs to the dojo. <see cref="Indigo"/> down his edge is the only thing that
     /// separates your side from theirs in the arena, where both are dark paper figures.
     /// </param>
+    /// <param name="lost">What he has already lost, so the head in the card carries his blinded eye.</param>
+    /// <param name="alive">Is he alive? A dead man's head is printed in ash.</param>
     public static Control UnitCard(
         string name,
         string trade,
@@ -752,7 +755,9 @@ public static class UiKit
         Color? bar = null,
         bool ours = false,
         bool selected = false,
-        Color? nameColor = null)
+        Color? nameColor = null,
+        BodyPartSet lost = default,
+        bool alive = true)
     {
         PanelContainer panel = new();
         panel.AddThemeStyleboxOverride(
@@ -763,12 +768,20 @@ public static class UiKit
         row.AddThemeConstantOverride("separation", 12);
         Padded(panel, 14, 11).AddChild(row);
 
-        // The portrait is a hole in the card until the rig can draw a head into it. An empty framed
-        // square reads as "a man goes here"; a placeholder drawing would read as a bug.
+        // The square was a hole in the card until the rig could draw a head into it. It is his own head:
+        // the look is keyed on the name (see WarriorLook), so the man on this line is the man the arena
+        // will fight with, and a list of six is six faces rather than six empty frames.
         PanelContainer portrait = new() { CustomMinimumSize = new Vector2(44, 44) };
         portrait.AddThemeStyleboxOverride("panel", FlatStyle(Pressed, border: ours ? Indigo : null, borderWidth: ours ? 3 : 0));
         portrait.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         row.AddChild(portrait);
+
+        if (name.Length > 0)
+        {
+            WarriorPortrait head = new(PortraitCrop.Head, new Vector2(44, 44), framed: false);
+            head.Print(default, name, lost, alive);
+            portrait.AddChild(head);
+        }
 
         VBoxContainer column = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         column.AddThemeConstantOverride("separation", 4);
@@ -812,7 +825,9 @@ public static class UiKit
         Color? bar = null,
         bool ours = false,
         bool selected = false,
-        Color? nameColor = null)
+        Color? nameColor = null,
+        BodyPartSet lost = default,
+        bool alive = true)
     {
         Button button = new()
         {
@@ -827,7 +842,7 @@ public static class UiKit
         button.AddThemeStyleboxOverride("pressed", empty);
         button.AddThemeStyleboxOverride("focus", empty);
 
-        Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor);
+        Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor, lost, alive);
         card.MouseFilter = Control.MouseFilterEnum.Ignore;
         card.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         button.AddChild(card);

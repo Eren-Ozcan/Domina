@@ -241,6 +241,13 @@ public sealed partial class SeasonEndScreen : DojoScreen
             HBoxContainer row = new();
             row.AddThemeConstantOverride("separation", 12);
 
+            // The face over the name on the stone. A dead man is printed in ash, the same grey the
+            // roster greys him with, so the list reads as men who were here and not as a column of text.
+            WarriorPortrait head = new(PortraitCrop.Head, new Vector2(30, 30), framed: false);
+            head.Print(default, name, alive: false);
+            head.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+            row.AddChild(head);
+
             Label named = UiKit.OnNight(name, UiKit.PaperInk, UiKit.BodySize + 1, display: true);
             named.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             row.AddChild(named);

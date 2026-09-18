@@ -458,6 +458,18 @@ public sealed partial class BattleHud : CanvasLayer
             heading.AddThemeConstantOverride("separation", 8);
             column.AddChild(heading);
 
+            // The head on the card is the head on the field. The HUD named the men and the arena drew
+            // them, and with one figure for everybody the player could not tell which of the two
+            // figures the card he is reading belongs to.
+            WarriorPortrait head = new(
+                PortraitCrop.Head,
+                new Vector2(36, 36),
+                framed: false,
+                ink: ours ? new Color(0.62f, 0.70f, 0.86f) : new Color(0.80f, 0.68f, 0.46f));
+            head.Print(default, name);
+            head.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+            heading.AddChild(head);
+
             _name = UiKit.OnNight(name, UiKit.PaperInk, UiKit.HeadSize + 4, display: true);
             _name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             _name.ClipText = true;

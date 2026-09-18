@@ -111,7 +111,22 @@ public sealed partial class HutScreen : DojoScreen
         VBoxContainer said = UiKit.Padded(card, 20, 18);
         said.AddThemeConstantOverride("separation", 6);
 
-        said.AddChild(end.Irreversible
+        HBoxContainer named = new();
+        named.AddThemeConstantOverride("separation", 10);
+        said.AddChild(named);
+
+        // The man the verdict is about, drawn on the card itself. On the night card he is pale, or the
+        // figure disappears into the paper it is cut out of.
+        WarriorPortrait face = new(
+            PortraitCrop.Head,
+            new Vector2(40, 40),
+            framed: false,
+            ink: end.Irreversible ? new Color(0.70f, 0.55f, 0.50f) : null);
+        face.Print(default, end.Name);
+        face.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        named.AddChild(face);
+
+        named.AddChild(end.Irreversible
             ? UiKit.OnNight(end.Name, UiKit.BrickLit, UiKit.HeadSize + 6, display: true)
             : UiKit.OnPaper(end.Name, UiKit.Ink, UiKit.HeadSize + 6, display: true));
 
@@ -143,6 +158,13 @@ public sealed partial class HutScreen : DojoScreen
         {
             HBoxContainer row = new();
             row.AddThemeConstantOverride("separation", 12);
+
+            // The head beside the name: who is on the mat is a face the player knows from the yard,
+            // and a list of three names says nothing about which of his men he is short of tonight.
+            WarriorPortrait head = new(PortraitCrop.Head, new Vector2(30, 30), framed: false);
+            head.Print(default, line.Name);
+            head.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+            row.AddChild(head);
 
             Label named = UiKit.OnPaper(line.Name, UiKit.Ink, UiKit.BodySize + 1, display: true);
             named.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;

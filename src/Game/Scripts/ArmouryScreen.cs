@@ -147,12 +147,30 @@ public sealed partial class ArmouryScreen : DojoScreen
         if (QuartermasterModel.Describe(_dojo, _selected!.Value) is CounterCard card)
         {
             _map.Slots = card.Slots;
-            BuildCounter(card);
+            BuildCounter(card, rows.First(r => r.Id == _selected));
         }
     }
 
-    private void BuildCounter(CounterCard card)
+    private void BuildCounter(CounterCard card, RosterRow man)
     {
+        // The counter served six slots and a forge with no one standing at it, so the player fitted
+        // armour to a name. The man himself is at the head of it now — his own figure, with what he has
+        // already lost missing from it, which is the same thing the slot map says in words.
+        HBoxContainer standing = new();
+        standing.AddThemeConstantOverride("separation", 12);
+        _counter.AddChild(standing);
+
+        WarriorPortrait fitted = new(PortraitCrop.Bust, new Vector2(110, 124));
+        fitted.Print(man);
+        standing.AddChild(fitted);
+
+        VBoxContainer beside = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+        beside.AddThemeConstantOverride("separation", 4);
+        standing.AddChild(beside);
+        beside.AddChild(UiKit.OnPaper(man.Name, UiKit.Ink, UiKit.HeadSize, display: true));
+        beside.AddChild(UiKit.Note($"{man.ArmorName}  ·  {man.WeaponName}", wrap: false));
+
+        _counter.AddChild(UiKit.Rule());
         _counter.AddChild(UiKit.SectionLabel("Armour — six parts, each hit on its own"));
 
         foreach (ArmorSlotRow slot in card.Slots)

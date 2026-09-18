@@ -62,6 +62,8 @@ public sealed partial class RosterScreen : DojoScreen
     private VBoxContainer _rackRows = null!;
     private Label _charmLabel = null!;
     private VBoxContainer _charmRows = null!;
+    private WarriorPortrait _portrait = null!;
+    private Label _portraitCaption = null!;
     private WarriorId? _selected;
 
     /// <summary>Builds the screen and prints the roster.</summary>
@@ -135,13 +137,36 @@ public sealed partial class RosterScreen : DojoScreen
         VBoxContainer man = UiKit.Section(body, "the man", fill: true);
         VBoxContainer kit = UiKit.Section(body, "what he carries", fill: true);
 
+        // The reference puts the man's own figure beside his numbers and names his class under it; a
+        // page of nothing but figures gives the player no one to look at (docs/UI-PAPER-THEATRE.md).
+        // The portrait is the arena's rig posed standing, so what a fight took off him is missing here
+        // too, and the path is the line under it — it is what our men have in place of a class.
+        HBoxContainer face = new();
+        face.AddThemeConstantOverride("separation", 14);
+        man.AddChild(face);
+
+        VBoxContainer plate = new();
+        plate.AddThemeConstantOverride("separation", 6);
+        face.AddChild(plate);
+
+        _portrait = new WarriorPortrait();
+        plate.AddChild(_portrait);
+
+        _portraitCaption = UiKit.Note(string.Empty, wrap: false);
+        _portraitCaption.HorizontalAlignment = HorizontalAlignment.Center;
+        plate.AddChild(_portraitCaption);
+
+        VBoxContainer beside = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        beside.AddThemeConstantOverride("separation", 9);
+        face.AddChild(beside);
+
         _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        man.AddChild(_detail);
+        beside.AddChild(_detail);
 
         // The numbers were printed as a block of padded text, which only lines up while the face is
         // monospaced. An aligned pair of columns says the same thing and cannot drift.
         _statTerms = new VBoxContainer();
-        man.AddChild(_statTerms);
+        beside.AddChild(_statTerms);
 
         HBoxContainer renameRow = new();
         man.AddChild(renameRow);
@@ -256,7 +281,9 @@ public sealed partial class RosterScreen : DojoScreen
                 bar: StatusColor(row.Status),
                 ours: row.IsAlive && row.Status != RosterStatus.Freed,
                 selected: row.Id == _selected,
-                nameColor: row.IsAlive ? null : StatusColor(row.Status));
+                nameColor: row.IsAlive ? null : StatusColor(row.Status),
+                lost: row.Lost,
+                alive: row.IsAlive);
 
             WarriorId id = row.Id;
             button.Pressed += Guarded(_dojo, () =>
@@ -346,6 +373,8 @@ public sealed partial class RosterScreen : DojoScreen
             _releaseButton.Visible = false;
             _releaseNotice.Text = string.Empty;
             _pathRow.Visible = false;
+            _portrait.Clear();
+            _portraitCaption.Text = string.Empty;
             return;
         }
 
@@ -362,6 +391,9 @@ public sealed partial class RosterScreen : DojoScreen
             row.RecoveryDaysRemaining > 0
                 ? $"Infirmary: {row.RecoveryDaysRemaining} days"
                 : "Ready");
+
+        _portrait.Print(row);
+        _portraitCaption.Text = row.IsAlive ? PathName(row.Path) : "fallen";
 
         ShowStats(raw, live);
         ShowGear(row);

@@ -33,6 +33,7 @@ public sealed partial class MarketScreen : DojoScreen
     private VBoxContainer _list = null!;
     private Label _summary = null!;
     private Label _detail = null!;
+    private WarriorPortrait _face = null!;
     private Button _buyButton = null!;
     private Label _notice = null!;
     private Label _sakeLabel = null!;
@@ -72,8 +73,22 @@ public sealed partial class MarketScreen : DojoScreen
         };
         panel.AddThemeConstantOverride("separation", 10);
 
-        _detail = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        panel.AddChild(_detail);
+        // The candidate stands beside his own numbers. His look is keyed on his name, so the man weighed
+        // at the stall is the man who walks into the yard when he is bought — the face does not change
+        // at the moment of the purchase, which is the moment the player is looking at him.
+        HBoxContainer weighed = new();
+        weighed.AddThemeConstantOverride("separation", 14);
+        panel.AddChild(weighed);
+
+        _face = new WarriorPortrait(PortraitCrop.Bust, new Vector2(132, 150));
+        weighed.AddChild(_face);
+
+        _detail = new Label
+        {
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        weighed.AddChild(_detail);
 
         _buyButton = new Button { Text = "Buy" };
         _buyButton.Pressed += Guarded(_dojo, Buy);
@@ -171,6 +186,7 @@ public sealed partial class MarketScreen : DojoScreen
         if (row.Name is null)
         {
             _detail.Text = "Nobody at the stall today.";
+            _face.Clear();
             _buyButton.Disabled = true;
             _notice.Text = string.Empty;
             return;
@@ -178,6 +194,8 @@ public sealed partial class MarketScreen : DojoScreen
 
         WarriorStats stats = row.Stats;
         WarriorStats? best = BestLivingStats();
+
+        _face.Print(default, row.Name);
 
         _detail.Text = string.Join(
             '\n',

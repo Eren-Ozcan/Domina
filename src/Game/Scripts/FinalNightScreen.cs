@@ -181,7 +181,20 @@ public sealed partial class FinalNightScreen : DojoScreen
                 UpdateButton();
             };
 
-            _partyList.AddChild(box);
+            // The head beside the tick: on the last night the player is choosing between men he has
+            // trained for a season, and a column of ticked names does not say which of them he is sending.
+            HBoxContainer line = new();
+            line.AddThemeConstantOverride("separation", 8);
+
+            WarriorPortrait head = new(PortraitCrop.Head, new Vector2(28, 28), framed: false);
+            head.Print(default, candidate.Name, alive: candidate.CanStand);
+            head.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+            line.AddChild(head);
+
+            box.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            line.AddChild(box);
+
+            _partyList.AddChild(line);
         }
     }
 
