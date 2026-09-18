@@ -429,8 +429,51 @@ public static class UiKit
             color ?? (count == limit ? Ink : Muted),
             FigureSize,
             display: true));
-        row.AddChild(Note($"of {limit.ToString(System.Globalization.CultureInfo.InvariantCulture)} {label}"));
+        row.AddChild(Note($"of {limit.ToString(System.Globalization.CultureInfo.InvariantCulture)} {label}", wrap: false));
         return row;
+    }
+
+    /// <summary>
+    /// The block a set of terms is read off: a label in the left column, its figure in the right.
+    /// </summary>
+    /// <remarks>
+    /// The reference game's contract sheet puts what a job pays and what it costs on two lines with
+    /// their labels aligned, and that alignment is the whole reason the pair can be compared at a
+    /// glance. A run of sentences cannot be compared, which is what our board printed before.
+    /// </remarks>
+    public static GridContainer Terms(Control parent)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+
+        GridContainer grid = new() { Columns = 2, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        grid.AddThemeConstantOverride("h_separation", 14);
+        grid.AddThemeConstantOverride("v_separation", 3);
+        parent.AddChild(grid);
+        return grid;
+    }
+
+    /// <summary>One line of a <see cref="Terms"/> block: what it is, and the figure it stands at.</summary>
+    /// <param name="grid">The block the line is added to.</param>
+    /// <param name="label">What the figure is — "reward", "setting out".</param>
+    /// <param name="value">The figure itself, already worded.</param>
+    /// <param name="mark">The emblem printed before the figure; <see cref="Mark.None"/> for none.</param>
+    /// <param name="color">The figure's ink; the ordinary ink when it is not given.</param>
+    public static void Term(GridContainer grid, string label, string value, Mark mark = Mark.None, Color? color = null)
+    {
+        ArgumentNullException.ThrowIfNull(grid);
+
+        grid.AddChild(Body(label, Muted, NoteSize, wrap: false));
+
+        HBoxContainer figure = new();
+        figure.AddThemeConstantOverride("separation", 5);
+        if (mark != Mark.None)
+        {
+            figure.AddChild(new CenterContainer { CustomMinimumSize = new Vector2(12, 0) });
+            figure.GetChild<CenterContainer>(0).AddChild(Emblem(mark, color ?? Muted));
+        }
+
+        figure.AddChild(Body(value, color, BodySize, wrap: false));
+        grid.AddChild(figure);
     }
 
     /// <summary>
@@ -1152,6 +1195,21 @@ public static class UiKit
 
         theme.SetFontSize("font_size", "CheckBox", BodySize);
         theme.SetColor("font_color", "CheckBox", Ink);
+
+        // A field is a line ruled on the paper, not a slab of the engine's default grey: the one place
+        // the player writes on a sheet has to be made of the same stuff as the sheet.
+        StyleBoxFlat field = FlatStyle(Pressed, Edge);
+        field.ContentMarginLeft = field.ContentMarginRight = 12;
+        field.ContentMarginTop = field.ContentMarginBottom = 8;
+        theme.SetStylebox("normal", "LineEdit", field);
+        theme.SetStylebox("focus", "LineEdit", FlatStyle(Surface, Ink));
+        theme.SetStylebox("read_only", "LineEdit", FlatStyle(Pressed, Edge));
+        theme.SetColor("font_color", "LineEdit", Ink);
+        theme.SetColor("font_placeholder_color", "LineEdit", Muted);
+        theme.SetColor("font_uneditable_color", "LineEdit", Muted);
+        theme.SetColor("caret_color", "LineEdit", Ink);
+        theme.SetColor("selection_color", "LineEdit", new Color(Indigo, 0.30f));
+        theme.SetFontSize("font_size", "LineEdit", BodySize);
 
         return theme;
     }
