@@ -171,17 +171,11 @@ so the layout can be looked at without playing a day to it — the same arrangem
   over the yard. Nothing calls `Ask` yet, because there is no Twitch or Kick connection in this build,
   so the gate stands empty and the crowd panels in 6b and 6d say so rather than offering switches.
 - **Sound.** There is none, so the settings sheet names the panel and leaves it unwired.
-- **Carrying a term into the next one (6h).** The closing sheet counts what a next term would inherit,
-  but the core ends a term and frees the slot; nothing yet opens a second term with the first one's
-  men. The panel says so plainly.
 - **The three player-pressed ends of the tribunal (6f).** GDD §6 gives the verdict to the crowd, with
   an artificial crowd standing in when nobody is watching, so the hut prints what each end costs and
   the player's own act is to send the yard to bed.
 - **The per-man pull-out (5b).** GDD §5 makes the order the party's; the confirm sheet states the cost
   first, as the design asks, but the order it gives pulls everybody.
-- **A portrait on the man's own page.** The reference carries a full-body portrait and a class name on
-  its gladiator panel, and ours prints the numbers with nothing to look at. The rig that draws a
-  warrior in the yard exists; nothing poses it for the sheet yet.
 - **The shrine, the desk and the ledger (4e, 4f).** The canvas's lower boards (2a–4g) were not in the
   file that was handed over, so those destinations are not in the yard — nothing in the yard leads
   nowhere.

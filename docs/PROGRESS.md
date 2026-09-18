@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-17 (three more seasons played by hand, none of them reaching the last night — and the reason turned out to be the harness: a played season could not give the one order the game gives, so the pull-out is now a move; before it: the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind; before it: the journal gets its reader — Domina.Sim --replay)
+Last updated: 2026-09-17 (six seasons played by hand at once and the last night reached twice — the harness now lets the payroll be ended, gives the bench a fight, warns before the tribunal kills, names every refusal and keeps a warrior's number his for the season; before it: three more seasons played by hand, none of them reaching the last night, and the pull-out became a move; before it: the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,97 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-09-17 (third round) — Six seasons played at once, the last night reached twice, and the five things the screen never said
+
+**Six agents each played a full season through `--play`**, on fresh seeds, with no guidance beyond the
+move vocabulary and no access to the source: 7101 and 7202 on Opus, 7303 and 7404 on Sonnet, 7505 and
+7606 on Haiku. It is the first round where the climax was seen at all.
+
+| Seed | Outcome | Heads | Gate | Last night |
+|---|---|---|---|---|
+| 7101 | closed day 154, 1074 gold, 0 men | 12 | day 9 | never |
+| 7202 | closed day 138, 1531 gold, 0 men | 9 | day 22 | never |
+| 7303 | day 181, **reached it**, lost bout 1 | 5 | day 10 | 0 of 5 |
+| 7404 | day 181, **reached it**, lost bout 2 | 10 | day 10 | 1 of 5 |
+| 7505 | closed day 154, 0 gold, 0 men | 3 | day 10 | never |
+| 7606 | day 180 alive with one man | 3 | day 36 | **never opened** |
+
+**Two of six reached the last night, against 0 of 7 over the two earlier rounds.** Both did it the
+same way: refuse every Heavy and Dire posting, stop hunting bounties entirely (7404 gave up after
+three hunts cost three men), and spend the season on the board's cheap end. Both then lost inside two
+bouts with eight men, and both drew the same conclusion unprompted — the night is not priced like a
+season's fight, and eight men is not a roster for it.
+
+**The deaths came in two shapes, and the shape followed the purse, not the seed.** 7101 and 7202 died
+**rich**: 1074 and 1531 gold, thirteen and eleven buildings, nine and eight staff, and no men left at
+all. 7505 and 7606 died **starved**: gold, food and water at zero from roughly day 78 and 100 days of
+watching the dojo decay. Neither shape is the one the earlier rounds died of (a whole party lost in
+one engagement), and the rich one has a single cause, named by both players without being asked:
+**the payroll**. A post costs nothing to fill and then draws its wage every day forever, 40 and 44
+gold a day at the peak, and the harness had no move to end it.
+
+**Five things were fixed, all of them in the harness, none of them in the core.** Each one is a place
+where the game knew something and the screen did not say it:
+
+- **the wage is a lease, and the lease can now be ended.** `dismiss <post>` is a move. The core has
+  had `DojoState.Dismiss` since the staff layer landed — letting someone go on a bad day is the one
+  gear the economy has (GDD §10) — and `--play` had only the hiring half of it. The standing now
+  prices every post and adds the bill up (`Monk 4g/day … payroll 10 gold a day`), the `DRAW` line
+  says how much of the day's gold is wages, and taking a post on writes the wage into the log;
+- **the threat word stopped leading the line.** The board now reads `3 enemies, health 700 (233 each)
+  [Heavy]`, with a standing note that the word is the day's band read off the calendar and not a
+  comparison with the roster. Three players worked out by burying men that a one-enemy "Heavy" is a
+  free 150 gold and a three-enemy "Heavy" is a funeral, and that the health behind the same word
+  roughly doubles across a season while the word does not move;
+- **the tribunal warns before it kills.** The roster block prints the threshold and what moves
+  honour, and flags each man under it — `HONOUR BELOW THE THRESHOLD`, `SUMMONED`, or `STANDS BEFORE
+  THE TRIBUNAL, the verdict comes when this day closes`. Three of the six lost a man to seppuku and
+  none of them had been told the rule existed;
+- **the bench can be sent.** `expedition 0 men:0,3,5`, and the same on `bounty` and `night`, names the
+  party by the roster's numbers; a bare number still means "the best n". The party was taken off the
+  top by quality and nothing else could be asked of it, so the bottom four never fought, never gained
+  and were still raw on the night they were needed — three players reported the trap and none had a
+  move that reached it;
+- **the refusals name the rule.** `retire` gives the victory count against the twelve the house asks
+  for, `path` the training days against the twenty, `class` the hall that is not standing and its
+  price, `fit` whether the store is empty or the slots are full and what the man already wears,
+  `staff` the building the post belongs to. One player spent four turns guessing at a single one of
+  these and never found it. The charms a man wears are now on his roster line, which is what made two
+  120-gold purchases wasted.
+
+**And the numbers stopped moving under the player.** The roster was printed alphabetically and
+numbered by position, so every hire and every death renumbered the men below it: a player read "6" in
+the morning, wrote `drill 6` an hour later and drilled somebody else — two veterans went onto the
+wrong exercise that way. A number is now handed out once, on the day the man first appears, and never
+handed out again; a dead man's number is not reused. **This is the one change that breaks an old
+script**: a pre-change script's warrior indices no longer mean the same men, and replaying the six
+seasons verbatim proves it — 7303, 7404, 7505 and 7606 land exactly where their players left them,
+while 7101 and 7202 end earlier (day 85 and day 99) because their `drill`, `class`, `path` and `fit`
+lines now reach different men or nobody. Scripts written from here on replay cleanly; the four that
+have no warrior-indexed moves already do.
+
+**One more line was added beside them**, because it cost a player his finale: `night` asked too early
+now says *when* it opens — the phase turns to `FinalNight` when day 180 **closes** (`Season.cs`), so a
+player reading the standing on day 180 and typing `night` was told only that the season was "Running".
+7606 played 180 correct days and never saw the climax it had opened the gate for on day 36.
+
+**Left open, and deliberately not touched: `pull:` does not mean what every player read it to mean.**
+The order is the core's `RetreatWhenLosing`, and it fires only when *both* `AlliesStanding <
+EnemiesStanding` **and** the health share is under the threshold (`IRetreatPolicy.cs`). So a party of
+four sent against one or two enemies cannot trip the first condition until it has already lost three
+men, and a lone man can never trip it at all. Five of the six players reported the order as broken —
+one lost four men at `pull:0.5`, another three at `pull:0.6`, a third stopped writing it after
+testing it solo. They are reading it correctly: as a batch policy it is a sensible class, and as the
+player's hand on the key it is not the same thing. The brief now states both conditions; **whether
+`--play` should bind `pull:` to a plain health threshold instead is a design question and is left to
+the user.**
+
+New tests: `PlayCommandTests` 8 — the season-long number, the payroll and its dismissal, the post that
+names its building, the four refusals that name their rule, the named party, the tribunal's threshold
+on screen, the board's band note, and the night that says when it opens.
 
 ---
 
