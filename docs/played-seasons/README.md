@@ -14,6 +14,21 @@ dotnet run --project src/Domina.Sim -- --play docs/played-seasons/<round>/<file>
 
 The reports these seasons produced are in `PROGRESS.md`, one entry per round.
 
+## The pull-out order
+
+A move can carry `pull:0.5`, and it means one exact thing: **pull out when we are losing** — the party
+is outnumbered on the field *and* under that share of health. Both conditions, not either. It is the
+core's `RetreatWhenLosing`, the batch bed's stand-in for a player, and it is deliberately not a plain
+health threshold: a player does not call off an expedition over one wound, and an order watching
+health alone abandons more than 80% of 3v3 fights.
+
+The consequence is worth writing down, because five played seasons reported the order as broken when
+it was not: **send four men at one enemy and the order cannot fire**, because you are never
+outnumbered until three of them are down. A lone man can never trip it at all. If the fight has to be
+breakable off, that is what the party size is for — or the fight is one to fight to the end.
+
+This is the harness only. The game's own key is a key: it is pressed, and the party leaves.
+
 ## Round 1 — 2026-09-14, three seasons
 
 | File | Seed | Play |
