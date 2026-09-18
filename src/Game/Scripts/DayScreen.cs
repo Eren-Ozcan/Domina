@@ -57,11 +57,11 @@ public sealed partial class DayScreen : DojoScreen
     private Label _readingLabel = null!;
     private VBoxContainer _patronRows = null!;
     private Label _bountyLabel = null!;
-    private VBoxContainer _partyList = null!;
-    private HBoxContainer _partyHeading = null!;
+    private Label _partyLine = null!;
     private int _partyLimit;
     private Label _verdictLabel = null!;
     private Button _sendButton = null!;
+    private SortieScreen? _terms;
     private Button _bountyButton = null!;
     private Button _acceptButton = null!;
     private Button _restButton = null!;
@@ -156,17 +156,11 @@ public sealed partial class DayScreen : DojoScreen
 
         VBoxContainer ours = UiKit.Section(columns, null, fill: true);
 
-        // The refusal text below already says why the party will not do, but it says it in a sentence.
-        // The counter says the same thing in two characters, beside the question it answers.
-        _partyHeading = new HBoxContainer();
-        _partyHeading.AddThemeConstantOverride("separation", 14);
-        ours.AddChild(_partyHeading);
-
-        ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        ours.AddChild(scroll);
-
-        _partyList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        scroll.AddChild(_partyList);
+        // The men are no longer ticked here. Picking a party and reading what the road pays were two
+        // screens apart, which asked the player to choose his men before anything had told him what the
+        // job was worth; both now happen on the terms sheet (SortieScreen), which this button opens.
+        _partyLine = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        ours.AddChild(_partyLine);
 
         _verdictLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         ours.AddChild(_verdictLabel);
@@ -225,7 +219,6 @@ public sealed partial class DayScreen : DojoScreen
         ShowReading(OfferModel.ReadOffer(_dojo));
         BuildPatronRows();
 
-        BuildPartyList();
         ShowBounty(OfferModel.DescribeBounty(_dojo));
         UpdateButtons();
     }
@@ -427,70 +420,6 @@ public sealed partial class DayScreen : DojoScreen
         return UiKit.Chip(figure, name, state, mark, $"−{draw} / day · {days}d");
     }
 
-    private void BuildPartyList()
-    {
-        Clear(_partyList);
-        IReadOnlyList<PartyCandidate> candidates = OfferModel.Candidates(_dojo);
-
-        // Those who dropped off the roster must not stay selected: if a dead or wounded warrior stays in
-        // the selection, the verdict says "not on the roster" and the button looks disabled for no reason.
-        _party.IntersectWith(candidates.Where(c => c.Fit).Select(c => c.Id));
-
-        if (candidates.Count == 0)
-        {
-            _partyList.AddChild(new Label { Text = "Nobody left on the roster." });
-            return;
-        }
-
-        foreach (PartyCandidate candidate in candidates)
-        {
-            // The bar is the gate this screen cares about and nothing else: a man is fit to go or he is
-            // in the infirmary. Drawing a fraction of his power here would invite the player to compare
-            // two numbers the resolver does not compare.
-            Button box = UiKit.UnitButton(
-                candidate.Name,
-                candidate.Fit ? $"power {candidate.Score:0}" : string.Empty,
-                candidate.Fit ? 1 : 0,
-                candidate.Fit
-                    ? "Fit for the road"
-                    : $"Infirmary — {candidate.RecoveryDaysRemaining} days",
-                bar: candidate.Fit ? GoodColor : WarningColor,
-                ours: candidate.Fit,
-                selected: _party.Contains(candidate.Id),
-                nameColor: candidate.Fit ? null : MutedColor);
-            box.Disabled = !candidate.Fit;
-
-            WarriorId id = candidate.Id;
-            box.Toggled += pressed =>
-            {
-                if (pressed)
-                {
-                    _party.Add(id);
-                }
-                else
-                {
-                    _party.Remove(id);
-                }
-
-                // A man picked is a decision half made: the clock waits rather than letting the
-                // morning arrive on top of it. It runs again the moment the selection is empty
-                // (build step 8).
-                if (_party.Count > 0)
-                {
-                    Clock?.Hold(PartyHold);
-                }
-                else
-                {
-                    Clock?.Release(PartyHold);
-                }
-
-                UpdateButtons();
-            };
-
-            _partyList.AddChild(box);
-        }
-    }
-
     private void ShowBounty(BountyCard? card)
     {
         Clear(_bountyTerms);
@@ -533,50 +462,51 @@ public sealed partial class DayScreen : DojoScreen
             WarningColor);
     }
 
+    /// <summary>
+    /// Dresses the day's three acts.
+    /// </summary>
+    /// <remarks>
+    /// The party's own verdict is not read here any more: the men are ticked on the terms sheet, which
+    /// prints the refusal beside its own act. What this screen still has to say is whether there is
+    /// anybody to send at all — an act opening a sheet with an empty roster behind it is a door onto
+    /// nothing.
+    /// </remarks>
     private void UpdateButtons()
     {
-        List<WarriorId> party = [.. _party];
-        PartyVerdict offer = OfferModel.Judge(_dojo, party);
+        int fit = OfferModel.Candidates(_dojo).Count(candidate => candidate.Fit);
         BountyContract? contract = _dojo.Bounty;
-        PartyVerdict bounty = contract is null
-            ? new PartyVerdict(ExpeditionRefusal.StaleOffer, party.Count)
-            : OfferModel.JudgeBounty(_dojo, contract, party);
 
-        _sendButton.Disabled = !offer.CanSend;
-        _bountyButton.Disabled = !bounty.CanSend;
         _bountyButton.Visible = contract is not null;
         _acceptButton.Visible = contract is not null;
         _acceptButton.Disabled = contract is null || _dojo.AcceptedBountyDay is not null;
         _restButton.Disabled = false;
 
-        Clear(_partyHeading);
-        _partyHeading.AddChild(new Label
-        {
-            Text = "Who goes on the expedition?",
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        });
-        _partyHeading.AddChild(UiKit.Counter("chosen", party.Count, _partyLimit));
+        _partyLine.Text = _party.Count > 0
+            ? $"{_party.Count} of {_partyLimit} ticked — the men are chosen on the terms sheet."
+            : $"Up to {_partyLimit} may walk this one. The men are chosen on the terms sheet.";
+        _partyLine.AddThemeColorOverride("font_color", MutedColor);
 
         // A blocked act is never hidden and never brick: it stays where the act will be, pressed into
-        // the paper, and the line beside it says the number that refuses it (design canvas → 7a).
-        if (offer.Refusal is ExpeditionRefusal refusal)
+        // the paper, with the line beside it saying what refuses it (design canvas → 7a).
+        if (fit == 0)
         {
-            _verdictLabel.Text = RefusalText(refusal);
+            _verdictLabel.Text = "Nobody in the yard can walk out today.";
             _verdictLabel.AddThemeColorOverride("font_color", WarningColor);
-            UiKit.Refused(_sendButton, RefusalText(refusal));
+            UiKit.Refused(_sendButton, "Nobody is fit for the road.");
+            _bountyButton.Disabled = true;
+            return;
         }
-        else
-        {
-            _verdictLabel.Text = "The seats are full.";
-            _verdictLabel.AddThemeColorOverride("font_color", MutedColor);
-            UiKit.Act(_sendButton);
-            _sendButton.Disabled = false;
-        }
+
+        _verdictLabel.Text = "The terms are read before the gate opens.";
+        _verdictLabel.AddThemeColorOverride("font_color", MutedColor);
+        UiKit.Act(_sendButton);
+        _sendButton.Disabled = false;
+        _bountyButton.Disabled = contract is null;
     }
 
-    private void SendToOffer()
+    /// <summary>Opens the terms; the men are ticked there and the sending is what accepting does.</summary>
+    private void SendToOffer() => ReadTerms(null, chosen =>
     {
-        List<WarriorId> chosen = [.. _party];
         if (!OfferModel.Judge(_dojo, chosen).CanSend)
         {
             return;
@@ -591,7 +521,7 @@ public sealed partial class DayScreen : DojoScreen
             setup,
             BattleSeed(),
             battle => Log(new Expedition().Settle(dojo, setup, battle), dojo)));
-    }
+    });
 
     private void SendToBounty()
     {
@@ -600,23 +530,85 @@ public sealed partial class DayScreen : DojoScreen
             return;
         }
 
-        List<WarriorId> chosen = [.. _party];
-        if (!OfferModel.JudgeBounty(_dojo, contract, chosen).CanSend)
+        ReadTerms(contract, chosen =>
+        {
+            if (!OfferModel.JudgeBounty(_dojo, contract, chosen).CanSend)
+            {
+                return;
+            }
+
+            DojoState dojo = _dojo;
+            List<RosterEntry> party = [.. OfferModel.Party(dojo, chosen)];
+            BattleSetup setup = Expedition.PrepareBounty(dojo, contract, party, collectEvents: true);
+
+            Fight(new PendingBattle(
+                setup,
+                BattleSeed(),
+                battle => Log(
+                    new Expedition().SettleBounty(dojo, contract, party, setup, battle),
+                    contract,
+                    dojo)));
+        });
+    }
+
+    /// <summary>
+    /// Opens the terms over the day: the men are ticked there, and sending is what accepting them does.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The sheet is opened over this screen rather than handed to the hub, because refusing must leave
+    /// the day exactly as it was — the ticked men included, which a screen the hub closed and rebuilt
+    /// would lose.
+    /// </para>
+    /// <para>
+    /// The clock is held for as long as the sheet stands: a party half chosen is a decision half made,
+    /// and the morning must not arrive on top of it (build step 8).
+    /// </para>
+    /// </remarks>
+    /// <param name="contract">The promise being kept, or <c>null</c> for the day's own offer.</param>
+    /// <param name="send">What accepting the terms does, with the men ticked on the sheet.</param>
+    private void ReadTerms(BountyContract? contract, Action<IReadOnlyList<WarriorId>> send)
+    {
+        if (_terms is not null)
         {
             return;
         }
 
-        DojoState dojo = _dojo;
-        List<RosterEntry> party = [.. OfferModel.Party(dojo, chosen)];
-        BattleSetup setup = Expedition.PrepareBounty(dojo, contract, party, collectEvents: true);
+        SortieScreen terms = new()
+        {
+            Dojo = _dojo,
+            Contract = contract,
+            Chosen = [.. _party],
+            Layer = 4,
+        };
 
-        Fight(new PendingBattle(
-            setup,
-            BattleSeed(),
-            battle => Log(
-                new Expedition().SettleBounty(dojo, contract, party, setup, battle),
-                contract,
-                dojo)));
+        terms.Refused = Remember;
+        terms.Accepted = chosen =>
+        {
+            Remember(chosen);
+            send(chosen);
+        };
+
+        _terms = terms;
+        Clock?.Hold(PartyHold);
+        AddChild(terms);
+    }
+
+    /// <summary>Closes the sheet and keeps the men it was left holding.</summary>
+    private void Remember(IReadOnlyList<WarriorId> chosen)
+    {
+        _party.Clear();
+        _party.UnionWith(chosen);
+        Clock?.Release(PartyHold);
+
+        if (_terms is not null)
+        {
+            RemoveChild(_terms);
+            _terms.QueueFree();
+            _terms = null;
+        }
+
+        UpdateButtons();
     }
 
     /// <summary>
@@ -757,15 +749,6 @@ public sealed partial class DayScreen : DojoScreen
         BattleOutcome.PlayerWithdrawal => "The party left the field.",
         BattleOutcome.PlayerWipe => "The party was wiped out.",
         _ => "The fight stalled and was broken off.",
-    };
-
-    private static string RefusalText(ExpeditionRefusal refusal) => refusal switch
-    {
-        ExpeditionRefusal.EmptyParty => "Nobody selected.",
-        ExpeditionRefusal.StaleOffer => "This is not today's offer.",
-        ExpeditionRefusal.WrongPartySize => "The party size does not fit this job.",
-        ExpeditionRefusal.Unfit => "One of those selected is not fit for an expedition.",
-        _ => "One of those selected is not on the roster.",
     };
 
     private static string ThreatName(ThreatBand threat) => threat switch
