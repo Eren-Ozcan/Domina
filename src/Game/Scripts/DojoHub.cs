@@ -683,11 +683,50 @@ public sealed partial class DojoHub : Node
         }
 
         // The way out of a sheet is always the same and it is always back to the ground it opened
-        // over — the corner of the paper says so, and the key agrees with the corner.
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _screen is not null)
+        // over — the corner of the paper says so, and the key agrees with the corner. Standing in the
+        // yard with nothing over it, the same key stops the world instead: it is the key a player
+        // presses looking for the settings, and the four acts are where the settings are.
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
         {
-            ShowYard();
+            if (_screen is not null)
+            {
+                ShowYard();
+            }
+            else if (_stopped is null)
+            {
+                _clock.Set(ClockSpeed.Paused);
+                ShowStopped();
+            }
+            else
+            {
+                CloseStopped();
+                _clock.Set(ClockSpeed.Normal);
+            }
+
             GetViewport().SetInputAsHandled();
+        }
+    }
+
+    /// <summary>
+    /// The speed the strip was told to run at — and the world's four acts with it.
+    /// </summary>
+    /// <remarks>
+    /// The bar's <c>||</c> and the space bar are the same act and must land in the same place: the
+    /// button used to stop only the clock, so a player who never found the key could stop the world
+    /// and still never see the four acts — which is the only way into the settings once a term is
+    /// running (design canvas → 6e).
+    /// </remarks>
+    private void Choose(ClockSpeed speed)
+    {
+        _clock.Set(speed);
+
+        if (speed == ClockSpeed.Paused && _screen is null)
+        {
+            ShowStopped();
+        }
+        else
+        {
+            CloseStopped();
         }
     }
 
@@ -1094,7 +1133,7 @@ public sealed partial class DojoHub : Node
             Button button = new() { Text = text };
             button.AddThemeFontSizeOverride("font_size", UiKit.NoteSize);
             ClockSpeed chosen = speed;
-            button.Pressed += () => _clock.Set(chosen);
+            button.Pressed += () => Choose(chosen);
             row.AddChild(UiKit.WayOut(button));
         }
 
