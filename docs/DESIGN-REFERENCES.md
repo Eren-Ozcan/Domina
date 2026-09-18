@@ -228,6 +228,66 @@ preparation axes are read at once.
 
 ---
 
+## 7. How much a line of interface may say
+
+**The complaint that opened this:** the settings sheet explained every switch in a full
+sentence printed under it, and the screens generally over-explain. A sheet that answers
+questions nobody asked is read as a wall and then not read at all.
+
+**The ground — people read a fraction of what is printed.** Nielsen's reading study puts the
+ceiling at **28% of the words on an average page, and more realistically about 20%**. Anything
+past the first clause is therefore a gamble: it costs every player screen space and costs most
+of them nothing but the scanning.
+
+**The ground — progressive disclosure.** NN/g's rule is to show the few things most users need
+and **defer the rest to a second layer that the user asks for**. The layer is not a lesser
+version of the content; it is the same content, fetched. Microsoft's Win32 guidance says the
+same for settings specifically: the common case is visible, the detail is behind a disclosure.
+
+**The ground — what a tooltip may and may not carry.** NN/g's tooltip guidelines are blunt:
+tooltips are **microcontent**, "short text fragments intended to be self-sufficient", and
+*"don't use tooltips for information that is vital to task completion"* — anything the player
+must hold in working memory to act stays on screen. They must also not repeat a visible label.
+
+**The accessibility floor.** WCAG 2.1 SC 1.4.13 (*Content on Hover or Focus*) requires anything
+revealed this way to be **dismissable, hoverable and persistent**, and the game-accessibility
+guidance adds the part that matters for a game aimed at Steam: **hover-only content is content
+a pad and a keyboard never reach**, so the same clause must be reachable by focus.
+
+### The rule this repo follows
+
+| What it is | Where it goes |
+|---|---|
+| What a thing is called, and what it is set to now | **Always printed**, on the control |
+| What an act costs, and why it is refused | **Always printed** — it is needed to decide, so it is never in a fetched layer |
+| What a setting or a term is *for*, one clause | **The chalk line** — fetched by hover or focus |
+| The rationale, the measurement, the history | **The docs**, never the screen |
+
+**How it is built:** `UiKit.ChalkLine` puts one fixed-height line at the foot of a sheet and
+`UiKit.Explains` gives a control the clause it prints there while the hand or the focus is on
+it. It is the yard's chalk name brought onto paper: the design canvas already refused floating
+tooltip cards (7b, 8a), and a line in one fixed place keeps that refusal while answering the
+same question. Because the clause sits outside the control, nothing is obscured, there is
+nothing to dismiss, and the keyboard reaches it — the three things SC 1.4.13 asks for.
+
+**Where we depart from the sources:** the usual tooltip appears after a delay, in a floating
+card, next to the cursor. Ours never floats and never moves. The cost is that the eye travels
+to the foot of the sheet; the gain is that the sheet never jumps, nothing is covered, and a
+player on a pad gets the same clause by tabbing to the control.
+
+**What it does not verify:** none of these sources gives a word count. "One clause" is our own
+limit, taken from the design canvas's own rule for the yard — a destination names itself with
+exactly one clause saying what it does.
+
+> [How Little Do Users Read? — NN/g](https://www.nngroup.com/articles/how-little-do-users-read/) ·
+> [Progressive Disclosure — NN/g](https://www.nngroup.com/articles/progressive-disclosure/) ·
+> [Tooltip Guidelines — NN/g](https://www.nngroup.com/articles/tooltip-guidelines/) ·
+> [Progressive Disclosure Controls — Microsoft Win32 UX Guide](https://learn.microsoft.com/en-us/windows/win32/uxguide/ctrl-progressive-disclosure-controls) ·
+> [Understanding SC 1.4.13: Content on Hover or Focus — W3C](https://www.w3.org/WAI/WCAG21/Understanding/content-on-hover-or-focus.html) ·
+> [Game Accessibility Guidelines — full list](https://gameaccessibilityguidelines.com/full-list/)
+
+---
+
 ## Where each number comes from
 
 Commercial games do not publish their balance constants. So **we take no numbers from the

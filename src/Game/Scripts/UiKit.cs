@@ -1019,6 +1019,66 @@ public static class UiKit
     public static Control Emblem(Mark mark, Color? color = null, int size = 12) =>
         new MarkIcon { Mark = mark, Tint = color ?? Muted, CustomMinimumSize = new Vector2(size, size) };
 
+    /// <summary>
+    /// The chalk line at the foot of a sheet: one clause about whatever the hand is over.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It is the yard's chalk name brought onto paper. The yard already answers "what is this" under
+    /// the cursor and never in a floating card (design canvas -> 7b, 8a), and a sheet answers it the
+    /// same way: the clause is printed in <b>one fixed place</b>, at the foot of the paper, rather
+    /// than over the control the player is reaching for.
+    /// </para>
+    /// <para>
+    /// The line keeps its height whether or not it is saying anything, so a sheet does not jump as the
+    /// hand crosses it. Nothing that has to be read to act belongs here — the label and the reading on
+    /// the control itself carry that, and this line only says what the setting is for.
+    /// </para>
+    /// </remarks>
+    public static Label ChalkLine(Control column)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+
+        column.AddChild(Rule());
+
+        Label line = Note(string.Empty, Muted, wrap: false);
+        line.CustomMinimumSize = new Vector2(0, NoteSize + 6);
+        line.VerticalAlignment = VerticalAlignment.Center;
+        column.AddChild(line);
+        return line;
+    }
+
+    /// <summary>
+    /// Gives a control the clause it prints on the sheet's chalk line while it is under the hand.
+    /// </summary>
+    /// <remarks>
+    /// <b>The focus is wired as well as the cursor.</b> A clause that only the mouse can reach is a
+    /// clause a player on a pad never sees, and the game is aimed at a machine that is often played
+    /// with one; the same clause is therefore printed when the control takes keyboard focus
+    /// (WCAG 2.1 SC 1.4.13 asks for the same thing of anything shown on hover).
+    /// </remarks>
+    public static T Explains<T>(T control, Label line, string clause)
+        where T : Control
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        ArgumentNullException.ThrowIfNull(line);
+
+        control.MouseEntered += () => line.Text = clause;
+        control.FocusEntered += () => line.Text = clause;
+        control.MouseExited += () => Erase(line, clause);
+        control.FocusExited += () => Erase(line, clause);
+        return control;
+    }
+
+    /// <summary>Clears the line, but only if it is still saying what this control put there.</summary>
+    private static void Erase(Label line, string clause)
+    {
+        if (line.Text == clause)
+        {
+            line.Text = string.Empty;
+        }
+    }
+
     /// <summary>A horizontal rule — the cheapest way to end a block without adding another panel.</summary>
     public static Control Rule(bool onNight = false) =>
         new ColorRect

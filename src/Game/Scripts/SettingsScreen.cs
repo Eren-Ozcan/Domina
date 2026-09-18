@@ -8,13 +8,15 @@ namespace Domina.Game;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every line says what it costs, the way the rest of the game does — a setting that only names itself
-/// makes the player press it to find out (design canvas → 6d).
+/// <b>A row is a label and its reading; the sentence about it waits to be asked for.</b> The clause
+/// each setting used to print under itself now goes to the chalk line at the foot of the sheet, where
+/// the hand or the keyboard focus fetches it (<see cref="UiKit.Explains{T}"/>, and
+/// docs/DESIGN-REFERENCES.md → "How much a line of interface may say"). What a setting is set to is
+/// still on the control, because that is what the player came to read.
 /// </para>
 /// <para>
-/// The sheet is honest about the two panels the build has nothing behind: the sound and the crowd in
-/// the chat are named and then plainly said to be unwired, rather than given switches that move and do
-/// nothing.
+/// The sheet is still honest about the two panels the build has nothing behind: sound and the crowd in
+/// the chat are named and said to be unwired, rather than given switches that move and do nothing.
 /// </para>
 /// </remarks>
 public sealed partial class SettingsScreen : CanvasLayer
@@ -24,6 +26,8 @@ public sealed partial class SettingsScreen : CanvasLayer
 
     /// <summary>Called whenever a setting changes, so the yard can take up its new state at once.</summary>
     public Action? Changed { get; set; }
+
+    private Label _line = null!;
 
     public override void _Ready()
     {
@@ -48,6 +52,8 @@ public sealed partial class SettingsScreen : CanvasLayer
         columns.AddThemeConstantOverride("separation", 12);
         sheet.AddChild(columns);
 
+        _line = UiKit.ChalkLine(sheet);
+
         BuildPicture(columns);
         BuildReading(columns);
         BuildHands(columns);
@@ -61,19 +67,15 @@ public sealed partial class SettingsScreen : CanvasLayer
 
         panel.AddChild(Toggle(
             "The window",
-            () => GameSettings.Borderless ? "borderless, the whole screen" : "a window",
-            () => GameSettings.Borderless = !GameSettings.Borderless));
+            () => GameSettings.Borderless ? "the whole screen" : "a window",
+            () => GameSettings.Borderless = !GameSettings.Borderless,
+            "Borderless over the whole screen, or a window that can be dragged and resized."));
 
         panel.AddChild(Toggle(
             "The paper",
-            () => GameSettings.PaperGrain ? "grained, and the hour washed over it" : "flat",
+            () => GameSettings.PaperGrain ? "grained" : "flat",
             () => GameSettings.PaperGrain = !GameSettings.PaperGrain,
-            "The grain, the inked edges and the colour the hour puts over the yard. Taking it off "
-            + "changes nothing the game does — only what it looks like."));
-
-        panel.AddChild(UiKit.Note(
-            "The yard is drawn at 1920 × 1080 and the engine stretches it; nothing is cut off at "
-            + "another size."));
+            "The grain and the colour the hour puts over the yard. Looks only."));
     }
 
     /// <summary>Reading it — and being able to.</summary>
@@ -85,55 +87,50 @@ public sealed partial class SettingsScreen : CanvasLayer
             "Text size",
             () => GameSettings.LargeText ? "one step up" : "as drawn",
             () => GameSettings.LargeText = !GameSettings.LargeText,
-            "Every sheet holds at either size: the whole stage is scaled, not the type inside it."));
+            "The whole stage is scaled, so every sheet still holds at the larger size."));
 
         panel.AddChild(Toggle(
             "Name the destinations",
             () => GameSettings.NameDestinations ? "always" : "under the cursor",
             () => GameSettings.NameDestinations = !GameSettings.NameDestinations,
-            "Every object keeps its chalk name showing, for a player who would rather read the yard "
-            + "than learn it."));
+            "Whether the yard's chalk names stay up, or wait for the cursor."));
 
         panel.AddChild(Toggle(
             "Reduced motion",
             () => GameSettings.ReducedMotion ? "on" : "off",
             () => GameSettings.ReducedMotion = !GameSettings.ReducedMotion,
-            "No flicker and nothing that moves on its own. The clock still runs and the day still ends."));
+            "No flicker and nothing moving on its own. The clock still runs."));
 
         panel.AddChild(Toggle(
             "The day log",
             () => $"{GameSettings.LogHold.ToString("0", CultureInfo.InvariantCulture)}s a line",
             () => GameSettings.LogHold = GameSettings.LogHold >= 8 ? 4 : GameSettings.LogHold + 2,
-            "How long a line of the fight's report holds before the next takes its place."));
+            "How long a line of the fight's report holds before the next one."));
     }
 
-    /// <summary>The hands: what the keys do. There is no key that opens a menu, because there is no menu.</summary>
+    /// <summary>The hands: what the keys do.</summary>
     private static void BuildHands(Control parent)
     {
         VBoxContainer panel = UiKit.Section(parent, "Hands");
 
         panel.AddChild(Reading("Walk up to a thing", "click it"));
         panel.AddChild(Reading("Close what is open", "Esc, or the corner of the sheet"));
-        panel.AddChild(Reading("Stop the clock", "Space"));
+        panel.AddChild(Reading("Stop the world", "Space, or Esc in the yard"));
         panel.AddChild(Reading("Set the clock's speed", "the strip, on the right"));
-        panel.AddChild(UiKit.Note("There is no key that opens a menu, because there is no menu."));
     }
 
-    /// <summary>What the build has nothing behind, said plainly rather than switched.</summary>
+    /// <summary>What the build has nothing behind, named rather than switched.</summary>
     private static void BuildUnwired(Control parent)
     {
         VBoxContainer panel = UiKit.Section(parent, "Not yet wired");
 
-        panel.AddChild(Reading("Sound", "there is none yet"));
-        panel.AddChild(Reading("Twitch · Kick", "the chat layer is not written"));
-        panel.AddChild(UiKit.Note(
-            "When the crowd is connected these become the panel the design draws: who is connected, "
-            + "whether viewers may enter the roster, and whether a viewer's man may die in it. Until "
-            + "then they are not offered as switches, because a switch that moves and changes nothing "
-            + "is worse than an empty shelf."));
+        panel.AddChild(Reading("Sound", "none yet"));
+        panel.AddChild(Reading("Twitch · Kick", "not connected"));
     }
 
-    /// <summary>A setting: what it is, what it is set to, and what setting it does.</summary>
+    /// <summary>
+    /// A setting: what it is and what it is set to. The sentence about it is fetched, not printed.
+    /// </summary>
     private Control Toggle(string what, Func<string> reading, Action press, string? clause = null)
     {
         VBoxContainer column = new();
@@ -160,7 +157,11 @@ public sealed partial class SettingsScreen : CanvasLayer
 
         if (clause is not null)
         {
-            column.AddChild(UiKit.Note(clause));
+            // The label is wired as well as the control, so the clause is there for a hand that is
+            // reading the row rather than already reaching for the switch.
+            label.MouseFilter = Control.MouseFilterEnum.Stop;
+            UiKit.Explains(button, _line, clause);
+            UiKit.Explains(label, _line, clause);
         }
 
         return column;
