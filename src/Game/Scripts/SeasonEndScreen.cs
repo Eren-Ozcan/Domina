@@ -255,24 +255,27 @@ public sealed partial class SeasonEndScreen : DojoScreen
     }
 
     /// <summary>
-    /// What carries over - which, in this build, is nothing.
+    /// What the term ends holding - which is where it stops, because there is no term after it.
     /// </summary>
     /// <remarks>
-    /// The design's closing sheet offers the next term the men, the chest and the buildings (design
-    /// canvas -> 6h). The core has no second term to carry them into: a term ends and the slot is
-    /// freed. The panel says so plainly rather than promising a carry-over that does not happen.
+    /// The design's closing sheet offers a next term the men, the chest and the buildings (design
+    /// canvas -> 6h). <b>The game is one term.</b> The campaign ends at the final tournament and
+    /// nothing is played past it (docs/GDD.md §10, closed decision 2b), so the panel counts what the
+    /// school ended with and says the book closes there. It is not a carry-over the build owes and
+    /// has not paid: a second term is not a thing this game has.
     /// </remarks>
     private static void Carried(Control parent, SeasonEndCard card, DojoState dojo)
     {
-        VBoxContainer panel = UiKit.Section(parent, "What carries over", fill: true);
+        VBoxContainer panel = UiKit.Section(parent, "What the school ends holding", fill: true);
 
         panel.AddChild(Reading("Men still standing", Figure(card.Freed.Count)));
         panel.AddChild(Reading("The chest", $"{Figure(dojo.Resources.Gold)} koku"));
         panel.AddChild(Reading("The rack and the buildings", "kept until the book is closed"));
         panel.AddChild(UiKit.Rule());
         panel.AddChild(UiKit.Body(
-            "Nothing yet carries into a term after this one. Closing the book frees the slot, and the "
-            + "next term is opened from the title with a seed of its own.",
+            "The term is the whole game and this is the end of it — there is no term after this one "
+            + "to carry the school into. Closing the book frees the slot, and a new school is opened "
+            + "from the title with a seed of its own.",
             UiKit.Muted,
             UiKit.NoteSize));
     }
