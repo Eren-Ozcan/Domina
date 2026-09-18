@@ -1,5 +1,10 @@
-; The Godot project file.
-; This file is managed by the Godot editor — be careful when editing it by hand.
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -10,13 +15,22 @@ config/description="A samurai-themed dojo management + automatic combat game."
 run/main_scene="res://dojo.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
-[dotnet]
-
-project/assembly_name="Domina.Game"
-
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+window/size/window_width_override=1600
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[rendering]
+
+; Whatever the window leaves unpainted — a letterbox, a frame the compositor clamped — is the night
+; the yard is drawn on, not the engine's grey. A band of grey down the edge of the screen reads as a
+; second window; a band of night reads as the world.
+environment/defaults/default_clear_color=Color(0.051, 0.043, 0.035, 1)
+
+[dotnet]
+
+project/assembly_name="Domina.Game"

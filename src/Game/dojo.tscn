@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://d0j0h5u6b7c8d"]
+[gd_scene format=3 uid="uid://d0j0h5u6b7c8d"]
 
-[ext_resource type="Script" path="res://Scripts/DojoHub.cs" id="1_hub"]
+[ext_resource type="Script" uid="uid://cyxladeway0el" path="res://Scripts/DojoHub.cs" id="1_hub"]
 
-[node name="Dojo" type="Node"]
+[node name="Dojo" type="Node" unique_id=983097783]
 script = ExtResource("1_hub")
