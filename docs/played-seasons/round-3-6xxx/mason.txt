@@ -1,0 +1,255 @@
+build TrainingGround
+build Kitchen
+expedition 0
+build Infirmary
+expedition 0
+expedition 0 1
+restock 40 40 5
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0 1
+build Steward
+expedition 0
+expedition 0
+restock 40 40 10
+expedition 0
+expedition 0 1
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+accept
+bounty
+expedition 1 1
+hire 0
+expedition 0
+expedition 0
+expedition 0
+accept
+expedition 1
+bounty
+build Armoury
+expedition 1
+expedition 1 1
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+restock 60 60 20
+accept
+bounty
+feast
+build Shrine
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+build ToriteHall
+hire 0
+expedition 1 1
+expedition 0 1
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+expedition 0 1
+hire 0
+hire 0
+hire 0
+hire 0
+restock 100 100 30
+expedition 0
+expedition 0
+hire 0
+accept
+build BardHall
+bounty
+hire 0
+expedition 0
+expedition 0 1
+expedition 0
+expedition 0
+hire 0
+expedition 0
+accept
+bounty
+hire 0
+build Forge
+build DivinerHut
+hire 0
+day
+hire 0
+day
+hire 0
+day
+hire 0
+day
+expedition 0
+day
+day
+day
+expedition 0
+restock 120 120 30
+accept
+bounty
+staff Instructor
+staff Physician
+staff Quartermaster
+staff Priest
+staff Cook
+staff Bursar
+staff Sensei
+staff Steward
+staff Diviner
+staff Bard
+staff Smith
+expedition 0
+hire 0
+expedition 0
+expedition 0
+build Barracks
+hire 0
+day
+expedition 1
+accept
+bounty
+hire 0
+day
+hire 0
+day
+hire 0
+day
+accept
+bounty
+expedition 0
+hire 0
+expedition 0
+hire 0
+expedition 0
+restock 100 100 30
+expedition 0 1
+accept
+bounty
+expedition 1
+hire 0
+day
+hire 0
+day
+hire 0
+day
+expedition 0 1
+hire 0
+expedition 0
+hire 0
+expedition 0
+hire 0
+day
+hire 0
+day
+hire 0
+day
+hire 0
+day
+day
+day
+day
+day
+expedition 0 1
+day
+day
+day
+restock 80 80 20
+expedition 1 1
+hire 0
+day
+day
+hire 0
+day
+expedition 1
+hire 0
+day
+day
+hire 0
+day
+day
+expedition 1
+restock 60 60 15
+day
+day
+hire 0
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+expedition 1
+restock 40 40 10
+expedition 0
+day
+day
+day
+hire 0
+day
+day
+hire 0
+day
+day
+expedition 0
+restock 60 60 15
+day
+day
+hire 0
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+expedition 1 1
+restock 60 60 15
+day
+expedition 0

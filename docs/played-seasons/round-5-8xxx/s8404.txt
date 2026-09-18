@@ -1,0 +1,311 @@
+restock 20 20 5
+expedition 0 4 pull:0.5
+accept
+bounty men:0,1 pull:0.5
+expedition 0 men:2,3
+hire 4
+hire 5
+expedition 0 3
+accept
+bounty men:1,2 pull:0.5
+expedition 0 men:3,4,5
+expedition 1 men:3,4,5
+restock 30 30 10
+expedition 0 men:3,4,5
+build TrainingGround
+expedition 0 men:3,4,5
+accept
+bounty men:1,2,3 pull:0.5
+hire 3
+hire 6
+expedition 0 men:3,4,5
+expedition 0 men:3,6,7
+restock 40 40 10
+expedition 0 men:1,4,5
+expedition 0 men:3,6,7
+expedition 0 men:1,4,5
+expedition 0 men:1,3,4,5 pull:0.5
+build Shrine
+expedition 0 men:6,7,3,4 pull:0.5
+expedition 0 men:1,5,6
+restock 40 40 10
+expedition 0 men:3,4,7
+expedition 0 men:1,3,4,5 pull:0.5
+expedition 0 men:1
+charm test
+charm SteadyHand
+fit 1 SteadyHand
+charm IronGate
+fit 3 IronGate
+charm LongBreath
+fit 4 LongBreath
+charm QuietMind
+fit 5 QuietMind
+charm SwiftFoot
+fit 6 SwiftFoot
+charm SteadyHand
+fit 7 SteadyHand
+expedition 0 men:1,3,4
+expedition 0 men:1
+restock 40 40 10
+expedition 0 men:1,3,4,5 pull:0.5
+expedition 0 men:6,7
+expedition 0 men:1,3,4,5 pull:0.5
+expedition 0 men:1
+expedition 0 men:3,4
+restock 40 40 10
+expedition 0 men:5,6
+expedition 0 men:1,3
+expedition 0 men:1,3,4,5 pull:0.5
+build Infirmary
+expedition 0 men:1,4,5
+expedition 0 men:1,3,4,5 pull:0.5
+restock 40 40 10
+expedition 0 men:1,3,4,5 pull:0.5
+expedition 0 men:1,6
+expedition 0 men:1,4,5
+build Barracks
+expedition 0 men:3,6,7
+expedition 0 men:1,3,4,5 pull:0.5
+restock 40 40 10
+expedition 0 men:1,3,5,6 pull:0.5
+expedition 0 men:1,4,5,6 pull:0.5
+expedition 0 men:1
+expedition 0 men:1,3,4,5 pull:0.5
+accept
+bounty men:1,3,5 pull:0.5
+expedition 1 men:1,4,5,6 pull:0.5
+expedition 1 men:1
+hire 4
+hire 8
+hire 5
+restock 40 40 10
+expedition 1 men:1,4,5,6 pull:0.5
+expedition 1 men:1,4,5,6 pull:0.5
+expedition 1 men:8,9,10
+expedition 0 men:1,4,6,7 pull:0.5
+restock 50 50 15
+expedition 0 men:8,9,10
+expedition 0 men:1,4,5
+expedition 0 men:1,4,6,7 pull:0.5
+drill 1 test
+expedition 0 men:1,4,6,7 pull:0.5
+build Armoury
+expedition 0 men:1,4,6,7 pull:0.5
+restock 50 50 15
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1
+expedition 0 men:4,5,6,7 pull:0.5
+expedition 0 men:1,4,6,7 pull:0.5
+build Steward
+expedition 0 men:8,9,10
+expedition 0 men:1
+restock 50 50 15
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,5,6,7 pull:0.5
+expedition 0 men:1,4,7,8 pull:0.5
+staff test
+staff Steward
+staff Physician
+expedition 0 men:1,4,7,5 pull:0.5
+restock 50 50 20
+expedition 0 men:1,5,7,8 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+staff DrillMaster
+staff WeaponMaster
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1
+restock 50 50 20
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1
+expedition 0 men:4,5,6,7 pull:0.5
+build Forge
+expedition 0 men:1,4,5,7 pull:0.5
+restock 50 50 20
+expedition 0 men:1
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,5,6,7 pull:0.5
+restock 50 50 20
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:1,4,5,7 pull:0.5
+expedition 0 men:4,5,6,7 pull:0.5
+expedition 0 men:1
+restock 50 50 20
+expedition 0 men:4,5,6,7 pull:0.5
+hire 4
+hire 6
+day
+expedition 0 men:1,4,8,9 pull:0.5
+restock 50 50 20
+expedition 0 men:1
+expedition 0 men:1,4,7,8 pull:0.5
+expedition 0 men:1
+day
+restock 50 50 20
+expedition 0 men:1,4,7,8 pull:0.5
+expedition 0 men:1,4,7,8 pull:0.5
+expedition 0 men:1,4,8,9 pull:0.5
+expedition 0 men:1
+restock 50 50 20
+expedition 0 men:7
+expedition 0 men:1,4,8,9 pull:0.5
+hire 0
+expedition 0 men:1,4,8,9 pull:0.5
+expedition 0 men:1
+expedition 0 men:1,4,9,10 pull:0.5
+expedition 0 men:1
+restock 50 50 20
+hire 8
+hire 9
+expedition 0 men:1,9,10,11 pull:0.5
+class 1 test
+path 1 test
+class 1 Torite
+path 1 Blade
+path 9 Blade
+path 11 Blade
+path 12 Blade
+path 13 Blade
+path 14 Blade
+path 15 Blade
+expedition 0 men:1,9,11,12 pull:0.5
+day
+expedition 0 men:1
+expedition 0 men:1,9,11,12 pull:0.5
+hire 0
+hire 3
+restock 50 50 20
+expedition 0 men:1,9,13,14 pull:0.5
+expedition 0 men:1,9,13,14 pull:0.5
+expedition 0 men:1,9,14,15 pull:0.5
+expedition 0 men:1,15,16,17 pull:0.5
+expedition 0 men:1,9,15,16 pull:0.5
+restock 40 40 20
+expedition 0 men:11,13,14,17 pull:0.5
+expedition 0 men:1,11,14,17 pull:0.5
+expedition 0 men:1,13,14,17 pull:0.5
+hire 0
+hire 6
+day
+expedition 1 men:1,14,17,19 pull:0.5
+restock 40 40 20
+expedition 0 men:1,13,14,16 pull:0.5
+day
+expedition 0 men:1,13,14,16 pull:0.5
+expedition 0 men:1,14,16,17 pull:0.5
+restock 40 40 20
+day
+day
+expedition 0 men:1,14,16,17 pull:0.5
+restock 40 40 20
+expedition 0 men:1,13,17,19 pull:0.5
+expedition 0 men:1
+expedition 0 men:13,14,16,17 pull:0.5
+hire 0
+hire 1
+hire 2
+hire 3
+restock 40 40 20
+day
+expedition 0 men:17,19,20,21 pull:0.5
+expedition 0 men:13,17,19,21 pull:0.5
+restock 40 40 20
+day
+expedition 0 men:13,16,19,21 pull:0.5
+build ToriteHall
+expedition 0 men:13,19,20,21 pull:0.5
+expedition 0 men:13,17,19,21 pull:0.5
+restock 40 40 20
+day
+expedition 0 men:13,17,19,21 pull:0.5
+day
+restock 30 30 20
+day
+expedition 0 men:13,17,19,21 pull:0.5
+expedition 0 men:13,17,19,21 pull:0.5
+restock 30 30 20
+day
+day
+restock 40 40 20
+expedition 0 men:13,17,19,21 pull:0.5
+day
+class 13 Torite
+class 17 Torite
+class 21 Torite
+expedition 0 men:13,17,19,21 pull:0.5
+restock 30 30 20
+day
+day
+expedition 0 men:13,17,19,21 pull:0.5
+hire 0
+hire 1
+hire 3
+restock 30 30 20
+day
+expedition 1 men:13,21,22,23 pull:0.5
+restock 30 30 20
+expedition 0 men:13,21,23,24 pull:0.5
+day
+restock 30 30 20
+day
+expedition 0 men:13,21,24,25 pull:0.5
+hire 0
+hire 3
+restock 30 30 20
+day
+expedition 1 men:13,18,20,25 pull:0.5
+restock 30 30 20
+expedition 1 men:13,20,22,25 pull:0.5
+expedition 1 men:13,21,22,25 pull:0.5
+expedition 1 men:13,21,24,25 pull:0.5
+hire 1
+hire 2
+hire 3
+restock 30 30 20
+day
+expedition 1 men:13,21,25,27 pull:0.5
+restock 30 30 20
+expedition 0 men:13,21,25,27 pull:0.5
+expedition 0 men:13,20,21,26 pull:0.5
+hire 1
+hire 2
+hire 3
+restock 30 30 20
+day
+expedition 0 men:13,27,28,29 pull:0.5
+expedition 0 men:13,25,27,30 pull:0.5
+restock 30 30 20
+expedition 0 men:13,27,29,30 pull:0.5
+expedition 0 men:13,25,27,30 pull:0.5
+restock 30 30 20
+expedition 0 men:13,25,27,30 pull:0.5
+hire 0
+hire 3
+hire 6
+restock 20 20 20
+day
+expedition 0 men:20,28,29,31 pull:0.5
+hire 0
+hire 2
+restock 20 20 20
+day
+restock 50 50 30
+day
+day
+day
+restock 30 30 20
+expedition 0 men:20,29,30,33 pull:0.5
+expedition 0 men:20,30,33,34 pull:0.5
+restock 30 30 20
+day
+day
+restock 40 40 30
+day
+day
+day
+day
+night men:20,30,33,36 pull:0.5

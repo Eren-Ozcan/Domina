@@ -1,0 +1,239 @@
+restock 30 30 10
+expedition 0 4
+accept
+bounty 4
+expedition 0 4
+expedition 0 4
+restock 40 40 15
+accept
+bounty 4 pull:0.5
+expedition 1 1
+expedition 1 4
+expedition 1 4 pull:0.5
+hire 0
+accept
+bounty 4 pull:0.5
+expedition 0 1
+build TrainingGround
+hire 1
+hire 3
+expedition 0 4
+restock 50 50 20
+expedition 0 4
+accept
+bounty 6 pull:0.5
+expedition 0 5 pull:0.7
+expedition 0 5
+expedition 0 5 pull:0.75
+expedition 0 4
+build Infirmary
+hire 6
+expedition 0 6
+restock 50 50 20
+expedition 0 6
+expedition 0 6
+expedition 0 6
+expedition 0 6
+expedition 0 6 pull:0.75
+expedition 0 6
+restock 50 50 20
+expedition 0 6
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+build Barracks
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 5
+expedition 0 6 pull:0.75
+restock 60 60 25
+expedition 0 6
+expedition 0 6
+expedition 0 6
+expedition 0 6
+hire 6
+hire 8
+expedition 0 6
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+restock 60 60 25
+expedition 0 6
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 1
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+restock 70 70 30
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 1
+restock 70 70 30
+expedition 0 1
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+restock 80 80 35
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.8
+expedition 0 1
+hire 1
+hire 7
+expedition 0 6 pull:0.75
+expedition 0 6 pull:0.75
+accept
+bounty 6 pull:0.7
+expedition 0 6 pull:0.75
+restock 80 80 35
+day
+hire 0
+day
+expedition 0 8 pull:0.7
+day
+day
+day
+day
+restock 90 90 40
+drill 0 Conditioning
+drill 3 Guard
+drill 4 Guard
+drill 6 Conditioning
+day
+day
+day
+day
+day
+expedition 1 1
+hire 8
+day
+day
+day
+day
+day
+restock 100 100 40
+expedition 1 8 pull:0.75
+hire 0
+drill 3 Guard
+day
+day
+day
+day
+day
+day
+restock 100 100 40
+day
+day
+day
+expedition 1 8 pull:0.75
+day
+day
+restock 100 100 40
+day
+expedition 0 8 pull:0.75
+day
+day
+expedition 1 8 pull:0.75
+day
+day
+restock 100 100 40
+expedition 1 8 pull:0.75
+expedition 0 8 pull:0.75
+day
+day
+day
+day
+restock 100 100 40
+day
+expedition 0 8 pull:0.75
+day
+day
+expedition 0 8 pull:0.75
+day
+day
+restock 100 100 40
+day
+expedition 1 8 pull:0.8
+hire 0
+hire 2
+day
+day
+restock 100 100 40
+day
+day
+day
+day
+day
+day
+day
+restock 100 100 40
+day
+expedition 0 8 pull:0.8
+day
+day
+day
+day
+day
+day
+restock 70 70 36
+day
+expedition 0 8 pull:0.8
+hire 0
+day
+day
+day
+day
+expedition 0 8 pull:0.8
+restock 60 60 30
+day
+day
+day
+expedition 1 8 pull:0.8
+restock 60 60 30
+day
+day
+day
+day
+day
+restock 60 60 30
+expedition 1 8 pull:0.8
+day
+day
+day
+restock 40 40 30
+day
+day
+expedition 0 8 pull:0.8
+restock 40 40 25
+day
+day
+day
+restock 30 30 25
+expedition 0 8 pull:0.8
+hire 8
+day
+restock 25 25 27
+day
+restock 25 25 27
+day
+expedition 0 8 pull:0.8
+restock 70 70 30
+day
+day
+day
+day
+day
+day
+day
+day
+day
+night 8 pull:0.8

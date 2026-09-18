@@ -1,0 +1,179 @@
+restock 20 20 5
+expedition 0 2
+hire 1
+expedition 0 2
+accept
+bounty 3 pull:0.5
+hire 3
+expedition 0 2
+restock 25 25 6
+expedition 0 2
+accept
+bounty 3 pull:0.5
+hire 1
+hire 3
+expedition 1 2
+restock 20 20 5
+expedition 0 2
+accept
+bounty 4 pull:0.5
+night 3 pull:0.5
+restock 25 25 6
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+restock 40 40 10
+expedition 0 2
+build Shrine
+expedition 0 2
+day
+expedition 0 2
+expedition 0 2
+expedition 0 2
+charm
+charm SteadyHand
+fit 1 SteadyHand
+charm IronGate
+fit 3 IronGate
+charm LongBreath
+fit 5 LongBreath
+charm QuietMind
+fit 6 QuietMind
+charm SwiftFoot
+fit 7 SwiftFoot
+restock 30 30 8
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 4 pull:0.4
+day
+restock 35 35 10
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+restock 40 40 10
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+expedition 0 2
+hire 1
+hire 6
+hire 9
+day
+expedition 0 3 pull:0.4
+restock 40 40 10
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+build Infirmary
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+hire 1
+hire 3
+hire 8
+hire 7
+hire 6
+day
+restock 40 40 10
+day
+expedition 0 3 pull:0.4
+day
+expedition 0 4 pull:0.4
+restock 40 40 10
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+day
+expedition 1 6 pull:0.5
+hire 2
+hire 7
+expedition 0 3 pull:0.4
+restock 40 40 10
+expedition 0 3 pull:0.4
+expedition 0 4 pull:0.4
+pardon 11
+day
+expedition 0 4 pull:0.4
+day
+restock 30 30 8
+expedition 0 3 pull:0.4
+day
+day
+expedition 0 5 pull:0.5
+hire 5
+hire 7
+restock 30 30 8
+day
+day
+expedition 0 6 pull:0.5
+hire 5
+hire 6
+restock 30 30 8
+day
+expedition 0 6
+restock 25 25 6
+expedition 0 4
+expedition 0 3
+restock 30 30 8
+expedition 0 4
+expedition 0 3
+expedition 0 4
+restock 30 30 8
+hire 3
+expedition 0 4
+day
+day
+restock 30 30 8
+expedition 0 6
+hire 0
+expedition 0 6
+hire 0
+hire 8
+day
+expedition 1 4
+day
+hire 0
+day
+hire 2
+day
+expedition 0 3
+restock 25 25 6
+day
+hire 1
+day
+expedition 0 4
+day
+expedition 0 4
+restock 25 25 6
+hire 2
+day
+expedition 1 4
+hire 0
+day
+expedition 1 5
+hire 1
+day
+expedition 0 4
+restock 25 25 6
+day
+day
+day
+day
+expedition 0 3
+day

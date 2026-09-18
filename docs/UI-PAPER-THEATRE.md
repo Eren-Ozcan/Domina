@@ -50,6 +50,8 @@ the account of the build.
 | Someone at the gate, and what taking him in costs (9b) | `GateScreen.cs`, `GateModel`, `ViewerGate` in `Domina.Chat` |
 | An order that came back undone (10a) | `DojoScreen.Returned`, used by the rack's refusals |
 | Three terms kept, and an overwrite shaped unlike a load (6c) | `SavesScreen.cs`, `SaveSlot` (three slots) |
+| The man's own figure beside his numbers, and his path named under it | `WarriorPortrait.cs`, `WarriorRig.Stand` |
+| One clause about whatever the hand is over, printed at the foot of a sheet | `UiKit.ChalkLine`, `UiKit.Explains` |
 
 The two faces the canvas uses are bundled, subsetted to the glyphs the screens print:
 `src/Game/Fonts/`, listed in `THIRD-PARTY-NOTICES.md`.
@@ -63,9 +65,104 @@ The two faces the canvas uses are bundled, subsetted to the glyphs the screens p
   party's.
 - **The term is 180 days, not 60.** The canvas's eyebrow and its save cards say sixty;
   the season's own tuning says otherwise, and the screens read the tuning.
+- **Nothing carries into a next term (6h), because there is no next term.** The canvas's
+  closing sheet hands the men, the chest and the buildings on. The game is **one term**: the
+  campaign ends at the final tournament and nothing is played past it (`docs/GDD.md` §10,
+  closed decision 2b). The sheet therefore counts what the school ended holding and says the
+  book closes there; a new school is opened from the title with a seed of its own.
+- **A sheet answers "what is this for" on a chalk line, not in a card.** The canvas refuses
+  floating tooltip cards (7b, 8a) and the build keeps that refusal, but it stops printing the
+  clause under every row: it is fetched by hover **or** keyboard focus and printed in one fixed
+  line at the foot of the paper. The grounds are in `docs/DESIGN-REFERENCES.md` §7.
 - **Settings offers no switch it cannot honour.** Sound and the crowd in the chat are
   named on the sheet and said plainly to be unwired, rather than given switches that move
   and change nothing.
+
+## The man's own face — where it appears
+
+A warrior is drawn by one rig (`src/Game/Scripts/WarriorRig.cs`) and, until now, every warrior was
+drawn by it identically: six men on the roster were six copies of one figure with different names
+over them. `WarriorLook` (`src/Domina.Presentation/WarriorLook.cs`) is the small set of dials that
+tells them apart — stature, build, head size, a shade on the team tint, hair, beard, a headband, a
+scar, a sash colour.
+
+- **It is derived, not stored.** The dials come from the man's **name**, so nothing is written to the
+  save and the same man is the same figure in every screen, across a reload.
+- **The name and not the id.** A market candidate is a `RecruitOffer` and has no id until he is
+  bought; keying the look on the id would change his face at the moment of the purchase, which is the
+  one moment the player is looking at him. A name belongs to one living warrior at a time (GDD §6),
+  so the dojo cannot hold two men with one face. The cost is that renaming a man reprints him.
+- **The skeleton is untouched.** The dials scale the bones and the drawing's width and hang marks on
+  the head joint; the part list and the joints the animations run on are the same, so no animation is
+  invalidated (ROADMAP, phase 2).
+
+`WarriorPortrait` prints him at three crops — `Full`, `Bust`, `Head` — by pushing the rig's root below
+the plate and letting the stage clip. Cropping rather than shrinking is what keeps a 30-pixel chip
+readable. Where each one sits:
+
+| Screen | Crop | Where |
+| --- | --- | --- |
+| Roster | Full | the plate beside his numbers, path under it |
+| Roster, day screen (party) | Head | in the unit card's 44px square, which was an empty frame |
+| Gate | Full | the man standing in the gateway, pale on the night |
+| Market | Bust | beside the candidate's stats, the man being weighed |
+| Armoury | Bust | at the head of the counter, so armour is fitted to a man |
+| Hut | Head | on each tribunal card and each line on the mats |
+| Battle HUD | Head | on each fighter's card, tinted to his side |
+| Final night | Head | beside each tick in the party list |
+| Season end | Head | over each name on the stone, printed in ash |
+| Terms of going out | Full | each man going, and each of theirs the hut read |
+
+The arena needs no wiring: it builds the same rig, so the man on the field is the man on the sheet.
+
+### The ground they fight on
+
+The arena drew a single line across the screen, so a fight read as two figures in a void.
+`src/Game/Scripts/ArenaArt.cs` gives it the yard's own set — flat polygons in the night palette, listed
+back to front: the night, two ridge lines, the far band the men walk in, a darker near apron, a roped
+far edge, two torches at the near corners and a few scuffs in the dirt. It is drawn from
+`ArenaLayout`, the same record the choreography stands the men on, so the paper and the men cannot
+drift apart, and it is fixed rather than generated — scenery that changed between two runs of one seed
+would make a recorded fight impossible to compare with itself. Like the figures, it is a stand-in:
+what has to survive into real art is the staging, not the shapes.
+
+### The terms of going out
+
+`src/Game/Scripts/SortieScreen.cs` is the sheet held up at the moment of sending, with
+`SortieModel` (`src/Domina.Presentation/SortieModel.cs`) behind it. The day's board already carried
+the same figures, but they were read among every other decision the morning brings, and the party was
+picked out of a list of names. The sheet puts the whole bargain on one page: **what it pays** and
+**what it costs** above, **the men going** and **what is on the road** facing each other below, and
+two answers at the foot — *Not today* and *Open the gate*.
+
+The layout is the reference game's terms-of-the-bout page (REFERENCE-DOMINA-UI); its widgets are not.
+Ours differs in three ways:
+
+- **It decides nothing.** The party was judged by `OfferModel.Judge` before the sheet opened;
+  refusing leaves the day exactly as it was, with the same men still ticked.
+- **An unread road says so.** A dojo with no diviner sees one card marked *unread*, not an empty
+  column — an empty column would read as a road with nothing on it (GDD §10: only the band is free).
+- **The pull-out is a term.** Where the reference asks whether surrender is allowed, ours states the
+  standing rule: the party may be pulled at any moment, and a man mid-strike leaves when the strike
+  finishes.
+
+The party is **ticked on this sheet**, not on the board behind it. Picking men and reading what the
+road pays used to be two screens apart, which asked the player to choose his men before anything had
+told him what the job was worth; the roster now sits under the two facing columns, each tick reprints
+the terms, the count and the verdict, and the day's board keeps only the three acts (send, take the
+bounty, skip) plus a line saying where the men are chosen. Refusing hands the ticked men back, so the
+board remembers them, and the clock is held for as long as the sheet stands.
+
+`sortie.tscn` (`SortieDemo`) stands the sheet up against the demo roster with two men already ticked,
+so the layout can be looked at without playing a day to it — the same arrangement as `roster.tscn`.
+
+### Gaps in the faces
+
+- **The aftermath sheet** carries lines of text and no per-man structure, so the party that came back
+  and the men who did not are named and not drawn.
+- **The market's list rows** are plain rows; the face is in the detail panel only.
+- **Gear is not on the figure.** What he carries is written beside him; the rig draws one blade and no
+  armour, so two differently armoured men look the same below the neck.
 
 ## Gaps — what the canvas has and the build does not
 

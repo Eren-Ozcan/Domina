@@ -1,0 +1,206 @@
+accept
+expedition 0
+day
+restock 30 30 10
+bounty
+expedition 1
+expedition 0
+day
+day
+accept
+bounty
+expedition 1
+day
+restock 40 40 15
+accept
+bounty
+build TrainingGround
+hire 0
+hire 1
+expedition 0
+expedition 1 1
+day
+accept
+bounty
+expedition 0
+day
+restock 40 40 15
+expedition 0 1
+day
+accept
+bounty
+expedition 0
+day
+hire 1
+expedition 0
+day
+restock 40 40 15
+accept
+bounty
+day
+hire 3
+hire 9
+expedition 0
+day
+accept
+bounty
+expedition 1
+day
+restock 50 50 20
+expedition 1
+day
+accept
+bounty
+expedition 0
+day
+day
+restock 50 50 20
+expedition 0
+day
+accept
+bounty
+expedition 0 1
+day
+day
+hire 6
+accept
+bounty
+expedition 0
+day
+restock 50 50 20
+day
+day
+day
+hire 9
+hire 6
+hire 8
+build Infirmary
+expedition 0
+day
+accept
+bounty
+expedition 0
+day
+day
+restock 50 50 20
+day
+hire 1
+expedition 0
+day
+day
+accept
+bounty
+expedition 1 1
+day
+hire 5
+hire 6
+expedition 0
+day
+day
+restock 50 50 20
+accept
+bounty
+day
+day
+hire 7
+expedition 1 1
+day
+day
+restock 50 50 20
+accept
+bounty
+day
+day
+hire 0
+expedition 1 1
+day
+day
+restock 50 50 20
+hire 2
+day
+day
+day
+restock 40 40 20
+expedition 0
+day
+accept
+bounty
+expedition 0
+day
+day
+restock 40 40 20
+hire 3
+hire 7
+hire 8
+day
+day
+expedition 0
+day
+day
+restock 40 40 20
+hire 6
+accept
+bounty
+day
+hire 6
+hire 7
+expedition 1
+day
+day
+restock 40 40 20
+expedition 0
+day
+day
+accept
+bounty
+restock 40 40 20
+day
+hire 0
+hire 8
+hire 9
+day
+day
+expedition 0 1
+day
+day
+restock 40 40 20
+accept
+bounty
+day
+hire 3
+hire 4
+hire 7
+day
+day
+restock 40 40 20
+expedition 1
+day
+accept
+bounty
+day
+accept
+bounty
+restock 40 40 20
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+expedition 0
+day
+hire 5
+expedition 0
+day
+restock 30 30 16
+day
+day
+hire 8
+day
+day
+expedition 1
+day

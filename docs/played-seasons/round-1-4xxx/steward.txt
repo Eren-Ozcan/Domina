@@ -1,0 +1,265 @@
+restock 40 40 10
+accept
+bounty
+accept
+bounty
+day
+accept
+bounty
+build Infirmary
+day
+accept
+bounty
+day
+accept
+bounty
+day
+accept
+bounty
+day
+restock 30 40 10
+hire 7
+day
+accept
+bounty
+expedition 1
+day
+build TrainingGround
+accept
+bounty
+day
+accept
+bounty
+day
+accept
+bounty
+day
+accept
+bounty
+day
+restock 20 15 5
+hire 2
+day
+expedition 0
+day
+restock 20 20 5
+expedition 1
+day
+day
+day
+restock 25 25 5
+expedition 1
+day
+expedition 1
+day
+expedition 1
+restock 20 20 5
+day
+day
+day
+expedition 0
+restock 20 20 5
+day
+expedition 1
+day
+restock 20 20 5
+day
+day
+day
+day
+expedition 0
+restock 20 20 5
+day
+day
+day
+expedition 1
+day
+restock 15 15 5
+hire 5
+day
+day
+day
+day
+expedition 1
+restock 10 10 0
+day
+expedition 0
+restock 15 15 5
+day
+day
+day
+restock 15 15 0
+day
+expedition 1
+day
+expedition 1
+restock 20 20 0
+day
+expedition 1
+day
+restock 15 15 5
+day
+day
+expedition 0
+restock 15 15 0
+day
+expedition 1
+day
+restock 25 25 10
+build Steward
+day
+day
+day
+expedition 1
+day
+day
+day
+restock 20 20 0
+day
+expedition 1
+day
+expedition 1
+day
+restock 15 15 0
+day
+expedition 0
+day
+expedition 1
+restock 15 15 0
+day
+build Steward
+day
+expedition 0
+day
+expedition 1
+restock 15 15 0
+day
+day
+expedition 0
+staff Steward
+restock 15 15 0
+day
+day
+expedition 1
+restock 15 15 0
+day
+day
+day
+expedition 0
+restock 15 15 0
+day
+hire 5
+day
+expedition 0
+day
+restock 20 20 5
+day
+expedition 1
+day
+build Kitchen
+day
+expedition 1
+restock 15 15 5
+day
+day
+day
+day
+day
+restock 10 10 0
+day
+expedition 0
+day
+expedition 1
+restock 15 15 5
+day
+expedition 0
+day
+hire 6
+restock 15 15 0
+day
+expedition 0
+day
+restock 10 10 0
+hire 6
+day
+day
+day
+expedition 1
+restock 10 10 0
+day
+hire 3
+day
+day
+expedition 0
+day
+restock 25 25 5
+day
+day
+day
+expedition 0
+day
+expedition 0
+restock 15 15 0
+day
+expedition 1
+hire 4
+day
+expedition 1
+restock 15 15 0
+day
+day
+day
+expedition 1
+restock 15 15 5
+day
+expedition 1
+day
+expedition 1
+restock 15 15 0
+day
+expedition 0
+day
+expedition 1
+restock 20 20 5
+day
+day
+day
+expedition 0
+restock 15 15 5
+day
+hire 5
+day
+day
+day
+expedition 1
+restock 15 15 0
+day
+expedition 1
+day
+expedition 0
+restock 15 15 5
+day
+expedition 1
+day
+expedition 1 2
+restock 10 10 0
+day
+expedition 0 1
+day
+expedition 1 1
+restock 25 25 5
+day
+expedition 0 2
+day
+restock 15 15 5
+day
+day
+hire 6
+day
+day
+day
+day
+day
+day
+day
+night

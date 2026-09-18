@@ -1,0 +1,88 @@
+hire 6
+hire 1
+restock 20 20 10
+expedition 0 4
+accept
+day
+bounty
+day
+expedition 0 4
+day
+restock 30 30 15
+accept
+expedition 1 1
+day
+expedition 0 1
+bounty
+day
+hire 4
+hire 1
+restock 30 30 15
+expedition 1 4
+expedition 0 4
+day
+accept
+expedition 1 4
+expedition 0 4
+bounty
+day
+restock 30 30 15
+accept
+bounty
+expedition 0 1
+day
+hire 7
+expedition 1 4
+expedition 0 4
+day
+accept
+bounty
+expedition 0 4
+day
+accept
+bounty
+expedition 0 4
+expedition 1 4
+restock 30 30 15
+accept
+bounty
+expedition 0 4
+expedition 1 4
+restock 30 30 15
+accept
+bounty
+expedition 0 4
+expedition 1 4
+restock 30 30 15
+accept
+bounty
+expedition 0 4
+expedition 1 4
+restock 30 30 15
+hire 4
+hire 0
+expedition 0 1
+day
+day
+day
+day
+restock 30 30 15
+expedition 1 4
+expedition 0 4
+day
+accept
+bounty
+day
+hire 3
+hire 4
+expedition 0 4
+day
+day
+day
+expedition 1 4
+expedition 0 4
+accept
+day
+day
+bounty
+day

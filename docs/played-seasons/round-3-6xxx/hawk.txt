@@ -1,0 +1,189 @@
+restock 20 20 5
+accept
+expedition 0
+bounty
+expedition 0
+hire 0
+hire 1
+expedition 0
+accept
+expedition 0
+bounty
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0 1
+accept
+expedition 0
+bounty
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0
+build Infirmary
+build Armoury
+accept
+bounty
+expedition 0
+restock 20 20 8
+hire 2
+expedition 0
+expedition 0
+expedition 0
+expedition 0
+expedition 0 1
+accept
+bounty
+expedition 0 1
+expedition 0 1
+restock 20 20 8
+expedition 0 1
+expedition 0 1
+accept
+bounty
+expedition 0
+hire 0
+hire 5
+restock 20 20 8
+expedition 0
+expedition 0
+accept
+bounty
+expedition 0
+restock 20 20 8
+expedition 0
+hire 2
+build TrainingGround
+build Forge
+expedition 0
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0
+hire 1
+build Barracks
+expedition 0
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0 1
+accept
+bounty
+restock 20 20 8
+expedition 0
+expedition 0
+hire 3
+hire 8
+accept
+bounty
+restock 20 20 8
+expedition 0
+expedition 0
+hire 2
+hire 3
+hire 8
+hire 1
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0
+expedition 0
+restock 20 20 8
+expedition 0
+expedition 0 1
+expedition 0 1
+restock 20 20 8
+expedition 0 1
+expedition 0 1
+expedition 0 1
+restock 40 40 15
+expedition 0
+hire 8
+hire 7
+expedition 0
+restock 40 40 15
+expedition 0
+hire 2
+hire 4
+expedition 0
+expedition 0
+restock 40 40 15
+expedition 0
+hire 4
+hire 5
+hire 3
+hire 6
+restock 40 40 15
+expedition 0
+hire 4
+expedition 0
+restock 40 40 15
+expedition 0
+expedition 0
+restock 40 40 15
+expedition 0
+expedition 0
+expedition 0
+restock 40 40 15
+day
+expedition 0
+expedition 0
+restock 40 40 15
+expedition 0
+hire 7
+expedition 0
+expedition 0
+restock 40 40 15
+expedition 0
+expedition 0
+restock 40 40 15
+day
+expedition 0
+day
+expedition 0
+day
+expedition 0
+day
+expedition 0
+day
+expedition 0
+day
+restock 40 40 15
+hire 4
+hire 8
+hire 9
+expedition 1
+restock 40 40 15
+expedition 1
+hire 2
+expedition 0
+day
+expedition 0
+day
+restock 40 40 15
+hire 8
+hire 6
+expedition 0
+restock 40 40 15
+hire 4
+hire 9
+expedition 0
+day
+expedition 0
+day
+restock 40 40 15
+expedition 1
+restock 40 40 15
+day
+expedition 0
+day

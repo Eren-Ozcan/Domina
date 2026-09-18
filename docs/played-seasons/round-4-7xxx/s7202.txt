@@ -1,0 +1,304 @@
+restock 30 30 6
+accept
+expedition 0 2
+bounty 4 pull:0.5
+build TrainingGround
+drill 0 Conditioning
+drill 3 Guard
+drill 2 Footwork
+expedition 0 2
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+restock 30 40 10
+expedition 0 1 pull:0.4
+build Kitchen
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+expedition 0 3 pull:0.4
+staff DrillMaster
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+accept
+bounty 4 pull:0.4
+hire 9
+hire 8
+hire 1
+drill 1 Guard
+drill 2 Footwork
+drill 0 Strikes
+restock 40 40 8
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+build Steward
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+restock 40 40 8
+gift 0
+build Shrine
+accept
+bounty 5 pull:0.6
+expedition 0 4 pull:0.4
+expedition 0 1 pull:0.5
+build Armoury
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+staff Monk
+accept
+bounty 5 pull:0.6
+restock 40 40 10
+charm SteadyHand
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+fit 3 SteadyHand
+staff WeaponMaster
+staff Steward
+staff Cook
+charm IronGate
+fit 4 IronGate
+accept
+bounty 5 pull:0.6
+build Infirmary
+expedition 0 4 pull:0.4
+expedition 0 1 pull:0.5
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+restock 50 60 12
+expedition 0 4 pull:0.5
+staff Physician
+accept
+bounty 5 pull:0.6
+hire 8
+hire 5
+build Barracks
+drill 2 Footwork
+drill 5 Guard
+expedition 0 4 pull:0.4
+expedition 0 1 pull:0.5
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 1 pull:0.5
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+restock 60 60 16
+hire 7
+hire 6
+drill 6 Strikes
+drill 7 Strikes
+drill 6 Guard
+drill 7 Guard
+build Forge
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 1 pull:0.5
+expedition 0 4 pull:0.4
+restock 60 60 16
+feast
+gift 6
+accept
+bounty 4 pull:0.75
+day
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+expedition 0 4 pull:0.4
+restock 70 70 20
+build FormsMaster
+expedition 0 1 pull:0.5
+expedition 0 8 pull:0.4
+expedition 0 8 pull:0.4
+expedition 0 8 pull:0.4
+drill 2 Guard
+drill 3 Guard
+drill 4 Conditioning
+accept
+bounty 4 pull:0.75
+hire 3
+build LongHouse
+day
+expedition 0 1 pull:0.5
+expedition 0 8 pull:0.4
+expedition 0 8 pull:0.4
+expedition 0 8 pull:0.4
+restock 70 70 20
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+build PlateWorks
+build ToriteHall
+charm SteadyHand
+fit 0 SteadyHand
+charm SteadyHand
+fit 1 SteadyHand
+charm SteadyHand
+fit 6 SteadyHand
+staff Smith
+staff KataMaster
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+expedition 0 8 pull:0.7
+build Patron
+restock 80 80 20
+hire 9
+hire 7
+hire 3
+hire 1
+drill 2 Conditioning
+drill 3 Guard
+drill 4 Conditioning
+drill 5 Guard
+drill 7 Conditioning
+expedition 0 4 pull:0.8
+expedition 0 4
+day
+expedition 0 4
+expedition 0 4
+expedition 0 4
+restock 80 80 20
+expedition 0 4
+expedition 0 4
+expedition 0 1 pull:0.5
+expedition 0 4
+day
+hire 7
+hire 6
+hire 4
+hire 1
+drill 0 Guard
+drill 1 Guard
+drill 3 Guard
+drill 4 Guard
+drill 5 Guard
+drill 7 Conditioning
+class 8 Torite
+class 0 Torite
+class 1 Torite
+class 2 Torite
+class 3 Torite
+class 4 Torite
+class 5 Torite
+class 6 Torite
+class 7 Torite
+expedition 0 4
+expedition 0 1 pull:0.5
+day
+expedition 0 4
+day
+expedition 0 4
+restock 80 80 20
+hire 8
+hire 6
+hire 7
+class 0 Torite
+class 7 Torite
+class 9 Torite
+drill 0 Guard
+drill 7 Guard
+drill 9 Guard
+expedition 0 4
+day
+expedition 0 4
+day
+expedition 0 1 pull:0.5
+day
+charm SteadyHand
+fit 0 SteadyHand
+charm SteadyHand
+fit 4 SteadyHand
+charm SteadyHand
+fit 5 SteadyHand
+charm SteadyHand
+fit 3 SteadyHand
+restock 80 80 20
+expedition 0 1 pull:0.5
+day
+expedition 0 4
+day
+expedition 0 4
+day
+hire 7
+hire 5
+hire 4
+hire 1
+hire 0
+drill 0 Guard
+drill 4 Guard
+drill 5 Guard
+drill 7 Guard
+drill 8 Guard
+class 0 Torite
+class 4 Torite
+class 5 Torite
+class 7 Torite
+class 8 Torite
+accept
+bounty 4
+expedition 0 4
+day
+day
+restock 60 60 16
+accept
+bounty 4
+expedition 1 4
+hire 7
+hire 5
+drill 0 Guard
+drill 1 Guard
+class 0 Torite
+expedition 1 1 pull:0.5
+day
+expedition 0 4
+day
+day
+expedition 0 4
+restock 50 50 12
+day
+day
+expedition 0 4
+expedition 0 4
+expedition 0 4
+hire 8
+hire 3
+hire 1
+hire 0
+hire 7
+drill 2 Guard
+drill 3 Guard
+drill 4 Guard
+drill 5 Guard
+drill 6 Guard
+drill 8 Guard
+class 2 Torite
+class 3 Torite
+class 4 Torite
+class 5 Torite
+class 6 Torite
+class 8 Torite
+expedition 0 1
+expedition 0 4
+restock 50 50 12
+expedition 0 4
+expedition 0 4
+day
+expedition 0 4
+expedition 0 1
+expedition 0 4
+expedition 0 4
+expedition 0 4
+expedition 0 4
+expedition 0 4
+day

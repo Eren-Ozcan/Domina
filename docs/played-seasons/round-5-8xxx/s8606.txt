@@ -1,0 +1,73 @@
+
+expedition 0 1
+day
+expedition 1 1
+day
+expedition 0 1
+day
+accept
+day
+bounty 1
+day
+expedition 1 1
+day
+expedition 0 1
+day
+accept
+day
+bounty 1
+day
+expedition 1 1
+day
+expedition 0 1
+day
+accept
+day
+accept
+day
+bounty 1
+day
+expedition 1 1
+day
+expedition 0 1
+day
+hire 6
+day
+build TrainingGround
+day
+accept
+day
+expedition 1 1
+day
+bounty 1
+day
+hire 2
+day
+expedition 1 1
+day
+hire 7
+day
+expedition 0 1
+day
+build Infirmary
+day
+expedition 1 1
+day
+day
+day
+expedition 0 2
+day
+hire 7
+day
+hire 0
+day
+drill 5 Strikes
+day
+accept
+day
+bounty 1
+day
+expedition 1 1
+day
+expedition 0 1
+day

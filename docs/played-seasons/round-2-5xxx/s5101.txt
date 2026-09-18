@@ -1,0 +1,174 @@
+restock 30 30 10
+expedition 0 2
+day
+day
+expedition 1 2
+build TrainingGround
+day
+day
+day
+day
+day
+day
+day
+day
+restock 30 30 10
+accept
+expedition 1 4
+expedition 0 4
+bounty 4
+build Infirmary
+day
+day
+day
+day
+day
+restock 30 30 10
+accept
+expedition 1 4
+day
+expedition 0 4
+day
+bounty 4
+day
+day
+restock 30 30 10
+expedition 1 4
+day
+expedition 0 4
+build Steward
+restock 40 40 15
+hire 9
+day
+day
+day
+day
+day
+day
+restock 40 40 15
+expedition 1 4
+day
+expedition 0 4
+day
+accept
+bounty 4
+day
+day
+restock 40 40 15
+staff DrillMaster
+expedition 1 1
+day
+expedition 0 4
+build Kitchen
+restock 40 40 15
+day
+day
+day
+day
+day
+day
+day
+day
+restock 40 40 15
+accept
+bounty 4
+day
+expedition 1 4
+day
+build Barracks
+restock 40 40 15
+day
+day
+day
+day
+day
+day
+day
+day
+restock 40 40 15
+accept
+bounty 4
+day
+expedition 0 4
+day
+expedition 1 4
+day
+restock 40 40 15
+hire 9
+build Barracks
+accept
+expedition 0 4
+day
+day
+day
+day
+restock 40 40 15
+expedition 1 5
+day
+expedition 0 5
+day
+accept
+bounty 5
+day
+day
+restock 40 40 15
+expedition 1 5
+day
+expedition 0 5
+build Patron
+hire 1
+restock 40 40 15
+day
+day
+day
+day
+day
+day
+day
+day
+restock 40 40 15
+accept
+expedition 1 6
+day
+expedition 0 6
+day
+bounty 6
+build Armoury
+restock 40 40 15
+day
+day
+day
+day
+day
+accept
+expedition 1 6
+day
+expedition 0 6
+day
+bounty 6
+restock 40 40 15
+day
+day
+day
+day
+day
+accept
+expedition 1 6
+day
+expedition 0 6
+day
+bounty 6
+build Forge
+restock 40 40 15
+day
+day
+day
+day
+day
+accept
+expedition 1 6
+day
+expedition 0 6
+day
+bounty 6
+restock 40 40 15

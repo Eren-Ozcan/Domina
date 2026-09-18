@@ -1,0 +1,108 @@
+restock 10 10 5
+build TrainingGround
+expedition 0 1
+day
+expedition 1 1
+restock 10 10 5
+day
+day
+day
+day
+restock 10 10 5
+build Infirmary
+expedition 0 1
+day
+day
+day
+day
+day
+expedition 0 4
+restock 8 8 5
+day
+day
+day
+restock 8 8 5
+accept
+bounty
+day
+expedition 1 3
+hire 7
+restock 8 8 5
+day
+day
+expedition 1 4
+day
+expedition 0 2
+restock 8 8 5
+day
+day
+expedition 1 4
+day
+expedition 0 4
+restock 8 8 5
+day
+day
+expedition 1 1
+day
+expedition 0 4
+restock 8 8 5
+day
+day
+expedition 1 1
+expedition 1 4
+restock 8 8 5
+build Kitchen
+expedition 0 2
+accept
+bounty
+restock 8 8 5
+day
+expedition 1 4
+day
+expedition 0 1
+restock 8 8 5
+day
+day
+expedition 1 4
+accept
+bounty
+build Armoury
+restock 8 8 5
+day
+expedition 1 4
+day
+expedition 0 1
+restock 10 10 6
+day
+day
+day
+day
+day
+expedition 0 4
+build ToriteHall
+expedition 0 1
+accept
+bounty
+restock 10 10 6
+day
+expedition 1 1
+day
+expedition 0 1
+restock 10 10 6
+day
+day
+day
+day
+day
+day
+day
+hire 8
+staff Torite
+class 0 Torite
+expedition 0 4
+day
+day
+day
+expedition 0 1
+hire 4
+day

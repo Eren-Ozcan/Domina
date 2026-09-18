@@ -1,0 +1,322 @@
+restock 40 40 10
+accept
+expedition 0 4
+bounty 4 pull:0.3
+hire 5
+hire 0
+expedition 0 4 pull:0.5
+drill 1 Guard
+drill 4 Conditioning
+expedition 0 4 pull:0.5
+restock 40 40 10
+accept
+bounty 5 pull:0.5
+build TrainingGround
+expedition 0 3 pull:0.5
+hire 1
+expedition 0 4 pull:0.5
+restock 45 45 10
+expedition 0 3 pull:0.5
+accept
+bounty 4 pull:0.5
+build Kitchen
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 45 45 12
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+accept
+bounty 5 pull:0.5
+build Infirmary
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+accept
+expedition 0 1 pull:0.4
+restock 45 45 12
+bounty 4 pull:0.5
+build Armoury
+expedition 0 1 pull:0.4
+accept
+bounty 4 pull:0.5
+build Forge
+expedition 0 4 pull:0.5
+restock 50 50 12
+expedition 0 1 pull:0.4
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+accept
+bounty 4 pull:0.5
+build Barracks
+expedition 1 4 pull:0.5
+restock 50 50 12
+accept
+expedition 0 4 pull:0.5
+bounty 4 pull:0.5
+staff Smith
+staff Physician
+build ToriteHall
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+accept
+expedition 0 1 pull:0.4
+hire 0
+bounty 4 pull:0.5
+restock 60 60 14
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+hire 6
+hire 0
+accept
+drill 0 Guard
+drill 1 Footwork
+drill 2 Guard
+drill 4 Conditioning
+drill 5 Footwork
+bounty 4 pull:0.5
+build Shrine
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 60 60 14
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+class 0 Torite
+accept
+class 2 Torite
+class 3 Torite
+build ArcheryRange
+bounty 4 pull:0.5
+charm IronGate
+fit 6 IronGate
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 70 70 16
+build PoisonGarden
+accept
+bounty 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+hire 0
+expedition 0 4 pull:0.6
+build PlateWorks
+build Steward
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 70 70 16
+expedition 0 4 pull:0.6
+staff DrillMaster
+staff WeaponMaster
+hire 8
+hire 0
+drill 0 Guard
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+class 6 Kyudo
+class 7 Kyudo
+class 0 Kyudo
+class 5 Dokushi
+class 3 Dokushi
+class 2 Torite
+build BardHall
+build DivinerHut
+build FormsMaster
+restock 70 70 16
+path 6 Blade
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+path 3 Stone
+path 4 Stone
+path 6 Blade
+hire 7
+hire 6
+day
+expedition 0 1 pull:0.4
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 70 70 16
+staff Bard
+staff Steward
+staff Cook
+staff Monk
+staff Diviner
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+charm SteadyHand
+charm SwiftFoot
+charm LongBreath
+fit 7 SteadyHand
+fit 4 SwiftFoot
+fit 5 LongBreath
+expedition 0 1 pull:0.4
+charm SteadyHand
+fit 6 SteadyHand
+charm QuietMind
+fit 0 QuietMind
+day
+expedition 0 4 pull:0.5
+feast
+expedition 0 1 pull:0.4
+restock 70 70 18
+expedition 0 4 pull:0.5
+build Herbalist
+charm IronGate
+fit 1 IronGate
+charm SteadyHand
+fit 3 SteadyHand
+expedition 0 4 pull:0.5
+day
+day
+path 0 Stone
+restock 80 80 20
+day
+day
+expedition 1 4 pull:0.5
+expedition 1 1 pull:0.4
+charm SteadyHand
+fit 4 SteadyHand
+charm SteadyHand
+fit 0 SteadyHand
+charm SwiftFoot
+charm SwiftFoot
+fit 7 SwiftFoot
+expedition 1 4 pull:0.5
+fit 2 SwiftFoot
+charm SteadyHand
+fit 1 SteadyHand
+charm SteadyHand
+charm IronGate
+fit 3 IronGate
+expedition 0 4 pull:0.5
+restock 80 80 24
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 1 pull:0.4
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+hire 7
+hire 6
+hire 4
+drill 1 Conditioning
+drill 3 Guard
+drill 5 Conditioning
+day
+hire 3
+hire 8
+expedition 0 1 pull:0.4
+restock 60 60 16
+day
+charm SteadyHand
+charm SteadyHand
+fit 6 SteadyHand
+fit 7 SteadyHand
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.6
+class 0 Kyudo
+class 1 Kyudo
+class 4 Torite
+class 6 Kyudo
+class 7 Torite
+class 2 Kyudo
+restock 70 70 20
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.6
+day
+day
+expedition 0 4 pull:0.65
+expedition 0 1 pull:0.4
+expedition 0 4 pull:0.65
+expedition 0 4 pull:0.65
+hire 7
+restock 70 70 20
+charm SteadyHand
+fit 3 SteadyHand
+day
+expedition 1 4 pull:0.6
+expedition 0 4 pull:0.65
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.6
+hire 9
+hire 8
+restock 70 70 20
+day
+expedition 0 1 pull:0.4
+day
+day
+expedition 0 4 pull:0.6
+restock 70 70 20
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.75
+day
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.75
+charm SteadyHand
+fit 0 SteadyHand
+charm SteadyHand
+fit 1 SteadyHand
+day
+restock 70 70 20
+charm SteadyHand
+fit 4 SteadyHand
+charm SteadyHand
+fit 5 SteadyHand
+charm IronGate
+charm IronGate
+fit 6 IronGate
+day
+fit 2 IronGate
+expedition 0 4 pull:0.6
+expedition 0 1 pull:0.4
+expedition 0 4 pull:0.6
+expedition 0 4 pull:0.75
+hire 2
+hire 8
+expedition 0 1 pull:0.4
+restock 70 70 20
+class 0 Kyudo
+class 7 Kyudo
+day
+expedition 0 4 pull:0.6
+hire 1
+hire 6
+day
+day
+day
+expedition 1 1 pull:0.4
+day
+restock 60 60 20
+expedition 1 1 pull:0.4
+day
+release 1
+day
+release 6
+expedition 0 1 pull:0.4
+day
+day
+day
+restock 40 40 10
+day
+day
+day
+day
+day
+restock 40 40 12
+expedition 1 4 pull:0.6
+expedition 0 1 pull:0.5
+day
+day
+day
+day
+day
+day
+expedition 1 2 pull:0.5

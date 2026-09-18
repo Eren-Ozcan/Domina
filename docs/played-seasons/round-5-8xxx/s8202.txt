@@ -1,0 +1,366 @@
+restock 20 20 5
+accept
+expedition 0 4
+hire 1
+hire 5
+bounty 6 pull:0.3
+build TrainingGround
+expedition 0 4
+restock 30 30 5
+expedition 0 men:3,4,1,5
+accept
+bounty 6 pull:0.3
+expedition 0 men:3,4,0,2
+expedition 0 men:1
+restock 30 30 6
+build Steward
+expedition 0 men:4,3,0,2
+accept
+expedition 0 men:4,5,3,1 pull:0.35
+expedition 0 men:4
+bounty 5 pull:0.3
+restock 30 30 6
+expedition 0 men:3,1,2,5 pull:0.3
+build Barracks
+expedition 0 men:3
+accept
+staff Steward
+hire 0
+bounty 5 pull:0.4
+expedition 1 4 pull:0.4
+restock 30 30 8
+expedition 0 3 pull:0.4
+accept
+hire 8
+expedition 0 4 pull:0.4
+bounty 5 pull:0.5
+build Infirmary
+expedition 0 4 pull:0.5
+restock 26 26 5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+restock 40 40 6
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+expedition 0 4 pull:0.5
+hire 6
+hire 7
+staff Physician
+expedition 0 4 pull:0.5
+expedition 0 men:8,9,1,5 pull:0.5
+expedition 0 men:0,6,7,1 pull:0.5
+expedition 0 men:8,9,5,6 pull:0.5
+expedition 0 men:0,7,1,5 pull:0.5
+restock 40 40 3
+day
+expedition 0 men:9,8 pull:0.5
+expedition 0 men:8,9,5,1 pull:0.5
+expedition 0 men:8,9,5,1 pull:0.5
+expedition 0 men:8,9,5,1 pull:0.5
+expedition 0 men:8,9,5,1 pull:0.5
+restock 40 40 6
+expedition 0 men:1,8,5,6 pull:0.5
+build DivinerHut
+day
+accept
+expedition 0 men:9,7,0,6 pull:0.5
+bounty 6 pull:0.5
+hire 6
+expedition 0 men:1,8,10,5 pull:0.5
+restock 50 50 6
+expedition 0 men:1,8,5,10 pull:0.5
+expedition 0 men:0,7,9,1 pull:0.5
+expedition 0 men:8,5,10,7 pull:0.5
+expedition 0 men:0,9,1,8 pull:0.5
+staff Diviner
+build Armoury
+build Kitchen
+expedition 0 men:1,8,5,10 pull:0.5
+path 1 Blade
+drill 8 Guard
+drill 10 Guard
+drill 9 Guard
+drill 0 Conditioning
+build Forge
+expedition 0 men:1,5,7,0 pull:0.5
+restock 44 44 4
+expedition 0 men:1,8,5,10 pull:0.5
+expedition 0 men:0,7,9,1 pull:0.5
+expedition 0 men:8,5,10,7 pull:0.5
+expedition 0 men:0,9,1,8 pull:0.5
+expedition 0 men:5,10,7,9 pull:0.5
+hire 0
+hire 4
+build Shrine
+staff DrillMaster
+staff Cook
+staff WeaponMaster
+restock 50 50 8
+expedition 0 men:8,10,12,7 pull:0.5
+expedition 0 men:1,9,11,0 pull:0.5
+expedition 0 men:8,10,1,12 pull:0.5
+day
+expedition 0 men:1,9,11,0 pull:0.5
+expedition 0 men:8,10,12,7 pull:0.5
+expedition 0 men:1,9,11,0 pull:0.5
+charm SteadyHand
+fit 1 SteadyHand
+charm SteadyHand
+fit 10 SteadyHand
+charm SteadyHand
+fit 12 SteadyHand
+charm SteadyHand
+fit 11 SteadyHand
+restock 44 44 6
+day
+build ArcheryRange
+expedition 0 men:1,8,12,11 pull:0.5
+expedition 0 men:9,7,0,1 pull:0.5
+expedition 0 men:1,8,12,11 pull:0.5
+charm SteadyHand
+fit 8 SteadyHand
+charm SteadyHand
+fit 7 SteadyHand
+charm SteadyHand
+fit 9 SteadyHand
+charm SteadyHand
+fit 0 SteadyHand
+restock 44 44 6
+day
+expedition 0 men:1,8,10,9 pull:0.5
+hire 4
+hire 8
+drill 13 Guard
+drill 14 Guard
+expedition 0 men:1,8,9,7 pull:0.5
+charm SteadyHand
+fit 13 SteadyHand
+expedition 0 men:12,13,1,8 pull:0.5
+expedition 0 men:11,9,7,0 pull:0.5
+expedition 0 men:12,13,1,8 pull:0.5
+hire 8
+drill 12 Guard
+day
+restock 60 60 8
+expedition 0 men:11,9,7,0 pull:0.5
+expedition 0 men:1,8,9,13 pull:0.5
+expedition 0 men:0,7,11,12 pull:0.5
+expedition 0 men:1,8,9,13 pull:0.5
+day
+expedition 0 men:13,1,8 pull:0.5
+build ArcheryRange
+day
+restock 60 60 8
+day
+expedition 1 men:13,12,9 pull:0.5
+expedition 0 men:9
+expedition 0 men:9
+dismiss Diviner
+expedition 0 men:1,8,12,13 pull:0.5
+restock 50 50 6
+expedition 0 men:13,1,8 pull:0.5
+expedition 0 men:9
+expedition 0 men:12,13,1,8 pull:0.5
+restock 50 50 8
+expedition 0 men:9,12,13,8 pull:0.5
+build LongHouse
+expedition 0 men:13
+expedition 0 men:0,7,9,12 pull:0.5
+class 0 Kyudo
+class 11 Kyudo
+expedition 0 men:8,12,9,1 pull:0.5
+path 0 Blade
+path 7 Blade
+path 8 Blade
+path 9 Blade
+restock 50 50 8
+expedition 0 men:0,7,11,9 pull:0.5
+build PlateWorks
+expedition 0 men:8,9,12,1 pull:0.5
+path 12 Blade
+restock 50 50 8
+day
+day
+expedition 0 men:8,9,12,1 pull:0.5
+day
+expedition 0 men:0,7,11,9 pull:0.5
+restock 60 60 10
+day
+expedition 0 men:8,12,1 pull:0.5
+hire 2
+hire 1
+hire 6
+drill 14 Guard
+drill 15 Guard
+drill 16 Guard
+expedition 0 men:14,15,16,9 pull:0.5
+expedition 0 men:14,15,16,9 pull:0.5
+charm SteadyHand
+fit 14 SteadyHand
+charm SteadyHand
+fit 15 SteadyHand
+day
+expedition 1 men:8,12,1,9 pull:0.6
+restock 50 50 8
+charm SteadyHand
+fit 16 SteadyHand
+staff Smith
+day
+expedition 0 men:14,15,16,1 pull:0.5
+hire 3
+hire 7
+drill 17 Guard
+drill 18 Guard
+expedition 0 men:17,18,14,15 pull:0.5
+expedition 0 men:1,8,15,14 pull:0.5
+restock 50 50 8
+expedition 0 men:17,18,16,0 pull:0.5
+charm SteadyHand
+fit 17 SteadyHand
+charm SteadyHand
+fit 18 SteadyHand
+day
+expedition 0 men:17,18,16,14 pull:0.5
+day
+expedition 0 men:14
+restock 30 30 5
+expedition 0 men:8,1,15,0 pull:0.6
+build BardHall
+day
+restock 40 40 6
+day
+expedition 0 men:17,18,16,7 pull:0.5
+day
+dismiss WeaponMaster
+dismiss Smith
+restock 30 30 5
+day
+staff Bard
+expedition 0 men:8,1,14,18 pull:0.6
+restock 50 50 8
+expedition 0 men:15,17,16,0 pull:0.6
+day
+build FormsMaster
+day
+expedition 0 men:8,1,18,14 pull:0.6
+restock 60 60 10
+day
+day
+expedition 0 men:17,16,11,7 pull:0.6
+expedition 0 men:15,14,18,17 pull:0.6
+restock 60 60 10
+expedition 0 men:8,1,18,14 pull:0.6
+path 14 Blade
+path 18 Blade
+day
+expedition 0 men:17,16,11,15 pull:0.6
+build ToriteHall
+class 16 Kyudo
+expedition 0 men:8,1,18,14 pull:0.6
+staff KataMaster
+expedition 0 men:8,1,18,14 pull:0.6
+restock 60 60 10
+expedition 0 men:8,18,14,15 pull:0.6
+build Patron
+day
+day
+expedition 0 men:8,1,14,15 pull:0.6
+expedition 0 men:8,14,18,15 pull:0.6
+restock 60 60 10
+day
+expedition 0 men:17,16,11,7 pull:0.6
+build PoisonGarden
+day
+day
+restock 60 60 10
+expedition 0 men:14
+class 14 Torite
+class 15 Torite
+class 17 Torite
+expedition 0 men:17,16,7,15 pull:0.6
+expedition 0 men:8,14,18,1 pull:0.6
+restock 60 60 10
+day
+day
+expedition 0 men:0,11,16,17 pull:0.6
+expedition 0 men:8,14,18,15 pull:0.6
+restock 60 60 10
+expedition 0 men:8,18,15,1 pull:0.6
+build Herbalist
+expedition 0 men:14
+day
+expedition 0 men:16,8,14 pull:0.6
+hire 7
+drill 19 Guard
+charm SteadyHand
+fit 19 SteadyHand
+restock 60 60 10
+day
+day
+expedition 0 men:16,19,0,11 pull:0.6
+day
+restock 60 60 10
+expedition 0 men:8,18,15,1 pull:0.6
+day
+day
+staff Monk
+day
+expedition 0 men:8,1,18,15 pull:0.6
+charm SteadyHand
+fit 8 SteadyHand
+charm SteadyHand
+fit 18 SteadyHand
+charm SteadyHand
+fit 15 SteadyHand
+charm SteadyHand
+fit 7 SteadyHand
+charm SteadyHand
+fit 17 SteadyHand
+day
+restock 60 60 10
+charm SteadyHand
+fit 0 SteadyHand
+charm SteadyHand
+fit 16 SteadyHand
+charm SteadyHand
+fit 19 SteadyHand
+charm SteadyHand
+fit 11 SteadyHand
+day
+day
+day
+expedition 0 men:0,16,19,11 pull:0.6
+dismiss Steward
+dismiss Cook
+dismiss Bard
+dismiss KataMaster
+day
+expedition 1 men:8,18,15,7 pull:0.6
+restock 60 60 10
+expedition 0 men:8,18,7,17 pull:0.6
+day
+day
+day
+day
+path 15 Blade
+restock 60 60 10
+expedition 0 men:8,18,7,15 pull:0.6
+day
+day
+day
+day
+day
+day
+restock 60 60 10
+day
+expedition 1 men:0,16,17,19 pull:0.6
+day
+day
+day
+day
+night men:8,18,7,15 pull:0.6
+night men:0,16,17,19,11 pull:0.6
+night men:0,16,17,19 pull:0.6
+night men:11

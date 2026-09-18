@@ -1,0 +1,387 @@
+restock 20 20 5
+accept
+expedition 0 4
+hire 6
+hire 2
+bounty 6 pull:0.35
+expedition 0 men:1,3,4,5
+expedition 0 men:0,1,3,4
+restock 40 40 10
+expedition 0 men:1,2,3,4
+accept
+bounty men:0,1,3,4 pull:0.35
+build TrainingGround
+expedition 0 men:2,3,4,5
+expedition 0 men:1,2,3,5 pull:0.3
+restock 60 60 10
+expedition 0 men:0,3,4,5
+accept
+bounty men:0,1,3,4 pull:0.3
+expedition 0 men:0,1,4,5
+build Shrine
+expedition 0 men:0,2,3,5
+drill 2 Xyz
+class 2 Xyz
+path 2 Xyz
+fit 2 Xyz
+staff Xyz
+drill 2 Guard
+drill 2 Footwork
+drill 2 Stamina
+drill 2 Forms
+drill 2 Rest
+drill 2 Sparring
+drill 2 Endurance
+drill 2 Accuracy
+drill 2 Breathing
+drill 2 Conditioning
+drill 2 Evasion
+drill 2 Defence
+drill 2 Grappling
+drill 2 Archery
+drill 2 Stealth
+drill 2 Meditation
+drill 2 Weights
+drill 2 Running
+drill 2 Strikes
+expedition 0 men:1
+build Infirmary
+expedition 0 men:0,2,3,5
+expedition 0 men:0,2
+restock 60 60 6
+expedition 0 men:2
+expedition 0 men:1,3,4,5 pull:0.3
+hire 9
+day
+expedition 0 men:0,2,5,6
+expedition 0 men:1,4,5,6 pull:0.4
+restock 60 60 4
+expedition 0 men:6
+staff Broker
+staff DrillMaster
+expedition 0 men:6
+expedition 0 men:0,2,5,6
+expedition 0 men:6
+restock 60 60 6
+expedition 0 men:2
+accept
+bounty men:1,2,5,6 pull:0.35
+build Armoury
+expedition 1 men:0,1,4,5
+expedition 0 men:0
+expedition 0 men:1,2,5,6 pull:0.4
+accept
+bounty men:1,2,5,6 pull:0.35
+hire 5
+restock 60 60 6
+expedition 0 men:1,4,5,6 pull:0.4
+expedition 0 men:2,5,6,7
+staff WeaponMaster
+day
+accept
+bounty men:1,2,5,6 pull:0.35
+build Forge
+expedition 0 men:2,5,6,7
+expedition 0 men:1,2,5,6 pull:0.4
+hire 2
+charm IronGate
+day
+fit 1 IronGate
+accept
+bounty men:1,2,5,6 pull:0.35
+restock 50 50 4
+expedition 0 men:1,2,5,6 pull:0.4
+expedition 0 men:1,2,5,6 pull:0.4
+build Barracks
+expedition 0 men:1,2,5,6 pull:0.4
+accept
+bounty men:1,5,6,7 pull:0.4
+staff Smith
+staff Physician
+expedition 0 men:1,6,7,8 pull:0.4
+restock 60 60 5
+path 1 Stone
+class 1 Torite
+day
+path 8 Stone
+path 7 Stone
+path 6 Blade
+path 5 Shadow
+expedition 0 men:1,5,6,7 pull:0.4
+accept
+bounty men:1,5,6,7 pull:0.4
+build ArcheryRange
+expedition 1 men:1,6,7,8 pull:0.4
+expedition 0 men:1,5,6,7 pull:0.4
+hire 8
+expedition 0 men:1,5,6,7 pull:0.4
+drill 8 Guard
+drill 9 Guard
+drill 7 Conditioning
+accept
+bounty men:1,5,6,7 pull:0.4
+restock 60 60 8
+expedition 1 men:1,6,8,9 pull:0.4
+build Kitchen
+day
+day
+path 6 Blade
+path 5 Blade
+path 1 Blade
+accept
+bounty men:1,5,6,7 pull:0.4
+expedition 0 men:1,6,7,9 pull:0.4
+build ToriteHall
+expedition 0 men:1,5,7,8 pull:0.4
+staff Cook
+restock 60 60 8
+expedition 0 men:5,6,8,9 pull:0.4
+accept
+bounty men:1,6,7,9 pull:0.4
+class 8 Kyudo
+staff KataMaster
+expedition 0 men:1,6,7,9 pull:0.4
+build FormsMaster
+expedition 0 men:1,6,7,9 pull:0.4
+hire 0
+hire 9
+drill 10 Guard
+drill 11 Guard
+day
+accept
+bounty men:1,6,7,9 pull:0.4
+restock 60 60 8
+expedition 0 men:5,8,10,11 pull:0.4
+expedition 0 men:1,6,7,9 pull:0.4
+build Steward
+build BardHall
+expedition 0 men:1,6,7,9 pull:0.4
+accept
+bounty men:1,6,7,9 pull:0.4
+restock 60 60 8
+charm SteadyHand
+fit 6 SteadyHand
+expedition 1 men:5,8,10,11 pull:0.4
+class 10 Torite
+class 11 Torite
+staff Monk
+expedition 0 men:5,8,10,11 pull:0.4
+expedition 0 men:10,11 pull:0.4
+staff KataMaster
+staff Bard
+accept
+bounty men:1,6,7,9 pull:0.4
+staff Steward
+drill 5 Guard
+drill 7 Guard
+drill 8 Guard
+charm IronGate
+fit 8 IronGate
+charm IronGate
+fit 7 IronGate
+day
+restock 60 60 8
+expedition 0 men:10,11 pull:0.4
+expedition 0 men:1,7,9,11 pull:0.4
+expedition 0 men:1,7,10,11 pull:0.6
+build PoisonGarden
+charm SteadyHand
+fit 7 SteadyHand
+charm SteadyHand
+fit 9 SteadyHand
+accept
+bounty men:5,7,9,11 pull:0.5
+restock 80 80 20
+expedition 0 men:1,9,10,11 pull:0.5
+hire 8
+drill 12 Guard
+day
+expedition 0 men:1,9,10,11 pull:0.5
+expedition 0 men:1,7,10,11 pull:0.6
+build Broker
+charm SteadyHand
+fit 10 SteadyHand
+charm SteadyHand
+fit 1 SteadyHand
+expedition 0 men:5,8,9,12 pull:0.5
+expedition 0 men:1,5,7,10 pull:0.6
+charm LongBreath
+fit 12 LongBreath
+charm SwiftFoot
+fit 8 SwiftFoot
+charm QuietMind
+fit 9 QuietMind
+day
+charm SteadyHand
+fit 5 SteadyHand
+charm IronGate
+fit 5 IronGate
+charm SteadyHand
+fit 11 SteadyHand
+charm IronGate
+fit 11 IronGate
+charm IronGate
+fit 10 IronGate
+charm IronGate
+fit 12 IronGate
+day
+restock 80 80 20
+expedition 0 men:8,9,11,12 pull:0.5
+expedition 0 men:1,7,10,11 pull:0.5
+expedition 0 men:5,8,9,12 pull:0.5
+build DivinerHut
+class 1 Dokushi
+class 5 Dokushi
+class 7 Dokushi
+class 9 Dokushi
+class 12 Dokushi
+expedition 0 men:1,7,10,11 pull:0.5
+expedition 0 men:1,7,10,11 pull:0.6
+drill 5 Conditioning
+drill 8 Conditioning
+drill 9 Conditioning
+drill 10 Conditioning
+drill 12 Conditioning
+day
+hire 4
+drill 13 Guard
+expedition 1 men:5,7,9,10 pull:0.5
+day
+path 7 Stone
+path 8 Stone
+path 9 Stone
+path 10 Stone
+path 12 Stone
+path 13 Stone
+restock 90 90 20
+day
+day
+path 12 Stone
+expedition 1 men:5,7,8,10 pull:0.5
+expedition 0 men:5,8,10,12 pull:0.6
+expedition 0 men:5,8,10,12 pull:0.6
+expedition 0 men:5,8,10,12 pull:0.6
+expedition 0 men:5,7,8,12 pull:0.6
+expedition 0 men:5,8,10,12 pull:0.6
+restock 90 90 20
+day
+day
+expedition 0 men:5,7,8,10 pull:0.5
+expedition 0 men:8,10,12,13 pull:0.5
+expedition 0 men:5,7,8,13 pull:0.6
+drill 1 Conditioning
+drill 13 Conditioning
+expedition 0 men:5,7,10,12 pull:0.6
+restock 100 100 25
+expedition 0 men:1,8,9,13 pull:0.5
+day
+day
+expedition 1 men:1,9,13,7 pull:0.5
+expedition 0 men:8,9,10,12 pull:0.6
+expedition 0 men:5,8,10,12 pull:0.6
+hire 5
+hire 9
+drill 14 Guard
+drill 15 Guard
+day
+expedition 1 men:1,7,8,10 pull:0.5
+day
+hire 1
+drill 16 Guard
+day
+day
+restock 100 100 25
+day
+day
+expedition 0 men:1,8,10,13 pull:0.5
+day
+day
+day
+day
+expedition 1 men:1,8,10,13 pull:0.5
+expedition 0 men:9,10,14,16 pull:0.5
+drill 15 Strikes
+drill 16 Strikes
+drill 14 Conditioning
+restock 100 100 25
+expedition 0 men:1,8,13,15 pull:0.5
+expedition 0 men:9,10,14,16 pull:0.5
+hire 7
+hire 0
+drill 17 Guard
+drill 18 Guard
+day
+day
+day
+day
+day
+day
+restock 100 100 25
+expedition 1 men:13,14,15,17 pull:0.5
+day
+day
+day
+path 15 Stone
+path 17 Stone
+path 14 Stone
+day
+day
+day
+day
+path 15 Stone
+path 14 Stone
+restock 100 100 25
+expedition 0 men:13,14,15,17 pull:0.5
+path 14 Stone
+path 15 Stone
+path 17 Stone
+path 9 Blade
+expedition 0 men:13,14,15,17 pull:0.5
+day
+day
+expedition 0 men:1,8,10,13 pull:0.6
+expedition 0 men:13,14,15,17 pull:0.5
+hire 5
+drill 19 Guard
+day
+day
+expedition 0 men:8,10,13,17 pull:0.5
+restock 100 100 25
+day
+day
+drill 18 Guard
+expedition 1 men:9,13,15,17 pull:0.5
+expedition 1 men:9,15,17,18 pull:0.5
+day
+day
+expedition 0 men:9,13,15,17 pull:0.5
+restock 100 100 25
+day
+day
+day
+expedition 1 men:9,13,15,18 pull:0.5
+expedition 1 men:1,8,10,17 pull:0.5
+day
+day
+day
+restock 100 100 25
+day
+day
+day
+expedition 0 men:9,13,15,18 pull:0.5
+day
+day
+day
+restock 120 120 30
+expedition 1 men:9,15,18,13 pull:0.5
+expedition 0 men:1,8,10,17 pull:0.5
+day
+day
+day
+day
+day
+day
+day
+night men:1,8,10,13 pull:0.35
+night men:9,13,15,17 pull:0.35
+night men:18

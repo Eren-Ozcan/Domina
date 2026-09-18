@@ -1,0 +1,197 @@
+expedition 0 2
+expedition 0 3
+accept
+bounty 4
+expedition 1 1
+accept
+bounty 4
+expedition 1 1
+expedition 1 2
+expedition 1 1
+accept
+bounty 4
+expedition 1 1
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+expedition 1 2
+build Kitchen
+expedition 1 1
+expedition 0 3
+day
+day
+day
+day
+day
+accept
+bounty 4
+expedition 1 1
+hire 5
+hire 1
+expedition 1 2
+day
+day
+day
+day
+expedition 0 3
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+accept
+bounty 4
+day
+day
+day
+day
+day
+expedition 0 2
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+expedition 1 4
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+hire 0
+hire 2
+hire 7
+hire 8
+expedition 1 1
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+day
+night 2
+night 2
+night 2
+night 2
+night 2
