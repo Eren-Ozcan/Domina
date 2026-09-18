@@ -145,6 +145,11 @@ internal static class PlayCommand
         /// <summary>Every death of the season, dated — the printed log only reaches ten days back.</summary>
         private readonly List<string> _deaths = [];
 
+        /// <summary>The season-long number of every warrior the dojo has had. See <see cref="NumberOf"/>.</summary>
+        private readonly Dictionary<WarriorId, int> _numbers = [];
+
+        private int _nextNumber;
+
         /// <summary>
         /// The day the last line of the log belongs to.
         /// </summary>
@@ -328,6 +333,9 @@ internal static class PlayCommand
                 case "staff":
                     return Staff(word);
 
+                case "sake":
+                    return BuySake(word);
+
                 case "feast":
                     return Feast();
 
@@ -338,7 +346,17 @@ internal static class PlayCommand
                     return Warrior(word, id => _state.Release(id));
 
                 case "retire":
-                    return Warrior(word, id => _state.Retire(id));
+                    return Warrior(
+                        word,
+                        entry => _state.CanRetire(entry)
+                            ? null
+                            : $"the retirement was refused — {entry.Name} has {entry.Victories} "
+                                + $"victory(ies) and the house asks for {_state.Tuning.VictoriesForRetirement}"
+                                + " (a crippling wound opens it early)",
+                        id => _state.Retire(id));
+
+                case "dismiss":
+                    return DismissStaff(word);
 
                 case "charm":
                     return Charm(word);
@@ -419,15 +437,11 @@ internal static class PlayCommand
             }
 
             EncounterOffer offer = board[pick];
-            int want = word.Length > 2 && !word[2].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
-                ? Number(word[2])
-                : EncounterOffer.MaxPartySize;
-            List<RosterEntry> party =
-            [
-                .. _state.Roster.FitForCampaign
-                    .OrderByDescending(e => Score(e))
-                    .Take(Math.Clamp(want, 1, EncounterOffer.MaxPartySize)),
-            ];
+            List<RosterEntry> party = Party(word, 2, [.. _state.Roster.FitForCampaign], out string? cannot);
+            if (cannot is not null)
+            {
+                return cannot;
+            }
 
             if (Domina.Core.Campaign.Expedition.Refuse(_state, offer, party) is ExpeditionRefusal no)
             {
@@ -472,19 +486,25 @@ internal static class PlayCommand
         {
             if (_state.Season.Phase != SeasonPhase.FinalNight)
             {
-                return $"the last night is not open (the season is {_state.Season.Phase})";
+                // The night opens when the last day closes, not on it — a player who read the standing
+                // on day 180 and typed `night` was told only that the season was "Running", and missed
+                // the climax he had played 180 days for.
+                return $"the last night is not open (the season is {_state.Season.Phase}) — "
+                    + $"it opens when day {_days} closes, so day {_state.Day} still has to be played out"
+                    + (_state.Season.GateOpen
+                        ? " (the gate is open, so there will be a night)"
+                        : $" — and the gate is shut: {Math.Max(0, 3 - _state.Season.HeadsTaken)} more head(s) or there is no night at all");
             }
 
-            int want = word.Length > 1 && !word[1].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
-                ? Number(word[1])
-                : EncounterOffer.MaxPartySize;
-            List<RosterEntry> party =
-            [
-                .. _state.Roster.Living
-                    .Where(FinalNight.CanAnswerTheBell(_state))
-                    .OrderByDescending(Score)
-                    .Take(Math.Clamp(want, 1, EncounterOffer.MaxPartySize)),
-            ];
+            List<RosterEntry> party = Party(
+                word,
+                1,
+                [.. _state.Roster.Living.Where(FinalNight.CanAnswerTheBell(_state))],
+                out string? cannot);
+            if (cannot is not null)
+            {
+                return cannot;
+            }
 
             if (FinalNight.Refuse(_state, party) is FinalRefusal no)
             {
@@ -521,20 +541,24 @@ internal static class PlayCommand
             // The hunt used to send the top four and nothing else could be asked of it, so a failed
             // hunt could take the whole roster in one line — and it did, in two played seasons. The
             // party is sized the way an expedition's is.
-            int want = word.Length > 1 && !word[1].StartsWith("pull:", StringComparison.OrdinalIgnoreCase)
-                ? Number(word[1])
-                : EncounterOffer.MaxPartySize;
-
-            List<RosterEntry> party =
-            [
-                .. _state.Roster.FitForCampaign
-                    .OrderByDescending(Score)
-                    .Take(Math.Clamp(want, 1, EncounterOffer.MaxPartySize)),
-            ];
+            List<RosterEntry> party = Party(word, 1, [.. _state.Roster.FitForCampaign], out string? cannot);
+            if (cannot is not null)
+            {
+                return cannot;
+            }
 
             if (party.Count == 0)
             {
                 return "nobody is fit to hunt";
+            }
+
+            // The expedition asks the core whether the party may go and prints the refusal; the hunt
+            // asked nothing and handed an oversized party straight to the core, which throws rather
+            // than refuses. A played season died on that throw — the whole run, not the move.
+            if (!contract.AsOffer(_state.Day).Accepts(party.Count))
+            {
+                return $"the hunt was refused: WrongPartySize — a contract takes "
+                    + $"1-{EncounterOffer.MaxPartySize} men, {party.Count} were sent";
             }
 
             BountyResult result = new Domina.Core.Campaign.Expedition().SendToBounty(
@@ -554,6 +578,40 @@ internal static class PlayCommand
         /// "the feast was refused" was the one refusal in a played season that gave no reason at all,
         /// and the reason is never guessable: sake is bought, not drawn, and the cooldown is invisible.
         /// </remarks>
+        /// <summary>Buys sake by the measure.</summary>
+        /// <remarks>
+        /// The core has had <see cref="DojoState.BuySake"/> since the feast landed, and the harness
+        /// had the drinking half and not the buying one — exactly the shape of the missing
+        /// <c>dismiss</c>. A played season met "the feast was refused — it drinks 10 sake (4 in the
+        /// store)" and had no move that could ever reach ten: sake is not a restock argument, and it
+        /// was not even printed in the purse.
+        /// </remarks>
+        private string? BuySake(string[] word)
+        {
+            if (word.Length < 2)
+            {
+                return $"sake needs a number of measures ({_state.Economy.SakePrice} gold each)";
+            }
+
+            int measures = Number(word[1]);
+            if (measures <= 0)
+            {
+                return "sake needs a number of measures above zero";
+            }
+
+            int bought = _state.BuySake(measures);
+            if (bought <= 0)
+            {
+                return $"no sake was bought — a measure costs {_state.Economy.SakePrice} gold "
+                    + $"and {_state.Resources.Gold} is in the chest";
+            }
+
+            Note($"bought {bought} measure(s) of sake for {bought * _state.Economy.SakePrice} gold"
+                + (bought < measures ? $" — {measures} were asked for and the purse reached {bought}" : string.Empty)
+                + $"; the store holds {_state.Resources.Sake} and a feast drinks {_state.FeastSake}");
+            return null;
+        }
+
         private string? Feast()
         {
             if (!_state.Roster.Living.Any())
@@ -671,7 +729,10 @@ internal static class PlayCommand
 
             if (!Enum.TryParse(word[2], ignoreCase: true, out Drill drill))
             {
-                return $"there is no drill called {word[2]}";
+                // Every other refusal that takes a word out of an enum prints the whole set; this one
+                // did not, and a player guessed eighteen words across two turns to find the five.
+                return $"there is no drill called {word[2]} — they are "
+                    + $"{string.Join(", ", Enum.GetNames<Drill>())}";
             }
 
             return Warrior(word, id => _state.SetDrill(id, drill));
@@ -684,6 +745,34 @@ internal static class PlayCommand
                 return $"there is no facility called {(word.Length > 1 ? word[1] : "?")}";
             }
 
+            // "the order was refused" was the one refusal left in the harness that named no rule at
+            // all: a player with 1,273 gold ordered a building whose prerequisite was not standing,
+            // was told nothing, and never found out why. A building is left off "can be ordered"
+            // exactly when one of these three is true, so the refusal says which.
+            if (_state.School.Has(node))
+            {
+                return $"the order was refused — the {node} is already standing";
+            }
+
+            if (_state.School.IsBuilding(node))
+            {
+                return $"the order was refused — the {node} is already on the site";
+            }
+
+            SchoolNode plan = SchoolTree.Find(node);
+            if (plan.Requires is SchoolNodeId needs && !_state.School.Has(needs))
+            {
+                return $"the order was refused — the {node} is built onto the {needs}, "
+                    + "and that is not standing";
+            }
+
+            int price = _state.School.PriceOf(plan);
+            if (price > _state.Resources.Gold)
+            {
+                return $"the order was refused — the {node} costs {price} gold and "
+                    + $"{_state.Resources.Gold} is in the chest";
+            }
+
             return _state.BuySchoolNode(node) ? null : "the order was refused";
         }
 
@@ -691,10 +780,67 @@ internal static class PlayCommand
         {
             if (word.Length < 2 || !Enum.TryParse(word[1], ignoreCase: true, out StaffRole role))
             {
-                return $"there is no post called {(word.Length > 1 ? word[1] : "?")}";
+                return $"there is no post called {(word.Length > 1 ? word[1] : "?")} — "
+                    + $"they are {string.Join(", ", Enum.GetNames<StaffRole>())}";
             }
 
-            return _state.Hire(role) ? null : "the post was not filled";
+            // "the post was not filled" was refused silently for a whole season in one played run:
+            // the post belongs to a building, and a player who has not built it is told nothing about
+            // which one. The wage is said out loud in the same breath, because hiring is free at the
+            // counter and then takes gold out of every day that follows.
+            if (!_state.School.HasPostFor(role))
+            {
+                SchoolNode post = SchoolTree.Of(role);
+                return $"the post was not filled — a {role} works out of the {post.Id}, "
+                    + $"and it is not standing ({post.Cost}g/{post.BuildDays}d)";
+            }
+
+            if (_state.Staff.Has(role))
+            {
+                return $"the post was not filled — a {role} already holds it "
+                    + $"(dismiss {role} lets him go)";
+            }
+
+            if (!_state.Hire(role))
+            {
+                return "the post was not filled";
+            }
+
+            Note($"{role} took the post at {_state.StaffTuning.WageOf(role)} gold a day — "
+                + $"the wage runs until he is dismissed (dismiss {role}), and the payroll is now "
+                + $"{_state.Staff.DailyWage(_state.StaffTuning)} gold a day");
+            return null;
+        }
+
+        /// <summary>Lets a member of staff go.</summary>
+        /// <remarks>
+        /// The core has always had <see cref="DojoState.Dismiss"/> — the wage is the one gear the
+        /// economy has, and letting someone go on a bad day is what it is for (GDD §10). The harness
+        /// had the hiring half and not this one, so a played season signed eight wages it could never
+        /// unsign: two dojos died at 40-44 gold a day with a full purse and no men.
+        /// </remarks>
+        private string? DismissStaff(string[] word)
+        {
+            if (word.Length < 2 || !Enum.TryParse(word[1], ignoreCase: true, out StaffRole role))
+            {
+                return $"there is no post called {(word.Length > 1 ? word[1] : "?")} — "
+                    + $"they are {string.Join(", ", Enum.GetNames<StaffRole>())}";
+            }
+
+            if (!_state.Staff.Has(role))
+            {
+                return $"nobody was let go — no {role} is on the payroll "
+                    + $"({(_state.Staff.Hired.Count == 0 ? "nobody is" : string.Join(", ", _state.Staff.Hired) + " are")})";
+            }
+
+            if (!_state.Dismiss(role))
+            {
+                return "nobody was let go";
+            }
+
+            Note($"{role} was let go — the building stays and drops to half its work, and the payroll "
+                + $"falls to {_state.Staff.DailyWage(_state.StaffTuning)} gold a day");
+            return null;
         }
 
         private string? Gift(string[] word)
@@ -734,51 +880,217 @@ internal static class PlayCommand
         {
             if (word.Length < 3 || !Enum.TryParse(word[2], ignoreCase: true, out OmamoriKind kind))
             {
-                return "fit needs a warrior and a charm";
+                return "fit needs a warrior and a charm — they are "
+                    + $"{string.Join(", ", Enum.GetNames<OmamoriKind>())}";
             }
 
-            return Warrior(word, id => _state.FitCharm(id, kind));
+            return Warrior(
+                word,
+                entry =>
+                {
+                    if (_state.CharmStore.GetValueOrDefault(kind) <= 0)
+                    {
+                        return $"the charm was not fitted — no {kind} is in the store "
+                            + $"(charm {kind} buys one for {_state.PriceOf(kind)} gold)";
+                    }
+
+                    if (entry.Warrior.Charms.Count >= _state.OmamoriSlots)
+                    {
+                        return $"the charm was not fitted — {entry.Name} already wears "
+                            + $"{string.Join(", ", entry.Warrior.Charms)} and a man has "
+                            + $"{_state.OmamoriSlots} slot(s)"
+                            + (_state.Staff.Has(StaffRole.Monk) ? string.Empty : "; a monk in the shrine opens the second");
+                    }
+
+                    return null;
+                },
+                id => _state.FitCharm(id, kind));
         }
 
         private string? Class(string[] word)
         {
             if (word.Length < 3 || !Enum.TryParse(word[2], ignoreCase: true, out WarriorClass klass))
             {
-                return "class needs a warrior and a class";
+                return "class needs a warrior and a class — they are "
+                    + $"{string.Join(", ", Enum.GetNames<WarriorClass>().Where(n => n != nameof(WarriorClass.None)))}";
             }
 
-            return Warrior(word, id => _state.TrainClass(id, klass));
+            return Warrior(
+                word,
+                entry =>
+                {
+                    if (!_state.School.UnlockedClasses().Contains(klass))
+                    {
+                        SchoolNode hall = SchoolTree.All.Single(n => n.Unlocks == klass);
+                        return $"the class was refused — {klass} is taught in the {hall.Id}, "
+                            + $"and it is not standing ({hall.Cost}g/{hall.BuildDays}d)";
+                    }
+
+                    if (!ClassAptitude.IsPossibleFor(klass, entry.Warrior.Disabilities))
+                    {
+                        return $"the class was refused — {entry.Name} cannot practise {klass} with "
+                            + $"the wounds he carries (lost: {string.Join(", ", entry.Warrior.Disabilities.Select(d => d.Part))})";
+                    }
+
+                    if (entry.Warrior.Class != WarriorClass.None
+                        && ClassAptitude.IsPossibleFor(entry.Warrior.Class, entry.Warrior.Disabilities))
+                    {
+                        return $"the class was refused — {entry.Name} already practises "
+                            + $"{entry.Warrior.Class}, and a class is only re-chosen when a wound closes it";
+                    }
+
+                    return null;
+                },
+                id => _state.TrainClass(id, klass));
         }
 
         private string? Path(string[] word)
         {
             if (word.Length < 3 || !Enum.TryParse(word[2], ignoreCase: true, out WarriorPath path))
             {
-                return "path needs a warrior and a path";
+                return "path needs a warrior and a path — they are "
+                    + $"{string.Join(", ", Enum.GetNames<WarriorPath>().Where(n => n != nameof(WarriorPath.None)))}";
             }
 
-            return Warrior(word, id => _state.ChoosePath(id, path));
+            return Warrior(
+                word,
+                entry =>
+                {
+                    if (entry.Warrior.Path != WarriorPath.None)
+                    {
+                        return $"the path was refused — {entry.Name} walks the "
+                            + $"{entry.Warrior.Path} path already, and a path is chosen once with no way back";
+                    }
+
+                    int needed = _state.Tuning.Training.PathTrainingDays;
+                    if (entry.TrainingDays < needed)
+                    {
+                        return $"the path was refused — a path is earned on the training ground: "
+                            + $"{entry.Name} has {entry.TrainingDays} training day(s) of the {needed} it asks for";
+                    }
+
+                    return null;
+                },
+                id => _state.ChoosePath(id, path));
         }
 
-        private string? Warrior(string[] word, Func<WarriorId, bool> act)
+        private string? Warrior(string[] word, Func<WarriorId, bool> act) =>
+            Warrior(word, _ => null, act);
+
+        /// <summary>Makes a move on one named warrior, saying why the move is not open to him.</summary>
+        /// <remarks>
+        /// The bare "the move was refused" was the harness's worst line: every rule in the core that
+        /// can turn a move down printed the same six words, and a player could spend four turns
+        /// guessing at tenure, training days, a hall he had not built and a slot that was full. The
+        /// check runs before the core is asked, and it names the one thing that is in the way.
+        /// </remarks>
+        private string? Warrior(string[] word, Func<RosterEntry, string?> why, Func<WarriorId, bool> act)
         {
             if (word.Length < 2)
             {
                 return "the move names no warrior";
             }
 
-            List<RosterEntry> living = Living();
-            int index = Number(word[1]);
-            if (index < 0 || index >= living.Count)
+            int number = Number(word[1]);
+            RosterEntry? entry = Living().Find(e => NumberOf(e) == number);
+            if (entry is null)
             {
-                return $"there is no warrior {index}";
+                return $"there is no warrior {number} on the roster — a number is given once and "
+                    + "kept for the season, so a dead man's number is never handed to anybody else";
             }
 
-            return act(living[index].Warrior.Id) ? null : "the move was refused";
+            if (why(entry) is string no)
+            {
+                return no;
+            }
+
+            return act(entry.Warrior.Id) ? null : "the move was refused";
         }
 
-        private List<RosterEntry> Living() =>
-            [.. _state.Roster.Living.OrderBy(e => e.Warrior.Name, StringComparer.Ordinal)];
+        /// <summary>The number a warrior keeps for the whole season.</summary>
+        /// <remarks>
+        /// The roster was printed in alphabetical order and numbered by its position in that list, so
+        /// every hire and every death renumbered the men under it: a player who read "6" in the
+        /// morning and wrote <c>drill 6</c> an hour later drilled a different man, and two veterans
+        /// were put on the wrong exercise that way without anybody noticing. The number is handed out
+        /// once, on the day the man first appears, and is never handed out again.
+        /// </remarks>
+        private int NumberOf(RosterEntry entry)
+        {
+            if (!_numbers.TryGetValue(entry.Warrior.Id, out int number))
+            {
+                number = _nextNumber++;
+                _numbers[entry.Warrior.Id] = number;
+            }
+
+            return number;
+        }
+
+        private List<RosterEntry> Living()
+        {
+            // The numbers follow the order the men joined in, not the order they are printed in, so
+            // they are handed out over the whole roster — the dead included — before anybody is listed.
+            foreach (RosterEntry entry in _state.Roster.Entries)
+            {
+                NumberOf(entry);
+            }
+
+            return [.. _state.Roster.Living.OrderBy(NumberOf)];
+        }
+
+        /// <summary>Who goes out on a fight move.</summary>
+        /// <remarks>
+        /// The party used to be taken off the top of the roster by quality and there was no way to
+        /// ask for anybody else, so the bottom of the bench never fought, never gained and was still
+        /// raw on the night it was needed — three played seasons reported the same trap and none of
+        /// them had a move that reached it. <c>men:0,3,5</c> names the party by the numbers the
+        /// roster prints; a bare number still means "the best n of them".
+        /// </remarks>
+        private List<RosterEntry> Party(string[] word, int from, List<RosterEntry> pool, out string? refusal)
+        {
+            refusal = null;
+
+            if (Array.Find(word, w => w.StartsWith("men:", StringComparison.OrdinalIgnoreCase)) is string named)
+            {
+                List<RosterEntry> chosen = [];
+                foreach (string part in named[4..].Split(',', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    int number = Number(part.Trim());
+                    RosterEntry? man = pool.Find(e => NumberOf(e) == number);
+                    if (man is null)
+                    {
+                        refusal = Living().Exists(e => NumberOf(e) == number)
+                            ? $"warrior {number} cannot go today — he is on the roster but not fit for the field"
+                            : $"there is no warrior {number} on the roster";
+                        return [];
+                    }
+
+                    if (!chosen.Contains(man))
+                    {
+                        chosen.Add(man);
+                    }
+                }
+
+                if (chosen.Count == 0)
+                {
+                    refusal = "men: named nobody — it takes the roster's numbers, as in men:0,3,5";
+                }
+
+                return chosen;
+            }
+
+            int want = EncounterOffer.MaxPartySize;
+            for (int i = from; i < word.Length; i++)
+            {
+                if (int.TryParse(word[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int size))
+                {
+                    want = size;
+                    break;
+                }
+            }
+
+            return [.. pool.OrderByDescending(Score).Take(Math.Clamp(want, 1, EncounterOffer.MaxPartySize))];
+        }
 
         private static int Number(string word) =>
             int.TryParse(word, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) ? value : -1;
@@ -864,11 +1176,16 @@ internal static class PlayCommand
 
             output.WriteLine($"DAY {_state.Day} of {_days}   phase {_state.Season.Phase}");
             output.WriteLine(
-                $"PURSE  {purse.Gold} gold | food {purse.Food} | water {purse.Water} | medicine {purse.Medicine}");
+                $"PURSE  {purse.Gold} gold | food {purse.Food} | water {purse.Water} | "
+                + $"medicine {purse.Medicine} | sake {purse.Sake}"
+                + $"   (food {_state.Economy.FoodPrice}g, water {_state.Economy.WaterPrice}g, "
+                + $"medicine {_state.Economy.MedicinePrice}g, sake {_state.Economy.SakePrice}g)");
 
             Resources draw = _state.DailyDraw();
+            int payroll = _state.Staff.DailyWage(_state.StaffTuning);
             output.WriteLine(
-                $"DRAW   today takes food {draw.Food}, water {draw.Water}, medicine {draw.Medicine}, gold {draw.Gold}");
+                $"DRAW   today takes food {draw.Food}, water {draw.Water}, medicine {draw.Medicine}, gold {draw.Gold}"
+                + (payroll > 0 ? $" (of which {payroll} is the staff payroll)" : string.Empty));
             // The gate used to be a bare fraction, and a player could reach day 180 alive without ever
             // being told that the heads are what the season is for: surviving to the end with a shut
             // gate closes the season with no last night at all.
@@ -886,18 +1203,61 @@ internal static class PlayCommand
                 $"SEASON {heads}, {gate}, "
                 + $"quiet weeks in a row {_state.Season.MissedStreak}");
 
-            output.WriteLine();
-            output.WriteLine("ROSTER (index name  health  infirmary  drill  morale  honor  class)");
-            List<RosterEntry> living = Living();
-            for (int i = 0; i < living.Count; i++)
+            // The one line every played season asked for and none of them got. From day 9 the header
+            // said "the last night will be fought" and nothing else for 171 days, so four players
+            // built one good party of four and met a chain of five. Wounds carry between the bells
+            // and the first loss ends the season, which is what actually decided four of six runs.
+            if (_state.Season.GateOpen)
             {
-                RosterEntry e = living[i];
-                WarriorStats s = e.Warrior.EffectiveStats;
                 output.WriteLine(
-                    $"  {i}  {e.Warrior.Name,-12} hp {s.MaxHealth,3:F0}  "
+                    $"  the night is {_state.Season.Tuning.FinalRounds} bouts, answered one at a time; "
+                    + "wounds carry from bell to bell and nobody heals between them, and the FIRST bout "
+                    + "lost ends the season where it stands — the bouts left are not fought. A party is "
+                    + $"1-{EncounterOffer.MaxPartySize} men, so the night asks for "
+                    + $"{_state.Season.Tuning.FinalRounds} parties, not one.");
+            }
+
+            output.WriteLine();
+            // The number is the man's for the season (see NumberOf) — it is not his place in this list.
+            output.WriteLine("ROSTER (no. name  health  infirmary  drill  morale  honor  class  charms)");
+            double threshold = _state.Tribunal.Tuning.SeppukuThreshold;
+            output.WriteLine(
+                // This line used to say "winning fights lifts honour; sitting out lets it fall", and
+                // both halves were wrong. A fight's honour is HonorEngine.PerformanceDelta — the
+                // man's own hit rate against a neutral 0.5 — so a man can win and lose honour, and a
+                // played season watched exactly that happen and could not explain it. The pardon is
+                // the crowd's, never the player's: there is no move that grants one.
+                $"  a man whose honour falls under {threshold:F0} is called before the tribunal, and the "
+                + "verdict is seppuku unless the crowd pardons him — the house has no move that does. "
+                + "A fight moves honour by how well HE fought, not by whether the party won: a man who "
+                + "misses more than he lands loses honour in a victory. A week the dojo takes no fight "
+                + "costs the whole roster honour.");
+            List<RosterEntry> living = Living();
+            foreach (RosterEntry e in living)
+            {
+                WarriorStats s = e.Warrior.EffectiveStats;
+                string charms = e.Warrior.Charms.Count == 0
+                    ? _state.OmamoriSlots == 0
+                        ? "no charm (no slot until a shrine stands)"
+                        : $"no charm ({_state.OmamoriSlots} slot(s))"
+                    : $"{string.Join("+", e.Warrior.Charms)} ({e.Warrior.Charms.Count} of {_state.OmamoriSlots})";
+
+                // The one death that arrives with no warning at all: three played seasons lost a man
+                // to the tribunal and not one of them had been told the threshold existed.
+                string tribunal = _state.Tribunal.Standing?.Warrior == e.Warrior.Id
+                    ? "  <- STANDS BEFORE THE TRIBUNAL, the verdict comes when this day closes"
+                    : _state.Tribunal.Queue.Any(q => q.Warrior == e.Warrior.Id)
+                        ? "  <- SUMMONED by the tribunal"
+                        : e.Warrior.Honor < threshold
+                            ? "  <- HONOUR BELOW THE THRESHOLD, the tribunal will call him"
+                            : string.Empty;
+
+                output.WriteLine(
+                    $"  {NumberOf(e),2}  {e.Warrior.Name,-12} hp {s.MaxHealth,3:F0}  "
                     + $"{(e.RecoveryDaysRemaining > 0 ? $"infirmary {e.RecoveryDaysRemaining}d" : "fit        ")}  "
                     + $"{e.Drill,-12} morale {e.Warrior.Morale,5:F0}  honor {e.Warrior.Honor,5:F0}  "
-                    + $"{e.Warrior.Class}  str {s.Strength:F0} acc {s.Accuracy:F0} def {s.Defense:F0} eva {s.Evasion:F0}");
+                    + $"{e.Warrior.Class}  str {s.Strength:F0} acc {s.Accuracy:F0} def {s.Defense:F0} eva {s.Evasion:F0}  "
+                    + $"{charms}{tribunal}");
             }
 
             if (living.Count == 0)
@@ -918,7 +1278,11 @@ internal static class PlayCommand
             }
 
             output.WriteLine();
-            output.WriteLine("BOARD (index  threat  enemies  promised  expires  party)");
+            output.WriteLine("BOARD (index  enemies  promised  expires  party)");
+            output.WriteLine(
+                "  the threat word in brackets is the day's band, read off the calendar and not off "
+                + "your roster: it says nothing about how your men compare, and the health behind "
+                + "the same word grows all season. How many of them there are is what costs lives.");
 
             // A raid stands on the board like any other job, and a player who does not know that reads
             // it as one and lets it expire — then the day closes with a sacking whose cause was never
@@ -941,8 +1305,15 @@ internal static class PlayCommand
                 string stores = spoils.Food > 0 || spoils.Water > 0
                     ? $" + {spoils.Food} food, {spoils.Water} water"
                     : string.Empty;
+                // The threat word is the day's band and nothing else: it is read off the calendar
+                // curve, so the same word covers a lone man worth 150 gold and three men who take a
+                // funeral home, and the health behind it doubles over a season while the word does
+                // not move. Three played seasons worked that out by burying people. The line now
+                // prints the count first, gives the health a man at a time, and says what the word is.
+                double each = o.Enemies.Count > 0 ? o.EnemyHealth / o.Enemies.Count : o.EnemyHealth;
                 output.WriteLine(
-                    $"  {i}  {o.Threat,-7} {o.Enemies.Count} men, health {o.EnemyHealth:F0}  "
+                    $"  {i}  {o.Enemies.Count} enem{(o.Enemies.Count == 1 ? "y" : "ies")}, "
+                    + $"health {o.EnemyHealth:F0} ({each:F0} each)  [{o.Threat}]  "
                     + $"{_state.PromisedRewardFor(o)} gold{stores}  expires day {_state.ExpiryOf(o)}  "
                     + $"{party}  — {o.Sighting}");
             }
@@ -956,9 +1327,13 @@ internal static class PlayCommand
             output.WriteLine("BOUNTY");
             if (_state.Bounty is BountyContract contract)
             {
+                // The board prints "send 1-4" on every job and the contract printed nothing, so a
+                // player had no way to know the hunt takes a party of the same shape — one sent six
+                // men at it and the run died on an unhandled WrongPartySize.
                 output.WriteLine(
                     $"  {contract.Target.Name} — {contract.Reward} gold, "
                     + $"{contract.DaysLeft(_state.Day)} days left, "
+                    + $"send 1-{EncounterOffer.MaxPartySize}, "
                     + $"{(_state.AcceptedBountyDay is null ? "not accepted (accept)" : "accepted (bounty sends the party)")}");
             }
             else
@@ -994,8 +1369,18 @@ internal static class PlayCommand
                     ", ",
                     _state.School.Available().Select(n => $"{n.Id} {n.Cost}g/{n.BuildDays}d")));
 
+            // A post is free to fill and then takes its wage out of every day that follows, with no
+            // line anywhere that added the wages up. Two played seasons died of a payroll their
+            // players had read as a one-off: the standing now prices each post and the whole bill.
             output.WriteLine(
-                $"  staff: {(_state.Staff.Hired.Count == 0 ? "nobody" : string.Join(", ", _state.Staff.Hired))}");
+                "  staff: "
+                + (_state.Staff.Hired.Count == 0
+                    ? "nobody"
+                    : string.Join(
+                        ", ",
+                        _state.Staff.Hired.Select(r => $"{r} {_state.StaffTuning.WageOf(r)}g/day"))
+                      + $" — payroll {_state.Staff.DailyWage(_state.StaffTuning)} gold a day "
+                      + "(dismiss <post> lets one go)"));
 
             output.WriteLine();
             output.WriteLine("LOG (last 10 days)");
