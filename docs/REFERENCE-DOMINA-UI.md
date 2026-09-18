@@ -323,10 +323,23 @@ Then the conclusions above were built, not just noted:
 | A resource indicator with no trend | `DojoState.DailyDraw` (a pure query) behind `UiKit.Chip`'s trend line, on the day screen's store row |
 | A fight view that gives no information | The arena HUD is coloured by side and prints the health figures |
 
-**Still open from these conclusions:** the cost of a decision is not yet printed beside every
-decision — the school's doors and the armoury's swaps say their price, the day screen's contract
-still says the reward without the setting-out cost. The armoury does not yet draw the slot map, and
-the crowd panel drawn on the canvas has no screen behind it (phase 5 work).
+**Still open from these conclusions:** the crowd panel drawn on the canvas has no screen behind it
+(phase 5 work).
+
+## A second pass on the layouts (2026-09-18)
+
+The first pass took the reference's *widgets*; this one took its **layouts**, from the same frames.
+
+| Taken from | Where it now lives |
+|---|---|
+| The contract sheet read in two columns — the terms on one side, our own side on the other (§7) | `DayScreen.Build`: the work and the contract in one panel, the party, the counter and the acts in the other |
+| The reward and the participation cost printed as one aligned pair (§7) | `UiKit.Terms` / `UiKit.Term`, and `DayScreen.ShowOfferTerms` — the setting-out cost is the day's own draw, so it cannot drift from what the morning charges |
+| The gladiator panel earning its density by splitting the man from what he carries (§3) | `RosterScreen.BuildDetailPanel`: "the man" and "what he carries" side by side, the stats as an aligned block rather than padded text |
+| Where a man is bare, as a figure rather than as six rows (§3's own gap) | `SlotMap.cs`, drawn in the rack's left column |
+
+Two things the reference does that this pass still refused: the terms block is printed on paper in our
+own type rather than in the maroon parchment panel, and a blocked act stays where it is and says its
+number instead of being dimmed without a reason.
 
 *The source frames: `scratchpad/domina-ref/frames` and `.../ui` (session-scoped; they do not go
 into the repo).*

@@ -82,6 +82,9 @@ The two faces the canvas uses are bundled, subsetted to the glyphs the screens p
   the player's own act is to send the yard to bed.
 - **The per-man pull-out (5b).** GDD §5 makes the order the party's; the confirm sheet states the cost
   first, as the design asks, but the order it gives pulls everybody.
+- **A portrait on the man's own page.** The reference carries a full-body portrait and a class name on
+  its gladiator panel, and ours prints the numbers with nothing to look at. The rig that draws a
+  warrior in the yard exists; nothing poses it for the sheet yet.
 - **The shrine, the desk and the ledger (4e, 4f).** The canvas's lower boards (2a–4g) were not in the
   file that was handed over, so those destinations are not in the yard — nothing in the yard leads
   nowhere.
