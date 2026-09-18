@@ -35,6 +35,17 @@ public sealed partial class BattleArena : Node2D
     private static readonly Color PlayerTint = new(0.42f, 0.62f, 0.86f);
     private static readonly Color EnemyTint = new(0.80f, 0.38f, 0.34f);
 
+    /// <summary>
+    /// The layer the set is drawn on. It must be under <b>every</b> man on the field.
+    /// </summary>
+    /// <remarks>
+    /// A man's draw order is minus his depth (<see cref="ArenaChoreography.DrawOrderFor"/>), so a
+    /// warrior standing at the back of the plane sits at a z of about -420. Anything painted at a
+    /// shallower depth than that swallows him: the set is put below the whole range rather than at a
+    /// number that happens to work for the front rank.
+    /// </remarks>
+    private const int SetZ = -1000;
+
     private readonly Dictionary<WarriorId, WarriorRig> _rigs = [];
     private readonly ReactionReader _reactions = new();
 
@@ -226,12 +237,19 @@ public sealed partial class BattleArena : Node2D
     {
         ArenaLayout layout = _choreography.Layout;
 
+        // The set is drawn from the same layout the men are stood on, so the far edge on the paper is
+        // the far edge the choreography walks them to (see ArenaArt).
+        foreach ((Color fill, Vector2[] points) in ArenaArt.Ground(layout, GetViewportRect().Size.Y))
+        {
+            AddChild(new Polygon2D { Polygon = points, Color = fill, ZIndex = SetZ });
+        }
+
         var ground = new Line2D
         {
             Points = [new Vector2(0, layout.FrontGroundY), new Vector2(layout.Width, layout.FrontGroundY)],
             Width = 4f,
             DefaultColor = new Color(0.32f, 0.30f, 0.28f),
-            ZIndex = -100,
+            ZIndex = SetZ + 1,
         };
 
         AddChild(ground);
