@@ -52,6 +52,8 @@ public sealed partial class DayScreen : DojoScreen
     private Label _seasonLabel = null!;
     private HFlowContainer _storeRow = null!;
     private Label _offerLabel = null!;
+    private VBoxContainer _offerTerms = null!;
+    private VBoxContainer _bountyTerms = null!;
     private Label _readingLabel = null!;
     private VBoxContainer _patronRows = null!;
     private Label _bountyLabel = null!;
@@ -98,45 +100,82 @@ public sealed partial class DayScreen : DojoScreen
         _storeRow = UiKit.ChipRow();
         page.AddChild(_storeRow);
 
+        // The board is read the way the reference game's contract sheet is read: the terms of the work
+        // stand in one column and our own side stands in the other, so what a job pays and who would
+        // walk it are compared without scrolling between them (docs/REFERENCE-DOMINA-UI.md §7).
+        HBoxContainer columns = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        columns.AddThemeConstantOverride("separation", 14);
+        page.AddChild(columns);
+
+        VBoxContainer termsColumn = UiKit.Section(columns, "the work posted today", fill: true, ratio: 1.25f);
+
+        // The terms are longer than the sheet on a short window — the parties were falling off the
+        // bottom of it — so the column scrolls inside its own panel rather than pushing the sheet.
+        ScrollContainer termsScroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        termsColumn.AddChild(termsScroll);
+
+        VBoxContainer terms = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        terms.AddThemeConstantOverride("separation", 9);
+        termsScroll.AddChild(terms);
+
         _offerLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        page.AddChild(_offerLabel);
+        terms.AddChild(_offerLabel);
+
+        // What a job pays was on the board from the start; what taking it costs was not. The reference
+        // prints the reward and the participation cost as one aligned pair, and a reward with no cost
+        // beside it is a number the player cannot weigh.
+        _offerTerms = new VBoxContainer();
+        terms.AddChild(_offerTerms);
 
         // The diviner's reading sits directly under the offer it reads, and hides itself when the dojo
         // has no hut: an empty panel would advertise the information it is withholding.
         _readingLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
-        page.AddChild(_readingLabel);
+        terms.AddChild(_readingLabel);
+
+        terms.AddChild(UiKit.Rule());
+        terms.AddChild(UiKit.SectionLabel("the contract"));
+
+        _bountyLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        terms.AddChild(_bountyLabel);
+
+        _bountyTerms = new VBoxContainer();
+        terms.AddChild(_bountyTerms);
+
+        _acceptButton = new Button { Text = "Accept the contract" };
+        _acceptButton.Pressed += Guarded(_dojo, AcceptBounty);
+        terms.AddChild(UiKit.WayOut(_acceptButton));
+
+        terms.AddChild(UiKit.Rule());
+        terms.AddChild(UiKit.SectionLabel("the parties"));
 
         // The three parties sit on the day screen because that is where their work arrives: a contract
         // is taken here, and what the tiers are worth is read against the offer standing beside them.
         _patronRows = new VBoxContainer();
         _patronRows.AddThemeConstantOverride("separation", 4);
-        page.AddChild(_patronRows);
+        terms.AddChild(_patronRows);
 
-        _bountyLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        page.AddChild(_bountyLabel);
-
-        _acceptButton = new Button { Text = "Accept the contract" };
-        _acceptButton.Pressed += Guarded(_dojo, AcceptBounty);
-        page.AddChild(_acceptButton);
+        VBoxContainer ours = UiKit.Section(columns, null, fill: true);
 
         // The refusal text below already says why the party will not do, but it says it in a sentence.
         // The counter says the same thing in two characters, beside the question it answers.
         _partyHeading = new HBoxContainer();
         _partyHeading.AddThemeConstantOverride("separation", 14);
-        page.AddChild(_partyHeading);
+        ours.AddChild(_partyHeading);
 
         ScrollContainer scroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        page.AddChild(scroll);
+        ours.AddChild(scroll);
 
         _partyList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         scroll.AddChild(_partyList);
 
-        _verdictLabel = new Label();
-        page.AddChild(_verdictLabel);
+        _verdictLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        ours.AddChild(_verdictLabel);
 
-        HBoxContainer buttons = new();
-        buttons.AddThemeConstantOverride("separation", 12);
-        page.AddChild(buttons);
+        // The acts stand in a column under the party they act on rather than in a row across the foot
+        // of the sheet: in a row the third of them was pushed off the paper's edge.
+        VBoxContainer buttons = new();
+        buttons.AddThemeConstantOverride("separation", 8);
+        ours.AddChild(buttons);
 
         // The one act the sheet exists for takes the indigo, and it is the only indigo on it: sending
         // men out is what the board is for, and a second filled act would make the player choose twice
@@ -176,16 +215,12 @@ public sealed partial class DayScreen : DojoScreen
 
         BuildStoreRow(purse);
 
-        _offerLabel.Text = string.Join(
-            '\n',
-            $"Offer: {offer.Sighting}",
-            $"Threat: {ThreatName(offer.Threat)}  ·  Promised reward {offer.PromisedReward} gold",
-            offer.RequiredPartySize is int size
-                ? $"This job wants exactly {size}."
-                : $"Party of at most {offer.MaxPartySize}.");
+        _offerLabel.Text = offer.Sighting;
 
         // A job that wants exactly three is counted against three; otherwise the limit is the ceiling.
         _partyLimit = offer.RequiredPartySize ?? offer.MaxPartySize;
+
+        ShowOfferTerms(offer);
 
         ShowReading(OfferModel.ReadOffer(_dojo));
         BuildPatronRows();
@@ -194,6 +229,74 @@ public sealed partial class DayScreen : DojoScreen
         ShowBounty(OfferModel.DescribeBounty(_dojo));
         UpdateButtons();
     }
+
+    /// <summary>The offer's terms: the threat, what it pays, what walking it costs, and how long it stands.</summary>
+    /// <remarks>
+    /// The cost is the day the expedition spends, priced in what that day draws off the store — the
+    /// same arithmetic the morning charges (<see cref="DojoState.DailyDraw"/>), so the figure beside
+    /// the reward cannot drift from what going out actually takes.
+    /// </remarks>
+    private void ShowOfferTerms(OfferCard offer)
+    {
+        Clear(_offerTerms);
+        GridContainer grid = UiKit.Terms(_offerTerms);
+
+        UiKit.Term(grid, "threat", ThreatName(offer.Threat), Mark.Blade, ThreatColor(offer.Threat));
+        UiKit.Term(
+            grid,
+            "reward",
+            offer.IsStanding
+                ? $"{offer.PromisedReward} gold — {offer.FullReward} on the day it was posted"
+                : $"{offer.PromisedReward} gold",
+            Mark.Coin,
+            offer.IsStanding ? PendingColor : GoodColor);
+
+        Resources draw = _dojo.DailyDraw();
+        UiKit.Term(grid, "setting out", $"one day · {DrawText(draw)}", Mark.Grain);
+
+        UiKit.Term(
+            grid,
+            "party",
+            offer.RequiredPartySize is int size ? $"exactly {size}" : $"at most {offer.MaxPartySize}",
+            Mark.Person);
+
+        UiKit.Term(
+            grid,
+            "stands",
+            offer.LastDay ? "the last day it can be taken" : $"{offer.DaysLeft} more days",
+            Mark.None,
+            offer.LastDay ? WarningColor : MutedColor);
+    }
+
+    /// <summary>What one day takes off the store, as a single line.</summary>
+    private static string DrawText(Resources draw)
+    {
+        List<string> parts = [];
+        if (draw.Gold > 0)
+        {
+            parts.Add($"{draw.Gold} gold");
+        }
+
+        if (draw.Food > 0)
+        {
+            parts.Add($"{draw.Food} food");
+        }
+
+        if (draw.Water > 0)
+        {
+            parts.Add($"{draw.Water} water");
+        }
+
+        return parts.Count == 0 ? "the store is not drawn" : string.Join(", ", parts);
+    }
+
+    private static Color ThreatColor(ThreatBand threat) => threat switch
+    {
+        ThreatBand.Faint => GoodColor,
+        ThreatBand.Rising => InkColor,
+        ThreatBand.Heavy => PendingColor,
+        _ => WarningColor,
+    };
 
     /// <summary>Prints what the diviner's hut could read off today's offer.</summary>
     /// <remarks>
@@ -390,6 +493,8 @@ public sealed partial class DayScreen : DojoScreen
 
     private void ShowBounty(BountyCard? card)
     {
+        Clear(_bountyTerms);
+
         if (card is not BountyCard bounty)
         {
             _bountyLabel.Text = "No contract on the board today.";
@@ -397,17 +502,35 @@ public sealed partial class DayScreen : DojoScreen
             return;
         }
 
-        _bountyLabel.Text = string.Join(
-            '\n',
-            $"Contract: {bounty.TargetName}  ·  {bounty.Patron}",
-            $"Threat: {ThreatName(bounty.Threat)}  ·  Reward {bounty.Reward} gold" +
-            $"  ·  Time {bounty.DaysLeft} days",
+        _bountyLabel.Text = bounty.Accepted
+            ? $"The promise is given: {bounty.TargetName}."
+            : $"{bounty.TargetName} — {bounty.Patron}";
+        _bountyLabel.AddThemeColorOverride("font_color", bounty.Accepted ? PendingColor : InkColor);
+
+        GridContainer grid = UiKit.Terms(_bountyTerms);
+        UiKit.Term(grid, "issued by", bounty.Patron, Mark.None, MutedColor);
+        UiKit.Term(grid, "threat", ThreatName(bounty.Threat), Mark.Blade, ThreatColor(bounty.Threat));
+        UiKit.Term(grid, "reward", $"{bounty.Reward} gold", Mark.Coin, GoodColor);
+        UiKit.Term(
+            grid,
+            "the head is worth",
+            $"{bounty.HonorReward:0} honour to the party that brings it",
+            Mark.Person,
+            GoodColor);
+        UiKit.Term(
+            grid,
+            "time",
+            bounty.DaysLeft <= 1 ? "the last day" : $"{bounty.DaysLeft} days",
+            Mark.None,
+            bounty.DaysLeft <= 1 ? WarningColor : MutedColor);
+        UiKit.Term(
+            grid,
+            "if the promise breaks",
             bounty.Accepted
-                ? $"The promise is given. If it is not kept the roster loses {bounty.BrokenHonorPenalty:0} honour."
-                : $"Accepting costs no day, it buys time. The party that brings the head gains {bounty.HonorReward:0} honour.");
-        _bountyLabel.AddThemeColorOverride(
-            "font_color",
-            bounty.Accepted ? PendingColor : InkColor);
+                ? $"the roster loses {bounty.BrokenHonorPenalty:0} honour"
+                : $"once given, {bounty.BrokenHonorPenalty:0} honour off the roster",
+            Mark.None,
+            WarningColor);
     }
 
     private void UpdateButtons()
