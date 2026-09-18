@@ -50,8 +50,7 @@ public sealed class HonorEngine(HonorTuning? tuning = null)
     /// <remarks>
     /// It is added to <see cref="PerformanceDelta"/>, it does not replace it: one is "how did he fight",
     /// this is "did he pull out". Because pulling out before the fight begins is no longer possible
-    /// (see docs/GDD.md §5), this penalty is always the price of leaving a fight that has <b>begun</b>
-    /// bedelidir.
+    /// (see docs/GDD.md §5), this penalty is always the price of leaving a fight that has <b>begun</b>.
     /// </remarks>
     public double RetreatDelta(WarriorBattleSummary summary)
     {
