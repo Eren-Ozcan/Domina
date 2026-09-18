@@ -5,18 +5,13 @@ using Godot;
 namespace Domina.Game;
 
 /// <summary>
-/// Opening a school: the name, the province, the seed — and what that seed opens with.
+/// Opening a school: the name, the instructor, the province and the seed.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Every choice on this sheet has its consequence written beside it, and none of them is called easy or
 /// hard: a province is quiet, as it is written, or a bad year, and the sheet says in the term's own
 /// units what each one does (design canvas → 6b).
-/// </para>
-/// <para>
-/// The opening is not predicted, it is opened: <see cref="NewTermModel.Preview"/> builds the term the
-/// seed describes and reads it, so the four lines under "what this seed opens with" cannot drift from
-/// the term the player then plays.
 /// </para>
 /// </remarks>
 public sealed partial class NewTermScreen : CanvasLayer
@@ -26,7 +21,6 @@ public sealed partial class NewTermScreen : CanvasLayer
     private LineEdit _name = null!;
     private LineEdit _instructor = null!;
     private VBoxContainer _provinces = null!;
-    private VBoxContainer _opening = null!;
     private Label _seedLabel = null!;
 
     /// <summary>The term is opened: the two names the player wrote, the province and the seed.</summary>
@@ -57,24 +51,18 @@ public sealed partial class NewTermScreen : CanvasLayer
             back,
             "A term runs its whole length and cannot be restarted near the end of it.");
 
-        HBoxContainer columns = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
-        columns.AddThemeConstantOverride("separation", 14);
-        sheet.AddChild(columns);
-
-        VBoxContainer left = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        VBoxContainer left = new()
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
         left.AddThemeConstantOverride("separation", 14);
-        columns.AddChild(left);
-
-        VBoxContainer right = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, SizeFlagsStretchRatio = 0.8f };
-        right.AddThemeConstantOverride("separation", 14);
-        columns.AddChild(right);
+        sheet.AddChild(left);
 
         _provinces = UiKit.Section(left, "How hard the province is");
         BuildProvinces();
 
         BuildNames(left);
-        _opening = UiKit.Section(right, "What this seed opens with");
-        BuildOpening();
 
         Button open = new() { Text = "Open the gates on day 1" };
         open.Pressed += () => Opened?.Invoke(DojoName, Instructor, _tier, _seed);
@@ -112,7 +100,6 @@ public sealed partial class NewTermScreen : CanvasLayer
             {
                 _tier = tier;
                 BuildProvinces();
-                BuildOpening();
             };
 
             // The card is a button with the card laid over it, so the card brings its own margin: a
@@ -198,47 +185,8 @@ public sealed partial class NewTermScreen : CanvasLayer
         {
             _seed = unchecked((ulong)Random.Shared.NextInt64());
             _seedLabel.Text = NewTermModel.Spell(_seed);
-            BuildOpening();
         };
         row.AddChild(UiKit.WayOut(again));
-    }
-
-    /// <summary>What the seed opens with, read by opening it.</summary>
-    private void BuildOpening()
-    {
-        if (_opening is null || !IsInstanceValid(_opening))
-        {
-            return;
-        }
-
-        foreach (Node child in _opening.GetChildren())
-        {
-            if (child.GetIndex() > 0)
-            {
-                _opening.RemoveChild(child);
-                child.QueueFree();
-            }
-        }
-
-        foreach (OpeningLine line in NewTermModel.Preview(_seed, _tier))
-        {
-            HBoxContainer row = new();
-            row.AddThemeConstantOverride("separation", 12);
-
-            Label label = UiKit.Body(line.Label, UiKit.Ink, UiKit.BodySize, wrap: false);
-            label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            row.AddChild(label);
-
-            Label reading = UiKit.OnPaper(line.Reading, UiKit.Ink, UiKit.BodySize + 1, display: true);
-            reading.HorizontalAlignment = HorizontalAlignment.Right;
-            row.AddChild(reading);
-
-            _opening.AddChild(row);
-        }
-
-        _opening.AddChild(UiKit.Note(
-            "The instructor's post is yours; the school has no second teacher and trains at half "
-            + "rate until one is hired."));
     }
 
     /// <summary>A field's own two lines: what it is, and what writing in it does.</summary>
