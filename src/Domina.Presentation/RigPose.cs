@@ -20,6 +20,18 @@ public readonly record struct RigPose
     /// <summary>The whole body toppling — used only in death.</summary>
     public float RootRotation { get; init; }
 
+    /// <summary>
+    /// The whole body lifted off the ground it stands on; a positive value sinks it.
+    /// </summary>
+    /// <remarks>
+    /// It is applied <b>before</b> <see cref="RootRotation"/> and is therefore straight up and down in
+    /// the scene whatever the body is doing. The yard's press-ups are what it exists for: a body laid
+    /// flat pivots on the feet and ends up lying <i>on</i> the ground, with the arms that are supposed
+    /// to be holding it up reaching down through it. Every other pose leaves it at zero and is
+    /// unchanged.
+    /// </remarks>
+    public float RootOffsetY { get; init; }
+
     /// <summary>The hip's horizontal shift from its resting point (filled while limping).</summary>
     public float HipOffsetX { get; init; }
 
