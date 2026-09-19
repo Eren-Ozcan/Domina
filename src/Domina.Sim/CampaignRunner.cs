@@ -1296,7 +1296,11 @@ internal sealed class CampaignRunner(CampaignOptions options)
             Warrior warrior = entry.Warrior;
             Weapon? wanted = WantedWeapon(warrior);
 
-            if (wanted is null || warrior.Weapon.Name == wanted.Name)
+            // The forged implement counts as the implement. The rack compared names, and the forge
+            // renames what it reworks, so a dojo that armed its taught hands bought the implement again
+            // the day after the smith touched it — and the smith reforged the new one the same day.
+            // Over a season that is the whole purse and a mastery that never settles.
+            if (wanted is null || Weapon.SameKind(warrior.Weapon, wanted))
             {
                 continue;
             }
