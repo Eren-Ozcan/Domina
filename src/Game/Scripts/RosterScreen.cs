@@ -696,7 +696,9 @@ public sealed partial class RosterScreen : DojoScreen
         {
             _pathRow.AddChild(new Label
             {
-                Text = $"The path opens after {row.TrainingDaysToPath} more training days.",
+                Text = $"Drilled {row.TrainingDays} days of "
+                    + $"{row.TrainingDays + row.TrainingDaysToPath} — the path opens on the last of them. "
+                    + "A fight he learned something from counts as one.",
             });
             return;
         }
@@ -905,9 +907,22 @@ public sealed partial class RosterScreen : DojoScreen
         RosterStatus.Fallen => "Dead",
         RosterStatus.Freed => "Walked out free",
         RosterStatus.Master => $"Master of the house  ·  {row.Victories} won",
-        RosterStatus.Training => $"{DrillName(row.Drill)}  ·  spirits {row.Morale:0}",
-        _ => $"Ready  ·  spirits {row.Morale:0}",
+        RosterStatus.Training => $"{DrillName(row.Drill)} {Drilled(row)}  ·  spirits {row.Morale:0}",
+        _ => $"Ready {Drilled(row)}  ·  spirits {row.Morale:0}",
     };
+
+    /// <summary>
+    /// How far along the twenty days a man's path costs he is.
+    /// </summary>
+    /// <remarks>
+    /// The count lived inside a refusal — the path buttons said how many days were still wanted and
+    /// nothing said where he stood, so a man parked at sixteen looked exactly like a man at one. It is
+    /// on his card now, where the player is already choosing his drill. Once the path is open the
+    /// counter stops being news and the card stops printing it.
+    /// </remarks>
+    private static string Drilled(RosterRow row) => row.PathUnlocked || row.Path != WarriorPath.None
+        ? string.Empty
+        : $"· drilled {row.TrainingDays}/{row.TrainingDays + row.TrainingDaysToPath}  ";
 
     private static string Pair(double raw, double effective) =>
         Math.Abs(raw - effective) < 0.05
