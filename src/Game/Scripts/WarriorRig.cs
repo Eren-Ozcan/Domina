@@ -75,8 +75,19 @@ public sealed partial class WarriorRig : Node2D
     private float _girth = 1f;
 
     private WarriorLook _look = WarriorLook.Of(default, string.Empty);
+    private WarriorKit _kit = WarriorKit.Default;
 
     private readonly RigAnimator _animator = new();
+
+    /// <summary>
+    /// The body under the root: it carries the topple and the lift, the root carries the facing.
+    /// </summary>
+    /// <remarks>
+    /// They are two nodes because they are two different things. The facing is a mirror and belongs to
+    /// the figure as it stands in the scene; the topple and the lift are the pose's, and change every
+    /// frame. Put on one node, a lift given to a toppled body would be measured along the topple.
+    /// </remarks>
+    private Node2D _body = null!;
 
     private Node2D _hip = null!;
     private Node2D _torso = null!;
@@ -94,16 +105,23 @@ public sealed partial class WarriorRig : Node2D
 
     private Color _tint = Colors.White;
 
+    /// <summary>The name the elbow and the knee are hung under, so <see cref="Bend"/> can find them.</summary>
+    private const string LowerJoint = "lower";
+
     public WarriorId WarriorId { get; private set; }
 
     public string WarriorName { get; private set; } = string.Empty;
 
     /// <summary>Builds the rig for a warrior of the core's. Called once.</summary>
+    /// <remarks>
+    /// His kit is read off him here: a man who walks out of the gate in a cuirass is drawn in one, and
+    /// the weapon in his hand is the one the core says he can use.
+    /// </remarks>
     public void Build(Warrior warrior, Color tint, float facing)
     {
         ArgumentNullException.ThrowIfNull(warrior);
 
-        Build(warrior.Id, warrior.Name, tint, facing);
+        Build(warrior.Id, warrior.Name, tint, facing, WarriorKit.Of(warrior));
     }
 
     /// <summary>
@@ -114,11 +132,20 @@ public sealed partial class WarriorRig : Node2D
     /// wants his figure holds a presentation row rather than the core object. Taking the two values
     /// directly is what lets the man's own page print him without the screen reaching into the core.
     /// </remarks>
-    public void Build(WarriorId id, string name, Color tint, float facing)
+    /// <param name="id">His id.</param>
+    /// <param name="name">His name — the look is keyed on it.</param>
+    /// <param name="tint">The side's colour.</param>
+    /// <param name="facing">1 to face right, -1 to face left.</param>
+    /// <param name="kit">
+    /// What he is wearing and carrying. Left out, he is drawn bare with a plain sword, which is what a
+    /// screen holding nothing but a name (a candidate at the stall) can honestly say about him.
+    /// </param>
+    public void Build(WarriorId id, string name, Color tint, float facing, WarriorKit? kit = null)
     {
         WarriorId = id;
         WarriorName = name;
         _look = WarriorLook.Of(id, name);
+        _kit = kit ?? WarriorKit.Default;
 
         // The man's own shade is a nudge on the team tint, not a colour of his own: the side must stay
         // readable across a room, and six men on one side still have to be told apart on a sheet.
@@ -129,25 +156,26 @@ public sealed partial class WarriorRig : Node2D
         // every pose is written in one place for both sides.
         Scale = new Vector2(facing, 1);
 
-        _hip = Joint(this, new Vector2(0, -_hipHeight));
+        _body = Joint(this, Vector2.Zero);
+        _hip = Joint(_body, new Vector2(0, -_hipHeight));
 
         _torso = Joint(_hip, Vector2.Zero);
         Limb(_torso, -_torsoLength, 11f, Shade(0.00f));
         Sash();
+        Cuirass();
 
         _head = Joint(_torso, new Vector2(0, -_torsoLength));
         _headShape = Circle(_head, new Vector2(0, -_headRadius), _headRadius, Shade(0.12f));
         Adorn();
+        Helm();
 
         // The far side is drawn first; the z order is separate so the near side stays on top.
-        _armFar = BuildArm(_torso, Shade(-0.22f), z: -1);
-        _legFar = BuildLeg(_hip, Shade(-0.22f), z: -1);
-        _legNear = BuildLeg(_hip, Shade(0.06f), z: 1);
-        _armNear = BuildArm(_torso, Shade(0.06f), z: 2);
+        _armFar = BuildArm(_torso, Shade(-0.22f), z: -1, out _, _kit.OffArm);
+        _legFar = BuildLeg(_hip, Shade(-0.22f), z: -1, _kit.LeftLeg);
+        _legNear = BuildLeg(_hip, Shade(0.06f), z: 1, _kit.RightLeg);
+        _armNear = BuildArm(_torso, Shade(0.06f), z: 2, out Node2D hand, _kit.SwordArm);
 
-        Node2D hand = _armNear.GetChild<Node2D>(1).GetChild<Node2D>(1);
-        _weapon = Joint(hand, new Vector2(0, _hand));
-        Limb(_weapon, WeaponLength, 6f, new Color(0.85f, 0.85f, 0.90f));
+        _weapon = Arm(hand);
 
         Apply(_animator.Advance(CombatState.Idle, 0, 0));
     }
@@ -248,6 +276,17 @@ public sealed partial class WarriorRig : Node2D
     public void Advance(CombatState state, double phase, double delta) =>
         Apply(_animator.Advance(state, phase, delta));
 
+    /// <summary>
+    /// Puts the body into a pose that did not come from the fight's animator.
+    /// </summary>
+    /// <remarks>
+    /// The yard's drills are the one caller (<see cref="Domina.Presentation.DrillAnimator"/>): a man at
+    /// the post is not in a <see cref="CombatState"/> and has no reaction timers, so he is posed
+    /// directly. The rig stays the one body — the same bones, the same kit, the same lost limbs —
+    /// which is the whole reason the drills are not a second figure drawn somewhere else.
+    /// </remarks>
+    public void Pose(in RigPose pose) => Apply(pose);
+
     private void Apply(in RigPose pose)
     {
         Visible = pose.Visible;
@@ -257,7 +296,8 @@ public sealed partial class WarriorRig : Node2D
             return;
         }
 
-        Rotation = pose.RootRotation;
+        _body.Rotation = pose.RootRotation;
+        _body.Position = new Vector2(0, pose.RootOffsetY);
         _hip.Position = new Vector2(pose.HipOffsetX, -_hipHeight + pose.HipOffsetY);
         _torso.Rotation = pose.Torso;
         _head.Rotation = pose.Head;
@@ -358,6 +398,269 @@ public sealed partial class WarriorRig : Node2D
         _torso.AddChild(sash);
     }
 
+    // ------------------------------------------------------------- what he wears and carries
+
+    /// <summary>
+    /// The plate colour of one step of armour, on this man's own tint.
+    /// </summary>
+    /// <remarks>
+    /// It is derived from the side's colour rather than given a palette of its own, for the reason the
+    /// sash is kept dull: the tint is the only thing that says which side a figure is on, and a kit
+    /// painted in lacquer black would read as a third team across a room. What the steps differ in is
+    /// <b>value</b> — cloth lifts off the body, plate sinks below it, the smith's plate sinks further
+    /// and takes a lit rim — which survives being made small and being made grey.
+    /// </remarks>
+    private Color Plate(PlateWeight weight) => weight switch
+    {
+        PlateWeight.Cloth => Shade(0.30f),
+        PlateWeight.Plate => Shade(-0.42f),
+        PlateWeight.Heavy => Shade(-0.60f),
+        _ => _tint,
+    };
+
+    /// <summary>How much wider than the bone a plate of this step is drawn.</summary>
+    private static float PlateWidth(PlateWeight weight) => weight switch
+    {
+        PlateWeight.Cloth => 1.55f,
+        PlateWeight.Plate => 2.10f,
+        PlateWeight.Heavy => 2.60f,
+        _ => 0f,
+    };
+
+    /// <summary>The cuirass over the torso — and the shoulder guards the smith's plate comes with.</summary>
+    private void Cuirass()
+    {
+        if (_kit.Torso == PlateWeight.Bare)
+        {
+            return;
+        }
+
+        float width = 11f * _girth * PlateWidth(_kit.Torso);
+
+        // From the waist to just under the shoulders: a plate that reached the neck would swallow the
+        // head's own circle at the size a list chip draws him.
+        var plate = new Line2D
+        {
+            Points = [new Vector2(0, -6f), new Vector2(0, -_torsoLength * 0.86f)],
+            Width = width,
+            DefaultColor = Plate(_kit.Torso),
+            BeginCapMode = Line2D.LineCapMode.Box,
+            EndCapMode = Line2D.LineCapMode.Box,
+        };
+
+        _torso.AddChild(plate);
+
+        if (_kit.Torso != PlateWeight.Heavy)
+        {
+            return;
+        }
+
+        // The sode: the two boards that hang off an ō-yoroi's shoulders and are most of its silhouette.
+        foreach (float side in (float[])[-1f, 1f])
+        {
+            var sode = new Line2D
+            {
+                Points =
+                [
+                    new Vector2(side * width * 0.42f, -_shoulderDrop + 4f),
+                    new Vector2(side * width * 0.82f, -_shoulderDrop + 30f),
+                ],
+                Width = 13f * _girth,
+                DefaultColor = Plate(PlateWeight.Plate),
+                BeginCapMode = Line2D.LineCapMode.Box,
+                EndCapMode = Line2D.LineCapMode.Box,
+                ZIndex = 3,
+            };
+
+            _torso.AddChild(sode);
+        }
+    }
+
+    /// <summary>The kabuto: a bowl over the head, with the neck guard flaring behind it.</summary>
+    private void Helm()
+    {
+        if (_kit.Head == PlateWeight.Bare)
+        {
+            return;
+        }
+
+        float r = _headRadius;
+        Color steel = Plate(_kit.Head);
+
+        var bowl = new Line2D
+        {
+            Points =
+            [
+                new Vector2(-r * 1.02f, -r * 1.15f),
+                new Vector2(-r * 0.55f, -r * 1.95f),
+                new Vector2(r * 0.45f, -r * 1.95f),
+                new Vector2(r * 0.95f, -r * 1.25f),
+            ],
+            Width = r * 0.70f,
+            DefaultColor = steel,
+            BeginCapMode = Line2D.LineCapMode.Round,
+            EndCapMode = Line2D.LineCapMode.Round,
+            JointMode = Line2D.LineJointMode.Round,
+            ZIndex = 2,
+        };
+
+        _head.AddChild(bowl);
+
+        // The shikoro, hung off the back of the bowl — the part that says helmet and not hat.
+        var neck = new Line2D
+        {
+            Points = [new Vector2(-r * 1.05f, -r * 1.25f), new Vector2(-r * 1.55f, -r * 0.35f)],
+            Width = r * 0.55f,
+            DefaultColor = steel,
+            BeginCapMode = Line2D.LineCapMode.Box,
+            EndCapMode = Line2D.LineCapMode.Box,
+            ZIndex = -1,
+        };
+
+        _head.AddChild(neck);
+    }
+
+    /// <summary>A sleeve or a greave laid over the bone under it.</summary>
+    /// <remarks>
+    /// It is hung on the same joint as the limb's own drawing and covers the upper segment only, so it
+    /// bends with the arm and goes nowhere near the part list the animations run on. A piece drawn
+    /// across a joint would tear open the first time the elbow bent.
+    /// </remarks>
+    private void Piece(Node2D bone, float length, float width, PlateWeight weight)
+    {
+        if (weight == PlateWeight.Bare)
+        {
+            return;
+        }
+
+        var piece = new Line2D
+        {
+            Points = [new Vector2(0, length * 0.16f), new Vector2(0, length * 0.92f)],
+            Width = width * _girth * PlateWidth(weight),
+            DefaultColor = Plate(weight),
+            BeginCapMode = Line2D.LineCapMode.Box,
+            EndCapMode = Line2D.LineCapMode.Box,
+            ZIndex = 1,
+        };
+
+        bone.AddChild(piece);
+    }
+
+    /// <summary>
+    /// Puts the thing he fights with in his hand.
+    /// </summary>
+    /// <remarks>
+    /// The weapon is one node hung off the near hand however long it is, so the pose's single
+    /// <see cref="RigPose.Weapon"/> angle still drives it and severing the sword arm still takes it
+    /// with the chain. What the shape changes is the drawing, not the rig.
+    /// </remarks>
+    /// <returns>The weapon joint, or <c>null</c> when his hands are empty.</returns>
+    private Node2D? Arm(Node2D hand)
+    {
+        if (_kit.Weapon == WeaponShape.Unarmed)
+        {
+            return null;
+        }
+
+        Node2D weapon = Joint(hand, new Vector2(0, _hand));
+        Color steel = new(0.85f, 0.85f, 0.90f);
+        Color wood = new(0.36f, 0.27f, 0.19f);
+
+        switch (_kit.Weapon)
+        {
+            case WeaponShape.ShortBlade:
+                Grip(weapon, 12f, wood);
+                Limb(weapon, 34f, 5f, steel);
+                break;
+
+            case WeaponShape.LongBlade:
+                Grip(weapon, 26f, wood);
+                Tsuba(weapon);
+                Limb(weapon, 112f, 7f, steel);
+                break;
+
+            case WeaponShape.Spear:
+                // The haft is most of it and the head is the last handspan — the reach is the weapon.
+                Limb(weapon, 108f, 6f, wood);
+                Tip(weapon, 108f, 26f, steel, 9f);
+                break;
+
+            case WeaponShape.Club:
+                Limb(weapon, 92f, 8f, wood);
+                Tip(weapon, 62f, 34f, Shade(-0.30f), 17f);
+                break;
+
+            case WeaponShape.Hook:
+                Grip(weapon, 14f, wood);
+                Limb(weapon, 44f, 6f, steel);
+
+                // The prong off the guard: the whole of why a jitte is carried.
+                var prong = new Line2D
+                {
+                    Points = [new Vector2(0, 18f), new Vector2(11f, 30f)],
+                    Width = 5f,
+                    DefaultColor = steel,
+                    BeginCapMode = Line2D.LineCapMode.Round,
+                    EndCapMode = Line2D.LineCapMode.Round,
+                };
+                weapon.AddChild(prong);
+                break;
+
+            default:
+                Grip(weapon, 18f, wood);
+                Tsuba(weapon);
+                Limb(weapon, WeaponLength, 6f, steel);
+                break;
+        }
+
+        return weapon;
+    }
+
+    /// <summary>The bound handle at the weapon's root, drawn back over the hand.</summary>
+    private static void Grip(Node2D weapon, float length, Color wood)
+    {
+        var grip = new Line2D
+        {
+            Points = [new Vector2(0, -length), Vector2.Zero],
+            Width = 8f,
+            DefaultColor = wood,
+            BeginCapMode = Line2D.LineCapMode.Round,
+            EndCapMode = Line2D.LineCapMode.Round,
+        };
+
+        weapon.AddChild(grip);
+    }
+
+    /// <summary>The tsuba: the disc between the grip and the blade.</summary>
+    private static void Tsuba(Node2D weapon)
+    {
+        var guard = new Line2D
+        {
+            Points = [new Vector2(-8f, 0), new Vector2(8f, 0)],
+            Width = 5f,
+            DefaultColor = new Color(0.42f, 0.36f, 0.26f),
+            BeginCapMode = Line2D.LineCapMode.Round,
+            EndCapMode = Line2D.LineCapMode.Round,
+        };
+
+        weapon.AddChild(guard);
+    }
+
+    /// <summary>The business end of a hafted weapon — a spear's point, a club's weight.</summary>
+    private static void Tip(Node2D weapon, float tip, float length, Color colour, float width)
+    {
+        var head = new Line2D
+        {
+            Points = [new Vector2(0, tip - length), new Vector2(0, tip)],
+            Width = width,
+            DefaultColor = colour,
+            BeginCapMode = Line2D.LineCapMode.Round,
+            EndCapMode = Line2D.LineCapMode.Round,
+        };
+
+        weapon.AddChild(head);
+    }
+
     /// <summary>
     /// Hair, beard, band and scar — what tells one head from the next at a glance.
     /// </summary>
@@ -446,39 +749,64 @@ public sealed partial class WarriorRig : Node2D
 
     // ------------------------------------------------------------- rig kurulumu
 
-    private Node2D BuildArm(Node2D parent, Color color, int z)
+    /// <remarks>
+    /// The order the pieces are hung in is free: <see cref="Bend"/> finds the lower joint by the name
+    /// <c>lower</c>, not by its place among the children, so a drawing added to the chain cannot
+    /// silently stop the elbow bending.
+    /// </remarks>
+    /// <param name="hand">The hand at the end of the chain; the weapon hangs off it.</param>
+    private Node2D BuildArm(Node2D parent, Color color, int z, out Node2D hand, PlateWeight guard = PlateWeight.Bare)
     {
         Node2D upper = Joint(parent, new Vector2(0, -_shoulderDrop));
         upper.ZIndex = z;
         Limb(upper, _upperArm, 8f, color);
 
-        Node2D fore = Joint(upper, new Vector2(0, _upperArm));
+        Node2D fore = Joint(upper, new Vector2(0, _upperArm), LowerJoint);
         Limb(fore, _forearm, 7f, color);
 
-        Node2D hand = Joint(fore, new Vector2(0, _forearm));
+        hand = Joint(fore, new Vector2(0, _forearm));
         Limb(hand, _hand, 9f, color);
+
+        Piece(upper, _upperArm, 8f, guard);
+
+        // The kote is a sleeve down the forearm as much as the upper arm: drawn on the upper alone it
+        // reads as a shoulder pad, which is the one Japanese piece it is not.
+        Piece(fore, _forearm, 7f, guard);
 
         return upper;
     }
 
-    private Node2D BuildLeg(Node2D parent, Color color, int z)
+    private Node2D BuildLeg(Node2D parent, Color color, int z, PlateWeight greave = PlateWeight.Bare)
     {
         Node2D thigh = Joint(parent, Vector2.Zero);
         thigh.ZIndex = z;
         Limb(thigh, _thigh, 10f, color);
 
-        Node2D shin = Joint(thigh, new Vector2(0, _thigh));
+        Node2D shin = Joint(thigh, new Vector2(0, _thigh), LowerJoint);
         Limb(shin, _shin, 9f, color);
 
         Node2D foot = Joint(shin, new Vector2(0, _shin));
         Limb(foot, _foot, 8f, color, horizontal: true);
 
+        // The suneate covers the shin and nothing above the knee, which is what it is named for.
+        Piece(shin, _shin, 9f, greave);
+
         return thigh;
     }
 
-    private static Node2D Joint(Node2D parent, Vector2 offset)
+    /// <param name="name">
+    /// A name for the joint when something has to find it again later — <see cref="Bend"/> looks up
+    /// <c>lower</c>. Naming it keeps the lookup off the child index, so a drawing can be hung anywhere
+    /// in the chain without moving the elbow.
+    /// </param>
+    private static Node2D Joint(Node2D parent, Vector2 offset, string? name = null)
     {
         var joint = new Node2D { Position = offset };
+        if (name is not null)
+        {
+            joint.Name = name;
+        }
+
         parent.AddChild(joint);
         return joint;
     }
@@ -522,7 +850,10 @@ public sealed partial class WarriorRig : Node2D
         }
 
         limb.Rotation = upper;
-        limb.GetChild<Node2D>(1).Rotation = lower;
+        if (limb.GetNodeOrNull<Node2D>(LowerJoint) is { } joint)
+        {
+            joint.Rotation = lower;
+        }
     }
 
     private Color Shade(float amount) => Shade(_tint, amount);
