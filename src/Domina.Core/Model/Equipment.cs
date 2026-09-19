@@ -285,6 +285,28 @@ public sealed record Weapon(
         return weapon.Name.StartsWith("Forged ", StringComparison.Ordinal);
     }
 
+    /// <summary>The weapon's name without the forge's prefix — what it was before it was reworked.</summary>
+    /// <remarks>
+    /// The forge renames what it reworks, and the name is what carries mastery, so two weapons that are
+    /// the same implement read as different everywhere a name is compared. Anything asking "is this the
+    /// implement I wanted" has to ask it of the base name, or a reforged implement counts as missing.
+    /// </remarks>
+    public static string BaseName(Weapon weapon)
+    {
+        ArgumentNullException.ThrowIfNull(weapon);
+
+        return IsForged(weapon) ? weapon.Name["Forged ".Length..] : weapon.Name;
+    }
+
+    /// <summary>Are these the same implement, whether or not the forge has been over one of them?</summary>
+    public static bool SameKind(Weapon left, Weapon right)
+    {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
+        return string.Equals(BaseName(left), BaseName(right), StringComparison.OrdinalIgnoreCase);
+    }
+
     public static Weapon Fists() => new("Fists", WeaponClass.Blunt, 8, false, 0.80)
     {
         Catchable = false,

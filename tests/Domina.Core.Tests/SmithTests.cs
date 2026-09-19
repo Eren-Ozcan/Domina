@@ -119,4 +119,21 @@ public class SmithTests
         Assert.True(
             dojo.Quartermaster.ForgePrice(club.Warrior) > dojo.Quartermaster.ForgePrice(knife.Warrior));
     }
+
+    /// <summary>A reforged weapon is still the same implement, and anything asking must see that.</summary>
+    /// <remarks>
+    /// The forge renames what it reworks, so a policy that compares names reads the reforged implement
+    /// as a missing one and buys it again — which is what the rack did for a whole season.
+    /// </remarks>
+    [Fact]
+    public void TheForgeDoesNotChangeWhatTheWeaponIs()
+    {
+        Weapon knife = Weapon.PoisonedTanto();
+        Weapon reforged = Weapon.Forged(knife);
+
+        Assert.NotEqual(knife.Name, reforged.Name);
+        Assert.Equal(knife.Name, Weapon.BaseName(reforged), ignoreCase: true);
+        Assert.True(Weapon.SameKind(reforged, knife));
+        Assert.False(Weapon.SameKind(reforged, Weapon.Tanto()));
+    }
 }
