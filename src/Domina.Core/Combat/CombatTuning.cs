@@ -819,6 +819,38 @@ public sealed record CombatTuning
     /// </remarks>
     public double PoisonMaxDose { get; init; } = 3.0;
 
+    /// <summary>
+    /// The share of his <b>Accuracy</b> a full dose takes from a poisoned warrior — the sickness a
+    /// blurred eye becomes.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The three affliction shares are poison's second currency, and they are the answer to the thing
+    /// damage could not answer: the dose wins the fight but wins it <b>slowly</b>, and a long fight is
+    /// paid for in the blood of the man who wins it. They make the length harmless instead of making
+    /// the kill faster — the poisoned enemy strikes worse while he dies.
+    /// </para>
+    /// <para>
+    /// All three scale with how far the dose has gone (<see cref="PoisonMaxDose"/>), so they carry the
+    /// cap's upper bound with them, and all three sit on the <b>dose</b> rather than on the weapon: an
+    /// unclassed hand delivers a smaller dose and therefore a lighter sickness, with no second rule.
+    /// </para>
+    /// </remarks>
+    public double PoisonAccuracyPenaltyAtMaxDose { get; init; }
+
+    /// <summary>The share of his <b>Evasion</b> a full dose takes — the sickness a swimming head becomes.</summary>
+    /// <remarks>
+    /// Evasion and not Defence: the dose makes a man slow to move out of the way, it does not thin his
+    /// armour. Defence is the plate's own line and poison has never been allowed to read it.
+    /// </remarks>
+    public double PoisonEvasionPenaltyAtMaxDose { get; init; }
+
+    /// <summary>
+    /// The share a full dose adds to the poisoned warrior's attack cycle, and takes off his walk — the
+    /// sickness nausea becomes.
+    /// </summary>
+    public double PoisonSlowAtMaxDose { get; init; }
+
     // ---- Limb loss ----
 
     /// <summary>

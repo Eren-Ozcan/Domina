@@ -226,6 +226,52 @@ public class PoisonTests
             t => t.Warrior == new WarriorId(1) && t.AtSeconds > commandedAt);
     }
 
+    /// <summary>
+    /// The dose is a sickness as well as a clock: the poisoned warrior swings slower while it is in him.
+    /// </summary>
+    /// <remarks>
+    /// The affliction shares are poison's answer to the length of the fight it wins — the poisoned enemy
+    /// is less dangerous while he dies, instead of dying faster. They default to nothing, so the check
+    /// is a paired one: the same fight, the same seed, only the share moved.
+    /// </remarks>
+    [Fact]
+    public void TheDoseSlowsTheWarriorCarryingIt()
+    {
+        static int Swings(double slow)
+        {
+            BattleSetup setup = new(
+                [
+                    TestBuilders.Warrior(
+                        1, "Zehirlenen", health: 4000, aggression: 100, weapon: CleanFang),
+                ],
+                [
+                    TestBuilders.Warrior(
+                        101,
+                        "Zehirleyen",
+                        health: 4000,
+                        aggression: 100,
+                        weapon: Fang,
+                        klass: WarriorClass.Dokushi),
+                ])
+            {
+                Tuning = PoisonOnly with
+                {
+                    PoisonSlowAtMaxDose = slow,
+                    StallGuardSeconds = 30,
+                },
+            };
+
+            var battle = new Battle(setup, new FixedRandom(0.0));
+            battle.Run();
+
+            return battle.Events
+                .OfType<AttackStarted>()
+                .Count(a => a.Attacker == new WarriorId(1));
+        }
+
+        Assert.True(Swings(0.5) < Swings(0));
+    }
+
     /// <summary>Poison is carried on a projectile too — the rule belongs to the blade, not to melee.</summary>
     [Fact]
     public void ThrownWeaponsCarryPoison()

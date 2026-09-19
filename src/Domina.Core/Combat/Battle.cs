@@ -1017,11 +1017,31 @@ public sealed class Battle
     private double BaseMoveSpeed(Combatant c) => Lerp(
         _tuning.MoveSpeedAtZeroSpeed,
         _tuning.MoveSpeedAtMaxSpeed,
-        Math.Clamp(c.Stats.Speed / 100.0, 0, 1));
+        Math.Clamp(c.Stats.Speed / 100.0, 0, 1))
+        * (1 - (PoisonGrip(c) * _tuning.PoisonSlowAtMaxDose));
 
-    /// <summary>The attack cycle stretched by the weight of the armour.</summary>
+    /// <summary>The attack cycle stretched by the weight of the armour and by the sickness.</summary>
     private double AttackCycleSeconds(Combatant c) => c.Weapon.AttackSeconds
-        * (1 + (ArmorLoad(c) * _tuning.ArmorAttackSlowdownAtFullWeight));
+        * (1 + (ArmorLoad(c) * _tuning.ArmorAttackSlowdownAtFullWeight))
+        * (1 + (PoisonGrip(c) * _tuning.PoisonSlowAtMaxDose));
+
+    /// <summary>How far the dose in this warrior's blood has gone, as a share of the cap (0-1).</summary>
+    /// <remarks>
+    /// The one reading the three affliction shares are taken from. It is a share of
+    /// <see cref="CombatTuning.PoisonMaxDose"/> and not of the dose itself, so the sickness stops
+    /// growing where the dose does and a poisoner cannot stack a man into a statue.
+    /// </remarks>
+    private double PoisonGrip(Combatant c) => !c.IsPoisoned || _tuning.PoisonMaxDose <= 0
+        ? 0
+        : Math.Clamp(c.PoisonDose / _tuning.PoisonMaxDose, 0, 1);
+
+    /// <summary>His Accuracy as the dose leaves it.</summary>
+    private double SickenedAccuracy(Combatant c) =>
+        c.Stats.Accuracy * (1 - (PoisonGrip(c) * _tuning.PoisonAccuracyPenaltyAtMaxDose));
+
+    /// <summary>His Evasion as the dose leaves it.</summary>
+    private double SickenedEvasion(Combatant c) =>
+        c.Stats.Evasion * (1 - (PoisonGrip(c) * _tuning.PoisonEvasionPenaltyAtMaxDose));
 
     /// <summary>The armour's ratio to full weight (0-1). All penalties are read from this.</summary>
     private double ArmorLoad(Combatant c) => _tuning.ArmorWeightAtFullPenalty <= 0
@@ -1394,7 +1414,7 @@ public sealed class Battle
         // everyone else keeps a share of it. Shuriken and the tantō stay open to all; the implement
         // that is taught rather than picked up — the yumi — deepens the penalty itself.
         double hitChance = (_tuning.BaseThrowHitChance
-                            + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
+                            + (SickenedAccuracy(attacker) * _tuning.AccuracyHitBonus))
                            * (1 - (reachedFraction * _tuning.ThrowFalloffAtMaxRange))
                            * ClassAptitude.RangeFactor(
                                attacker.Warrior.Class,
@@ -1448,8 +1468,9 @@ public sealed class Battle
 
         // 1) Hit
         bool flanking = IsFlanking(attacker, defender);
-        double hitChance = (_tuning.BaseHitChance + (atkStats.Accuracy * _tuning.AccuracyHitBonus))
-                           * staminaFactor;
+        double hitChance =
+            (_tuning.BaseHitChance + (SickenedAccuracy(attacker) * _tuning.AccuracyHitBonus))
+            * staminaFactor;
 
         if (!defender.CanDefend)
         {
@@ -1485,7 +1506,7 @@ public sealed class Battle
         // 4) Evasion — no evading while pulling out, and no evading a strike from behind
         if (!blocking && !flanking && defender.CanDefend && defender.Stamina >= _tuning.DodgeStaminaCost)
         {
-            double evasionChance = defStats.Evasion / 100.0 * _tuning.MaxEvasionChance;
+            double evasionChance = SickenedEvasion(defender) / 100.0 * _tuning.MaxEvasionChance;
             if (_rng.Chance(evasionChance))
             {
                 defender.Stamina -= _tuning.DodgeStaminaCost;
@@ -1578,7 +1599,7 @@ public sealed class Battle
 
         Weapon caught = attacker.Weapon;
         double accuracyBonus =
-            defender.Stats.Accuracy / 100.0 * _tuning.CatchAccuracyBonusAtMax;
+            SickenedAccuracy(defender) / 100.0 * _tuning.CatchAccuracyBonusAtMax;
 
         double chance = _tuning.BaseCatchChance
                         * implementFactor
