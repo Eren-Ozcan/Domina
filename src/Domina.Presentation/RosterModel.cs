@@ -30,6 +30,7 @@ namespace Domina.Presentation;
 /// <param name="Victories">The fights he came back from.</param>
 /// <param name="CanRetire">May he leave the field for good today?</param>
 /// <param name="Post">The post he holds as a master of the house; <c>null</c> if he holds none.</param>
+/// <param name="Kit">What he is wearing and carrying, as the figure on a sheet needs it.</param>
 /// <param name="Charms">The temple charms he is wearing.</param>
 /// <param name="CharmSlots">How many he may wear today — the shrine opens them, the monk the second.</param>
 /// <param name="IsFitForCampaign">Can he be sent on an expedition today?</param>
@@ -64,7 +65,8 @@ public readonly record struct RosterRow(
     int CharmSlots = 0,
     int Victories = 0,
     bool CanRetire = false,
-    StaffRole? Post = null);
+    StaffRole? Post = null,
+    WarriorKit Kit = default);
 
 /// <summary>The row's badge — it also sets the ordering.</summary>
 public enum RosterStatus
@@ -234,7 +236,8 @@ public static class RosterModel
             CharmSlots: charmSlots,
             Victories: entry.Victories,
             CanRetire: canRetire,
-            Post: post);
+            Post: post,
+            Kit: WarriorKit.Of(warrior));
     }
 
     /// <summary>The numbers at the top of the roster.</summary>
