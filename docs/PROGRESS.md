@@ -1830,6 +1830,94 @@ language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists
 
 ---
 
+## 2026-09-19 — Open Decision #19 measured: the catch is priced out, not the damage
+
+**The question.** #21 closed by building the rack and the season then disproved the row: arming a
+class collapsed the last night from 19.1% to 1.8% (torite) and 3.7% (dokushi), and a near-free rack
+reproduced the collapse, so the price was not the cause. That left the implements' own numbers, which
+is #19. They had never been sweepable — every other axis has a knob, but a weapon's damage and cycle
+sit on a static factory — so the first thing built was the knob: `--implement-damage`,
+`--implement-cycle`, `--blade-damage` and `--dose` (`ImplementBench`, applied once before the first
+fight, five tests).
+
+**The duel bed's record was stale, and by 21 points.** `Equipment.cs` records the 2026-09-12 reading
+that put the jitte level with the katana at 15 damage (77.07% against 76.13%). On today's build, same
+scenarios, same `losing:0.7`, 40.000 fights: **katana 72.14%, jitte 55.17%**. The implements lost a
+fifth of their win rate to something built after the reprice, and nothing said so.
+
+**What took it.** A knockout battery over the suspects — armour durability, the disarm rule, block,
+enemy profiles, the stamina costs — leaves one answer. With stamina never scarce (`--stamina-regen
+100`) the jitte **beats** the katana, 79.89% against 73.39%. With the catch made free
+(`--catch-stamina 0`, everything else stock) it beats it again, **77.72% against 72.02%**. At the
+locked price of 16 it reads 55.13%. The catching implement is not weak — **its own move is priced out
+of the fight it is for**, and the curve is steep and non-linear: 16 → 55.1%, 6 → 62.1%, 0 → 77.7%.
+Cheaper attacks do not help it (attack stamina 14 → 8 takes the jitte *down* to 44.2%, because the
+saving is spent by the enemy too); only the catch's own price moves it.
+
+**The damage curve, for the record.** Duel, 20.000 fights, seed 5, `losing:0.7` — jitte / sai against
+a katana control at 72.02% and a catching warrior holding a katana at 73.61%:
+
+| Implement damage | jitte | sai |
+|---|---|---|
+| 15 (locked) | 55.13% | 53.47% |
+| 16 | 62.33% | 61.72% |
+| 17 | 68.28% | 67.79% |
+| **18** | **73.65%** | **72.96%** |
+| 19 | 78.41% | 77.56% |
+| 22 (the katana's) | 86.68% | — |
+
+At 18 the implement is level with the katana in the open duel and **ahead of it against a two-handed
+enemy** (jitte-heavy 28.19% against katana-heavy 23.26%), which is the trade the design asks for.
+
+**The armoured fight is a separate hole.** jitte-armored 8.43% against katana-armored 26.01%, because
+armour subtracts a **flat** amount per struck piece (`Battle.cs:1653`), so a 15-damage implement loses
+a far larger share of its blow than a 22-damage sword. Raising the disarm-on-catch share answers it on
+the bed — 0.05 → 0.20 lifts the armoured fight to 20.28%, 0.40 to 33.44% — without touching the open
+duel. It does not answer it in the season (below).
+
+**The season, which still says no.** The documented rich bed, 800 dojos × 180 days, `--class-fit
+torite --train-classes on`, against a control that arms nobody (19.1 / 20.2 / 19.2% of last nights won
+on seeds 11-13):
+
+| Armed policy | Last night won (seed 11) |
+|---|---|
+| implement damage 15 (locked) | 2.2% |
+| 17 | 6.9% |
+| 18 | 9.5% |
+| 19 | 11.4% |
+| 22 (the katana's damage) | 20.4% |
+| 15 + catch chance 1.0 | 12.5% |
+| 15 + catch chance 0.8, stamina 8 | 15.2% |
+| 15 + catching at its absurd ceiling (chance 1.0, stamina 0, bind 2.0, disarm 0.5) | 35.6% |
+| **18 + catch stamina 8 (the proposal)** | **10.9 / 10.5 / 12.2%** (seeds 11-13) |
+
+Two readings come out of the table. The season is **only** sensitive to the implement's damage — the
+disarm share that lifts the armoured duel by 12 points moves the season by one (2.2% → 3.5%) — and it
+takes the whole 7-point damage deficit back before it breaks even. The reason is the night's shape:
+five bouts, sudden death, so the dojo-level number is roughly the per-bout rate to the fifth power, and
+the per-bout rate is the armoured fight the implements are worst at. The mastery the man loses when he
+is rearmed is **not** the cause (instant mastery, `--mastery-rate 1 --mastery-fight 1`, moves the armed
+season by 1.3 points), and neither is the gold.
+
+**What is proposed, and what is left to the user.** The numbers that make the implements honest on the
+bed are **damage 15 → 18** and **`CatchStaminaCost` 16 → 8**; with them the season still reads ~11%
+against the control's ~19%. The remaining gap is not a number — it is the **policy**: `--arm-fit class`
+arms a man for the whole season, including the armoured night the implement is worst at. The measurement
+condemns that policy, not the class. The next measurement is a **situational** arm policy (the implement
+fitted for the fight that suits it, the sword back for the night), and the alternative the user may take
+instead is parity by damage (22), which closes the season and ends the trade. Nothing is locked here:
+`--implement-damage`, `--implement-cycle`, `--blade-damage` and `--dose` exist so the decision can be
+made on numbers, and #19 stays open until it is.
+
+**The dokushi's is a different failure.** The poisoned knife wins its duels (83.30% open, 71.56% against
+armour, against the katana's 72.02 / 26.01) and still collapses the season to 3.5%, because the dose
+kills slowly: deaths per warrior-fight 3.9% → 4.5%, 8.7 → 9.7 dead per dojo, and only **6.0** men reach
+the last night instead of 8.9. Raising the blade from 7 to 15 buys 3 points of last night (3.5% → 6.5%),
+doubling the dose buys 1. Poison's problem is the **length** of the fight it wins, and it wants a
+different answer from the jitte's.
+
+---
+
 ## 2026-09-17 (third round) — Six seasons played at once, the last night reached twice, and the five things the screen never said
 
 **Six agents each played a full season through `--play`**, on fresh seeds, with no guidance beyond the
