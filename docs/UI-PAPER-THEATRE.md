@@ -106,6 +106,8 @@ readable. Where each one sits:
 | Roster, day screen (party) | Head | in the unit card's 44px square, which was an empty frame |
 | Gate | Full | the man standing in the gateway, pale on the night |
 | Market | Bust | beside the candidate's stats, the man being weighed |
+| Market, aftermath | Head | in each list row's card, the man being chosen or counted |
+| Yard | Full | each man on the trodden ground, at the drill he was set to |
 | Armoury | Bust | at the head of the counter, so armour is fitted to a man |
 | Hut | Head | on each tribunal card and each line on the mats |
 | Battle HUD | Head | on each fighter's card, tinted to his side |
@@ -156,13 +158,67 @@ board remembers them, and the clock is held for as long as the sheet stands.
 `sortie.tscn` (`SortieDemo`) stands the sheet up against the demo roster with two men already ticked,
 so the layout can be looked at without playing a day to it — the same arrangement as `roster.tscn`.
 
-### Gaps in the faces
+### The men on the ground
 
-- **The aftermath sheet** carries lines of text and no per-man structure, so the party that came back
-  and the men who did not are named and not drawn.
-- **The market's list rows** are plain rows; the face is in the detail panel only.
-- **Gear is not on the figure.** What he carries is written beside him; the rig draws one blade and no
-  armour, so two differently armoured men look the same below the neck.
+The yard had one cut-paper figure standing in it that meant "the roster is over here". The roster
+itself stands there now (`src/Game/Scripts/YardMen.cs`): one rig a man, wearing what the player bought
+him, working at whatever he was set to this morning. The destination he walks to is no longer the
+figure but **the trodden ground under them**, which takes the cursor and chalks its name like every
+other post in the yard.
+
+The poses come from `DrillAnimator` in the engine-free assembly, the same way the fight's come from
+`RigAnimator`; nothing in the engine decides what a drill looks like. The five drills are five things
+to look at from across the yard — the sword raised and cut down (strikes), presses on the ground
+(guard), hops with the guard up (footwork), running on the spot with the knees high (conditioning),
+and a man sitting still (meditation, the one drill with no motion in it, because it is the day the
+sword is not touched). A man in the infirmary stands among them faded and not working, because the
+yard is where the player counts who is available today.
+
+Each man is given his own offset into the cycle, or eight men press to the same beat and the ground
+reads as one drill performed by a chorus. The ground holds eight; past that the roster sheet is the
+screen for reading a whole roster. The figures are rebuilt when the roster can have changed — the same
+moments the strip is reprinted — and not per frame.
+
+The press-ups are what `RigPose.RootOffsetY` was added for: a body laid flat pivots on the feet and
+ends up lying *on* the ground, with the arms that are meant to be holding it up reaching down through
+it. The lift is applied before the topple, so it is straight up and down in the scene whatever the
+body is doing, and every other pose leaves it at zero.
+
+### What he wears and carries
+
+`WarriorKit` (`src/Domina.Presentation/WarriorKit.cs`) is the second set of dials, beside the look:
+the look is the man and never changes, the kit is what he happens to have on today. It carries a
+**weapon shape** (blade, short blade, long blade, spear, club, hook, empty hands) and a **plate step**
+per region (bare, cloth, plate, the smith's plate), and the rig draws both — a cuirass over the torso,
+sode off the shoulders of an ō-yoroi, a kabuto with its neck guard, sleeves down the arms, suneate on
+the shins, and the right thing in the hand.
+
+- **It is read off the core, never guessed.** The weapon is `Warrior.UsableWeapon`, so a man who lost
+  the arm his nodachi needed is drawn with empty hands, the same as he fights.
+- **The plate is drawn on the man's own tint,** not in a lacquer palette of its own: the tint is what
+  says which side a figure is on, and a kit with a colour of its own would read as a third team. The
+  three steps differ in value, which survives being made small and being made grey.
+- **Three steps, not the piece.** A kote and a heavy kote differ by a pixel at the size of a list
+  chip; what has to read is bare, cloth, plate — and that the plate is the smith's.
+- **The zero of every field is the old bare figure,** so a screen that knows only a name (a candidate
+  at the stall, a viewer at the gate) passes nothing and gets what it always got.
+
+Every plate is hung on the bone under it and **added last**, because the rig is addressed by child
+index — a drawing slipped between a limb and the joint below it moves the elbow one place along and
+the arm stops bending.
+
+### Who came back
+
+The aftermath sheet was a headline and a paragraph, and the one thing the player wanted from it —
+which of the four did not come back — was a name inside a sentence. The party now travels with the
+fight (`PendingBattle.Party`) and the sheet reads those men off the roster **after** the books are
+closed, so each of them gets the same card the roster prints: his face, his wound, his days in the
+hut, or the vermilion bar of a man who did not walk back. The lines of the report are kept underneath,
+because the expedition's own accounting is not about the men.
+
+The market's rows carry the same card. A candidate was a line of text with a price on it, on the one
+screen where the player is choosing a **man**; the bar on his card carries his talent, which is the
+only thing about him that training cannot give him later.
 
 ## Gaps — what the canvas has and the build does not
 
