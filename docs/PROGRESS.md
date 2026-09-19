@@ -1916,6 +1916,21 @@ the last night instead of 8.9. Raising the blade from 7 to 15 buys 3 points of l
 doubling the dose buys 1. Poison's problem is the **length** of the fight it wins, and it wants a
 different answer from the jitte's.
 
+
+**Decided the same day: the trade goes (the user's call).** The implements take the katana's steel —
+**jitte 22/1.10, sai 22/1.15** — and buy their grip with **gold and a class** instead of damage; the
+rack asks 240 and 249 against the katana's 160. The cycle is the katana's on purpose. At 22/1.00, which
+is what the plain "raise the damage" reading gives, an *untrained* hand holding a jitte beats a katana
+(76.58% against 72.02%) and the implement becomes the best weapon in the game for everybody; at the
+katana's cycle the untrained hand is level (72.62%) and the grip is worth what the class makes of it.
+The trained readings: duel **83.40%**, against a two-handed enemy **40.62%**, against an armoured one
+**44.80%**, 3v3 **68.70%** — the katana's are 72.02 / 23.26 / 26.01 / 65.22. Over a season the armed
+dojo reads **17.5 / 19.8 / 18.2%** of last nights won against the control's 19.1 / 20.2 / 19.2%, which
+is neutral inside the bed's own noise. `CatchStaminaCost` stays at 16: it is what made the old trade
+unpayable, and with the damage answer in there is no reason to move two things at once. #19 closes on
+the jitte and the sai; the dokushi's knife stays open, because its failure is the length of the fight
+it wins, not the damage it deals.
+
 ---
 
 ## 2026-09-17 (third round) — Six seasons played at once, the last night reached twice, and the five things the screen never said

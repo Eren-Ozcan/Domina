@@ -175,20 +175,28 @@ public sealed record Weapon(
     /// A single-hooked holding implement: low damage, its return is stopping the incoming sword.
     /// </summary>
     /// <remarks>
-    /// Next to the katana (22/1.10) it stands at 14/1.00 — that is the trade: catching has to pay
-    /// for the damage lost. Whether it pays is measured (the <c>katana</c>/<c>jitte</c>
-    /// scenarios).
+    /// <para>
+    /// <b>It carries the katana's steel now: 22/1.10, locked 2026-09-19 (Open Decision #19).</b> It
+    /// used to stand at 15/1.00 and buy its grip with the damage it gave up. The season said no to
+    /// that trade in every form it was offered: arming a trained torite for a season took his dojo's
+    /// last night from 19.1% to 2.2%, and the deficit could not be bought back — the catch made free
+    /// and certain still left it at 15.2%, while every point of damage returned about 2.5 points of
+    /// last night. The night is five sudden-death bouts against armoured enemies, and armour subtracts
+    /// a <b>flat</b> amount per struck piece, so a low-damage implement loses a far larger share of
+    /// every blow than a sword does.
+    /// </para>
+    /// <para>
+    /// So the trade is gone and the implement is steel of the katana's grade with a grip on top; what
+    /// it costs is <b>gold and a class</b>, not damage. The cycle is the katana's too, and that is
+    /// deliberate: at 22/1.00 an <i>untrained</i> hand holding a jitte beat a katana (76.58% against
+    /// 72.02%), which would have made the implement the best weapon in the game for everyone. At the
+    /// katana's cycle the untrained hand is level (72.62%) and the class is what the grip is worth —
+    /// a trained torite takes 83.40% and 40.62% against a two-handed enemy, against the katana's
+    /// 72.02% and 23.26%. Over a season the armed dojo reads 17.5 / 19.8 / 18.2% of last nights won
+    /// against a control's 19.1 / 20.2 / 19.2%: the purchase is no longer a punishment.
+    /// </para>
     /// </remarks>
-    /// <remarks>
-    /// <b>Repriced 2026-09-12 (Open Decision #19), 14 → 15 damage.</b> With the class layer in, a
-    /// catching warrior holding a <b>katana</b> beat the same warrior holding a jitte everywhere — a
-    /// catch pays per event, so even the 0.10 unskilled-implement floor collected most of its value
-    /// while the jitte paid for the frequency with every strike. One point of damage is the whole fix,
-    /// and the curve here is steep: at 14 the jitte loses the duel by 4.7 points, at 15 it is level
-    /// (77.07% against 76.13%) and **ahead against a two-handed enemy** (33.39% against 32.46%), and by
-    /// 16 it is winning the duel outright at 81.83%. 40.000 fights a row.
-    /// </remarks>
-    public static Weapon Jitte() => new("Jitte", WeaponClass.Blunt, 15, false, 1.00)
+    public static Weapon Jitte() => new("Jitte", WeaponClass.Blunt, 22, false, 1.10)
     {
         CatchSkill = 1.0,
     };
@@ -204,13 +212,15 @@ public sealed record Weapon(
     /// <para>
     /// It started at 13/1.05 and was outright bad (61.92% victory, control 73.09%): the extra grip did
     /// not pay for the damage lost. At 14/1.05 all three sat within half a point (72.73%), and it went
-    /// to <b>15</b> with the jitte when the implements were repriced (2026-09-12). The
-    /// difference from the jitte is not damage but <b>volume</b>: the sai catches 3.71 times per fight,
-    /// the jitte 2.75 — meaning the sai should have more work to do against a crowd. That encirclement
-    /// measurement has not been made yet.
+    /// to <b>15</b> with the jitte when the implements were repriced (2026-09-12). It follows the jitte
+    /// again on 2026-09-19 — <b>22 damage, 1.15 s</b> — and keeps the 0.05 of extra weight it has
+    /// always carried, because the two differ in grip and not in speed. The difference from the jitte
+    /// is not damage but <b>volume</b>: the sai catches 3.71 times per fight, the jitte 2.75 — meaning
+    /// the sai should have more work to do against a crowd. That encirclement measurement has not been
+    /// made yet.
     /// </para>
     /// </remarks>
-    public static Weapon Sai() => new("Sai", WeaponClass.Blunt, 15, false, 1.05)
+    public static Weapon Sai() => new("Sai", WeaponClass.Blunt, 22, false, 1.15)
     {
         CatchSkill = 1.25,
     };
