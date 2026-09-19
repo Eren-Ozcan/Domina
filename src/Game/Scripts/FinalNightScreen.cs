@@ -229,7 +229,8 @@ public sealed partial class FinalNightScreen : DojoScreen
         Fight(new PendingBattle(
             setup,
             seed,
-            battle => Describe(_night.Settle(dojo, setup, battle, seed), dojo)));
+            battle => Describe(_night.Settle(dojo, setup, battle, seed), dojo),
+            [.. party.Select(entry => entry.Id)]));
     }
 
     private void Fight(PendingBattle bout)

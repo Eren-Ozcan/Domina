@@ -98,20 +98,29 @@ public sealed partial class WarriorPortrait : PanelContainer
 
     /// <summary>Prints this man. Called every time the page changes the man it is showing.</summary>
     /// <param name="row">The row the page is printing — his losses and whether he is alive.</param>
-    public void Print(RosterRow row) => Print(row.Id, row.Name ?? string.Empty, row.Lost, row.IsAlive);
+    public void Print(RosterRow row) => Print(row.Id, row.Name ?? string.Empty, row.Lost, row.IsAlive, row.Kit);
 
     /// <summary>Prints a man a screen knows by hand — an arrival at the gate, a name on the market's board.</summary>
     /// <param name="id">His id; the look is derived from it, so it must be the id he will keep.</param>
     /// <param name="name">His name.</param>
     /// <param name="lost">What he has already lost.</param>
     /// <param name="alive">Is he alive? A dead man is printed in ash.</param>
-    public void Print(WarriorId id, string name, BodyPartSet lost = default, bool alive = true)
+    /// <param name="kit">
+    /// What he wears and carries. A screen that knows only a name passes nothing and gets the bare
+    /// figure — which is the honest drawing of a man nobody has equipped yet.
+    /// </param>
+    public void Print(
+        WarriorId id,
+        string name,
+        BodyPartSet lost = default,
+        bool alive = true,
+        WarriorKit? kit = null)
     {
         Clear();
 
         _rig = new WarriorRig();
         _stage.AddChild(_rig);
-        _rig.Build(id, name ?? string.Empty, alive ? _ink : DeadTint, facing: 1f);
+        _rig.Build(id, name ?? string.Empty, alive ? _ink : DeadTint, facing: 1f, kit);
         _rig.Stand(lost);
 
         // A dead man is not drawn lying down: the page is a record, and the record is of the man who

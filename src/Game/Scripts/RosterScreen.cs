@@ -283,7 +283,8 @@ public sealed partial class RosterScreen : DojoScreen
                 selected: row.Id == _selected,
                 nameColor: row.IsAlive ? null : StatusColor(row.Status),
                 lost: row.Lost,
-                alive: row.IsAlive);
+                alive: row.IsAlive,
+                kit: row.Kit);
 
             WarriorId id = row.Id;
             button.Pressed += Guarded(_dojo, () =>

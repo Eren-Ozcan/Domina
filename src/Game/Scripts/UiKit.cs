@@ -1,4 +1,5 @@
 using Domina.Core.Model;
+using Domina.Presentation;
 using Godot;
 
 namespace Domina.Game;
@@ -747,6 +748,7 @@ public static class UiKit
     /// </param>
     /// <param name="lost">What he has already lost, so the head in the card carries his blinded eye.</param>
     /// <param name="alive">Is he alive? A dead man's head is printed in ash.</param>
+    /// <param name="kit">What he wears — at a head crop it is his helmet that shows.</param>
     public static Control UnitCard(
         string name,
         string trade,
@@ -757,7 +759,8 @@ public static class UiKit
         bool selected = false,
         Color? nameColor = null,
         BodyPartSet lost = default,
-        bool alive = true)
+        bool alive = true,
+        WarriorKit? kit = null)
     {
         PanelContainer panel = new();
         panel.AddThemeStyleboxOverride(
@@ -779,7 +782,7 @@ public static class UiKit
         if (name.Length > 0)
         {
             WarriorPortrait head = new(PortraitCrop.Head, new Vector2(44, 44), framed: false);
-            head.Print(default, name, lost, alive);
+            head.Print(default, name, lost, alive, kit);
             portrait.AddChild(head);
         }
 
@@ -827,7 +830,8 @@ public static class UiKit
         bool selected = false,
         Color? nameColor = null,
         BodyPartSet lost = default,
-        bool alive = true)
+        bool alive = true,
+        WarriorKit? kit = null)
     {
         Button button = new()
         {
@@ -842,7 +846,7 @@ public static class UiKit
         button.AddThemeStyleboxOverride("pressed", empty);
         button.AddThemeStyleboxOverride("focus", empty);
 
-        Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor, lost, alive);
+        Control card = UnitCard(name, trade, fraction, note, bar, ours, selected, nameColor, lost, alive, kit);
         card.MouseFilter = Control.MouseFilterEnum.Ignore;
         card.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         button.AddChild(card);

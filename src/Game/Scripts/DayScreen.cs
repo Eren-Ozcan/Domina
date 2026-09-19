@@ -520,7 +520,8 @@ public sealed partial class DayScreen : DojoScreen
         Fight(new PendingBattle(
             setup,
             BattleSeed(),
-            battle => Log(new Expedition().Settle(dojo, setup, battle), dojo)));
+            battle => Log(new Expedition().Settle(dojo, setup, battle), dojo),
+            [.. party.Select(entry => entry.Id)]));
     });
 
     private void SendToBounty()
@@ -547,7 +548,8 @@ public sealed partial class DayScreen : DojoScreen
                 battle => Log(
                     new Expedition().SettleBounty(dojo, contract, party, setup, battle),
                     contract,
-                    dojo)));
+                    dojo),
+                [.. party.Select(entry => entry.Id)]));
         });
     }
 
@@ -770,4 +772,16 @@ public sealed partial class DayScreen : DojoScreen
 /// <param name="Settle">
 /// Closes the books of the finished fight and returns the report to print on screen.
 /// </param>
-public sealed record PendingBattle(BattleSetup Setup, ulong Seed, Func<BattleResult, string> Settle);
+/// <param name="Party">
+/// The men who walked out of the gate, in the order they were ticked.
+/// </param>
+/// <remarks>
+/// The party travels with the fight so the sheet the men walk back into can print <b>them</b> rather
+/// than a paragraph about them: the ids are read against the roster after the books are closed, which
+/// is what makes a man's line say what the fight did to him.
+/// </remarks>
+public sealed record PendingBattle(
+    BattleSetup Setup,
+    ulong Seed,
+    Func<BattleResult, string> Settle,
+    IReadOnlyList<WarriorId>? Party = null);

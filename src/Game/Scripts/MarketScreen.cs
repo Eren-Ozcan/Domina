@@ -146,14 +146,18 @@ public sealed partial class MarketScreen : DojoScreen
 
         foreach (MarketRow row in rows)
         {
-            Button button = new()
-            {
-                Text = RowText(row),
-                Alignment = HorizontalAlignment.Left,
-                ToggleMode = true,
-                ButtonPressed = row.Index == _selected,
-            };
-            button.AddThemeColorOverride("font_color", RowColor(row));
+            // The same card the roster and the party list print. A candidate was a line of text with a
+            // price on it, which is the one screen in the game where the player is choosing a <b>man</b>
+            // — and the face he is weighing at the stall is the face that walks into the yard, because
+            // the look is keyed on the name (see WarriorLook).
+            Button button = UiKit.UnitButton(
+                row.Name,
+                BandName(row.Band),
+                Worth(row.Band),
+                RowText(row),
+                bar: RowColor(row),
+                selected: row.Index == _selected,
+                nameColor: row.Bought ? MutedColor : null);
 
             int index = row.Index;
             button.Pressed += Guarded(_dojo, () =>
@@ -256,9 +260,27 @@ public sealed partial class MarketScreen : DojoScreen
         return best?.Warrior.BaseStats;
     }
 
+    /// <summary>The line under a candidate's bar. His name is the card's heading, so it is not repeated.</summary>
     private static string RowText(MarketRow row) => row.Bought
-        ? $"{row.Name}  —  bought"
-        : $"{row.Name}  —  {row.Price} gold  ·  {BandName(row.Band)}";
+        ? "Bought — he is on the roster"
+        : $"{row.Price} gold" + (row.Affordable ? string.Empty : "  ·  more than the purse holds");
+
+    /// <summary>
+    /// The bar on a candidate's card: his talent, which is the only thing about him that cannot be
+    /// trained into him later.
+    /// </summary>
+    /// <remarks>
+    /// The stall's cards carry a bar because every other card in the game does, and an empty one would
+    /// read as a man with nothing left. What it cannot carry is his spirits — a man nobody owns has
+    /// none — so it carries the number the whole purchase turns on instead.
+    /// </remarks>
+    private static double Worth(TalentBand band) => band switch
+    {
+        TalentBand.Dull => 0.25,
+        TalentBand.Fair => 0.5,
+        TalentBand.Promising => 0.75,
+        _ => 1.0,
+    };
 
     private static Color RowColor(MarketRow row)
     {
