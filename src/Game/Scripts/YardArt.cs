@@ -109,6 +109,21 @@ public static class YardArt
         (Hex(0x2B241C), Circle(246, 206, 36)),
     ];
 
+    /// <summary>
+    /// The trodden ground the men stand on — the bare patch a yard wears into itself.
+    /// </summary>
+    /// <remarks>
+    /// The men used to be one cut-paper figure standing here. They are the real figures now
+    /// (<see cref="YardMen"/>), so what is left for the destination to be is the <b>ground under
+    /// them</b>: it takes the cursor, it lifts a step when the cursor is on it, and the chalk is
+    /// written beside it like every other post in the yard.
+    /// </remarks>
+    public static IReadOnlyList<(Color Fill, Vector2[] Points)> Ground() =>
+    [
+        (Hex(0x4A4034), Ellipse(300, 176, 292, 46)),
+        (Hex(0x554839), Ellipse(300, 176, 250, 30)),
+    ];
+
     /// <summary>A man standing in the yard, with a blade at his side.</summary>
     public static IReadOnlyList<(Color Fill, Vector2[] Points)> Man() =>
     [
@@ -138,6 +153,21 @@ public static class YardArt
     /// <summary>A rectangle, as the polygon it is.</summary>
     private static Vector2[] Rect(float x, float y, float width, float height) =>
         [new(x, y), new(x + width, y), new(x + width, y + height), new(x, y + height)];
+
+    /// <summary>A flattened circle — ground seen at the angle the yard is drawn from.</summary>
+    private static Vector2[] Ellipse(float x, float y, float wide, float high)
+    {
+        const int Sides = 32;
+        Vector2[] points = new Vector2[Sides];
+
+        for (int i = 0; i < Sides; i++)
+        {
+            float angle = Mathf.Tau * i / Sides;
+            points[i] = new Vector2(x + (Mathf.Cos(angle) * wide), y + (Mathf.Sin(angle) * high));
+        }
+
+        return points;
+    }
 
     /// <summary>A circle, cut into enough sides that the wheel of a cart does not read as a nut.</summary>
     private static Vector2[] Circle(float x, float y, float radius)

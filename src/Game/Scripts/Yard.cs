@@ -1,3 +1,4 @@
+using Domina.Presentation;
 using Godot;
 
 namespace Domina.Game;
@@ -158,6 +159,7 @@ public sealed partial class YardScreen : CanvasLayer
 
     private VBoxContainer? _notices;
     private VBoxContainer? _spoken;
+    private YardMen? _men;
 
     /// <summary>Called when the player walks to one of the things in the yard.</summary>
     public Action<YardPlace>? Walked { get; set; }
@@ -217,13 +219,22 @@ public sealed partial class YardScreen : CanvasLayer
             YardPlace.Cart, "the cart", "buy a man, while the cart is still here",
             new Vector2(-24, 264));
 
-        Stand(page, YardArt.Man(), new Vector2(600, 664), new Vector2(120, 216),
+        // The men are the one destination that is not a thing built in the yard: it is the ground they
+        // stand on, and the men standing on it are the real figures (see YardMen below).
+        Stand(page, YardArt.Ground(), new Vector2(180, 690), new Vector2(600, 240),
             YardPlace.Men, "the men", "read one of them, and see what he has become",
-            new Vector2(-150, 236));
+            new Vector2(214, 250));
 
         Stand(page, YardArt.Gate(), new Vector2(1612, 432), new Vector2(200, 260),
             YardPlace.Gate, "the gate", "walk out, and see how far the province reaches",
             new Vector2(-92, 300));
+
+        // The men stand over the yard's own drawing rather than in it: they are nodes that move, and the
+        // ground they are on is a control the cursor can take. A Node2D takes no mouse input, so the
+        // destination underneath keeps the click even with a figure drawn on top of it.
+        YardMen men = new() { Position = new Vector2(232, 700) };
+        AddChild(men);
+        _men = men;
 
         VBoxContainer notices = new() { Position = new Vector2(96, Height - 300) };
         notices.AddThemeConstantOverride("separation", 10);
@@ -378,6 +389,21 @@ public sealed partial class YardScreen : CanvasLayer
         }
 
         Show();
+    }
+
+    /// <summary>
+    /// Stands the roster on the ground of the yard.
+    /// </summary>
+    /// <remarks>
+    /// Called whenever the roster can have changed — a day closed, a man bought, a sheet shut — and not
+    /// per frame: the figures are nodes, and only the pose moves between two calls of this.
+    /// </remarks>
+    public void StandMen(IReadOnlyList<RosterRow> roster)
+    {
+        if (_men is YardMen men && IsInstanceValid(men))
+        {
+            men.Stand(roster);
+        }
     }
 
     /// <summary>Takes every notice off the ground — a new day, or a term that has ended.</summary>

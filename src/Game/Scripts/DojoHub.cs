@@ -2,6 +2,7 @@ using Domina.Chat;
 using Domina.Core.Campaign;
 using Domina.Core.Dojo;
 using Domina.Core.Dojo.Save;
+using Domina.Core.Model;
 using Domina.Presentation;
 using Godot;
 
@@ -110,6 +111,16 @@ public sealed partial class DojoHub : Node
     private CanvasLayer? _arenaChrome;
     private DojoTab _tab = DojoTab.Day;
     private string? _report;
+
+    /// <summary>
+    /// The men the last fight went out with; the sheet they walk back into prints them.
+    /// </summary>
+    /// <remarks>
+    /// It is kept beside the report and cleared with it: both belong to one expedition, and a party
+    /// left over from yesterday's fight would be printed under today's report as though those were the
+    /// men who had just come home.
+    /// </remarks>
+    private IReadOnlyList<WarriorId> _party = [];
 
     /// <summary>
     /// The season's clock. It belongs to the hub because the hub is the only node that outlives a
@@ -231,6 +242,7 @@ public sealed partial class DojoHub : Node
 
         _screen?.Refresh();
         RefreshStrip();
+        RefreshYardMen();
         ShowGateIfAnyoneIsAsking();
         (_screen as DayScreen)?.Note(string.Join(System.Environment.NewLine, log));
 
@@ -487,6 +499,7 @@ public sealed partial class DojoHub : Node
         _yard = yard;
         AddChild(yard);
         yard.Build();
+        RefreshYardMen();
     }
 
     /// <summary>Walks to one of the things standing in the yard.</summary>
@@ -546,6 +559,7 @@ public sealed partial class DojoHub : Node
         }
 
         RefreshStrip();
+        RefreshYardMen();
         ShowGateIfAnyoneIsAsking();
     }
 
@@ -754,6 +768,8 @@ public sealed partial class DojoHub : Node
 
         CloseScreen();
 
+        _party = bout.Party ?? [];
+
         BattleArena arena = new()
         {
             Bout = bout.Setup,
@@ -831,11 +847,14 @@ public sealed partial class DojoHub : Node
 
         if (_report is not string told || told.Length == 0)
         {
+            _party = [];
             ShowYard();
             return;
         }
 
         _report = null;
+        IReadOnlyList<RosterRow> returned = Returned();
+        _party = [];
 
         if (_yard is null)
         {
@@ -853,6 +872,7 @@ public sealed partial class DojoHub : Node
             Layer = 1,
             Headline = lines.Length > 0 ? lines[0] : "They came back.",
             Lines = lines.Length > 1 ? lines[1..] : [],
+            Returned = returned,
         };
 
         aftermath.Closed = () =>
@@ -865,6 +885,42 @@ public sealed partial class DojoHub : Node
 
         _aftermath = aftermath;
         AddChild(aftermath);
+    }
+
+    /// <summary>
+    /// The party that went out, as the roster has them now the books are closed.
+    /// </summary>
+    /// <remarks>
+    /// The rows are read <b>after</b> the accounting rather than kept from before it: what the sheet
+    /// has to print is the wound, the days in the hut and the empty bed, and none of those exist until
+    /// the expedition layer has written them. The order the men were ticked in is kept, so the sheet
+    /// reads as the party the player put together.
+    /// </remarks>
+    private IReadOnlyList<RosterRow> Returned()
+    {
+        if (_dojo is not DojoState dojo || _party.Count == 0)
+        {
+            return [];
+        }
+
+        Dictionary<WarriorId, RosterRow> rows = [];
+
+        foreach (RosterRow row in RosterModel.Describe(dojo))
+        {
+            rows[row.Id] = row;
+        }
+
+        List<RosterRow> party = [];
+
+        foreach (WarriorId id in _party)
+        {
+            if (rows.TryGetValue(id, out RosterRow row))
+            {
+                party.Add(row);
+            }
+        }
+
+        return party;
     }
 
     private void CloseArena()
@@ -1061,6 +1117,21 @@ public sealed partial class DojoHub : Node
         _strip = layer;
         AddChild(layer);
         RefreshStrip();
+    }
+
+    /// <summary>
+    /// Stands the roster on the ground of the yard again.
+    /// </summary>
+    /// <remarks>
+    /// It is called wherever the strip is reprinted, and for the same reason: both say what the dojo
+    /// is today, and a yard whose men were bought yesterday is as wrong as a strip whose day is.
+    /// </remarks>
+    private void RefreshYardMen()
+    {
+        if (_dojo is DojoState dojo && _yard is YardScreen yard && IsInstanceValid(yard))
+        {
+            yard.StandMen(RosterModel.Describe(dojo));
+        }
     }
 
     /// <summary>Reprints the strip. The day, the stores and the hour are all read off the dojo.</summary>
