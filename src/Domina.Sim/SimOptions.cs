@@ -26,7 +26,8 @@ internal sealed record SimOptions(
     MoraleBand MoraleBand = default,
     double? PlayerMorale = null,
     double? PlayerMastery = null,
-    MasteryBand MasteryBand = default)
+    MasteryBand MasteryBand = default,
+    ImplementSpec Implements = default)
 {
     /// <summary>The band actually used — an unset record field defaults to zeroes, not to the design's band.</summary>
     public MoraleBand EffectiveMoraleBand =>
@@ -93,6 +94,7 @@ internal static class SimArgs
         MoraleTuning moraleTuning = new();
         MasteryTuning masteryTuning = new();
         double? playerMastery = null;
+        ImplementSpec implements = default;
         MasteryBand masteryBand = MasteryBand.Default;
         bool useCharms = false;
         bool acceptCountsCharms = false;
@@ -928,6 +930,51 @@ internal static class SimArgs
                     }
 
                     tuning = tuning with { UnclassedRangeFactor = rangeShare };
+                    break;
+
+                case "--implement-damage":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double implementDamage)
+                        || implementDamage < 0)
+                    {
+                        return ParsedArgs.Fail(
+                            $"--implement-damage must be a non-negative number: {value}");
+                    }
+
+                    implements = implements with { Damage = implementDamage };
+                    break;
+
+                case "--implement-cycle":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double implementCycle)
+                        || implementCycle <= 0)
+                    {
+                        return ParsedArgs.Fail($"--implement-cycle must be a positive number: {value}");
+                    }
+
+                    implements = implements with { Cycle = implementCycle };
+                    break;
+
+                case "--blade-damage":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double bladeDamage)
+                        || bladeDamage < 0)
+                    {
+                        return ParsedArgs.Fail($"--blade-damage must be a non-negative number: {value}");
+                    }
+
+                    implements = implements with { BladeDamage = bladeDamage };
+                    break;
+
+                case "--dose":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double dose)
+                        || dose < 0)
+                    {
+                        return ParsedArgs.Fail($"--dose must be a non-negative number: {value}");
+                    }
+
+                    implements = implements with { Dose = dose };
                     break;
 
                 case "--poison-damage":
@@ -1916,7 +1963,8 @@ internal static class SimArgs
 
         return ParsedArgs.Ok(new SimOptions(
             scenario, battles, firstSeed, policy, label, csvPath, tuning, playerArmor, armorLabel,
-            playerSpeed, campaignOptions, moraleBand, playerMorale, playerMastery, masteryBand));
+            playerSpeed, campaignOptions, moraleBand, playerMorale, playerMastery, masteryBand,
+            implements));
     }
 
     /// <summary>
@@ -2152,6 +2200,10 @@ internal static class SimArgs
         writer.WriteLine("  --class-catch-floor  What a catching warrior's die is worth with the wrong implement");
         writer.WriteLine("  --class-poison-share The share of a dose a warrior of no poison class carries");
         writer.WriteLine("  --class-range-share  The share of the throw hit chance outside the range class");
+        writer.WriteLine("  --implement-damage What a jitte or a sai deals in a blow (Open Decision #19)");
+        writer.WriteLine("  --implement-cycle  The seconds between their blows (the sai keeps its extra 0.05)");
+        writer.WriteLine("  --blade-damage     What the poisoned tanto's steel deals");
+        writer.WriteLine("  --dose             The strength of the dose on that blade");
         writer.WriteLine("  --poison-damage    Damage poison deals in one tick (at dose 1)");
         writer.WriteLine("  --poison-seconds   The lifetime of one dose");
         writer.WriteLine("  --poison-tick      The interval at which poison deals damage");

@@ -1319,8 +1319,8 @@ internal sealed class CampaignRunner(CampaignOptions options)
     /// </remarks>
     private static Weapon? WantedWeapon(Warrior warrior) => warrior.Class switch
     {
-        WarriorClass.Torite => Weapon.Jitte(),
-        WarriorClass.Dokushi => Weapon.PoisonedTanto(),
+        WarriorClass.Torite => ImplementBench.Jitte(),
+        WarriorClass.Dokushi => ImplementBench.PoisonedTanto(),
         _ => null,
     };
 

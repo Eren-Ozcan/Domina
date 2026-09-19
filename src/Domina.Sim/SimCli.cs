@@ -48,6 +48,9 @@ internal static class SimCli
 
         SimOptions options = parsed.Options;
 
+        // The implements the run was asked to measure, before the first weapon is built.
+        ImplementBench.Apply(options.Implements);
+
         if (options.Campaign is CampaignOptions campaign)
         {
             long began = Stopwatch.GetTimestamp();

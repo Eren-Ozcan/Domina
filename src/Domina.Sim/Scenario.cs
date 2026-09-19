@@ -114,7 +114,7 @@ internal static class Scenarios
     /// being the recruit's weapon.
     /// </remarks>
     private static BattleSetup ThreeVsThreeJitte() =>
-        ThreeVsThreeWith(Weapon.Jitte(), WarriorClass.Torite);
+        ThreeVsThreeWith(ImplementBench.Jitte(), WarriorClass.Torite);
 
     /// <summary>
     /// The measurement where poison turns on <b>the player's side</b>: the tengu throws poisoned shuriken.
@@ -227,10 +227,10 @@ internal static class Scenarios
     private static BattleSetup KatanaControl() => Trade(Weapon.Katana());
 
     /// <inheritdoc cref="KatanaControl"/>
-    private static BattleSetup JitteCatch() => Trade(Weapon.Jitte(), klass: WarriorClass.Torite);
+    private static BattleSetup JitteCatch() => Trade(ImplementBench.Jitte(), klass: WarriorClass.Torite);
 
     /// <inheritdoc cref="KatanaControl"/>
-    private static BattleSetup SaiCatch() => Trade(Weapon.Sai(), klass: WarriorClass.Torite);
+    private static BattleSetup SaiCatch() => Trade(ImplementBench.Sai(), klass: WarriorClass.Torite);
 
     /// <summary>
     /// The class layer's <b>hard zero</b>: the same jitte in the hand of a warrior with no class.
@@ -240,7 +240,7 @@ internal static class Scenarios
     /// implement. Measured against <c>jitte</c> this scenario prices the class itself, and against
     /// <c>katana</c> it prices what the jitte costs in damage when it buys nothing back.
     /// </remarks>
-    private static BattleSetup JitteUnclassed() => Trade(Weapon.Jitte());
+    private static BattleSetup JitteUnclassed() => Trade(ImplementBench.Jitte());
 
     /// <summary>
     /// The class layer's <b>soft end</b>: a catching warrior holding the wrong implement.
@@ -281,7 +281,7 @@ internal static class Scenarios
     /// so that the difference comes only from catching.
     /// </remarks>
     private static BattleSetup JitteVsTwoHanded() =>
-        Trade(Weapon.Jitte(), Weapon.Nodachi(), klass: WarriorClass.Torite);
+        Trade(ImplementBench.Jitte(), Weapon.Nodachi(), klass: WarriorClass.Torite);
 
     /// <inheritdoc cref="JitteVsTwoHanded"/>
     private static BattleSetup KatanaVsTwoHanded() => Trade(Weapon.Katana(), Weapon.Nodachi());
@@ -297,7 +297,7 @@ internal static class Scenarios
 
     /// <inheritdoc cref="TantoControl"/>
     private static BattleSetup PoisonedTanto() =>
-        Trade(Weapon.PoisonedTanto(), klass: WarriorClass.Dokushi);
+        Trade(ImplementBench.PoisonedTanto(), klass: WarriorClass.Dokushi);
 
     /// <summary>
     /// The same poisoned knife in the hand of a warrior with no class.
@@ -307,7 +307,7 @@ internal static class Scenarios
     /// (<c>UnclassedPoisonFactor</c>). This scenario is what prices that cut: against <c>poison</c> it
     /// shows what the class buys, against <c>tanto</c> whether a reduced dose is still worth carrying.
     /// </remarks>
-    private static BattleSetup PoisonedTantoUnclassed() => Trade(Weapon.PoisonedTanto());
+    private static BattleSetup PoisonedTantoUnclassed() => Trade(ImplementBench.PoisonedTanto());
 
     /// <summary>
     /// The pair where poison's real claim is measured: the enemy wears <b>full armour</b>.
@@ -321,7 +321,7 @@ internal static class Scenarios
 
     /// <inheritdoc cref="TantoVsArmored"/>
     private static BattleSetup PoisonedVsArmored() =>
-        Trade(Weapon.PoisonedTanto(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Dokushi);
+        Trade(ImplementBench.PoisonedTanto(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Dokushi);
 
     /// <summary>
     /// The <b>real</b> alternative against an armoured enemy: an ordinary sword.
@@ -363,7 +363,7 @@ internal static class Scenarios
     /// <see cref="KatanaVsArmored"/> — the same enemy, the same stats, the only difference the weapon.
     /// </remarks>
     private static BattleSetup JitteVsArmored() =>
-        Trade(Weapon.Jitte(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Torite);
+        Trade(ImplementBench.Jitte(), enemyArmor: Armor.Heavy(), klass: WarriorClass.Torite);
 
     /// <summary>
     /// Disarming's <b>team</b> price: the control is <c>3v3</c>, the only difference the enemy's armour.
