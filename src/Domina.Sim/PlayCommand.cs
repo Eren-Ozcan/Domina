@@ -394,12 +394,20 @@ internal static class PlayCommand
         /// </para>
         /// <para>
         /// So the script states the order in advance: <c>pull:0.5</c> on the move means "pull out when
-        /// we are outnumbered and the party is under half health". It is the core's own
-        /// <see cref="RetreatWhenLosing"/> — the batch bed's stand-in for a player — and it costs what
-        /// the key costs, in honour and in the fee.
+        /// the party is under half health", whatever the count on the field. It costs what the key
+        /// costs, in honour and in the fee.
+        /// </para>
+        /// <para>
+        /// It is the core's <see cref="RetreatBelowHealth"/> and <b>not</b> the batch bed's
+        /// <see cref="RetreatWhenLosing"/>, which also wants the party outnumbered. That second
+        /// condition is right for a measurement bed — watching health alone abandons most 3v3 fights
+        /// and the victory rate then measures the policy rather than the balance — but wrong for a
+        /// hand-played season: a party of four against one enemy cannot trip it until three of them
+        /// are down, and a lone man never can, so the order a player wrote never fired. The bed keeps
+        /// both conditions; the played season takes the order at its word.
         /// </para>
         /// </remarks>
-        private static RetreatWhenLosing? PullOut(string[] word)
+        private static RetreatBelowHealth? PullOut(string[] word)
         {
             foreach (string token in word)
             {
@@ -415,7 +423,7 @@ internal static class PlayCommand
                         out double share)
                     && share is > 0 and <= 1)
                 {
-                    return new RetreatWhenLosing(share);
+                    return new RetreatBelowHealth(share);
                 }
             }
 
@@ -456,7 +464,7 @@ internal static class PlayCommand
                 return $"the expedition was refused: {why}";
             }
 
-            RetreatWhenLosing? pull = PullOut(word);
+            RetreatBelowHealth? pull = PullOut(word);
             ExpeditionResult result = new Domina.Core.Campaign.Expedition().Send(
                 _state,
                 offer,

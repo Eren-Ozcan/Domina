@@ -16,16 +16,17 @@ The reports these seasons produced are in `PROGRESS.md`, one entry per round.
 
 ## The pull-out order
 
-A move can carry `pull:0.5`, and it means one exact thing: **pull out when we are losing** — the party
-is outnumbered on the field *and* under that share of health. Both conditions, not either. It is the
-core's `RetreatWhenLosing`, the batch bed's stand-in for a player, and it is deliberately not a plain
-health threshold: a player does not call off an expedition over one wound, and an order watching
-health alone abandons more than 80% of 3v3 fights.
+A move can carry `pull:0.5`, and it means one exact thing: **pull out when the party's health falls
+to that share**, whatever the count on the field. It is the core's `RetreatBelowHealth`, and it fires
+the way a player reading the line expects it to.
 
-The consequence is worth writing down, because five played seasons reported the order as broken when
-it was not: **send four men at one enemy and the order cannot fire**, because you are never
-outnumbered until three of them are down. A lone man can never trip it at all. If the fight has to be
-breakable off, that is what the party size is for — or the fight is one to fight to the end.
+It is deliberately *not* the batch bed's `RetreatWhenLosing`, which also wants the party outnumbered.
+That second condition is right for a measurement bed — an order watching health alone abandons more
+than 80% of 3v3 fights, so the victory rate then measures the policy and not the balance — but in a
+hand-played season it meant the order almost never fired: send four men at one enemy and you are not
+outnumbered until three of them are down, and a lone man never is. Five played seasons reported the
+order as broken; from 2026-09-19 the played season takes the order at its word and the bed keeps both
+conditions.
 
 This is the harness only. The game's own key is a key: it is pressed, and the party leaves.
 
