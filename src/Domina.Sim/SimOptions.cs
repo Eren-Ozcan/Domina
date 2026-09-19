@@ -1021,6 +1021,39 @@ internal static class SimArgs
                     tuning = tuning with { PoisonMaxDose = poisonDose };
                     break;
 
+                case "--sick-accuracy":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double sickAim)
+                        || sickAim < 0 || sickAim > 1)
+                    {
+                        return ParsedArgs.Fail($"--sick-accuracy must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { PoisonAccuracyPenaltyAtMaxDose = sickAim };
+                    break;
+
+                case "--sick-evasion":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double sickFeet)
+                        || sickFeet < 0 || sickFeet > 1)
+                    {
+                        return ParsedArgs.Fail($"--sick-evasion must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { PoisonEvasionPenaltyAtMaxDose = sickFeet };
+                    break;
+
+                case "--sick-slow":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double sickSlow)
+                        || sickSlow < 0 || sickSlow > 1)
+                    {
+                        return ParsedArgs.Fail($"--sick-slow must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { PoisonSlowAtMaxDose = sickSlow };
+                    break;
+
                 case "--armor-durability":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double durability)
@@ -2093,6 +2126,7 @@ internal static class SimArgs
         writer.WriteLine("             [--class-range-share <0-1>]");
         writer.WriteLine("             [--poison-damage <number>] [--poison-seconds <sec>]");
         writer.WriteLine("             [--poison-tick <sec>] [--poison-dose <number>]");
+        writer.WriteLine("             [--sick-accuracy <0-1>] [--sick-evasion <0-1>] [--sick-slow <0-1>]");
         writer.WriteLine("             [--armor-durability <multiplier>]");
         writer.WriteLine("             [--target-wounded <points>] [--target-exposed <points>]");
         writer.WriteLine("             [--target-crowd <points>] [--target-sticky <points>]");
@@ -2208,6 +2242,9 @@ internal static class SimArgs
         writer.WriteLine("  --poison-seconds   The lifetime of one dose");
         writer.WriteLine("  --poison-tick      The interval at which poison deals damage");
         writer.WriteLine("  --poison-dose      The maximum dose that can accumulate on one warrior");
+        writer.WriteLine("  --sick-accuracy    The Accuracy a full dose takes from the poisoned");
+        writer.WriteLine("  --sick-evasion     The Evasion a full dose takes from the poisoned");
+        writer.WriteLine("  --sick-slow        The attack cycle a full dose stretches, and the walk it shortens");
         writer.WriteLine("  --armor-durability The multiplier for armour durability pools (0 = no wear)");
         writer.WriteLine("  --disarm-chance    Base chance of the weapon falling on a strike landing on armour");
         writer.WriteLine("  --disarm-catch     The chance a caught weapon leaves the palm");
