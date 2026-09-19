@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-17 (six seasons played by hand at once and the last night reached twice — the harness now lets the payroll be ended, gives the bench a fight, warns before the tribunal kills, names every refusal and keeps a warrior's number his for the season; before it: three more seasons played by hand, none of them reaching the last night, and the pull-out became a move; before it: the dojo can finally arm the man it trains — a rack on his own page — and the first measurement on it says arming a class with its own implement is a loss at any price; before it: the difficulty numbers re-read against the bed that changed under them; before it: a season can be played a day at a time, three were, and a won fight now leaves food behind)
+Last updated: 2026-09-20 (the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,89 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-09-20 — The rack was buying the same knife every day, and the dokushi's collapse was mostly that
+
+**The bug, and it stood underneath every armed-class reading in this file.** `ArmTheTaught` asked
+whether the man already held the implement by comparing **names** — and the forge renames what it
+reworks (`Weapon.Forged`: "Poisoned tantō" becomes "Forged poisoned tantō"). So the day after the
+smith touched the implement the rack read it as missing, bought the plain one again, and the smith
+reforged the new one the same day. Forever. On the documented rich bed that is, per dojo:
+
+| | control (nobody armed) | armed, with the loop |
+|---|---|---|
+| Kit spending / fight | 43.5 | **57.1** |
+| Ending purse | 1056 gold | **118 gold** |
+| Mastery on the best man | 27.2% | 22.6% |
+| Training days | 190.7 | 138.2 |
+
+The forge bill is read off the weapon's damage (`ForgeGoldPerDamage` 12), so the loop is worth about
+a thousand gold a season — and the mastery never settles, because mastery belongs to the weapon's
+**name** and the name changed every day. `--smith-upgrades off` makes the whole gap disappear, which
+is what named the cause. The fix is in the core, where the question belongs: `Weapon.BaseName` and
+`Weapon.SameKind` — a reforged implement **is** the implement. The rack now asks that.
+
+**Re-measured after the fix** (6 seeds × 1600 dojos × 180 days, paired, `--weapon-gold 0.01`):
+
+| Policy | Last night won | Deaths / warrior-fight | Men sent |
+|---|---|---|---|
+| Dokushi, nobody rearmed | 15.60% | 4.6% | 8.2 |
+| Dokushi, armed with the dose | **14.17%** | 4.8% | 7.7 |
+| Torite, nobody rearmed | 15.97% | — | 8.2 |
+| Torite, armed with a jitte (22/1.10) | **16.47%** | — | 8.4 |
+
+So **the 3.7%-against-19.1% collapse of 2026-09-17 was mostly the loop**, not the implement, and the
+"8.9 men become 6.0" reading of 2026-09-19 was too. What is left of the dokushi's failure is 1.4
+points of last night, consistent in sign across all six seeds. The torite's close (#19, the katana's
+steel) survives the fix and reads slightly **ahead** of the sword — it was measured through the loop
+and it was right anyway.
+
+**Then the dokushi's own round. Three answers were measured; nothing is locked.** The knife wins its
+duels and loses the season because the fight it wins is long, so the answers are about time, not damage
+(armed dokushi against a 15.77% control, 3 seeds × 1600):
+
+| Answer | Last night |
+|---|---|
+| nothing (today) | 13.97% |
+| the dose doubled (`--dose 2.0`) | 14.57% — the cap eats it, the dose is not the lever |
+| the blade 7 → 12 / 15 / 22 | 16.67 / 18.63 / 22.30% — and it ends the trade the knife is built on |
+| poison's throughput doubled (tick 0.5) | 19.37% |
+| **the same total, in half the window** (tick 1.0 → 0.5, lifetime 6 s → 3 s) | **15.90%** |
+| the control for it: 12 ticks at 1.25, throughput unchanged | 14.17% — unmoved |
+
+The last two rows are the finding: poison's lever is **when** the dose is paid, not how much. Six ticks
+are still six ticks, and nothing was made stronger.
+
+**The user's own answer, and it is a better one: the dose is a sickness.** Nausea and a swimming head
+instead of more damage — three shares, all scaled by how far the dose has gone
+(`PoisonAccuracyPenaltyAtMaxDose`, `PoisonEvasionPenaltyAtMaxDose`, `PoisonSlowAtMaxDose`, all
+defaulting to **0**, `--sick-accuracy` / `--sick-evasion` / `--sick-slow`). It does not shorten the
+fight; it makes the length **harmless** — the poisoned enemy strikes worse while he dies.
+`Combatant.Stats` is still read once for the whole fight: the sickness is a multiplier at the four
+read sites, not a stat that moves.
+
+| Setting | Duel | Armoured | Unclassed | Season |
+|---|---|---|---|---|
+| off | 83.10% | 71.95% | 74.56% | 13.97% |
+| Accuracy 0.3 | 86.27% | 74.50% | 77.85% | 15.10% |
+| Accuracy 0.5 | 88.03% | 75.93% | 79.81% | **15.83%** |
+| Evasion 0.5 | 83.44% | 71.86% | 75.02% | — (does nothing) |
+| slow 0.2 | 85.84% | **70.49%** | 77.39% | 14.37% |
+| 0.2 / 0.3 / 0.15 together | 87.77% | 72.45% | 78.90% | **15.73%** |
+| the same, plus the 3 s window | 88.34% | 75.64% | 73.33% | 18.07% |
+| half of it, plus the 3 s window | — | — | — | 16.87% |
+
+Evasion alone is worth nothing in a duel (the oni barely evades), and slowing alone is **negative**
+against an armoured enemy. What carries it is the blurred eye. Two side effects worth the entry: the
+sickness lifts the **unclassed** dose too (74.56 → 78.90), so the class gap stays the thin ~8 points
+§4 already flagged, while the 3 s window widens it to 15.0 by punishing the smaller dose.
+
+**Open, for the user's call:** (a) the sickness alone at 0.2 / 0.3 / 0.15, (b) the sickness as Accuracy
+0.5 alone, (c) half the sickness plus the 3 s window — wide class gap, and 1.1 points ahead of the
+sword, which is the band the armed torite sits in (+0.5). Until it is answered the three shares stay at
+0 and poison is exactly what it was.
 
 ---
 
