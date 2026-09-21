@@ -936,12 +936,33 @@ public sealed record CombatTuning
     /// unclassed hand delivers a smaller dose and therefore a lighter sickness, with no second rule.
     /// </para>
     /// </remarks>
-    public double PoisonAccuracyPenaltyAtMaxDose { get; init; }
+    /// <remarks>
+    /// <b>Locked 2026-09-21 at 0.25, and only Accuracy carries the sickness.</b> Evasion alone is
+    /// worth nothing in a duel (the oni barely evades) and slowing alone is negative in front of
+    /// armour; the blurred eye is what does the work. The share is half of the 0.5 that was measured
+    /// on its own, because it is locked <b>beside</b> the backstep
+    /// (<see cref="PoisonBackstepSeconds"/>) — the two together at full strength put the knife 1.9
+    /// points clear of the armed torite and the purchase stopped being a trade. At 0.25 with the step
+    /// the armed dokushi sat in the torite's own band (+0.6).
+    /// </remarks>
+    /// <remarks>
+    /// <b>Cut to 0.15 on 2026-09-21</b>, the same day, when the backstep learned to wait on the dose
+    /// cap instead of on a clock. The better move carries more of the weight, so the medicine needs
+    /// less of it: at the locked ceiling the season reads 15.77% with no sickness at all, 16.57% at
+    /// 0.15 and 17.13% at 0.25, against a 16.20% control and an armed torite at +0.6. 0.15 is the one
+    /// in the band, and it also holds the best armoured fight measured on any setting (81.55%).
+    /// </remarks>
+    public double PoisonAccuracyPenaltyAtMaxDose { get; init; } = 0.15;
 
     /// <summary>The share of his <b>Evasion</b> a full dose takes — the sickness a swimming head becomes.</summary>
     /// <remarks>
     /// Evasion and not Defence: the dose makes a man slow to move out of the way, it does not thin his
     /// armour. Defence is the plate's own line and poison has never been allowed to read it.
+    /// </remarks>
+    /// <remarks>
+    /// <b>Left at 0 on 2026-09-21</b>, measured rather than skipped: 0.5 of it moves the duel by 0.14
+    /// points (83.30 → 83.44%). The enemy it is aimed at does not dodge enough for it to have anything
+    /// to take away.
     /// </remarks>
     public double PoisonEvasionPenaltyAtMaxDose { get; init; }
 
@@ -949,6 +970,11 @@ public sealed record CombatTuning
     /// The share a full dose adds to the poisoned warrior's attack cycle, and takes off his walk — the
     /// sickness nausea becomes.
     /// </summary>
+    /// <remarks>
+    /// <b>Left at 0 on 2026-09-21</b>, and it is the one that measured <b>negative</b>: 0.2 of it
+    /// takes the armoured fight from 71.56% to 70.49%. A slowed man in plate stands still and gets
+    /// hit less often on the way in; the dose ends up buying him time.
+    /// </remarks>
     public double PoisonSlowAtMaxDose { get; init; }
 
     // ---- Limb loss ----
