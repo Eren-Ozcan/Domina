@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-20 (the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-09-21 (**Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,205 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-09-21 — The dokushi's answer is a move, not a number
+
+Open Decision #23 had three measured answers on the table, all of them numbers (the dose, the blade,
+the sickness). This round asked the other question: **can the class fight its way out of the gap?**
+Two behaviour levers were built and measured, and only the second one is an answer.
+
+**The cheap one first: the charge.** `CombatTuning.PoisonChargeAppetite` (`--class-charge`, 1.0 by
+default and therefore silent) multiplies the poison class's own charge chance. On the duel bed
+(20.000 fights, seed 5, `losing:0.7`) it is monotone and large — the dokushi should not charge at all:
+
+| `--class-charge` | poison | poison-armored |
+|---|---|---|
+| **0.0** | **89.55%** | **76.20%** |
+| 0.5 | 86.37% | 73.76% |
+| 1.0 (today) | 83.30% | 71.56% |
+| 1.5 / 2.0 | 80.95% | 70.31% (the chance is at its ceiling) |
+
+**And it is poison's gain, not everyone's.** Silencing both sides' charge (`--charge-chance 0`)
+*lowers* the steel — tantō 26.13 → 24.18%, katana-armored 26.01 → 23.82% — and *raises* the dose,
+83.30 → 88.28% and 71.56 → 78.19%. Distance is worth something to a man whose weapon keeps working
+after he stops swinging it, and worth nothing to a man whose weapon is the swing.
+
+**The season says it is not #23's answer.** 3 seeds × 1600 dojos × 180 days on the documented rich
+bed, `--train-classes on --class-fit dokushi --weapon-gold 0.01`, last nights won:
+
+| | appetite 1.0 | appetite 0.0 |
+|---|---|---|
+| armed with the dose (`--arm-fit class`) | 13.87% | 16.60% |
+| nobody rearmed (`--arm-fit none`) | 16.20% | 18.83% |
+| **the knife's cost** | **−2.3** | **−2.2** |
+
+The whole line rises by 2.7 points and the **gap does not move**. The charge is not what the knife is
+paying for. What it does leave behind is a finding of its own, and it belongs to a round nobody has
+run: **for the dojo's own men the charge is a loss over a season** — armed and unarmed alike — while
+it is a gain in the duel. It is not written down as a class question because it is not one.
+
+**The second lever, and this one is the answer: hit and run.** A new `CombatState.Backstep` — after a
+strike that has already put the dose in, the poisoner walks **out of the enemy's reach** and waits
+there. He does not strike while he walks, he keeps facing the man, and the step ends the moment the
+dose does. Three conditions gate it, and they are the same sentence: the move must exist
+(`PoisonBackstepSeconds`, **0 by default**), his weapon must carry a dose, and the man in front of him
+must already be poisoned — a poisoner who has not landed his poison yet would be making a gift of the
+walk. `--backstep <sec>`, `--backstep-reach <share>`.
+
+Duel bed, the same 20.000 fights:
+
+| `--backstep` | poison | poison-armored |
+|---|---|---|
+| 0 (today) | 83.30% | 71.56% |
+| 0.2 | **94.98%** | 79.03% |
+| 0.4 | 90.16% | 80.01% |
+| 0.8 | 86.89% | 82.41% |
+| 1.0 | 85.45% | 85.34% |
+| **1.2** | 85.22% | **86.16%** |
+
+The two beds want opposite lengths, and the reason is the armour: in the open duel the knife still
+does work, so a short step that only breaks the exchange is best; in front of ō-yoroi the blade does
+almost nothing and the right fight is to keep walking while the dose works. The curve is not smooth —
+`poison-armored` dips to 74.05% at 0.3 between 79.03 and 80.01 — which is chase geometry, not noise at
+this bed's ±0.3.
+
+**The season, same bed as above, armed dokushi:**
+
+| `--backstep` | last night won | deaths / warrior-fight | dojos closed |
+|---|---|---|---|
+| 0 | 13.87% | 4.80% | 30.5% |
+| 0.3 | 14.57% | 4.67% | 29.7% |
+| 0.6 | 14.73% | 4.60% | 29.6% |
+| 1.0 | 15.57% | 4.53% | 29.0% |
+| **1.5** | **15.77%** | 4.57% | 29.5% |
+| 2.0 | 14.73% | 4.60% | 29.4% |
+
+Positive on all three seeds at every length, and at 1.5 s the armed dokushi reads 15.77% against the
+nobody-armed control's 16.20% — **0.4 points, inside the bed's noise**. The knife has stopped costing
+the season, and it did it by changing how the man fights rather than what the dose is worth.
+
+**It reaches only the man carrying the dose, and that was checked rather than assumed.** With
+`--arm-fit none` the season reads 15.6 / 17.0 / 16.0% at `--backstep 1.5` — *identical, seed by seed*,
+to the same bed with the move off. An unpoisoned blade fights exactly the fight it fought before the
+state existed, which is also a test (`BackstepTests`).
+
+**Not locked.** Both knobs default to their silent values (appetite 1.0, backstep 0), so every figure
+in this file still stands. What the round produced is a fourth option for the user's open call on #23,
+beside the three sickness settings: **the move instead of the medicine**, or the two together.
+
+**Still open in it:** the length wants to differ by enemy (0.2 s in the open, 1.2 s in front of
+armour) and today it is one number; and a poisoned *thrown* weapon does not trigger the move, because
+the gate reads the melee weapon. Both are Phase 9.
+
+**The move and the medicine were then measured together, because they answer different halves.** The
+sickness makes the length harmless; the step makes the length happen on the poisoner's terms. Same
+season bed, and the **torite's own band re-measured on these three seeds** as the yardstick: armed
+16.70% against unarmed 16.07%, **+0.6** — the +0.5 the GDD records.
+
+| Setting (armed dokushi, control 16.20%) | Last night | Against the control | Deaths / warrior-fight |
+|---|---|---|---|
+| nothing | 13.87% | −2.3 | 4.80% |
+| the backstep at 1.5 s | 15.77% | −0.4 | 4.57% |
+| Accuracy 0.5 alone | 16.70% | **+0.5** | 4.60% |
+| **the backstep + Accuracy 0.25** | 16.63% | **+0.4** | **4.43%** |
+| the backstep + Accuracy 0.5 | 18.07% | +1.9 | 4.33% |
+
+The two together at full strength **overshoot** — +1.9 puts the knife more than a point clear of the
+armed torite, and the purchase stops being a trade. Two settings land in the band, and the number does
+not choose between them; the duel bed does:
+
+| | poison | armoured | unclassed | class gap |
+|---|---|---|---|---|
+| Accuracy 0.5 alone | 88.11% | 75.84% | 79.52% | 8.6 |
+| **the backstep + Accuracy 0.25** | 86.34% | **79.79%** | 73.22% | **13.1** |
+
+The step is what widens the gap, and it widens it from **below**: it *lowers* the unclassed poisoner
+(74.22 → 71.02% with the step alone), because a smaller dose does not pay for the strikes the walk
+costs. That is the class tax §4 has been asking for since the dose was scaled — earned by the man's
+craft rather than written into a factor.
+
+**Then the user took the rule apart, and was right.** The first version stepped back for a fixed
+1.5 s whenever *the nearest enemy* was poisoned. Two things wrong with that. The nearest man is often
+a **teammate's** fight on a crowded field, so the poisoner would walk away from a fresh body he could
+have dosed. And a clock is the wrong thing to wait on: what he is waiting for is his **poison to be
+worth landing again**. Poison stops at `PoisonMaxDose` — once the target carries that much, the next
+strike's dose goes nowhere and all the strike buys is the blade's own seven points, on a knife built
+to be a delivery rather than a weapon.
+
+**The rule as it now stands.** He steps out while **his own target** (`FindTarget`, not the nearest
+body) is at or above `PoisonMaxDose * PoisonBackstepHeadroom`, and he comes back in the moment a fresh
+dose would land. `PoisonBackstepSeconds` stopped being a duration and became the **ceiling** on the
+wait. `--backstep-headroom` sweeps the line; at 1.0 he only waits on a full cap.
+
+**Re-measured from scratch, because the rule is not the one the numbers were taken on** (season, same
+bed, 16.20% control, armed torite +0.6):
+
+| ceiling | last night | deaths | duel | armoured |
+|---|---|---|---|---|
+| 0 (no move) | 15.10% | 4.70% | 85.66% | 73.92% |
+| 0.5 | 16.00% | 4.53% | 89.48% | 76.38% |
+| **1.0** | 17.13% | 4.50% | 88.52% | **81.75%** |
+| 1.5 | 17.47% | 4.43% | 88.06% | 77.56% |
+| 3.0 | 17.17% | 4.50% | 88.14% | 74.30% |
+| 6.0 | — | — | 84.73% | 64.29% (he is loitering) |
+
+The better move carries more of the fight, so the medicine had to come down with it — at the 1.0 s
+ceiling the season reads 15.77% with no sickness at all, **16.57% at 0.15**, 17.13% at 0.25, and the
+last of those puts the knife clear of the torite again.
+
+**Locked, at the user's call: `PoisonBackstepSeconds` 1.0, `PoisonBackstepHeadroom` 1.0,
+`PoisonAccuracyPenaltyAtMaxDose` 0.15.** Evasion and the slow stay at 0. On the locked build, with no
+flags at all, the beds read poison **87.87%**, poison-armored **81.55%** (the best armoured reading of
+anything measured this round, the old rule included), poison-unclassed **77.79%**, tantō **26.13%** —
+the same numbers the sweep chose, which is the check that the defaults are the setting and not
+something near it. `BackstepTests` gained the rule's own guard: raise `PoisonMaxDose` out of reach and
+the fight is identical, seed by seed, to the fight with the move switched off. **Open Decision #23 is
+closed.**
+
+---
+
+## 2026-09-21 (second round) — The charge was locked on a bed that cannot see what it costs
+
+The poison round left a loose thread: silencing one class's charge moved its season by 2.7 points and
+its duel by nothing it could keep. The knob to chase it did not exist —`--charge-chance` moves **both
+sides**, so a sweep of it measures a different fight rather than a different policy. Written this
+round: `PlayerChargeAppetite` and `EnemyChargeAppetite` (`--player-charge`, `--enemy-charge`, both
+1.0, so nothing has changed yet).
+
+**The dojo's own side, swept alone.** Documented rich bed, 3 seeds × 1600 dojos × 180 days:
+
+| `--player-charge` | Last night won | Dojos closed | Deaths / warrior-fight | Net / fight |
+|---|---|---|---|---|
+| 1.0 (today) | 15.97% | 31.0% | 4.67% | 41.0 |
+| 0.75 | 19.40% | 27.6% | 4.27% | 44.3 |
+| 0.5 | 26.07% | 25.1% | 3.83% | 50.2 |
+| 0.25 | 33.63% | 21.2% | 3.47% | 55.7 |
+| **0** | **44.13%** | **16.2%** | **3.03%** | **63.3** |
+
+Monotone, every seed, no knee: **28 points of last night**, larger than every class question this
+project has argued over put together.
+
+**And the duel bed sees almost none of it.** With the player's charge alone silenced: 3v3 −0.15
+points (64.52 → 64.37%), katana-armored −0.67, and the tantō and the poisoned knife *gain* (26.13 →
+30.34%, 87.87 → 92.95%). Small and mixed — which is what a bed that closes its books at the end of the
+fight can see.
+
+**The asymmetry names the cause.** Silencing the **enemy's** charge instead is worth +2.9 points
+(15.97 → 18.83%) — an order less. With both sides silenced the season reads **61.67%** of last nights
+and 1.93% deaths against 4.67%. So the charge is a loss for whoever throws it, and it costs the dojo
+far more because the dojo's men **carry the injury into the next day** while the enemy is rebuilt free
+every fight. That is precisely the price a duel bed cannot quote.
+
+**Nothing has been changed.** The appetite stays at 1.0 on both sides and §11's numbers stand. The
+claim is not that the charge should go — it is a real decision with a real payoff inside one fight,
+and chat watches it — but that the curve was calibrated without its season price, and the price is 28
+points. Written up as Open Decision **#24**, and it should be answered before any further class
+balance: the classes are being tuned inside a behaviour that costs more than any of them.
+
+
+876 tests green under Release (580 core + 221 presentation + 75 sim).
 
 ---
 
