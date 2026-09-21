@@ -125,6 +125,96 @@ public sealed record CombatTuning
     public double ChargeChanceAtMaxAggression { get; init; } = 1.00;
 
     /// <summary>
+    /// A multiplier over the poison class's own charge appetite — <b>1.0 changes nothing</b>.
+    /// </summary>
+    /// <remarks>
+    /// A measuring knob, and the cheapest of the behaviour levers Open Decision #23 has left: the
+    /// dokushi's failure is time, and a man who throws himself across the field spends the fight
+    /// differently from one who closes it walking. It multiplies <see cref="ChargeChanceAtZeroAggression"/>
+    /// and <see cref="ChargeChanceAtMaxAggression"/> for a dokushi only, so every figure ever measured
+    /// stands at the default.
+    /// </remarks>
+    public double PoisonChargeAppetite { get; init; } = 1.0;
+
+    /// <summary>
+    /// A multiplier over the charge appetite of <b>the dojo's own side</b> — 1.0 changes nothing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The knob the charge round needs, and it did not exist until 2026-09-21. Every charge number in
+    /// docs/GDD.md §11 was locked on a 20.000-fight duel bed, which asks one question — did he win —
+    /// and a duel ends before the answer the campaign cares about is paid: the infirmary days, the
+    /// deaths, how many men reach the last night. The first sign that the two beds disagree came out
+    /// of the poison round: silencing one class's charge lifted its season by 2.7 points and its duel
+    /// by nothing it could keep.
+    /// </para>
+    /// <para>
+    /// It is a <b>side</b> knob and not a global one on purpose. <c>ChargeChanceAtZeroAggression</c>
+    /// moves both sides at once, so a sweep of it measures a different fight rather than a different
+    /// policy; this one leaves the enemy exactly as he was, which is what a player's decision would
+    /// do.
+    /// </para>
+    /// </remarks>
+    public double PlayerChargeAppetite { get; init; } = 1.0;
+
+    /// <summary>The same multiplier for the other side — the control for <see cref="PlayerChargeAppetite"/>.</summary>
+    /// <remarks>
+    /// Moving one side and reading a gain says nothing on its own: the gain may be the behaviour or it
+    /// may be the asymmetry. Sweeping the enemy's appetite with the player's left alone is how the two
+    /// are told apart.
+    /// </remarks>
+    public double EnemyChargeAppetite { get; init; } = 1.0;
+
+    /// <summary>
+    /// The <b>longest</b> a poisoner will stay out of reach waiting for his dose to be worth landing
+    /// again — <b>0 is no such move</b>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Hit and run, and the behaviour answer Open Decision #23 asks for: the dokushi's fight is long
+    /// and the length is paid in his own blood, so the move is to strike, leave, and let the dose do
+    /// the rest of the work while the enemy walks.
+    /// </para>
+    /// <para>
+    /// This is a <b>ceiling, not a duration</b>. What actually ends the step is
+    /// <see cref="PoisonBackstepHeadroom"/>: he steps out while his target is carrying so much poison
+    /// that another strike would be thrown away, and he goes looking for an opening the moment a
+    /// fresh dose would land. The ceiling only stops him loitering when the fight has drifted out from
+    /// under the rule.
+    /// </para>
+    /// </remarks>
+    /// <remarks>
+    /// <b>Locked 2026-09-21 at 1.0 s</b>, and re-measured from scratch when the rule stopped being a
+    /// duration: under the old "step back from anyone poisoned for a fixed 1.5 s" it read 1.5, and
+    /// under the cap rule the season runs 15.10 / 16.00 / 17.13 / 17.47 / 17.17% at ceilings of 0 /
+    /// 0.5 / 1.0 / 1.5 / 3.0 against a 16.20% control. 1.5 overshoots the armed torite's band, 1.0
+    /// sits in it, and past 3 s he is loitering — the duel collapses to 64.29% against armour at 6 s.
+    /// The duel beds still want different lengths (short in the open, long in front of ō-yoroi);
+    /// reading the ceiling off the enemy's armour is Phase 9.
+    /// </remarks>
+    public double PoisonBackstepSeconds { get; init; } = 1.0;
+
+    /// <summary>How far past his own reach the backstep takes him, as a share of that reach.</summary>
+    /// <remarks>
+    /// The step is a step, not a retreat: at 1.0 he ends up one reach beyond the distance he strikes
+    /// from, which is far enough that the enemy has to close again and near enough that he can strike
+    /// the moment the enemy arrives.
+    /// </remarks>
+    public double PoisonBackstepReachShare { get; init; } = 1.0;
+
+    /// <summary>
+    /// The share of <see cref="PoisonMaxDose"/> at which another strike's poison is thrown away, and
+    /// therefore the line the backstep waits behind.
+    /// </summary>
+    /// <remarks>
+    /// At 1.0 he only walks when the man is carrying the full cap — every strike below that still
+    /// adds dose, so there is nothing to wait for. Lower it and he leaves earlier, treating a
+    /// nearly-full man as full; at 0 the move would collapse back into "step away from anyone
+    /// poisoned", which is the rule this replaced.
+    /// </remarks>
+    public double PoisonBackstepHeadroom { get; init; } = 1.0;
+
+    /// <summary>
     /// The windup spent in place before the run starts. The warrior does not move during it
     /// and <b>the first hit he takes breaks the charge</b> (docs/GDD.md §4). His defence
     /// continues at its normal rate — a blow he can dodge does not take the move away.

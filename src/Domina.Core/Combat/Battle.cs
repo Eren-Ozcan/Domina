@@ -1049,10 +1049,19 @@ public sealed class Battle
         : Math.Clamp(c.ArmorWeight / _tuning.ArmorWeightAtFullPenalty, 0, 1);
 
     /// <summary>This warrior's probability of launching a charge — it comes out of his identity.</summary>
-    private double ChargeChanceFor(Combatant c) => Lerp(
-        _tuning.ChargeChanceAtZeroAggression,
-        _tuning.ChargeChanceAtMaxAggression,
-        Math.Clamp(c.Stats.Aggression / 100.0, 0, 1));
+    /// <remarks>
+    /// The class has a word on top of the stat, and only the poison class has one
+    /// (<see cref="CombatTuning.PoisonChargeAppetite"/>, 1.0 by default, which is silence).
+    /// </remarks>
+    private double ChargeChanceFor(Combatant c) => Math.Clamp(
+        Lerp(
+            _tuning.ChargeChanceAtZeroAggression,
+            _tuning.ChargeChanceAtMaxAggression,
+            Math.Clamp(c.Stats.Aggression / 100.0, 0, 1))
+        * ClassAptitude.ChargeAppetite(c.Warrior.Class, _tuning.PoisonChargeAppetite)
+        * (c.Team == PlayerTeam ? _tuning.PlayerChargeAppetite : _tuning.EnemyChargeAppetite),
+        0,
+        1);
 
     private void BeginCharge(Combatant c, Combatant target)
     {
