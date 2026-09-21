@@ -1,3 +1,5 @@
+using Domina.Core.Combat;
+
 namespace Domina.Core.Model;
 
 /// <summary>
@@ -55,6 +57,43 @@ public static class ClassAptitude
     /// <summary>The class share of a dose — full for the poison class, reduced for everyone else.</summary>
     public static double PoisonFactor(WarriorClass klass, double unclassedFactor) =>
         klass == WarriorClass.Dokushi ? 1.0 : unclassedFactor;
+
+    /// <summary>How a man of this class reads the field, or <see cref="TargetProfile.Default"/>.</summary>
+    /// <remarks>
+    /// <para>
+    /// The class is the one exception to §4's rule that the dojo's own men carry no appetite. The rule
+    /// stands for the hired man: the player directs his side and a warrior who picked his opponent by
+    /// temperament would be reading the field against him. A class is not temperament — it is a trained
+    /// craft the player paid a facility for, and the craft carries its own idea of whom to strike.
+    /// </para>
+    /// <para>
+    /// Only the <b>dokushi</b> has one. Poison ticks on its own clock, so finishing a poisoned man is
+    /// work already being done: the dose wants a fresh body, not the one that is already dying. He is
+    /// therefore pulled less by a wound, put off more by a teammate already on that target, and holds
+    /// his own fight loosely. The torite and the kyūdō keep the default until their own round measures
+    /// one for them.
+    /// </para>
+    /// </remarks>
+    public static TargetProfile Targeting(WarriorClass klass) => klass switch
+    {
+        WarriorClass.Dokushi => DokushiTargeting,
+        _ => TargetProfile.Default,
+    };
+
+    /// <summary>The poison class's appetite — spread the dose, the dose finishes them.</summary>
+    private static TargetProfile DokushiTargeting { get; } =
+        new(Wounded: 0.5, Crowd: 1.4, Stickiness: 0.6);
+
+    /// <summary>How much of his charge appetite a man of this class keeps.</summary>
+    /// <remarks>
+    /// The second half of the same exception: a craft says whom to strike, and it also says how to
+    /// close the ground. Only the <b>dokushi</b> has a word here, and it is a measuring knob rather
+    /// than a locked number — <paramref name="poisonAppetite"/> is
+    /// <see cref="Combat.CombatTuning.PoisonChargeAppetite"/> and defaults to 1.0, which is the
+    /// behaviour every figure before it was measured on.
+    /// </remarks>
+    public static double ChargeAppetite(WarriorClass klass, double poisonAppetite) =>
+        klass == WarriorClass.Dokushi ? poisonAppetite : 1.0;
 
     /// <summary>The class share of a throw — full for the range class, reduced for everyone else.</summary>
     public static double RangeFactor(WarriorClass klass, double unclassedFactor) =>

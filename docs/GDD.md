@@ -515,6 +515,33 @@ behaviour every figure measured before profiles existed was measured on.
 directs his side, and a hired man who picked his opponent by temperament would be reading the field
 against the player's plan.
 
+##### The one exception: a class is a craft, not a temperament (2026-09-20)
+
+The line above holds for the man, not for the **class**. A temperament is something a hired man happens
+to have; a class is a craft the player paid a facility for, chose to train and can see on the roster —
+and the craft carries its own idea of whom to strike. `ClassAptitude.Targeting` gives one, read by
+`Combatant` only when the man carries no kind's profile of his own, so Open Decision #3's six are never
+overwritten. `CombatTuning.ClassProfiles` (`--class-profiles`, **off** by default) is the measuring
+switch.
+
+| Class | Profile | What it is |
+|---|---|---|
+| **Dokushi** | wound ×0.5, crowd ×1.4, stickiness ×0.6 | Poison ticks on its own clock, so the dying man is work already being done — the dose wants a fresh body |
+| Torite | — | Default until its own round measures one |
+| Kyūdō | — | Default until its own round measures one |
+
+**An appetite only speaks on a crowded field, and that is measured.** At three a side the dokushi's
+profile changes nothing at all (0 of 12 seeds, identical fights); at six a side it changes 9 of 12. It
+is the obvious thing once seen — where every man already has an opponent of his own, there is nothing
+to weigh — and it is why the test bed for a profile is six a side.
+
+**Measured at zero, like the kinds' (2026-09-20).** Six seeds × 1600 dojos × 180 days, the armed
+dokushi bed, class profiles on against off, paired per seed: last nights won **−0.13** (−0.2, −0.1,
+0.0, −0.2, 0.0, −0.3 — never positive, and inside the bed's ±0.4), dojos closed and deaths per
+warrior-fight unmoved to the decimal. It is kept for the same reason the kinds' profiles are kept: a
+character trait should cost the season nothing, and the fights themselves do come out differently. **It
+is not the answer to the dokushi's balance gap** — that gap is a number, and it is answered in §7.
+
 **Measured at zero and kept anyway (2026-09-13).** Six seeds × 1600 dojos × 180 days, profiles on
 against profiles off, each seed against its own control: last nights won **+0.07 ±0.84**, dojos closed
 **−0.17 ±1.14**, net **−0.07 ±0.41**, deaths per warrior-fight **+0.03 ±0.05**, fight victory

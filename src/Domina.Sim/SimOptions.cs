@@ -420,6 +420,19 @@ internal static class SimArgs
                     };
                     break;
 
+                case "--class-profiles":
+                    if (!string.Equals(value, "on", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(value, "off", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ParsedArgs.Fail($"--class-profiles must be on or off: {value}");
+                    }
+
+                    tuning = tuning with
+                    {
+                        ClassProfiles = string.Equals(value, "on", StringComparison.OrdinalIgnoreCase),
+                    };
+                    break;
+
                 case "--stamina-regen":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double staminaRegen)

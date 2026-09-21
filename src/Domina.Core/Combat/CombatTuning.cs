@@ -316,6 +316,16 @@ public sealed record CombatTuning
     /// </remarks>
     public bool TargetProfiles { get; init; } = true;
 
+    /// <summary>
+    /// Whether a <b>class</b> carries an appetite of its own onto the dojo's own men.
+    /// </summary>
+    /// <remarks>
+    /// The measuring switch for <see cref="ClassAptitude.Targeting"/>, and the same kind of switch
+    /// <see cref="TargetProfiles"/> is: with it off every classed man reads the field exactly as the
+    /// classless one beside him, which is how every figure before this existed was measured.
+    /// </remarks>
+    public bool ClassProfiles { get; init; }
+
     // ---- Block ----
 
     /// <summary>Probability that a warrior in reach goes into a block stance at Defence 100.</summary>

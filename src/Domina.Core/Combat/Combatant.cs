@@ -106,7 +106,7 @@ public enum CombatState
 /// <see cref="Warrior"/> holds the persistent state; this is only the temporary state of <b>this
 /// fight</b>. When the fight ends, the persistent outcomes (death, maiming) are written to the warrior.
 /// </remarks>
-internal sealed class Combatant(Warrior warrior, int team)
+internal sealed class Combatant(Warrior warrior, int team, bool classProfiles)
 {
     public Warrior Warrior { get; } = warrior;
 
@@ -132,7 +132,15 @@ internal sealed class Combatant(Warrior warrior, int team)
     /// How he weighs the field when he chooses a target — read once, for the same reason
     /// <see cref="Stats"/> is: nothing can move it while the fight runs.
     /// </summary>
-    public TargetProfile Targeting { get; } = warrior.Targeting;
+    /// <remarks>
+    /// The kind that spawned him speaks first: an adversary carries the appetite of his kind and it is
+    /// never overwritten. A man with no kind's profile falls back on his <b>class</b>, which is how the
+    /// dojo's own men come by one at all (<see cref="ClassAptitude.Targeting"/>).
+    /// </remarks>
+    public TargetProfile Targeting { get; } =
+        !classProfiles || !ReferenceEquals(warrior.Targeting, TargetProfile.Default)
+            ? warrior.Targeting
+            : ClassAptitude.Targeting(warrior.Class);
 
     public int Team { get; } = team;
 

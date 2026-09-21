@@ -105,7 +105,7 @@ public sealed class Battle
 
         foreach (Warrior w in setup.PlayerSide)
         {
-            Combatant combatant = new(w, PlayerTeam);
+            Combatant combatant = new(w, PlayerTeam, _tuning.ClassProfiles);
 
             // A warrior who comes to the field already hurt starts with what is left of him.
             if (setup.StartingHealthShare?.TryGetValue(w.Id, out double share) == true)
@@ -118,7 +118,7 @@ public sealed class Battle
 
         foreach (Warrior w in setup.EnemySide)
         {
-            _combatants.Add(new Combatant(w, EnemyTeam));
+            _combatants.Add(new Combatant(w, EnemyTeam, _tuning.ClassProfiles));
         }
 
         PlaceCombatants();
