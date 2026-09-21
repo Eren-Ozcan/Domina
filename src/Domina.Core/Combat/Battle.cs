@@ -403,6 +403,25 @@ public sealed class Battle
 
                 c.Position = c.Position.MovedToward(new ArenaPoint(exitX, c.Position.Y), step);
             }
+            else if (c.State is CombatState.Backstep)
+            {
+                // He keeps his eyes on the man he poisoned and walks backwards out of his reach. The
+                // step stops at the distance it is for: past it he would only be running away, and
+                // the dose wants him near enough to strike again the moment the enemy arrives.
+                if (NearestEnemy(c) is Combatant near)
+                {
+                    FaceToward(c, near);
+
+                    double want = c.Weapon.Reach * _tuning.PreferredReachFraction
+                                  * (1 + _tuning.PoisonBackstepReachShare);
+                    double gap = c.Position.DistanceTo(near.Position);
+
+                    if (gap < want)
+                    {
+                        c.Position = c.Position.MovedAwayFrom(near.Position, Math.Min(step, want - gap));
+                    }
+                }
+            }
             else if (c.Unarmed && !c.RetreatRequested && NearestDropped(c) is GroundWeapon dropped)
             {
                 // An empty-handed warrior's first job is to find a weapon: instead of fighting with
@@ -697,6 +716,16 @@ public sealed class Battle
     private void AdvanceState(Combatant c)
     {
         c.StateTimer -= _tuning.TickSeconds;
+
+        // The step back is only worth walking while the dose is ticking. If the man he poisoned is
+        // clean again — the dose ran out, he died, or someone nearer took his place — the walk turns
+        // into plain retreat and ends here, mid-step.
+        if (c.State is CombatState.Backstep && !WantsBackstep(c))
+        {
+            c.BeginState(CombatState.Idle, 0);
+            return;
+        }
+
         if (c.StateTimer > 0)
         {
             return;
@@ -731,7 +760,25 @@ public sealed class Battle
                     return;
                 }
 
+                if (WantsBackstep(c))
+                {
+                    c.BeginState(CombatState.Backstep, _tuning.PoisonBackstepSeconds);
+                    return;
+                }
+
                 c.BeginState(CombatState.Idle, SpacingSeconds(c));
+                break;
+
+            case CombatState.Backstep:
+                // The step is over: back into the decision loop, and the spacing he owes is already
+                // paid — he spent it walking.
+                if (c.RetreatRequested)
+                {
+                    BeginRetreat(c);
+                    return;
+                }
+
+                StartAttack(c);
                 break;
 
             case CombatState.Blocking:
@@ -788,6 +835,68 @@ public sealed class Battle
             default:
                 break;
         }
+    }
+
+    /// <summary>Does he step back out of reach now, instead of standing in it?</summary>
+    /// <remarks>
+    /// <para>
+    /// The question is not "is my man poisoned" but <b>"would another strike be wasted"</b>. Poison
+    /// stops at <see cref="CombatTuning.PoisonMaxDose"/>: once the man in front of him carries that
+    /// much, the next strike's dose goes nowhere and all the strike buys is the blade's own damage —
+    /// seven points, on a knife built to be a delivery and not a weapon. That is the moment the walk
+    /// is worth taking, and the moment it stops being worth it is when the dose has burned down far
+    /// enough for a fresh one to land. He is not counting seconds; he is waiting for his poison to be
+    /// worth something again, and <see cref="CombatTuning.PoisonBackstepSeconds"/> is only the ceiling
+    /// on how long he will wait before going back in regardless.
+    /// </para>
+    /// <para>
+    /// It reads <b>his own target</b> and not the nearest body. On a crowded field the nearest man is
+    /// often a teammate's fight, and a poisoner who stepped back because someone else's opponent was
+    /// dosed would be walking away from a fresh man he could have poisoned.
+    /// </para>
+    /// </remarks>
+    private bool WantsBackstep(Combatant c)
+    {
+        if (_tuning.PoisonBackstepSeconds <= 0 || !c.Weapon.IsPoisoned || _tuning.PoisonMaxDose <= 0)
+        {
+            return false;
+        }
+
+        Combatant? target = FindTarget(c);
+        if (target is null || !target.IsPoisoned)
+        {
+            return false;
+        }
+
+        return target.PoisonDose >= _tuning.PoisonMaxDose * _tuning.PoisonBackstepHeadroom;
+    }
+
+    /// <summary>The nearest enemy still on the field, or <c>null</c>.</summary>
+    /// <remarks>
+    /// A plain loop for the same reason the two helpers below are: this is read on the hot path and
+    /// the hot path must not allocate.
+    /// </remarks>
+    private Combatant? NearestEnemy(Combatant c)
+    {
+        Combatant? best = null;
+        double bestDistance = double.MaxValue;
+
+        foreach (Combatant other in _combatants)
+        {
+            if (other.Team == c.Team || !other.IsActive || other.State is CombatState.Retreating)
+            {
+                continue;
+            }
+
+            double distance = c.Position.DistanceTo(other.Position);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = other;
+            }
+        }
+
+        return best;
     }
 
     private void StartAttack(Combatant attacker)

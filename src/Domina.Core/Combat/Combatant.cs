@@ -38,6 +38,18 @@ public enum CombatState
     Charging,
 
     /// <summary>
+    /// Stepping back out of the enemy's reach after a strike that has already done its work.
+    /// </summary>
+    /// <remarks>
+    /// The poisoner's move, and the one state in which a warrior walks <b>away</b> from the fight
+    /// without leaving it. He does not strike while he does it and the enemy has to come to him
+    /// again; the dose keeps ticking through the walk. Interruptible: a flee command, a stun or a
+    /// bind all take it, and the step ends the moment the dose does
+    /// (<see cref="CombatTuning.PoisonBackstepSeconds"/>, 0 by default, which is no such move).
+    /// </remarks>
+    Backstep,
+
+    /// <summary>
     /// In a block stance: his weapon is placed in front of the incoming blow, he is not striking.
     /// </summary>
     /// <remarks>
