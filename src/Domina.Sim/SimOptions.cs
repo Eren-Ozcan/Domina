@@ -236,6 +236,70 @@ internal static class SimArgs
                     tuning = tuning with { ChargeChanceAtMaxAggression = chanceMax };
                     break;
 
+                case "--class-charge":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double classCharge)
+                        || classCharge < 0)
+                    {
+                        return ParsedArgs.Fail($"--class-charge must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { PoisonChargeAppetite = classCharge };
+                    break;
+
+                case "--player-charge":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double playerCharge)
+                        || playerCharge < 0)
+                    {
+                        return ParsedArgs.Fail($"--player-charge must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { PlayerChargeAppetite = playerCharge };
+                    break;
+
+                case "--enemy-charge":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double enemyCharge)
+                        || enemyCharge < 0)
+                    {
+                        return ParsedArgs.Fail($"--enemy-charge must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { EnemyChargeAppetite = enemyCharge };
+                    break;
+
+                case "--backstep":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double backstep)
+                        || backstep < 0)
+                    {
+                        return ParsedArgs.Fail($"--backstep must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { PoisonBackstepSeconds = backstep };
+                    break;
+
+                case "--backstep-reach":
+                    if (!double.TryParse(
+                            value, NumberStyles.Float, CultureInfo.InvariantCulture, out double backstepReach)
+                        || backstepReach < 0)
+                    {
+                        return ParsedArgs.Fail($"--backstep-reach must be a non-negative number: {value}");
+                    }
+
+                    tuning = tuning with { PoisonBackstepReachShare = backstepReach };
+                    break;
+
+                case "--backstep-headroom":
+                    if (!TryFraction(value, out double backstepHeadroom))
+                    {
+                        return ParsedArgs.Fail($"--backstep-headroom must be between 0 and 1: {value}");
+                    }
+
+                    tuning = tuning with { PoisonBackstepHeadroom = backstepHeadroom };
+                    break;
+
                 case "--charge-windup":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double chargeWindup)
@@ -2122,6 +2186,10 @@ internal static class SimArgs
         writer.WriteLine("             [--grievous <0-1>] [--sever <0-1>]");
         writer.WriteLine("             [--armor none|light|medium|heavy] [--speed <0-100>]");
         writer.WriteLine("             [--charge-chance <0-1>] [--charge-chance-min/-max <0-1>]");
+        writer.WriteLine("             [--class-charge <multiplier>]");
+        writer.WriteLine("             [--player-charge <multiplier>] [--enemy-charge <multiplier>]");
+        writer.WriteLine("             [--backstep <sec>] [--backstep-reach <share>]");
+        writer.WriteLine("             [--backstep-headroom <0-1>]");
         writer.WriteLine("             [--charge-speed <>=1>] [--charge-damage <>=0>]");
         writer.WriteLine("             [--charge-windup <sec>] [--charge-counter <0-1>]");
         writer.WriteLine("             [--armor-attack-penalty <>=0>]");
@@ -2165,6 +2233,12 @@ internal static class SimArgs
         writer.WriteLine("  --speed     Overrides the player side's Speed stat (isolates the speed axis)");
         writer.WriteLine("  --charge-chance    Fixes the charge probability (flattens the Aggression curve)");
         writer.WriteLine("  --charge-chance-min/-max  The two ends of the Aggression curve");
+        writer.WriteLine("  --class-charge     Multiplies the poison class's charge appetite (1 = unchanged)");
+        writer.WriteLine("  --player-charge    Multiplies the dojo side's charge appetite (1 = unchanged)");
+        writer.WriteLine("  --enemy-charge     The same for the other side — the control for it");
+        writer.WriteLine("  --backstep         Seconds a poisoner steps out of reach after dosing his man (0 = off)");
+        writer.WriteLine("  --backstep-reach   How far past his reach the step takes him, as a share of it");
+        writer.WriteLine("  --backstep-headroom  The share of the dose cap at which a strike is wasted and he waits");
         writer.WriteLine("  --charge-windup    The windup before the run (0 = no windup)");
         writer.WriteLine("  --charge-speed     The speed multiplier during a charge");
         writer.WriteLine("  --charge-damage    Damage share added to the arrival blow at maximum speed");
