@@ -17,9 +17,15 @@ namespace Domina.Core.Campaign;
 /// the day itself, because that is exactly the item that closes the "enter, look, run" loop.
 /// </para>
 /// </remarks>
-public sealed class Expedition(BattleAftermath? aftermath = null)
+/// <param name="aftermath">What writes the fight onto the roster; the default one if left out.</param>
+/// <param name="fighter">
+/// What fights the fights <see cref="Send"/> and <see cref="SendToBounty"/> run, and the stall report's
+/// re-run; the engine-free resolver if left out (<see cref="IFightRunner"/>).
+/// </param>
+public sealed class Expedition(BattleAftermath? aftermath = null, IFightRunner? fighter = null)
 {
     private readonly BattleAftermath _aftermath = aftermath ?? new BattleAftermath();
+    private readonly IFightRunner _fighter = fighter ?? CoreFightRunner.Instance;
 
     /// <summary>Can the party be sent on the expedition — and if not, why?</summary>
     public static ExpeditionRefusal? Refuse(DojoState state, EncounterOffer offer, IReadOnlyList<RosterEntry> party)
@@ -85,7 +91,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = Prepare(state, offer, party, tuning, retreat, collectEvents);
-        return Settle(state, setup, new Battle(setup, random).Run(), offer, seed);
+        return Settle(state, setup, _fighter.Fight(setup, random), offer, seed);
     }
 
     /// <summary>
@@ -185,7 +191,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         // as a fault, so the seed and the day are written down beside the fight that hung.
         if (battle.Outcome == BattleOutcome.Stalled)
         {
-            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "expedition");
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "expedition", _fighter);
             state.RecordFault(
                 "combat",
                 $"the fight hit the stall guard after {battle.ElapsedSeconds:F0} s",
@@ -273,7 +279,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = PrepareBounty(state, contract, party, tuning, retreat, collectEvents);
-        return SettleBounty(state, contract, party, setup, new Battle(setup, random).Run(), seed);
+        return SettleBounty(state, contract, party, setup, _fighter.Fight(setup, random), seed);
     }
 
     /// <summary>The same, from a seed rather than from a stream — see <see cref="Send"/>.</summary>
@@ -337,7 +343,7 @@ public sealed class Expedition(BattleAftermath? aftermath = null)
 
         if (battle.Outcome == BattleOutcome.Stalled)
         {
-            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "bounty");
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, "bounty", _fighter);
             state.RecordFault(
                 "combat",
                 $"the hunt hit the stall guard after {battle.ElapsedSeconds:F0} s",

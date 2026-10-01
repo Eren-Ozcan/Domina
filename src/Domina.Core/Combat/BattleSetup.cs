@@ -76,6 +76,16 @@ public sealed record BattleResult(
     /// </remarks>
     public IReadOnlyList<double> RetreatPresses { get; init; } = [];
 
+    /// <summary>
+    /// The fight's event stream, blow by blow.
+    /// </summary>
+    /// <remarks>
+    /// Empty unless <see cref="BattleSetup.CollectEvents"/> asked for it. It travels on the result so that
+    /// a fight asked for through <see cref="IFightRunner"/> comes back with its stream: the result and the
+    /// stream are the contract a resolver owes, whichever resolver it is.
+    /// </remarks>
+    public IReadOnlyList<BattleEvent> Events { get; init; } = [];
+
     public WarriorBattleSummary SummaryFor(WarriorId id) =>
         Summaries.First(s => s.Id == id);
 }

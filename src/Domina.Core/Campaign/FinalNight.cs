@@ -21,9 +21,15 @@ namespace Domina.Core.Campaign;
 /// books.
 /// </para>
 /// </remarks>
-public sealed class FinalNight(BattleAftermath? aftermath = null)
+/// <param name="aftermath">What writes each bout onto the roster; the default one if left out.</param>
+/// <param name="fighter">
+/// What fights the bouts <see cref="Fight"/> runs, and the stall report's re-run; the engine-free
+/// resolver if left out (<see cref="IFightRunner"/>).
+/// </param>
+public sealed class FinalNight(BattleAftermath? aftermath = null, IFightRunner? fighter = null)
 {
     private readonly BattleAftermath _aftermath = aftermath ?? new BattleAftermath();
+    private readonly IFightRunner _fighter = fighter ?? CoreFightRunner.Instance;
 
     /// <summary>The last night's enemy ids start here, clear of both the roster and the offers.</summary>
     public const int FirstEnemyId = 900_000;
@@ -186,7 +192,7 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
         ArgumentNullException.ThrowIfNull(random);
 
         BattleSetup setup = Prepare(state, party, tuning, retreat, collectEvents);
-        return Settle(state, setup, new Battle(setup, random).Run(), seed);
+        return Settle(state, setup, _fighter.Fight(setup, random), seed);
     }
 
     /// <summary>The same bout, from a seed rather than from a stream — so that it can be replayed.</summary>
@@ -223,7 +229,7 @@ public sealed class FinalNight(BattleAftermath? aftermath = null)
 
         if (battle.Outcome == BattleOutcome.Stalled)
         {
-            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, $"finalround{round}");
+            string? log = Dojo.Journal.StallReport.Write(state, setup, seed, $"finalround{round}", _fighter);
             state.RecordFault(
                 "combat",
                 $"the bout hit the stall guard after {battle.ElapsedSeconds:F0} s",

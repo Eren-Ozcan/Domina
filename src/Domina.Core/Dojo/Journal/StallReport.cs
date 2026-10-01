@@ -32,7 +32,12 @@ public static class StallReport
     /// <param name="seed">The seed it was fought on; without it nothing can be re-run.</param>
     /// <param name="label">What the fight was — an expedition, a hunt, a bout of the last night.</param>
     /// <returns>The path written, or <c>null</c> if nothing was.</returns>
-    public static string? Write(DojoState state, BattleSetup setup, ulong? seed, string label)
+    public static string? Write(
+        DojoState state,
+        BattleSetup setup,
+        ulong? seed,
+        string label,
+        IFightRunner? fighter = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(setup);
@@ -46,8 +51,8 @@ public static class StallReport
         {
             // The same setup and the same seed give the same fight; the one thing changed is that the
             // stream is kept this time.
-            Battle again = new(setup with { CollectEvents = true }, new Rng.SeededRandom(stream));
-            again.Run();
+            BattleResult again = (fighter ?? CoreFightRunner.Instance)
+                .Fight(setup with { CollectEvents = true }, new Rng.SeededRandom(stream));
 
             string path = Path.Combine(
                 state.DiagnosticsFolder,

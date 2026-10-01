@@ -2763,11 +2763,14 @@ public sealed class Battle
             LastChargeStartSeconds = c.LastChargeStartSeconds,
         });
 
+        // The stream is handed over as the list itself, not a copy: a batch that collects no events hands
+        // over an empty list and allocates nothing for it.
         Result = _retreatPresses is null
-            ? new BattleResult(outcome, ElapsedSeconds, summaries)
+            ? new BattleResult(outcome, ElapsedSeconds, summaries) { Events = _events }
             : new BattleResult(outcome, ElapsedSeconds, summaries)
             {
                 RetreatPresses = [.. _retreatPresses],
+                Events = _events,
             };
     }
 }
