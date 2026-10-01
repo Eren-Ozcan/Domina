@@ -60,6 +60,22 @@ dotnet run --project src/Domina.Sim -c Release -- --scenario 3v3 --battles 10000
 `below:0.3` is the only way to measure the balance of the limb-loss mechanic (limb
 loss only happens in fights where you intervene in time).
 
+### The engine bed
+
+The fight is moving into Godot (`docs/PLAN-ENGINE-RESOLUTION.md`); the bed is where it is measured,
+headless:
+
+```bash
+dotnet build src/Game/Domina.Game.csproj -c Debug -p:Optimize=true
+tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64_console.exe --headless \
+  --path src/Game res://Bed/engine_bed.tscn -- --fights 10000 --digest run.txt
+```
+
+`--fighter core` runs the engine-free resolver inside Godot, `--lane frame` lets the engine's physics
+loop step the fights (it needs Godot's `--fixed-fps 20` before the `--`), `--profile` splits the time.
+Two runs are the same only if their `--digest` files are. The Phase A reading and its script are in
+`docs/engine-bed/2026-10-phase-a/`.
+
 ### Running the game
 
 ```bash
