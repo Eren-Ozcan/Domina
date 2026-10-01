@@ -1,0 +1,14 @@
+Godot Engine v4.7.stable.mono.official.5b4e0cb0f - https://godotengine.org
+
+engine bed - fighter=trivial lane=manual body=static clip=mixer blade=shape slots=1 rebuild=no
+build: Godot 4.7-stable (official), .NET 10.0.10; optimised: Domina.Game yes, Domina.Core yes, GodotSharp NO (C:\Projects\domina\tools\Godot_v4.7-stable_mono_win64\GodotSharp\Api\Debug\GodotSharp.dll)
+fights 10000 (seeds 1..10000) in 24.679 s = 405 fights/s; 3078827 ticks, 15.39 s average fight
+outcomes: side 0 7269 (72.69%), side 1 2731 (27.31%)
+blows 628610, hits 376236 (59.9%)
+profile (the clip's time includes the blow it calls):
+  reset    0.482 s   2.0%       10000 calls   48.20 us/call
+  move     8.335 s  33.8%     2970583 calls    2.81 us/call
+  blade    0.267 s   1.1%      627429 calls    0.43 us/call
+  clip    12.385 s  50.2%    12380721 calls    1.00 us/call
+digest a342cfabe73ba738
+RESULT fighter=trivial lane=manual body=static clip=mixer blade=shape slots=1 rebuild=no fights=10000 seconds=24.679 fights_per_s=405 ticks=3078827 digest=a342cfabe73ba738

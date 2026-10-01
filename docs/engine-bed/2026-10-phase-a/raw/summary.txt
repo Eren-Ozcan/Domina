@@ -1,0 +1,18 @@
+core-1: fighter=core lane=manual fights=10000 seconds=1.905 fights_per_s=5251 ticks=3945031 digest=63f3b81089d3b1e2
+core-2: fighter=core lane=manual fights=10000 seconds=1.773 fights_per_s=5639 ticks=3945031 digest=63f3b81089d3b1e2
+core-3: fighter=core lane=manual fights=10000 seconds=1.987 fights_per_s=5033 ticks=3945031 digest=63f3b81089d3b1e2
+gate-1: fighter=trivial lane=manual body=static clip=keys blade=shape slots=1 rebuild=no fights=10000 seconds=9.347 fights_per_s=1070 ticks=3078827 digest=a342cfabe73ba738
+gate-2: fighter=trivial lane=manual body=static clip=keys blade=shape slots=1 rebuild=no fights=10000 seconds=8.326 fights_per_s=1201 ticks=3078827 digest=a342cfabe73ba738
+gate-3: fighter=trivial lane=manual body=static clip=keys blade=shape slots=1 rebuild=no fights=10000 seconds=7.666 fights_per_s=1304 ticks=3078827 digest=a342cfabe73ba738
+frame-256: fighter=trivial lane=frame body=static clip=keys blade=shape slots=256 rebuild=no fights=10000 seconds=13.856 fights_per_s=722 ticks=3078827 digest=a342cfabe73ba738
+gate-profile: fighter=trivial lane=manual body=static clip=keys blade=shape slots=1 rebuild=no fights=10000 seconds=7.924 fights_per_s=1262 ticks=3078827 digest=a342cfabe73ba738
+blade-query: fighter=trivial lane=manual body=static clip=keys blade=query slots=1 rebuild=no fights=10000 seconds=15.136 fights_per_s=661 ticks=3078827 digest=a342cfabe73ba738
+clip-mixer: fighter=trivial lane=manual body=static clip=mixer blade=shape slots=1 rebuild=no fights=10000 seconds=24.679 fights_per_s=405 ticks=3078827 digest=a342cfabe73ba738
+rebuild: fighter=trivial lane=manual body=static clip=keys blade=shape slots=1 rebuild=yes fights=10000 seconds=25.862 fights_per_s=387 ticks=3078827 digest=a342cfabe73ba738
+character-manual: fighter=trivial lane=manual body=character clip=keys blade=shape slots=1 rebuild=no fights=1000 seconds=1.038 fights_per_s=963 ticks=307211 digest=71536eb5d918c41a
+character-frame: fighter=trivial lane=frame body=character clip=keys blade=shape slots=64 rebuild=no fights=1000 seconds=4.035 fights_per_s=248 ticks=309202 digest=add0f625e9cd98de
+
+identical fights, gate run 1 vs run 2:          10000/10000
+identical fights, manual lane vs frame lane:    10000/10000
+identical fights, kinematic manual vs frame:    332/1000
+identical fights, static vs kinematic (manual): 332/1000
