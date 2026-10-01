@@ -121,8 +121,16 @@ public sealed record CombatTuning
     /// speed and the <c>Speed</c> axis came alive for the first time (3v3 victory 83.8% at
     /// Speed 0, 87.1% at Speed 100).
     /// </para>
+    /// <para>
+    /// <b>Lowered to 0.50 on 2026-10-01 (Open Decision #24).</b> The 1.00 above was read on a duel
+    /// bed, which closes its books when the fight ends; the season does not, and the dojo's men carry
+    /// every wound a charge costs into the next day while the enemy is rebuilt free. On the rich
+    /// campaign bed, six seeds paired, the ceiling at 0.50 is worth <b>+9.6 points</b> of last nights
+    /// won (19.5% → 29.1%), dojos closed 28.9% → 24.0%. The charge itself is untouched — its windup,
+    /// speed, arrival blow and counter stand — the boldest man simply uses half the openings he sees.
+    /// </para>
     /// </remarks>
-    public double ChargeChanceAtMaxAggression { get; init; } = 1.00;
+    public double ChargeChanceAtMaxAggression { get; init; } = 0.50;
 
     /// <summary>
     /// A multiplier over the poison class's own charge appetite — <b>1.0 changes nothing</b>.
