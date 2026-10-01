@@ -21,3 +21,6 @@
 *.otf binary
 *.zip binary
 *.pdf binary
+
+# Shell scripts run under bash, which chokes on a carriage return.
+*.sh text eol=lf
