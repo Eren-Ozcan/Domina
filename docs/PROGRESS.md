@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1909,6 +1909,28 @@ this round; the baseline for the engine move is taken on it as it stands.
 `MoveJournalTests.AWatchedFightsPullOutPressesAreWrittenDownAndReplayed` pressed the key at a fixed
 3 s; under the new ceiling seed 77's fight is over before that, so the key was never pressed. It now
 presses on first blood (`Battle.ContactMade`), which no tuning change can skip.
+
+## 2026-10-01 — Open Decision #13 closed on (c), and the door the fight will move through
+
+**The decision.** The user closed #13 on option (c): the fight's resolution moves into Godot. The
+shelved `docs/PLAN-ENGINE-RESOLUTION.md` became the active plan, with a section 0 recording what the
+call changed — the four things wanted from the engine, determinism narrowed to the same machine and
+the same build, measurement kept as a headless Godot bed, #24 and a baseline first, and a Phase F for
+animation timing and editor content. `CLAUDE.md`'s architecture rule and `ROADMAP.md`'s "Core
+Principle" now carry the transition rule; the dojo layer stays engine-free.
+
+**The seam, written and verified to change nothing.** `Combat/IFightRunner.cs` is the door:
+`BattleResult Fight(BattleSetup, IRandomSource)`, synchronous, with `CoreFightRunner` — today's
+`Battle` — behind it. `Expedition`, `FinalNight` and the stall report take a runner (optional, the
+core one by default); the sim's `CampaignOptions.Fighter` and `BatchRunner`'s `fighter` do the same;
+the game's two unwatched fights (`DayScreen`, `FinalNightScreen`) go through it. The only `new
+Battle(...)` left outside the runner is the watched arena, which has to step a live fight because the
+player's key lands inside it. `BattleResult.Events` now carries the stream (empty unless the setup
+collected it), so a fight asked for through the door comes back with its blow-by-blow — the stall
+report depends on that. Checked against the frozen `01105ee` build before the ceiling moved: the rich
+bed's seed-1 report and the 3v3 20,000-fight report are **identical** line for line.
+
+881 tests green under Release (585 core + 221 presentation + 75 sim).
 
 ---
 
