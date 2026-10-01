@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-09-21 (**Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,88 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-10-01 — Open Decision #24 closed: the boldest man uses half the openings he sees
+
+**The bed, written down this time.** The 2026-09-21 round quoted "the documented rich bed" without
+its flags, and its 15.97% control could not be reproduced exactly. Every figure here was taken on the
+rich bed as `docs/PROGRESS.md` defines it on 2026-09-15 —
+
+```
+--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on
+--paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on
+--thrown-fit everyone --retire maimed --class-fit torite --train-classes on
+```
+
+— over **six seeds** (`--seed` 1, 100001, 200001, 300001, 400001, 500001), every reading a mean of
+the six and every Δ **paired per seed** against its own control (the 2026-09-13 protocol). The frozen
+build was `01105ee`.
+
+**The finding replicates.** Control: last night won **19.53%**, dojos closed 28.92%, deaths per
+warrior-fight 3.92%, net per fight 35.9.
+
+| | Last night won | Δ (±se) | Dojos closed | Deaths | Net |
+|---|---|---|---|---|---|
+| `--player-charge` 0.75 | 23.20% | +3.67 (0.64) | 25.85% | 3.78% | 38.6 |
+| 0.5 | 27.40% | +7.87 (0.71) | 23.22% | 3.55% | 42.0 |
+| 0.25 | 33.72% | +14.18 (0.75) | 20.07% | 3.37% | 45.5 |
+| **0** | **41.78%** | **+22.25** (0.92) | 16.70% | 3.10% | 50.1 |
+| `--enemy-charge` 0 | 21.17% | +1.63 (0.85) | 29.90% | 4.07% | 35.9 |
+| both sides 0 | 50.70% | +31.17 (0.91) | 13.82% | 2.97% | 52.4 |
+
+Monotone, and an order larger for the dojo's own side than for the enemy's, exactly as on 2026-09-21
+(+22 here against +28 there; the bed differs, the shape does not).
+
+**It is not a class question.** With every class armed with its own implement (`--arm-fit class
+--weapon-gold 0.01`), silencing the dojo's charge is worth **+24.35** for the torite, **+26.00** for
+the dokushi and **+23.93** for the kyūdō (half appetite: +9.73 / +10.15 / +9.02). Unarmed, all three
+read +22. The charge costs every craft the same, which is why it had to be answered before any more
+class balance.
+
+**§11's numbers, re-read on the season** (each knob moves both sides, as it does in the game):
+
+| Knob (locked value) | Swept | Δ last night |
+|---|---|---|
+| Probability at Aggression 0 (0.35) | 0 / 0.15 / 0.6 | +1.38 / +0.80 / −0.62 |
+| **Probability at Aggression 100 (1.00)** | **0.5** / 0.75 | **+9.55** / +3.52 |
+| Windup (0.75 s) | 0.25 / 0.5 / 1.0 / 1.5 | −2.57 / −1.63 / −1.45 / +7.05 |
+| Speed multiplier (1.6) | 1.0 / 2.5 | +8.45 / −8.42 |
+| Arrival damage (0.43) | 0.25 / 0.6 / 0.9 | +3.62 / −3.85 / −8.83 |
+| Counter-blow (0.6) | 0.3 / 0.9 | +3.92 / −2.57 |
+
+One rule reads off the whole table: **whatever makes the charge more violent burns the side that
+keeps its wounds.** The speed multiplier is the sharpest case — §11 locked it as "not a balance knob
+but a presentation knob" because the duel read 84.8 / 84.5 / 84.4% across 1.0 / 1.6 / 2.5; the season
+reads ±8.4 points across the same span. The bottom of the appetite curve is nearly idle (few men sit
+near Aggression 0); the top of it is where the openings are taken.
+
+**Decided by the user: the ceiling, `ChargeChanceAtMaxAggression` 1.00 → 0.50.** The charge itself is
+untouched — windup, speed, arrival blow and counter stand — the boldest man uses half the openings he
+sees. The locked build, run with no flags, reproduces the 0.5 sweep byte for byte (seed 1), so the
+default is the setting and not something near it: **29.08%** of last nights, dojos closed 24.02%,
+deaths 3.60%, net 41.9.
+
+**What the duel bed says about the same change** (20,000 fights each, `--policy never`, seed 1): the
+fight itself mostly gets a little worse, which is the whole of #24 in one table. Charges per fight
+fall 1.90 → 1.25 (3v3) and 0.74 → 0.44 (one-on-one). 3v3 68.67 → 66.73%, 3v3-armored 46.66 → 41.52%,
+spear-armored 49.52 → 45.05%, club-armored 81.12 → 78.11%, ambush 10.48 → 6.76%; duel −0.42, katana
++0.46, veteran +0.69, and the poisoned knife *gains* (87.86 → 89.89%) because the dokushi's dose wants
+him close and standing, not arriving. The armoured fights pay most: the arrival blow was one of the
+few things that got through plate. The season, which keeps the books the duel throws away, is the
+reading the design is answerable to.
+
+**The easier season is kept, at the user's call.** Last nights went 19.5% → 29.1% and the difficulty
+table (`EncounterTuning.PowerPerDay`, the tier rungs) was tuned under the old ceiling. Three answers
+were put — re-tune back to the old level, keep the easier season, or aim at a target in between — and
+the season stays as it is: the hand-played rounds never won more than one bout of five on the last
+night, and an informed bed at 29% is not an easy game. The tier table is therefore **not** re-read in
+this round; the baseline for the engine move is taken on it as it stands.
+
+`MoveJournalTests.AWatchedFightsPullOutPressesAreWrittenDownAndReplayed` pressed the key at a fixed
+3 s; under the new ceiling seed 77's fight is over before that, so the key was never pressed. It now
+presses on first blood (`Battle.ContactMade`), which no tuning change can skip.
 
 ---
 
