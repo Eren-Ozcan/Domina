@@ -67,6 +67,7 @@ internal sealed record BattleRow(
 internal sealed class BatchRunner
 {
     private readonly BattleSetup _setup;
+    private readonly IFightRunner _fighter;
 
     /// <param name="playerArmor">
     /// If given, replaces the kit of everyone on the player side with it. For measuring the armour axis
@@ -78,6 +79,9 @@ internal sealed class BatchRunner
     /// armour: because speed now also feeds the force of the arrival blow (docs/GDD.md §4), the claim
     /// "a fast warrior charges better" can only be measured while everything else is fixed.
     /// </param>
+    /// <param name="fighter">
+    /// What fights the fights; the engine-free resolver if left out (<see cref="IFightRunner"/>).
+    /// </param>
     public BatchRunner(
         Scenario scenario,
         IRetreatPolicy? retreatPolicy,
@@ -87,9 +91,12 @@ internal sealed class BatchRunner
         MoraleBand? moraleBand = null,
         double? playerMorale = null,
         double? playerMastery = null,
-        MasteryBand? masteryBand = null)
+        MasteryBand? masteryBand = null,
+        IFightRunner? fighter = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
+
+        _fighter = fighter ?? CoreFightRunner.Instance;
 
         BattleSetup built = scenario.Build();
 
@@ -190,7 +197,7 @@ internal sealed class BatchRunner
 
     private BattleRow RunOne(ulong seed)
     {
-        BattleResult result = new Battle(_setup, new SeededRandom(seed)).Run();
+        BattleResult result = _fighter.Fight(_setup, new SeededRandom(seed));
 
         int playerDeaths = 0;
         int playerEscapes = 0;

@@ -628,7 +628,7 @@ public sealed partial class DayScreen : DojoScreen
             return;
         }
 
-        _log.Text = bout.Settle(new Battle(bout.Setup, new SeededRandom(bout.Seed)).Run());
+        _log.Text = bout.Settle(CoreFightRunner.Instance.Fight(bout.Setup, new SeededRandom(bout.Seed)));
         AfterDay();
     }
 

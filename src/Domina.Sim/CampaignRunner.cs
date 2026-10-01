@@ -202,6 +202,9 @@ internal sealed record CampaignOptions(
     /// both ends can be measured.
     /// </remarks>
     public const double DefaultRepairAtWearShare = 0.5;
+
+    /// <summary>What fights the campaign's fights; the engine-free resolver unless the bed says otherwise.</summary>
+    public IFightRunner Fighter { get; init; } = CoreFightRunner.Instance;
 }
 
 /// <summary>The policy for picking a candidate from the market.</summary>
@@ -454,7 +457,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
         }
 
         row.ReachedTheNight = true;
-        FinalNight night = new();
+        FinalNight night = new(fighter: _options.Fighter);
 
         while (state.Season.Phase == SeasonPhase.FinalNight)
         {
@@ -537,7 +540,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
             return null;
         }
 
-        ExpeditionResult result = new Expedition().Send(
+        ExpeditionResult result = new Expedition(fighter: _options.Fighter).Send(
             state,
             raid,
             party,
@@ -631,7 +634,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
             return Rest(state, row);
         }
 
-        ExpeditionResult result = new Expedition().Send(
+        ExpeditionResult result = new Expedition(fighter: _options.Fighter).Send(
             state,
             offer,
             party,
@@ -679,7 +682,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
 
         state.AcceptBounty();
 
-        BountyResult result = new Expedition().SendToBounty(
+        BountyResult result = new Expedition(fighter: _options.Fighter).SendToBounty(
             state,
             contract,
             party,
@@ -791,7 +794,7 @@ internal sealed class CampaignRunner(CampaignOptions options)
             CollectEvents = false,
         };
 
-        BattleResult result = new Battle(setup, new SeededRandom(seed)).Run();
+        BattleResult result = _options.Fighter.Fight(setup, new SeededRandom(seed));
         AftermathReport aftermath = new BattleAftermath().Apply(state, result);
 
         int reward = state.Quartermaster.RewardFor(setup, result.Outcome);
