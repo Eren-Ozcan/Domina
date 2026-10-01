@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-02 (**Phase A of the engine move read: the gate passes on the stand-in fight, with little room** — 10,000 headless Godot fights in 7.7-9.3 s against 10 s, two runs identical 10,000 of 10,000, and the engine's own physics loop gives the same fights as the bed's loop; the real fight is forecast at about 9 s, so Phase B starts on an engine-call budget; before it: **Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,40 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-10-02 — Phase A: the engine bed's gate passes on the stand-in, with little room
+
+**What was built.** `src/Game/Bed/` — the engine bed, a scene in the game's own Godot project run
+headless (`res://Bed/engine_bed.tscn`). Its stand-in fight, `TrivialFight`, is a 3v3 sized like
+`ThroughputTests`' and built from the pieces the real fight would use: `StaticBody2D`s on the physics
+server, movement by `MoveAndCollide`, the blade as a collision test, the blow on a strike clip's method
+key, the core's `SeededRandom` and tick. Two lanes: the bed's own loop (a fight stepped tick after tick
+inside one engine frame) and the engine's fixed physics step (`--fixed-fps 20`, many fights side by side,
+each in its own `SubViewport` and physics space). `--fighter core` runs `CoreFightRunner` inside Godot
+as the calibration; `--digest` writes every fight's fingerprint; `--profile` splits the time by piece.
+
+**The reading** (`docs/engine-bed/2026-10-phase-a/`, script and raw output): the gate configuration ran
+10,000 fights in **9.35 / 8.33 / 7.67 s** against the 10 s budget, on the editor binary, with other
+processes holding 40-50% of the CPU (the core calibration read 1.77-1.99 s under the same load). Two
+runs were **identical 10,000 of 10,000**, and the frame lane's 10,000 fights were identical to the
+manual lane's — a watched fight and its replay on the bed are one fight. 91% of the time is the motion
+test, 2.43 µs a call.
+
+**What the variants showed, which Phase B inherits as rules:** kinematic bodies tie the fight to the
+engine's step (332 of 1,000 identical between lanes), and so does a static body whose moved transform is
+not pushed to the server by hand; advancing an `AnimationPlayer` every tick costs +12.4 s, while reading
+the method key's time off the same clip gives the identical fight; `IntersectShape` costs 8.6 µs a call
+against `Shape2D.Collide`'s 0.21 µs with the same answer; building the fight's nodes per fight costs ~1.7
+ms, a reset 14 µs.
+
+**The room is thin.** Counted on the core, the real 3v3 moves on 285 fighter-ticks a fight; the stand-in
+makes 297 motion tests. The port is forecast at about 9 s for 10,000 — at the line. Phase B therefore
+works to a budget of about 330 motion tests a fight and counts its engine calls on the bed. The levers
+measured: the Release GodotSharp ~7.3 s against ~8.3 s (same fingerprints); a C# pre-check before the
+motion test 7% and not fingerprint-identical, dropped. An exported release build was not measured (no
+export templates in `tools/`).
 
 ---
 

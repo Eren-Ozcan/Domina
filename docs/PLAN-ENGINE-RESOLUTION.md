@@ -57,6 +57,19 @@ test files touch the combat namespace and about 30 construct a `Battle` directly
 7,629 lines. The tick is `CombatTuning.TickSeconds` = 0.05 s, so the engine bed starts at 20
 physics ticks a second and any change to that is a measured change.
 
+**Phase A, read 2026-10-02: the gate passes on the stand-in fight, with little room.** The record is
+`docs/engine-bed/2026-10-phase-a/`; the bed is `src/Game/Bed/`. A trivial 3v3 built from Godot
+bodies, motion tests, a collision-tested blade and a strike clip's method key ran 10,000 fights in
+7.7 / 8.3 / 9.3 s on the editor binary (a loaded machine), and two runs were identical 10,000 of
+10,000. The engine's own physics loop stepping the same fights gave the same 10,000 fingerprints as
+the bed's loop — a watched fight and its replay on the bed are one fight. The room is thin: 91% of the
+time is the motion test (2.4 µs), the stand-in makes 297 of them a fight and the core's real 3v3 moves
+on 285 fighter-ticks a fight, so the port is forecast at about 9 s. Phase B inherits six measured
+rules from the record — static bodies with the transform pushed to the server by hand, the bed
+stepping fights itself, the blow's frame read off the clip rather than by running it, no
+collection-returning engine call in the hot path, pooled fights, and a budget of about 330 motion
+tests a fight — and counts its engine calls per fight on the bed as it goes.
+
 ---
 
 ## 1. What option (c) actually means
@@ -135,7 +148,8 @@ without the one above it.
 
 **Phase A — the harness.** Headless Godot, a seeded stepper, fights/second measured, determinism
 across two machines shown. *Acceptance: 3.1 and 3.2. This is the whole decision; expect it to be
-the longest phase and be willing to stop at its end.*
+the longest phase and be willing to stop at its end.* **Read 2026-10-02: passed on the stand-in, with
+little room** (section 0; `docs/engine-bed/2026-10-phase-a/`).
 
 **Phase B — space moves.** Positions, distance, reach, projectile flight and the weapon on the
 ground become nodes and queries. The decision logic still runs on the core's own tick, driven by

@@ -13,6 +13,8 @@
 > into the engine; the dojo layer stays engine-free. The work is its own track, written in
 > `docs/PLAN-ENGINE-RESOLUTION.md` (step 0, then phases A-F), and its first phase — the
 > headless harness — is a gate. See "Core Principle" below for what holds while it runs.
+> **2026-10-02:** Phase A read — the gate passes on the stand-in fight with little room
+> (`docs/engine-bed/2026-10-phase-a/`); Phase B starts on an engine-call budget.
 
 ## New work from the decision pass (2026-09-07)
 
