@@ -8,6 +8,11 @@
 > locked rules. The phase boundaries are gathered in the "New work from the decision pass"
 > section below; distributing them into the phases will be done once the open
 > **9.1 core decision** is made (that decision sets the architecture directly).
+>
+> ⚠️ **2026-10-01 — the 9.1 core decision is made: option (c).** The fight's resolution moves
+> into the engine; the dojo layer stays engine-free. The work is its own track, written in
+> `docs/PLAN-ENGINE-RESOLUTION.md` (step 0, then phases A-F), and its first phase — the
+> headless harness — is a gate. See "Core Principle" below for what holds while it runs.
 
 ## New work from the decision pass (2026-09-07)
 
@@ -56,7 +61,7 @@ one thing only; both the number and the sweeps that found nothing are written do
 
 | # | Step | Why here |
 |---|---|---|
-| 0 | **Open Decision #13** (leaning: (a) with real time in Godot) | Everything below is written into the engine-free core |
+| 0 | **Open Decision #13** — **closed 2026-10-01 on (c)** after step 8, as the row foresaw | Everything below was written into the engine-free core; the move into the engine is `docs/PLAN-ENGINE-RESOLUTION.md` |
 | ~~1~~ | ~~Remove `BattleOutcome.TimeLimit`~~ | **Done (2026-09-10)** — measured before and after, nothing moved. The record is in `docs/PROGRESS.md` |
 | ~~2~~ | ~~A stun drops the weapon~~ | **Done (2026-09-10)** — locked at 0.15 after a 0-0.45 sweep; the rule and the measurement are in GDD §7 |
 | ~~3~~ | ~~Fights grant stats~~ | **Done (2026-09-10)** — `Dojo/CombatSchooling.cs`, rate locked at 0.08; the rule and the measurement are in GDD §11 |
@@ -202,6 +207,22 @@ a `seed`. The same seed + the same inputs = the same result. That gives three th
 1. Bugs can be reproduced ("the warrior died wrongly on this seed")
 2. Balance testing is automated (10,000 fights in batch simulation)
 3. A fight replay feature comes free later
+
+### Since 2026-10-01: the fight moves into the engine (Open Decision #13, option (c))
+
+The principle above is how everything up to build step 8 was written, and it still binds
+the **dojo layer** (`Dojo/**`, `Campaign/**`, `Model/**`, `Honor/**`): no Godot reference.
+The **fight** is being moved into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`. While
+that runs, four things hold in every phase:
+
+1. **The contract** — `BattleSetup` in, `BattleResult` and the `BattleEvent` stream out. The
+   types stay in `Domina.Core`; the HUD, the journal, the stall report and the sim sit on them.
+2. **Seeded randomness** — one `SeededRandom` a fight, never Godot's own generator. The promise
+   is narrowed to *the same machine and the same build*.
+3. **Measurement** — `Domina.Sim` runs inside a headless Godot (the engine bed). No locked
+   number is retired without being re-read on it.
+4. **The reference resolver** — `Combat/Battle.cs` stays runnable (`--fighter core` on the bed
+   once the bed exists) until a release after the one that ships the engine fight deletes it.
 
 ---
 
@@ -615,7 +636,9 @@ Twitch even if Kick is late — **do not make Kick a release blocker.**
 5. **The visual style decision before phase 2** — the technical route (2D cutout) is settled, the style is not
 6. **The core decision (#13) before everything (2026-09-07)** — will the engine-free core rule
    continue? If not, the "measure as each system arrives" setup cannot be applied and all of
-   phase 1 is reshaped
+   phase 1 is reshaped. **Answered 2026-10-01: (c), after every system was written and
+   measured in the core** — so the measuring setup survives as the headless engine bed rather
+   than being lost
 7. **The move to real time before the new systems** — if staff, classes and morale are written
    on top of the discrete-day assumption, they get written twice
 

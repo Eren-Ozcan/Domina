@@ -1,15 +1,61 @@
 # Plan — moving resolution into the engine (Open Decision #13, option (c))
 
-> **Status: shelved. This is not a decision and nothing here is scheduled.**
+> **Status: active since 2026-10-01.** Open Decision #13 closed on option (c), the user's call.
+> The document was written on 2026-09-14 as a shelved plan so that the choice, if it came, would
+> come with the work already counted; sections 1-7 are that plan, and section 0 below records what
+> the decision changed in it. Where the two disagree, section 0 binds.
 >
-> The rule in force is still the one in `CLAUDE.md` and `docs/ROADMAP.md` → "Core Principle":
-> the simulation core does not depend on Godot, randomness is seeded, the resolver produces an
-> event stream and the visualisation consumes it. This document exists so that if option (c) is
-> ever taken, it is taken with the work already counted — not estimated in the moment it is wanted.
->
-> GDD Open Decision #13 names the right moment to reconsider (c) as *after build-order step 8*,
-> as a **rewrite decision rather than an architecture decision**. Step 8 closed on 2026-09-13, so
-> the moment is here; the answer is still open.
+> While the plan runs, the rule in force is the transition one in `CLAUDE.md` and
+> `docs/ROADMAP.md` → "Core Principle": the dojo layer stays engine-free, the contract is the
+> event stream, randomness is seeded, and `Combat/Battle.cs` is the reference resolver until a
+> later release deletes it.
+
+---
+
+## 0. What the decision changed (2026-10-01)
+
+**Why (c), in the user's terms.** Four things are wanted from the engine, all four at once:
+Godot physics and collision; the blow landing on the frame the animation connects; the arena,
+the weapons' motion and the rig authored in the editor as content; and the fight and its picture
+held in one structure. Section 6 below lists two of these as reasons that are not reasons; it is
+kept as the record of the argument, and the call was made with it on the table.
+
+**Determinism is narrowed (amends 3.2).** The acceptance is now *the same seed gives the same
+winner, the same elapsed seconds and the same event stream over 10,000 fights, run twice on the
+same machine and the same build*. Two machines are no longer required. What follows from it: a
+`MoveJournal` replayed on another build may drift, so the journal's opening line carries the build
+and the Godot version, and a replay on a different one warns instead of drifting silently.
+
+**Measurement is kept, not mourned (amends section 5).** `Domina.Sim` runs inside a headless
+Godot — the engine bed — with `--fighter core|engine` so that the two resolvers read the same
+scenarios with the same seeds. Phase A is still the gate: if the harness cannot reach the
+throughput or the determinism above, the work stops and comes back with the numbers.
+
+**Step 0 comes before Phase A.** Open Decision #24 (the charge's season price) can only be
+measured on the old resolver today, so it is answered there first. Then a baseline of every locked
+number is taken on the old resolver and written down with its commands and seeds under
+`docs/baselines/` — the parity bed of 3.3 is read against that, not against figures scattered
+through `docs/PROGRESS.md`.
+
+**A seam before the harness.** `IFightRunner` in the core (`BattleResult Fight(BattleSetup,
+ulong seed)`) replaces the direct `new Battle(...).Run()` calls in the campaign, the stall report
+and the sim, and the game gets an asynchronous lane for the fights nobody watches. Its first
+implementation is today's resolver, so the seam changes nothing measurable; the engine fight is
+then a second implementation behind the same door.
+
+**Phase F is added: animation timing and editor content.** It comes after parity, never with it,
+because it is a balance change. Each fighter gets an `AnimationPlayer` advanced by the fight's own
+tick (callback mode manual, so the headless bed runs it too); a method-track key on the clip is the
+frame the blow lands. The first clips are generated from today's `AttackSeconds` and windup so
+nothing moves; clips authored in the editor afterwards are measured on the bed weapon by weapon
+like any other number. The arena becomes a scene and a weapon's motion a resource; weapon and
+armour **statistics** stay in `Domina.Core/Model`, because the market and the dojo layer read them.
+
+**The inventory has grown since section 2 was counted.** On 2026-10-01: `Combat/` is 12 files and
+5,502 lines, `Battle.cs` 2,773 of them, `Combatant.cs` 620, `CombatTuning.cs` 1,060; 47 of the 112
+test files touch the combat namespace and about 30 construct a `Battle` directly; `Domina.Sim` is
+7,629 lines. The tick is `CombatTuning.TickSeconds` = 0.05 s, so the engine bed starts at 20
+physics ticks a second and any change to that is a measured change.
 
 ---
 
@@ -112,6 +158,10 @@ carry a date after this phase.*
 
 Phases B and C cannot be shipped separately to players: between them the fight is half in each
 world. They are one release.
+
+**Phase F — animation timing and editor content** (added 2026-10-01, see section 0). After
+parity, as a balance change. *Acceptance: generated clips read the same as the baseline; every
+authored clip's timing carries its own bed measurement.*
 
 ---
 

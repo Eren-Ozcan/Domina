@@ -44,14 +44,26 @@ long session. If a change is needed, update the GDD first.
 
 ## Architecture rule (critical, must not be broken)
 
-The simulation core **must not depend on the engine**. The combat resolver knows nothing
-about animation — it only produces an **event stream**; the visualisation consumes it.
-Randomness must be **seeded and deterministic**.
+**In transition since 2026-10-01.** Open Decision #13 closed on option (c): the fight's
+resolution is moving into the engine, under `docs/PLAN-ENGINE-RESOLUTION.md`. Until that plan
+deletes `Combat/Battle.cs` in a later release, these hold:
+
+- The **dojo layer** (`Dojo/**`, `Campaign/**`, `Model/**`, `Honor/**`) **must not depend on
+  the engine**.
+- The **contract** is `BattleSetup` in, `BattleResult` and the **event stream** out; the types
+  stay in `Domina.Core`, and every consumer (HUD, journal, stall report, sim) reads them, not
+  the engine's nodes.
+- Randomness is **seeded**: one `SeededRandom` a fight, never Godot's generator. Determinism is
+  promised on the same machine and the same build.
+- **Measurement does not stop.** The sim runs headless — today on the core, later inside a
+  headless Godot (the engine bed). No locked number is retired without being re-read on it.
+- `Combat/Battle.cs` is the **reference resolver** until it is deleted; do not delete it in the
+  release that ships the engine fight.
 
 Rationale: combat is fully automatic and chat affects the outcome; balance can only be
-done by simulating tens of thousands of fights without opening the engine. If this
-separation breaks, balance work becomes impossible. Details: `docs/ROADMAP.md` →
-"Core Principle".
+done by simulating tens of thousands of fights. That is why the core was written engine-free,
+and why the move keeps a headless bed rather than giving balance up to playtest. Details:
+`docs/ROADMAP.md` → "Core Principle".
 
 ## Engine binary
 
