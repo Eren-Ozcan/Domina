@@ -266,12 +266,14 @@ public class MoveJournalTests
         List<RosterEntry> party = [.. dojo.Roster.FitForCampaign.Take(offer.RequiredPartySize ?? 2)];
         BattleSetup setup = Expedition.Prepare(dojo, offer, party);
 
-        // The fight is stepped the way the arena steps it, and the key is pressed part of the way in.
+        // The fight is stepped the way the arena steps it, and the key is pressed part of the way in — on
+        // first blood rather than at a fixed second, so a tuning change that shortens the fight cannot
+        // leave the key unpressed.
         Battle battle = new(setup, new SeededRandom(77));
         bool pressed = false;
         while (battle.Step())
         {
-            if (!pressed && battle.ElapsedSeconds >= 3)
+            if (!pressed && battle.ContactMade)
             {
                 battle.CommandRetreat();
                 pressed = true;
