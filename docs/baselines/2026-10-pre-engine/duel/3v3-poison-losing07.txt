@@ -1,0 +1,39 @@
+Scenario        : 3v3-poison - 3v3, the tengu throws poisoned shuriken - when poison turns on the player
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 8.27 s (2417 fights/s)
+Fight duration  : 18.5 s on average (in game)
+Longest fight   : 58.4 s (seed 2243)
+
+Outcome
+  Victory                    11640  58.20%
+  Withdrawal                  5500  27.50%
+  Rout                        2860  14.30%
+  Stalled (anomaly)              0  0.00%
+
+Player side (60000 warrior-fights)
+  Deaths                     28824  48.04%
+  Escapes                     7448  12.41%
+  Limb losses                 2804  4.67%
+    ú arm                     1000  1.67%
+    ú leg                     1230  2.05%
+    ú eye                      684  1.14%
+  Hit rate                  62.8%
+  Damage dealt/taken        5948033 / 4983050
+  Stuns (per warrior)       taken 0.37 / inflicted 0.10
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.18 blows met
+  Armour wear               10.9 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 4.88% (picked up 15.5%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.22 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 176808
+  Poison deaths             483 (1.7% of deaths)
+  Charges (per fight)       1.24  arrival 84.3%  free hits/charge 1.02
+    ú scattered in windup  10.9%
+    ú launch moment        average 1.02 s, latest 32.50 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                     41423  69.04%
+  Weapon dropped              1787  2.98%

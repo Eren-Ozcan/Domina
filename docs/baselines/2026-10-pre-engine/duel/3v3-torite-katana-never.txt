@@ -1,0 +1,39 @@
+Scenario        : 3v3-torite-katana - 3v3, the recruit is a catching warrior holding a katana - the honest control
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 8.11 s (2466 fights/s)
+Fight duration  : 20.7 s on average (in game)
+Longest fight   : 60.5 s (seed 13950)
+
+Outcome
+  Victory                    13404  67.02%
+  Withdrawal                  2021  10.11%
+  Rout                        4575  22.88%
+  Stalled (anomaly)              0  0.00%
+
+Player side (60000 warrior-fights)
+  Deaths                     29842  49.74%
+  Escapes                     2705  4.51%
+  Limb losses                 2680  4.47%
+    ú arm                      924  1.54%
+    ú leg                     1148  1.91%
+    ú eye                      706  1.18%
+  Hit rate                  61.9%
+  Damage dealt/taken        6582263 / 4917193
+  Stuns (per warrior)       taken 0.41 / inflicted 0.11
+  Catches (per warrior)     made 0.01 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               11.4 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 5.48% (picked up 17.1%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       1.25  arrival 84.4%  free hits/charge 0.64
+    ú scattered in windup  10.9%
+    ú launch moment        average 1.04 s, latest 43.60 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                     48914  81.52%
+  Weapon dropped              1871  3.12%

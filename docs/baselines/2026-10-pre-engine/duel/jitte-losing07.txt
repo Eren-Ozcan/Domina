@@ -1,0 +1,39 @@
+Scenario        : jitte - the same fight, only the weapon is a jitte - the catching end
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 3.71 s (5385 fights/s)
+Fight duration  : 27.1 s on average (in game)
+Longest fight   : 73.7 s (seed 8562)
+
+Outcome
+  Victory                    16584  82.92%
+  Withdrawal                  2180  10.90%
+  Rout                        1236  6.18%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1236  6.18%
+  Escapes                     2180  10.90%
+  Limb losses                   57  0.29%
+    ú arm                       17  0.08%
+    ú leg                       26  0.13%
+    ú eye                       14  0.07%
+  Hit rate                  60.7%
+  Damage dealt/taken        3074235 / 1553919
+  Stuns (per warrior)       taken 0.01 / inflicted 0.09
+  Catches (per warrior)     made 1.28 / suffered 0.00
+  Blocks (per warrior)      0.40 blows met
+  Armour wear               34.5 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.03% (picked up 0.0%) / inflicted (per warrior) 0.07
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 0.89
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.75 s, latest 0.75 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     16584  82.92%
+  Weapon dropped              3125  15.62%

@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-01 (**Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1929,6 +1929,14 @@ player's key lands inside it. `BattleResult.Events` now carries the stream (empt
 collected it), so a fight asked for through the door comes back with its blow-by-blow — the stall
 report depends on that. Checked against the frozen `01105ee` build before the ceiling moved: the rich
 bed's seed-1 report and the 3v3 20,000-fight report are **identical** line for line.
+
+**The baseline is taken** — step 0's last item, on the rules as #24 left them and the difficulty
+table as the user kept it. `docs/baselines/2026-10-pre-engine/` holds the script, the raw reports and
+the tables: all 34 duel scenarios at 20,000 fights under `never` and `losing:0.7`, and the plain and
+rich campaign beds at all three tiers over six seeds. The rich bed at master reads 29.08% of last
+nights won, the same figure the #24 sweep chose. Throughput, the number the engine bed will have to
+answer: `ThroughputTests` 2 s against its 10 s budget, 3v3 at 4,732 fights/s, one rich-bed seed in
+24.9 s. Phase A — the headless harness, and the plan's gate — is next.
 
 881 tests green under Release (585 core + 221 presentation + 75 sim).
 

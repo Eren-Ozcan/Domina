@@ -1,0 +1,52 @@
+Scenario        : 3v3 - dojo team vs enemy team (3v3)
+Expedition run  : 1600 dojos x 180 days, party of 3, roster of 4
+Starting purse  : 600 gold
+Wall clock      : 44.04 s
+
+Prices
+  Victory reward         0.48 gold / enemy health
+  Armour piece           1.50 gold / durability
+  Repair                 0.90 gold / wear
+  Daily stock            food 2 / water 1 / medicine 12
+  Warrior purchase       150
+
+Treasury (per fight)
+  Income                 162.6
+  Kit spending           46.1
+  Replacements           7.3
+  Net                    59.8
+  Daily consumption      4.6 gold/day
+  Ending purse           2606 gold
+  Kept their capital     49.9%
+
+Calendar
+  Fights (per dojo)      106.5  victory 98.6%
+  Idle days              36.0% (the roster was not enough for an expedition)
+  Declined offers        34.2%
+  Mishaps                15.1% of days, 1.8 gold/day
+  Hungry days            11.1%
+  Infirmary days / fight 1.34
+  Enemy health / fight   173
+  Deaths / warrior-fight 2.8%
+  Weeks with no fight    3.6 per dojo  paid for 2.0  longest run 2.2  ending honour 61.4
+  Seppuku threshold      17.0% of dojos  first crossed on day 82
+  Heads / last night     30.73 heads  gate open 81.3%
+  The province           6.83 settlements held  raids 1.66  met 1.50 (won 92.8%)  sacked 0.15
+
+The last night
+  Played it              81.3% of dojos  won all five 35.6%
+  Bouts won              2.87 of 5  men sent 12.5  dead 1.22
+  Survived the bout      1: 70%  2: 96%  3: 94%  4: 71%  5: 98%
+
+Roster
+  Deaths (per dojo)      8.25
+  Warriors hired         7.01
+  Bounty hunts           34.32  heads taken 99.2%
+  Armour pieces broken   0.03
+  Weapon mastery         46.8% on the best man  ú  retired 0.00  ú  classed 0.00
+  Training days          333.4  best warrior 470 score (+83)
+  School facilities      18.8  4981 gold, chose a path 6.45, charms 0 gold, throwing stall 0 gold, the rack 0 gold
+  Posts filled           7.1  965 post-days
+  Beds at the end        9.2
+  Dojos closed           17.8%
+  Days survived          average 166, median 180

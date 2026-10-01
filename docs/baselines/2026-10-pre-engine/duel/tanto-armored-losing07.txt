@@ -1,0 +1,39 @@
+Scenario        : tanto-armored - short knife vs armoured oni - the control for the armour wall
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 6.83 s (2927 fights/s)
+Fight duration  : 50.8 s on average (in game)
+Longest fight   : 197.4 s (seed 15441)
+
+Outcome
+  Victory                      491  2.46%
+  Withdrawal                 11253  56.27%
+  Rout                        8256  41.28%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      8256  41.28%
+  Escapes                    11253  56.27%
+  Limb losses                   92  0.46%
+    ú arm                       35  0.18%
+    ú leg                       38  0.19%
+    ú eye                       19  0.10%
+  Hit rate                  57.6%
+  Damage dealt/taken        1041862 / 2450082
+  Stuns (per warrior)       taken 0.01 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.87 blows met
+  Armour wear               56.1 damage (per warrior-fight)
+  Armour loss               warrior 0.29% / pieces (per warrior) 0.00
+  Weapon drops              own 31.29% (picked up 17.8%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.46  arrival 99.9%  free hits/charge 2.08
+    ú scattered in windup  0.0%
+    ú launch moment        average 3.06 s, latest 159.65 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                       491  2.46%
+  Weapon dropped              2788  13.94%

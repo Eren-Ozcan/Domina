@@ -1,0 +1,39 @@
+Scenario        : poison - the same fight, the knife's blade poisoned - the poison end
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 3.39 s (5907 fights/s)
+Fight duration  : 21.7 s on average (in game)
+Longest fight   : 52.3 s (seed 6880)
+
+Outcome
+  Victory                    17977  89.89%
+  Withdrawal                  1349  6.74%
+  Rout                         674  3.37%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                       674  3.37%
+  Escapes                     1349  6.74%
+  Limb losses                   97  0.48%
+    ú arm                       30  0.15%
+    ú leg                       42  0.21%
+    ú eye                       25  0.12%
+  Hit rate                  64.9%
+  Damage dealt/taken        2995145 / 1485478
+  Stuns (per warrior)       taken 0.01 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.27 blows met
+  Armour wear               26.8 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.19% (picked up 12.8%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 5.81
+  Poison damage             dealt 2092280 (69.9%) / taken 164
+  Poison deaths             4 (0.6% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 0.78
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.76 s, latest 38.45 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     17977  89.89%
+  Weapon dropped              1507  7.54%

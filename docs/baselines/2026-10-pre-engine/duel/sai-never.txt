@@ -1,0 +1,39 @@
+Scenario        : sai - the same fight with a sai - better grip, lower damage
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 4.26 s (4697 fights/s)
+Fight duration  : 28.5 s on average (in game)
+Longest fight   : 76.6 s (seed 3599)
+
+Outcome
+  Victory                    16826  84.13%
+  Withdrawal                  1965  9.83%
+  Rout                        1209  6.04%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1209  6.04%
+  Escapes                     1965  9.83%
+  Limb losses                   52  0.26%
+    ú arm                       16  0.08%
+    ú leg                       22  0.11%
+    ú eye                       14  0.07%
+  Hit rate                  60.3%
+  Damage dealt/taken        3082739 / 1511178
+  Stuns (per warrior)       taken 0.00 / inflicted 0.10
+  Catches (per warrior)     made 1.58 / suffered 0.00
+  Blocks (per warrior)      0.35 blows met
+  Armour wear               34.7 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.03% (picked up 0.0%) / inflicted (per warrior) 0.09
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 0.87
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.75 s, latest 0.75 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     16826  84.13%
+  Weapon dropped              3529  17.64%

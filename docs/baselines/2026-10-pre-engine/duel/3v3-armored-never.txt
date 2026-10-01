@@ -1,0 +1,39 @@
+Scenario        : 3v3-armored - 3v3, every enemy in full armour - disarming's team price
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 10.08 s (1985 fights/s)
+Fight duration  : 32.3 s on average (in game)
+Longest fight   : 91.6 s (seed 13338)
+
+Outcome
+  Victory                     8304  41.52%
+  Withdrawal                  3801  19.00%
+  Rout                        7895  39.48%
+  Stalled (anomaly)              0  0.00%
+
+Player side (60000 warrior-fights)
+  Deaths                     40679  67.80%
+  Escapes                     4567  7.61%
+  Limb losses                 2892  4.82%
+    ú arm                     1007  1.68%
+    ú leg                     1232  2.05%
+    ú eye                      741  1.23%
+  Hit rate                  58.4%
+  Damage dealt/taken        5844813 / 5661565
+  Stuns (per warrior)       taken 0.45 / inflicted 0.07
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.20 blows met
+  Armour wear               13.5 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 15.91% (picked up 41.5%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       1.25  arrival 84.3%  free hits/charge 0.96
+    ú scattered in windup  10.9%
+    ú launch moment        average 1.05 s, latest 52.00 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                     39636  66.06%
+  Weapon dropped              1887  3.15%

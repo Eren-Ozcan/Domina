@@ -1,0 +1,39 @@
+Scenario        : torite-katana-heavy - the same catching warrior with a katana vs a two-handed enemy
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 2.77 s (7225 fights/s)
+Fight duration  : 18.6 s on average (in game)
+Longest fight   : 84.1 s (seed 924)
+
+Outcome
+  Victory                     5097  25.49%
+  Withdrawal                  1556  7.78%
+  Rout                       13347  66.73%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                     13347  66.73%
+  Escapes                     1556  7.78%
+  Limb losses                 2036  10.18%
+    ú arm                      649  3.25%
+    ú leg                      938  4.69%
+    ú eye                      544  2.72%
+  Hit rate                  66.1%
+  Damage dealt/taken        2273548 / 2560661
+  Stuns (per warrior)       taken 0.21 / inflicted 0.02
+  Catches (per warrior)     made 0.09 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               25.5 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 3.02% (picked up 3.5%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 96.8%  free hits/charge 1.23
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.76 s, latest 16.60 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                      5097  25.49%
+  Weapon dropped              1433  7.17%
