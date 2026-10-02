@@ -71,10 +71,10 @@ tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64_console.exe --he
   --path src/Game res://Bed/engine_bed.tscn -- --fights 10000 --digest run.txt
 ```
 
-`--fighter core` runs the engine-free resolver inside Godot, `--lane frame` lets the engine's physics
-loop step the fights (it needs Godot's `--fixed-fps 20` before the `--`), `--profile` splits the time.
-Two runs are the same only if their `--digest` files are. The Phase A reading and its script are in
-`docs/engine-bed/2026-10-phase-a/`.
+`--fighter core` runs the engine-free resolver inside Godot, `--fighter engine` runs the same resolver
+with its movement on Godot's physics server, `--lane frame` lets the engine's physics loop step the
+fights (it needs Godot's `--fixed-fps 20` before the `--`), `--profile` splits the time. Two runs are the
+same only if their `--digest` files are. The readings and their scripts are in `docs/engine-bed/`.
 
 ### Running the game
 
