@@ -6,8 +6,7 @@ namespace Domina.Core.Combat;
 /// <remarks>
 /// <para>
 /// Because the core has to be engine-free, Godot's <c>Vector2</c> cannot be used. The unit is arbitrary
-/// but matches the scene's scale: the arena is 1920 units wide, a warrior
-/// 256 birim boyunda.
+/// but matches the scene's scale: the arena is 1920 units wide, a warrior 256 units tall.
 /// </para>
 /// <para>
 /// Depth is shown on screen as a vertical offset + a slight scale + the draw order (brawler staging).
