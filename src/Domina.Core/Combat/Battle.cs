@@ -25,6 +25,13 @@ public sealed class Battle
     private readonly BattleSetup _setup;
     private readonly CombatTuning _tuning;
     private readonly IRandomSource _rng;
+
+    /// <summary>Where the men stand and what stops them (see <see cref="IArenaSpace"/>).</summary>
+    private readonly IArenaSpace _space;
+
+    /// <summary>The men whose bodies have been taken out of <see cref="_space"/>, in the battle's order.</summary>
+    private readonly bool[] _leftTheSpace;
+
     /// <summary>
     /// The limbs lost in this fight, per warrior.
     /// </summary>
@@ -90,6 +97,17 @@ public sealed class Battle
     private List<double>? _retreatPresses;
 
     public Battle(BattleSetup setup, IRandomSource rng)
+        : this(setup, rng, null)
+    {
+    }
+
+    /// <summary>Builds a fight carried out in <paramref name="space"/>.</summary>
+    /// <param name="space">
+    /// Where the men stand and what stops them; <c>null</c> is the resolver's own kinematics
+    /// (<see cref="KinematicArenaSpace"/>). A space is the fight's for as long as it runs: it is begun
+    /// afresh here, so one instance can serve fight after fight, but never two at once.
+    /// </param>
+    public Battle(BattleSetup setup, IRandomSource rng, IArenaSpace? space)
     {
         ArgumentNullException.ThrowIfNull(setup);
         ArgumentNullException.ThrowIfNull(rng);
@@ -102,6 +120,7 @@ public sealed class Battle
         _setup = setup;
         _tuning = setup.Tuning;
         _rng = rng;
+        _space = space ?? new KinematicArenaSpace(_tuning);
 
         foreach (Warrior w in setup.PlayerSide)
         {
@@ -121,6 +140,7 @@ public sealed class Battle
             _combatants.Add(new Combatant(w, EnemyTeam, _tuning.ClassProfiles));
         }
 
+        _leftTheSpace = new bool[_combatants.Count];
         PlaceCombatants();
 
         foreach (Combatant c in _combatants)
@@ -349,8 +369,11 @@ public sealed class Battle
         int player = 0;
         int enemy = 0;
 
-        foreach (Combatant c in _combatants)
+        _space.Begin(_combatants.Count);
+
+        for (int body = 0; body < _combatants.Count; body++)
         {
+            Combatant c = _combatants[body];
             bool isPlayer = c.Team == PlayerTeam;
             int index = isPlayer ? player++ : enemy++;
             int count = isPlayer ? _setup.PlayerSide.Count : _setup.EnemySide.Count;
@@ -358,17 +381,18 @@ public sealed class Battle
             // Centres the roster in depth: 3 people spread over the range -1, 0, +1.
             double lane = index - ((count - 1) / 2.0);
 
-            c.Position = new ArenaPoint(
-                centerX + (isPlayer ? -_tuning.StartOffsetX : _tuning.StartOffsetX),
-                centerY + (lane * _tuning.StartSpacingY));
+            c.Position = _space.Enter(
+                body,
+                new ArenaPoint(
+                    centerX + (isPlayer ? -_tuning.StartOffsetX : _tuning.StartOffsetX),
+                    centerY + (lane * _tuning.StartSpacingY)));
 
             c.Facing = isPlayer ? 1 : -1;
         }
     }
 
     /// <summary>
-    /// Advances everyone by one tick: closing on the target, fleeing, and the push that
-    /// prevents overlap.
+    /// Advances everyone by one tick: closing on the target, fleeing, and what stops the step.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -376,14 +400,27 @@ public sealed class Battle
     /// strike: once you have started the move you are nailed in place even if the target flees.
     /// </para>
     /// <para>
-    /// There is no physics engine, we have our own kinematics — Godot's collision resolution
-    /// changes from version to version and would break the "same seed = same fight" guarantee.
+    /// This method decides where each man <b>means</b> to go; <see cref="_space"/> says where he
+    /// ends up — the push that prevents overlap and the arena's edge are its business. A man who
+    /// means to stay still is settled too: someone may have walked into him.
     /// </para>
     /// </remarks>
     private void Move()
     {
-        foreach (Combatant c in _combatants)
+        // Who left the field happened outside this method, so the space hears of it before anyone
+        // moves: a man settled early in the loop must not be stopped by a body that is no longer there.
+        for (int body = 0; body < _combatants.Count; body++)
         {
+            if (!_leftTheSpace[body] && !_combatants[body].IsActive)
+            {
+                _space.Leave(body);
+                _leftTheSpace[body] = true;
+            }
+        }
+
+        for (int body = 0; body < _combatants.Count; body++)
+        {
+            Combatant c = _combatants[body];
             ArenaPoint before = c.Position;
 
             if (!c.IsActive)
@@ -447,8 +484,7 @@ public sealed class Battle
                 }
             }
 
-            Separate(c);
-            Clamp(c);
+            c.Position = _space.Settle(body, c.Position, passing: c.State is CombatState.Retreating);
             c.SpeedThisTick = before.DistanceTo(c.Position) / _tuning.TickSeconds;
         }
     }
@@ -635,48 +671,6 @@ public sealed class Battle
     }
 
     private static double Lerp(double from, double to, double t) => from + ((to - from) * t);
-
-    /// <summary>Pushes overlapping warriors apart. The fleer is not pushed — his path must not be blocked.</summary>
-    private void Separate(Combatant c)
-    {
-        if (c.State is CombatState.Retreating)
-        {
-            return;
-        }
-
-        foreach (Combatant other in _combatants)
-        {
-            if (ReferenceEquals(other, c) || !other.IsActive)
-            {
-                continue;
-            }
-
-            double gap = c.Position.DistanceTo(other.Position);
-            if (gap >= _tuning.PersonalSpace)
-            {
-                continue;
-            }
-
-            // A fixed direction is needed to separate two warriors who land exactly on top of each
-            // other; otherwise the direction vector is zero and both lock up.
-            c.Position = gap <= double.Epsilon
-                ? new ArenaPoint(c.Position.X - (_tuning.PersonalSpace / 2), c.Position.Y)
-                : c.Position.MovedAwayFrom(other.Position, _tuning.PersonalSpace - gap);
-        }
-    }
-
-    /// <summary>Depth cannot spill outside the arena; along the line only the fleer leaves.</summary>
-    private void Clamp(Combatant c)
-    {
-        if (c.State is CombatState.Retreating)
-        {
-            return;
-        }
-
-        double y = Math.Clamp(c.Position.Y, 0, _tuning.ArenaDepth);
-        double x = Math.Clamp(c.Position.X, 0, _tuning.ArenaWidth);
-        c.Position = new ArenaPoint(x, y);
-    }
 
     private static void FaceToward(Combatant c, Combatant target)
     {
