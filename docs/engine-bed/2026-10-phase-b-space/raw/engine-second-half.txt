@@ -1,0 +1,10 @@
+Godot Engine v4.7.stable.mono.official.5b4e0cb0f - https://godotengine.org
+
+engine bed - fighter=engine lane=manual motion=contact slots=1
+build: Godot 4.7-stable (official), .NET 10.0.10; optimised: Domina.Game yes, Domina.Core yes, GodotSharp NO (C:\Projects\domina\tools\Godot_v4.7-stable_mono_win64\GodotSharp\Api\Debug\GodotSharp.dll)
+fights 5000 (seeds 5001..10000) in 2.789 s = 1793 fights/s; 1972699 ticks, 19.73 s average fight
+outcomes: PlayerVictory 3406 (68.12%), PlayerWithdrawal 482 (9.64%), PlayerWipe 1112 (22.24%)
+blows 166347, hits 102219 (61.4%)
+motion tests 379106 (75.8 a fight), places handed to the server 369884 (74.0 a fight)
+digest 6ebbc2fc9aee0ba6
+RESULT fighter=engine lane=manual motion=contact slots=1 fights=5000 seconds=2.789 fights_per_s=1793 ticks=1972699 digest=6ebbc2fc9aee0ba6

@@ -1,0 +1,25 @@
+core-1: fighter=core lane=manual slots=1 fights=10000 seconds=1.686 fights_per_s=5932 ticks=3945031 digest=63f3b81089d3b1e2
+core-2: fighter=core lane=manual slots=1 fights=10000 seconds=1.602 fights_per_s=6241 ticks=3945031 digest=63f3b81089d3b1e2
+core-3: fighter=core lane=manual slots=1 fights=10000 seconds=1.675 fights_per_s=5969 ticks=3945031 digest=63f3b81089d3b1e2
+engine-1: fighter=engine lane=manual motion=contact slots=1 fights=10000 seconds=3.848 fights_per_s=2599 ticks=3954562 digest=23fdb732949477e3
+engine-2: fighter=engine lane=manual motion=contact slots=1 fights=10000 seconds=3.784 fights_per_s=2643 ticks=3954562 digest=23fdb732949477e3
+engine-3: fighter=engine lane=manual motion=contact slots=1 fights=10000 seconds=3.903 fights_per_s=2562 ticks=3954562 digest=23fdb732949477e3
+engine-frame-256: fighter=engine lane=frame motion=contact slots=256 fights=10000 seconds=8.537 fights_per_s=1171 ticks=3954562 digest=23fdb732949477e3
+engine-second-half: fighter=engine lane=manual motion=contact slots=1 fights=5000 seconds=2.789 fights_per_s=1793 ticks=1972699 digest=6ebbc2fc9aee0ba6
+engine-every: fighter=engine lane=manual motion=every slots=1 fights=10000 seconds=8.880 fights_per_s=1126 ticks=3954562 digest=23fdb732949477e3
+engine-profile: fighter=engine lane=manual motion=contact slots=1 fights=10000 seconds=4.563 fights_per_s=2192 ticks=3954562 digest=23fdb732949477e3
+parity-core-20k: fighter=core lane=manual slots=1 fights=20000 seconds=2.949 fights_per_s=6781 ticks=7843370 digest=22144114031d9fcb
+parity-engine-20k: fighter=engine lane=manual motion=contact slots=1 fights=20000 seconds=8.013 fights_per_s=2496 ticks=7852725 digest=2fc73355d5d67325
+
+identical fights, run 1 vs run 2:                 10000/10000
+identical fights, manual lane vs frame lane:      10000/10000
+identical fights, seeds 5001.. alone vs in sweep: 5000/5000
+identical fights, contact pre-check vs every:     10000/10000
+
+parity, 20,000 fights (core | engine):
+  parity-core-20k: fights 20000 (seeds 1..20000) in 2.949 s = 6781 fights/s; 7843370 ticks, 19.61 s average fight
+  parity-core-20k: outcomes: PlayerVictory 13738 (68.69%), PlayerWithdrawal 1871 (9.36%), PlayerWipe 4391 (21.95%)
+  parity-core-20k: blows 662306, hits 407831 (61.6%)
+  parity-engine-20k: fights 20000 (seeds 1..20000) in 8.013 s = 2496 fights/s; 7852725 ticks, 19.63 s average fight
+  parity-engine-20k: outcomes: PlayerVictory 13725 (68.62%), PlayerWithdrawal 1914 (9.57%), PlayerWipe 4361 (21.80%)
+  parity-engine-20k: blows 662744, hits 407986 (61.6%)
