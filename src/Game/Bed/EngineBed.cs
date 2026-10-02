@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Domina.Core.Combat;
-using Domina.Core.Rng;
+using Domina.Game.Combat;
 using Domina.Presentation;
 using Godot;
 
@@ -28,14 +28,18 @@ namespace Domina.Game.Bed;
 /// (Godot's <c>--fixed-fps 20</c> turns off its real-time sync).
 /// </para>
 /// <para>
-/// <c>--fighter core</c> runs the engine-free resolver through <see cref="CoreFightRunner"/> instead: the
-/// calibration that says whether this runtime and this build are as fast as the one the core's figures
-/// were taken on.
+/// <b>Three fighters.</b> <c>--fighter trivial</c> is the stand-in Phase A was read on.
+/// <c>--fighter core</c> is the engine-free resolver, <see cref="Battle"/> over its own kinematics: the
+/// calibration that says whether this runtime is as fast as the one the core's figures were taken on.
+/// <c>--fighter engine</c> is the same resolver carrying out its steps on Godot's physics server
+/// (<see cref="GodotArenaSpace"/>) — Phase B's first slice. The two resolver fighters fight the arena's
+/// demo roster.
 /// </para>
 /// </remarks>
 public sealed partial class EngineBed : Node
 {
     private readonly List<Slot> _slots = [];
+    private readonly List<GodotArenaSpace> _spaces = [];
     private BedOptions _options = BedOptions.Default;
     private TrivialKit? _kit;
     private FightCosts? _costs;
@@ -70,29 +74,33 @@ public sealed partial class EngineBed : Node
             + $"Domina.Game {Optimised(typeof(EngineBed))}, Domina.Core {Optimised(typeof(Battle))}, "
             + $"GodotSharp {Optimised(typeof(Node))} ({typeof(Node).Assembly.Location})");
 
-        if (_options.Fighter == BedFighter.Trivial)
+        _kit = _options.Fighter == BedFighter.Trivial ? new TrivialKit() : null;
+        _costs = _options.Profile ? new FightCosts() : null;
+        int slots = _options.Lane == BedLane.Frame ? Math.Min(_options.Slots, _options.Fights) : 1;
+        for (int i = 0; i < slots; i++)
         {
-            _kit = new TrivialKit();
-            _costs = _options.Profile ? new FightCosts() : null;
-            int slots = _options.Lane == BedLane.Frame ? Math.Min(_options.Slots, _options.Fights) : 1;
-            for (int i = 0; i < slots; i++)
-            {
-                _slots.Add(NewSlot(i));
-            }
+            _slots.Add(NewSlot(i));
+        }
 
-            if (!SpacesAreSeparate())
-            {
-                GD.PrintErr("engine bed: two slots share a physics space; their fights would touch.");
-                Stop(3);
-                return;
-            }
+        if (!SpacesAreSeparate())
+        {
+            GD.PrintErr("engine bed: two slots share a physics space; their fights would touch.");
+            Stop(3);
+            return;
         }
 
         SetProcess(_options.Lane == BedLane.Manual);
         SetPhysicsProcess(_options.Lane == BedLane.Frame);
     }
 
-    public override void _ExitTree() => _kit?.Dispose();
+    public override void _ExitTree()
+    {
+        _kit?.Dispose();
+        foreach (GodotArenaSpace space in _spaces)
+        {
+            space.Dispose();
+        }
+    }
 
     /// <summary>The manual lane: the whole run inside the first engine frame.</summary>
     public override void _Process(double delta)
@@ -105,23 +113,16 @@ public sealed partial class EngineBed : Node
         _manualRan = true;
         _started = Stopwatch.GetTimestamp();
 
-        if (_options.Fighter == BedFighter.Core)
+        Slot slot = _slots[0];
+        for (int i = 0; i < _options.Fights; i++)
         {
-            RunCore();
-        }
-        else
-        {
-            Slot slot = _slots[0];
-            for (int i = 0; i < _options.Fights; i++)
+            Begin(slot, i);
+            while (!slot.Fight.Finished)
             {
-                Begin(slot, i);
-                while (!slot.Fight.Finished)
-                {
-                    slot.Fight.Step();
-                }
-
-                Record(slot);
+                slot.Fight.Step();
             }
+
+            Record(slot);
         }
 
         Report();
@@ -220,8 +221,25 @@ public sealed partial class EngineBed : Node
         return new Slot(viewport, NewFight(viewport));
     }
 
-    private TrivialFight NewFight(SubViewport viewport) =>
-        new(viewport, _kit!, _options) { Costs = _costs };
+    private IBedFight NewFight(SubViewport viewport)
+    {
+        if (_options.Fighter == BedFighter.Trivial)
+        {
+            return new TrivialFight(viewport, _kit!, _options) { Costs = _costs };
+        }
+
+        // The roster the arena opens on, without the event stream: batch simulation's real condition,
+        // as in ThroughputTests.
+        BattleSetup setup = DemoRoster.Setup() with { CollectEvents = false };
+        if (_options.Fighter == BedFighter.Core)
+        {
+            return new BattleBedFight(setup, null);
+        }
+
+        var space = new GodotArenaSpace(setup.Tuning, _options.Motion) { Costs = _costs };
+        _spaces.Add(space);
+        return new BattleBedFight(setup, space);
+    }
 
     private bool SpacesAreSeparate()
     {
@@ -243,7 +261,7 @@ public sealed partial class EngineBed : Node
         {
             // Free, not QueueFree: a body queued for deletion stays in the space until the frame ends,
             // and the manual lane's next fight would collide with it.
-            slot.Fight.Root.Free();
+            ((TrivialFight)slot.Fight).Root.Free();
             slot.Fight = NewFight(slot.Viewport);
         }
 
@@ -253,43 +271,9 @@ public sealed partial class EngineBed : Node
 
     private void Record(Slot slot)
     {
-        TrivialFight fight = slot.Fight;
-        _records[slot.FightIndex] = new FightRecord(
-            SeedOf(slot.FightIndex), fight.Winner, fight.Ticks, fight.Digest, fight.Blows, fight.Hits);
+        _records[slot.FightIndex] = slot.Fight.Record(SeedOf(slot.FightIndex));
         slot.FightIndex = -1;
         _recorded++;
-    }
-
-    private void RunCore()
-    {
-        // The roster the arena opens on, without the event stream: batch simulation's real condition,
-        // as in ThroughputTests.
-        BattleSetup setup = DemoRoster.Setup() with { CollectEvents = false };
-
-        for (int i = 0; i < _options.Fights; i++)
-        {
-            ulong seed = SeedOf(i);
-            BattleResult result = CoreFightRunner.Instance.Fight(setup, new SeededRandom(seed));
-
-            ulong digest = FightDigest.Mix(FightDigest.Mix(FightDigest.Empty, (long)result.Outcome), result.ElapsedSeconds);
-            foreach (WarriorBattleSummary s in result.Summaries)
-            {
-                digest = FightDigest.Mix(digest, s.Id.Value);
-                digest = FightDigest.Mix(digest, (long)s.FinalState);
-                digest = FightDigest.Mix(digest, s.HealthRemaining);
-                digest = FightDigest.Mix(digest, s.AttacksMade);
-                digest = FightDigest.Mix(digest, s.HitsLanded);
-                digest = FightDigest.Mix(digest, s.DamageDealt);
-                digest = FightDigest.Mix(digest, s.DamageTaken);
-                digest = FightDigest.Mix(digest, (long)s.LostParts);
-            }
-
-            int ticks = (int)Math.Round(result.ElapsedSeconds / TrivialFight.TickSeconds);
-            int attacks = result.Summaries.Sum(s => s.AttacksMade);
-            int hits = result.Summaries.Sum(s => s.HitsLanded);
-            _records[i] = new FightRecord(seed, (int)result.Outcome, ticks, digest, attacks, hits);
-            _recorded++;
-        }
     }
 
     private ulong SeedOf(int fightIndex) => _options.FirstSeed + (ulong)fightIndex;
@@ -318,6 +302,14 @@ public sealed partial class EngineBed : Node
         GD.Print("outcomes: " + string.Join(", ", outcomes.Select(o =>
             $"{OutcomeName(o.Key)} {o.Value} ({100.0 * o.Value / fights:F2}%)")));
         GD.Print($"blows {blows}, hits {hits} ({(blows == 0 ? 0 : 100.0 * hits / blows):F1}%)");
+        if (_spaces.Count > 0)
+        {
+            long tests = _spaces.Sum(space => space.MotionTests);
+            long handovers = _spaces.Sum(space => space.Handovers);
+            GD.Print($"motion tests {tests} ({(double)tests / fights:F1} a fight), "
+                + $"places handed to the server {handovers} ({(double)handovers / fights:F1} a fight)");
+        }
+
         if (_options.Lane == BedLane.Frame)
         {
             GD.Print($"frame lane: {_frames} physics frames, {100.0 * (seconds - _insideSeconds) / seconds:F1}% "
@@ -351,7 +343,7 @@ public sealed partial class EngineBed : Node
         Stop(0);
     }
 
-    private string OutcomeName(int outcome) => _options.Fighter == BedFighter.Core
+    private string OutcomeName(int outcome) => _options.Fighter != BedFighter.Trivial
         ? ((BattleOutcome)outcome).ToString()
         : outcome switch
         {
@@ -368,14 +360,12 @@ public sealed partial class EngineBed : Node
         GetTree().Quit(exitCode);
     }
 
-    private sealed class Slot(SubViewport viewport, TrivialFight fight)
+    private sealed class Slot(SubViewport viewport, IBedFight fight)
     {
         public SubViewport Viewport { get; } = viewport;
 
-        public TrivialFight Fight { get; set; } = fight;
+        public IBedFight Fight { get; set; } = fight;
 
         public int FightIndex { get; set; } = -1;
     }
-
-    private readonly record struct FightRecord(ulong Seed, int Outcome, int Ticks, ulong Digest, int Blows, int Hits);
 }

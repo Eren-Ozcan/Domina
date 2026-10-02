@@ -24,7 +24,7 @@ namespace Domina.Game.Bed;
 /// when the frame began.
 /// </para>
 /// </remarks>
-internal sealed class TrivialFight
+internal sealed class TrivialFight : IBedFight
 {
     public static readonly double TickSeconds = CombatTuning.Default.TickSeconds;
 
@@ -114,6 +114,8 @@ internal sealed class TrivialFight
             Place(f);
         }
     }
+
+    public FightRecord Record(ulong seed) => new(seed, Winner, Ticks, Digest, Blows, Hits);
 
     /// <summary>One tick of the fight: every man still standing acts once, in a fixed order.</summary>
     public void Step()

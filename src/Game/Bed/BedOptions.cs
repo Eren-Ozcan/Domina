@@ -1,4 +1,5 @@
 using System.Globalization;
+using Domina.Game.Combat;
 
 namespace Domina.Game.Bed;
 
@@ -10,6 +11,9 @@ internal enum BedFighter
 
     /// <summary>The engine-free resolver behind the door, run inside Godot's runtime as a calibration.</summary>
     Core,
+
+    /// <summary>The same resolver carrying out its steps on Godot's physics server (Phase B's first slice).</summary>
+    Engine,
 }
 
 /// <summary>Who steps the fight.</summary>
@@ -59,6 +63,7 @@ internal sealed record BedOptions(
     BedBody Body,
     BedClip Clip,
     BedBlade Blade,
+    ArenaMotion Motion,
     int Fights,
     ulong FirstSeed,
     int Slots,
@@ -67,12 +72,12 @@ internal sealed record BedOptions(
     string? DigestPath)
 {
     public const string Usage =
-        "engine bed: -- [--fighter trivial|core] [--lane manual|frame] [--body static|character] "
-        + "[--clip mixer|keys] [--blade query|shape] [--fights N] [--seed S] [--slots K] [--rebuild] [--profile] [--digest <file>]\n"
+        "engine bed: -- [--fighter trivial|core|engine] [--lane manual|frame] [--body static|character] "
+        + "[--clip mixer|keys] [--blade query|shape] [--motion every|contact] [--fights N] [--seed S] [--slots K] [--rebuild] [--profile] [--digest <file>]\n"
         + "  the frame lane needs Godot's own --fixed-fps 20 before the --, or it runs in real time";
 
     public static BedOptions Default { get; } = new(
-        BedFighter.Trivial, BedLane.Manual, BedBody.Static, BedClip.Keys, BedBlade.Shape, 10_000, 1, 256, false, false, null);
+        BedFighter.Trivial, BedLane.Manual, BedBody.Static, BedClip.Keys, BedBlade.Shape, ArenaMotion.Contact, 10_000, 1, 256, false, false, null);
 
     /// <summary>Reads the arguments; an unknown or malformed one is an error, never a silent default.</summary>
     public static BedOptions Parse(IReadOnlyList<string> arguments, out string? error)
@@ -102,6 +107,9 @@ internal sealed record BedOptions(
                     break;
                 case "--blade" when Enum.TryParse(value, true, out BedBlade blade):
                     options = options with { Blade = blade };
+                    break;
+                case "--motion" when Enum.TryParse(value, true, out ArenaMotion motion):
+                    options = options with { Motion = motion };
                     break;
                 case "--fights" when int.TryParse(value, CultureInfo.InvariantCulture, out int fights) && fights > 0:
                     options = options with { Fights = fights };
@@ -134,17 +142,17 @@ internal sealed record BedOptions(
             }
         }
 
-        // The core resolver runs its own loop; there is no engine step for it to be driven by.
-        if (options.Fighter == BedFighter.Core && options.Lane == BedLane.Frame)
+        if (options.Rebuild && options.Fighter != BedFighter.Trivial)
         {
-            error = "the core fighter has no frame lane: it is stepped by Battle.Run";
+            error = "--rebuild is the stand-in fight's: the resolver's space is pooled";
         }
 
         return options;
     }
 
-    public string Describe() => Fighter == BedFighter.Core
-        ? "fighter=core lane=manual"
-        : ($"fighter=trivial lane={Lane} body={Body} clip={Clip} blade={Blade} slots={(Lane == BedLane.Frame ? Slots : 1)} "
-            + $"rebuild={(Rebuild ? "yes" : "no")}").ToLowerInvariant();
+    public string Describe() => (Fighter == BedFighter.Trivial
+        ? $"fighter=trivial lane={Lane} body={Body} clip={Clip} blade={Blade} slots={(Lane == BedLane.Frame ? Slots : 1)} "
+            + $"rebuild={(Rebuild ? "yes" : "no")}"
+        : $"fighter={Fighter} lane={Lane}{(Fighter == BedFighter.Engine ? $" motion={Motion}" : string.Empty)} "
+            + $"slots={(Lane == BedLane.Frame ? Slots : 1)}").ToLowerInvariant();
 }
