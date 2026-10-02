@@ -15,6 +15,8 @@
 > headless harness — is a gate. See "Core Principle" below for what holds while it runs.
 > **2026-10-02:** Phase A read — the gate passes on the stand-in fight with little room
 > (`docs/engine-bed/2026-10-phase-a/`); Phase B starts on an engine-call budget.
+> **2026-10-02:** Phase B's first slice — the real fight's movement on Godot's physics server runs
+> 10,000 fights in 3.8-3.9 s, deterministic per seed (`docs/engine-bed/2026-10-phase-b-space/`).
 
 ## New work from the decision pass (2026-09-07)
 

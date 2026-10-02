@@ -108,6 +108,12 @@ on top.
 
 Each is a measured finding, not a preference.
 
+> **Refined 2026-10-02** by Phase B's first slice (`../2026-10-phase-b-space/`): the bodies live on the
+> server with no nodes (rule 1), and every fight gets a fresh, inactive physics space while the bodies
+> are pooled (rule 5) — a space carried from fight to fight remembers the earlier fights in its
+> broadphase. The stand-in here pooled its space; its lane identity held, but whether its seeds were
+> pure was not tested. The real fight's forecast of rule 6 was beaten: 3.8-3.9 s, not ~9 s.
+
 1. **Bodies are static on the server, and every move is pushed to it by hand.** Godot hands a moved
    node's transform to the physics server through a notification the scene tree flushes once a frame;
    a kinematic body (`CharacterBody2D`, `AnimatableBody2D`) waits for the next physics step besides.

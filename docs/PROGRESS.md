@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-10-02 (**Phase A of the engine move read: the gate passes on the stand-in fight, with little room** — 10,000 headless Godot fights in 7.7-9.3 s against 10 s, two runs identical 10,000 of 10,000, and the engine's own physics loop gives the same fights as the bed's loop; the real fight is forecast at about 9 s, so Phase B starts on an engine-call budget; before it: **Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-02 (**Phase B's first slice: the real fight's movement runs on Godot's physics server** — `IArenaSpace` in the core, the old kinematics behind it unchanged on the whole baseline, `GodotArenaSpace` in the game; 10,000 real 3v3 fights in 3.8-3.9 s, the same per seed in a sweep, alone or in the engine's loop, and the first parity reading inside noise; before it: **Phase A of the engine move read: the gate passes on the stand-in fight, with little room** — 10,000 headless Godot fights in 7.7-9.3 s against 10 s, two runs identical 10,000 of 10,000, and the engine's own physics loop gives the same fights as the bed's loop; the real fight is forecast at about 9 s, so Phase B starts on an engine-call budget; before it: **Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,39 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-10-02 — Phase B, first slice: the real fight's steps on Godot's physics server
+
+**The door.** `Combat/IArenaSpace.cs`: `Battle.Move` decides where each man *means* to go, the space says
+where he ends up (`Begin`, `Enter`, `Settle`, `Leave`). The resolver's own `Separate` and `Clamp` moved
+behind it as `KinematicArenaSpace`, the default. **Shown to change nothing:** the whole pre-engine baseline
+— 68 duel and 36 campaign reports — re-run on the seam build is identical line for line except the wall
+clock. `ArenaSpaceTests` (+3) pins that the resolver obeys the space it is handed: it stands men where the
+space says, begins it afresh each fight, enters men in order, and takes a man out once when he leaves.
+
+**The engine's side.** `src/Game/Combat/GodotArenaSpace.cs`: a static body per man on the physics server, a
+circle `PersonalSpace` across; a step that can touch someone is a `BodyTestMotion`, the rest of it slides
+along the body met. The bed grew `--fighter engine` (and `core`), both in both lanes, through `IBedFight`.
+
+**From 18 s to 3.9 s, measured step by step** (`docs/engine-bed/2026-10-phase-b-space/`): the first space —
+nodes walking by `MoveAndCollide` — ran 10,000 fights in 14.4-18.3 s, well over the gate. Server bodies
+tested directly took it to ~9.3 s; not testing a step that cannot touch anyone to ~7.3 s; the dearest
+call turned out to be handing a place to the server (`BodySetState`, ~1.4 µs, more than the test), so a
+place is now handed over only before a test reads it — ~5.5 s. The last step came from a determinism
+finding: **the server's broadphase remembers the order it was told things in**, so a space carried from
+fight to fight made a seed's fight depend now and then on the fights before it (the two lanes agreed on
+9,996 of 10,000). A fresh, inactive space per fight fixed that and the time with it: **3.85 / 3.78 / 3.90 s**,
+two runs, the two lanes and seeds run alone all identical fight for fight.
+
+**First parity reading,** the arena's demo 3v3 at 20,000 fights: victory 68.69% → 68.62%, withdrawal 9.36%
+→ 9.57%, wipe 21.95% → 21.80%, average fight 19.61 → 19.63 s, hit rate unchanged — inside the ±0.33-point
+noise. One scenario only; Phase B's acceptance needs the sim's 34 on the bed, which is next.
+
+`ArenaPoint`'s doc comment still carried a Turkish fragment ("256 birim boyunda"); it now reads in English.
+
+884 tests green under Release (588 core + 221 presentation + 75 sim).
 
 ---
 

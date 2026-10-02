@@ -70,6 +70,19 @@ stepping fights itself, the blow's frame read off the clip rather than by runnin
 collection-returning engine call in the hot path, pooled fights, and a budget of about 330 motion
 tests a fight — and counts its engine calls per fight on the bed as it goes.
 
+**Phase B's first slice, read 2026-10-02: the real fight's steps run on the physics server at 3.8-3.9 s
+for 10,000 fights.** The record is `docs/engine-bed/2026-10-phase-b-space/`. The door is `IArenaSpace` in
+the core — the resolver decides where a man means to go, the space says where he ends up — with the
+resolver's own `Separate`/`Clamp` moved behind it as `KinematicArenaSpace`, shown to change nothing on the
+whole baseline. `GodotArenaSpace` is the engine's side: static server bodies with no nodes, a motion test
+only for a step that can touch someone, a place handed to the server only before a test reads it, and a
+fresh inactive physics space for every fight. The last was found, not planned: the server's broadphase
+remembers the order it was told things in, so a carried space made a seed's fight depend now and then on
+the fights before it; with a fresh space two runs, the two lanes and a seed run alone all agree fight for
+fight. The first parity reading, one scenario at 20,000 fights, sits inside the noise (victory 68.69% →
+68.62%). Phase B's acceptance — every scenario, every locked number — needs the sim's scenarios on the
+bed next.
+
 ---
 
 ## 1. What option (c) actually means
@@ -154,7 +167,9 @@ little room** (section 0; `docs/engine-bed/2026-10-phase-a/`).
 **Phase B — space moves.** Positions, distance, reach, projectile flight and the weapon on the
 ground become nodes and queries. The decision logic still runs on the core's own tick, driven by
 the engine's fixed step. `ArenaPoint`, `Projectile`, `GroundWeapon` are deleted last, not first.
-*Acceptance: the parity bed's 24 scenarios re-read, every locked number inside noise.*
+*Acceptance: the parity bed's 24 scenarios re-read, every locked number inside noise.* **First slice
+read 2026-10-02 — movement through `IArenaSpace`, 3.8-3.9 s for 10,000 fights, one scenario inside
+noise** (section 0; `docs/engine-bed/2026-10-phase-b-space/`).
 
 **Phase C — the decision moves.** Target selection, charging, striking, catching, blocking,
 evading, panic, disarming, poison, armour wear. This is where `Battle.cs` is actually rewritten and
