@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Domina.Core.Combat;
 
 namespace Domina.Sim;
 
@@ -9,10 +10,23 @@ internal static class SimCli
     public const int ExitUsage = 2;
     public const int ExitIoError = 3;
 
-    public static int Run(IReadOnlyList<string> args, TextWriter output, TextWriter error)
+    /// <param name="fighter">
+    /// What fights the measurement's fights; the engine-free resolver if left out. The engine bed passes
+    /// its own, so that the same measurement runs inside Godot over the engine's ground
+    /// (docs/PLAN-ENGINE-RESOLUTION.md, Phase B).
+    /// </param>
+    public static int Run(IReadOnlyList<string> args, TextWriter output, TextWriter error, IFightRunner? fighter = null)
     {
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
+
+        // The replay and the played season ask the door for the default resolver and are not handed this
+        // one, so asking for them over another resolver would quietly run the old one.
+        if (fighter is not null and not CoreFightRunner && (ReplayCommand.Wanted(args) || PlayCommand.Wanted(args)))
+        {
+            error.WriteLine("the replay and the played season run on the engine-free resolver only");
+            return ExitUsage;
+        }
 
         // The replay takes a path and nothing else, so it is answered before the measurement's own
         // options are parsed: the two commands share no settings (see ReplayCommand).
@@ -54,7 +68,8 @@ internal static class SimCli
         if (options.Campaign is CampaignOptions campaign)
         {
             long began = Stopwatch.GetTimestamp();
-            CampaignReport campaignReport = new CampaignRunner(campaign).Run(options.FirstSeed);
+            CampaignOptions fought = fighter is null ? campaign : campaign with { Fighter = fighter };
+            CampaignReport campaignReport = new CampaignRunner(fought).Run(options.FirstSeed);
             CampaignSummaryReport.Write(
                 output, campaign, campaignReport, Stopwatch.GetElapsedTime(began));
             return ExitOk;
@@ -69,7 +84,8 @@ internal static class SimCli
             options.EffectiveMoraleBand,
             options.PlayerMorale,
             options.PlayerMastery,
-            options.EffectiveMasteryBand);
+            options.EffectiveMasteryBand,
+            fighter);
 
         try
         {

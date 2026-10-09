@@ -1,5 +1,6 @@
 using Domina.Core.Combat;
 using Domina.Core.Dojo;
+using Domina.Core.Rng;
 using Domina.Sim;
 
 namespace Domina.Sim.Tests;
@@ -266,5 +267,66 @@ public class SimCliTests
         Assert.True(options.Campaign.AcceptCountsCharms);
 
         Assert.NotNull(SimArgs.Parse(["--mode", "campaign", "--charm-fit", "luck"]).Error);
+    }
+
+    /// <summary>
+    /// The engine bed runs the same measurement over its own fighter: every fight of a duel bed has to be
+    /// asked of the fighter the tool is handed, or the bed would quietly measure the old resolver.
+    /// </summary>
+    [Fact]
+    public void ADuelBedAsksTheFighterItIsHanded()
+    {
+        var counting = new CountingRunner();
+
+        int exit = SimCli.Run(["--scenario", "duel", "--battles", "25"], TextWriter.Null, TextWriter.Null, counting);
+
+        Assert.Equal(SimCli.ExitOk, exit);
+        Assert.Equal(25, counting.Fights);
+    }
+
+    [Fact]
+    public void ACampaignAsksTheFighterItIsHanded()
+    {
+        var counting = new CountingRunner();
+        var output = new StringWriter();
+
+        int exit = SimCli.Run(
+            ["--mode", "campaign", "--days", "20", "--campaigns", "3", "--seed", "7"], output, TextWriter.Null, counting);
+
+        Assert.Equal(SimCli.ExitOk, exit);
+        Assert.True(counting.Fights > 0);
+
+        // The same run without a fighter is the same run: the counted one passes the fights through.
+        var plain = new StringWriter();
+        SimCli.Run(["--mode", "campaign", "--days", "20", "--campaigns", "3", "--seed", "7"], plain, TextWriter.Null);
+        Assert.Equal(WithoutWallClock(plain.ToString()), WithoutWallClock(output.ToString()));
+    }
+
+    [Theory]
+    [InlineData(ReplayCommand.Flag)]
+    [InlineData(PlayCommand.Flag)]
+    public void TheReplayAndThePlayedSeasonRefuseAnotherFighter(string flag)
+    {
+        var error = new StringWriter();
+
+        int exit = SimCli.Run([flag, "unused"], TextWriter.Null, error, new CountingRunner());
+
+        Assert.Equal(SimCli.ExitUsage, exit);
+        Assert.Contains("engine-free resolver only", error.ToString(), StringComparison.Ordinal);
+    }
+
+    private static string WithoutWallClock(string report) =>
+        string.Join('\n', report.Split('\n').Where(line => !line.StartsWith("Wall clock", StringComparison.Ordinal)));
+
+    /// <summary>The engine-free resolver, counted: a stand-in for the bed's fighter.</summary>
+    private sealed class CountingRunner : IFightRunner
+    {
+        public int Fights { get; private set; }
+
+        public BattleResult Fight(BattleSetup setup, IRandomSource random)
+        {
+            Fights++;
+            return CoreFightRunner.Instance.Fight(setup, random);
+        }
     }
 }

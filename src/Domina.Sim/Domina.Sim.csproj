@@ -11,6 +11,8 @@
   <ItemGroup>
     <!-- The tool is an application, not a library: the types stay internal and the tests see them. -->
     <InternalsVisibleTo Include="Domina.Sim.Tests" />
+    <!-- The engine bed runs the same measurement inside Godot, over the engine's fighter. -->
+    <InternalsVisibleTo Include="Domina.Game" />
   </ItemGroup>
 
 </Project>
