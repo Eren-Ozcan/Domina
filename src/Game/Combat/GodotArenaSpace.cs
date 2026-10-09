@@ -55,12 +55,12 @@ internal sealed class GodotArenaSpace : IArenaSpace, IDisposable
 {
     private const uint FighterLayer = 1;
 
-    private readonly CombatTuning _tuning;
     private readonly ArenaMotion _motion;
     private readonly CircleShape2D _shape;
     private readonly PhysicsTestMotionParameters2D _test = new();
     private readonly PhysicsTestMotionResult2D _tested = new();
     private readonly List<Rid> _bodies = [];
+    private CombatTuning _tuning;
     private Rid _space;
     private Vector2[] _where = [];
     private ArenaPoint[] _at = [];
@@ -82,6 +82,28 @@ internal sealed class GodotArenaSpace : IArenaSpace, IDisposable
 
     /// <summary>Where the time goes, when the bed asks; null otherwise.</summary>
     internal Bed.FightCosts? Costs { get; set; }
+
+    /// <summary>The next fight's tuning: a man's body and the arena's edge are read off it.</summary>
+    /// <remarks>
+    /// Called between fights, before <see cref="Begin"/>. The bodies are still in the old space then,
+    /// and that space is thrown away by <see cref="Begin"/>, so a body grown here leaves no trace in the
+    /// next fight's broadphase.
+    /// </remarks>
+    public void Fit(CombatTuning tuning)
+    {
+        ArgumentNullException.ThrowIfNull(tuning);
+        if (ReferenceEquals(tuning, _tuning))
+        {
+            return;
+        }
+
+        _tuning = tuning;
+        float radius = (float)(tuning.PersonalSpace / 2);
+        if (_shape.Radius != radius)
+        {
+            _shape.Radius = radius;
+        }
+    }
 
     public void Begin(int bodies)
     {

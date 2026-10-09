@@ -17,6 +17,8 @@
     <ProjectReference Include="..\Domina.Core\Domina.Core.csproj" />
     <ProjectReference Include="..\Domina.Chat\Domina.Chat.csproj" />
     <ProjectReference Include="..\Domina.Presentation\Domina.Presentation.csproj" />
+    <!-- The engine bed (Bed/) runs the sim's measurement over the engine's fighter. -->
+    <ProjectReference Include="..\Domina.Sim\Domina.Sim.csproj" />
   </ItemGroup>
 
 </Project>
