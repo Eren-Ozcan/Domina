@@ -269,6 +269,16 @@ public class SimCliTests
         Assert.NotNull(SimArgs.Parse(["--mode", "campaign", "--charm-fit", "luck"]).Error);
     }
 
+    /// <summary>The old push-out stays measurable: every figure before Open Decision #25 was read on it.</summary>
+    [Fact]
+    public void TheGroundCanBeSwitchedBackToThePushOut()
+    {
+        Assert.Equal(ArenaGround.Slide, Parse().Tuning.Ground);
+        Assert.Equal(ArenaGround.Kinematic, Parse("--ground", "kinematic").Tuning.Ground);
+        Assert.Equal(ArenaGround.Kinematic, Parse("--mode", "campaign", "--ground", "kinematic").Campaign!.Tuning.Ground);
+        Assert.NotNull(SimArgs.Parse(["--ground", "ice"]).Error);
+    }
+
     /// <summary>
     /// The engine bed runs the same measurement over its own fighter: every fight of a duel bed has to be
     /// asked of the fighter the tool is handed, or the bed would quietly measure the old resolver.

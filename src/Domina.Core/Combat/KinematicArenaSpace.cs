@@ -6,7 +6,9 @@ namespace Domina.Core.Combat;
 /// </summary>
 /// <remarks>
 /// This is the code that lived in <see cref="Battle"/> as <c>Separate</c> and <c>Clamp</c> until the
-/// <see cref="IArenaSpace"/> door was cut, moved without a change: a fight over it is the fight it was.
+/// <see cref="IArenaSpace"/> door was cut, moved without a change: a fight over it is the fight it was. It
+/// stopped being the default on 2026-10-02 (Open Decision #25, <see cref="SlideArenaSpace"/>) and stays as
+/// a measuring switch (<see cref="ArenaGround.Kinematic"/>): every figure before that date was read on it.
 /// </remarks>
 public sealed class KinematicArenaSpace : IArenaSpace
 {

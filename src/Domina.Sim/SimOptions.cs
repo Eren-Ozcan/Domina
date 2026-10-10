@@ -497,6 +497,15 @@ internal static class SimArgs
                     };
                     break;
 
+                case "--ground":
+                    if (!Enum.TryParse(value, ignoreCase: true, out ArenaGround ground) || !Enum.IsDefined(ground))
+                    {
+                        return ParsedArgs.Fail($"--ground must be slide or kinematic: {value}");
+                    }
+
+                    tuning = tuning with { Ground = ground };
+                    break;
+
                 case "--stamina-regen":
                     if (!double.TryParse(
                             value, NumberStyles.Float, CultureInfo.InvariantCulture, out double staminaRegen)
@@ -2295,6 +2304,7 @@ internal static class SimArgs
         writer.WriteLine("  --thrown-gold      The stall's price per point of a full quiver's damage");
         writer.WriteLine("  --thrown-poison    What a full dose adds to a thrown implement's price, as a share");
         writer.WriteLine("  --enemy-profiles on|off  Whether each enemy kind reads the field its own way (default on)");
+        writer.WriteLine("  --ground slide|kinematic  How the bodies collide: stop and slide, or the push-out every figure before 2026-10-02 was read on (default slide)");
         writer.WriteLine("  --province on|off  Whether the settlement map runs at all (campaign)");
         writer.WriteLine("  --meet-raids on|off Whether the policy goes out to meet a raid");
         writer.WriteLine("  --retire off|all|maimed  Who the policy takes off the field into a post");

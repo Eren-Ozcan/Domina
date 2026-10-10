@@ -103,8 +103,8 @@ public sealed class Battle
 
     /// <summary>Builds a fight carried out in <paramref name="space"/>.</summary>
     /// <param name="space">
-    /// Where the men stand and what stops them; <c>null</c> is the resolver's own kinematics
-    /// (<see cref="KinematicArenaSpace"/>). A space is the fight's for as long as it runs: it is begun
+    /// Where the men stand and what stops them; <c>null</c> is the engine-free ground the tuning names
+    /// (<see cref="CombatTuning.Ground"/>). A space is the fight's for as long as it runs: it is begun
     /// afresh here, so one instance can serve fight after fight, but never two at once.
     /// </param>
     public Battle(BattleSetup setup, IRandomSource rng, IArenaSpace? space)
@@ -120,7 +120,9 @@ public sealed class Battle
         _setup = setup;
         _tuning = setup.Tuning;
         _rng = rng;
-        _space = space ?? new KinematicArenaSpace(_tuning);
+        _space = space ?? (_tuning.Ground == ArenaGround.Kinematic
+            ? new KinematicArenaSpace(_tuning)
+            : new SlideArenaSpace(_tuning));
 
         foreach (Warrior w in setup.PlayerSide)
         {

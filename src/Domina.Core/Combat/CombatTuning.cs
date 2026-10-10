@@ -65,6 +65,15 @@ public sealed record CombatTuning
     /// </summary>
     public double PersonalSpace { get; init; } = 74;
 
+    /// <summary>The rule the bodies collide by when the fight is handed no space of its own.</summary>
+    /// <remarks>
+    /// <see cref="ArenaGround.Slide"/> since Open Decision #25 closed (2026-10-02): a body stops where it
+    /// meets another, as on the engine. <see cref="ArenaGround.Kinematic"/> is the old push-out, kept as a
+    /// measuring switch the way <see cref="TargetProfiles"/> is — every figure before 2026-10-02 was read on
+    /// it, and with it the pre-engine baseline reads back line for line. The game never sets it.
+    /// </remarks>
+    public ArenaGround Ground { get; init; } = ArenaGround.Slide;
+
     /// <summary>How much further to close after entering reach (0-1).</summary>
     /// <remarks>
     /// 1.0 stops at exactly full reach; stopping at the edge of reach makes attacks miss

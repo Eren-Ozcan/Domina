@@ -12,7 +12,9 @@ namespace Domina.Core.Tests;
 /// (docs/engine-bed/2026-10-phase-b-space/). Pinned here is the other half of the door: the resolver
 /// obeys the space it is handed — it stands men where the space says, begins it afresh for every fight,
 /// enters the men in the battle's order, and takes a man out of it once, when he leaves the field — so an
-/// engine's space behind the door is consulted the way the kinematic one is.
+/// engine's space behind the door is consulted the way the kinematic one is. And the default ground's own
+/// rule (<see cref="SlideArenaSpace"/>, Open Decision #25): a step stops at the man it meets, keeps its
+/// sideways part, is not held by a man it walks away from or by one who has left, and holds no fleer.
 /// </remarks>
 public class ArenaSpaceTests
 {
@@ -30,16 +32,21 @@ public class ArenaSpaceTests
             TestBuilders.Warrior(103, "Tengu", health: 80, aggression: 70, evasion: 50),
         ]);
 
-    [Fact]
-    public void OneSpaceServesFightAfterFight()
+    [Theory]
+    [InlineData(ArenaGround.Slide)]
+    [InlineData(ArenaGround.Kinematic)]
+    public void OneSpaceServesFightAfterFight(ArenaGround ground)
     {
         // The first fight leaves men dead in the space; the second must not find them standing there.
-        var space = new KinematicArenaSpace(CombatTuning.Default);
-        BattleResult first = new Battle(ThreeVsThree(), new SeededRandom(5), space).Run();
+        IArenaSpace space = ground == ArenaGround.Slide
+            ? new SlideArenaSpace(CombatTuning.Default)
+            : new KinematicArenaSpace(CombatTuning.Default);
+        BattleSetup setup = ThreeVsThree() with { Tuning = CombatTuning.Default with { Ground = ground } };
+        BattleResult first = new Battle(setup, new SeededRandom(5), space).Run();
         Assert.Contains(first.Summaries, s => s.FinalState is CombatState.Dead);
 
-        BattleResult reused = new Battle(ThreeVsThree(), new SeededRandom(17), space).Run();
-        BattleResult fresh = new Battle(ThreeVsThree(), new SeededRandom(17)).Run();
+        BattleResult reused = new Battle(setup, new SeededRandom(17), space).Run();
+        BattleResult fresh = new Battle(setup, new SeededRandom(17)).Run();
 
         Assert.Equal(fresh.Outcome, reused.Outcome);
         Assert.Equal(fresh.ElapsedSeconds, reused.ElapsedSeconds, precision: 9);
@@ -82,6 +89,31 @@ public class ArenaSpaceTests
             int leftAt = space.Calls.IndexOf(("leave", body));
             Assert.DoesNotContain(space.Calls.Skip(leftAt), call => call == ("settle", body));
         }
+    }
+
+    /// <summary>The ground a fight is handed no space for is the one its tuning names, the slide by default.</summary>
+    [Fact]
+    public void TheTuningNamesTheGroundAndTheSlideIsTheDefault()
+    {
+        Assert.Equal(ArenaGround.Slide, CombatTuning.Default.Ground);
+
+        // Seeds where the two rules part: an unhanded fight follows its tuning's rule, not the other.
+        BattleSetup setup = ThreeVsThree() with { CollectEvents = false };
+        BattleSetup old = setup with { Tuning = CombatTuning.Default with { Ground = ArenaGround.Kinematic } };
+        int parted = 0;
+        for (ulong seed = 1; seed <= 40; seed++)
+        {
+            BattleResult byDefault = new Battle(setup, new SeededRandom(seed)).Run();
+            BattleResult slid = new Battle(setup, new SeededRandom(seed), new SlideArenaSpace(setup.Tuning)).Run();
+            BattleResult byOld = new Battle(old, new SeededRandom(seed)).Run();
+            BattleResult pushed = new Battle(old, new SeededRandom(seed), new KinematicArenaSpace(old.Tuning)).Run();
+
+            Assert.Equal(slid.Summaries, byDefault.Summaries);
+            Assert.Equal(pushed.Summaries, byOld.Summaries);
+            parted += slid.Summaries.SequenceEqual(pushed.Summaries) ? 0 : 1;
+        }
+
+        Assert.True(parted > 0, "no seed parted the two rules; the test reads nothing");
     }
 
     /// <summary>A man walking straight at another stops at his edge rather than passing into him.</summary>

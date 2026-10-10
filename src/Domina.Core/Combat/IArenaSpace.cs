@@ -16,8 +16,9 @@ namespace Domina.Core.Combat;
 /// man's position as the space last returned it, and reads distances off those positions.
 /// </para>
 /// <para>
-/// Today there are two: <see cref="KinematicArenaSpace"/>, the engine-free resolver's own kinematics
-/// (the default), and the engine's, built on the physics server. The resolver is the same over both.
+/// Today there are three: <see cref="SlideArenaSpace"/>, where a body stops at another and slides (the
+/// default, Open Decision #25); <see cref="KinematicArenaSpace"/>, the old push-out, kept for measuring; and
+/// the engine's, built on the physics server, which carries out the slide. The resolver is the same over all.
 /// </para>
 /// </remarks>
 public interface IArenaSpace
@@ -42,4 +43,17 @@ public interface IArenaSpace
 
     /// <summary>The man is off the field — dead, escaped or yielded — and stands in nobody's way.</summary>
     void Leave(int body);
+}
+
+/// <summary>The rule the bodies collide by on the engine-free ground (<see cref="CombatTuning.Ground"/>).</summary>
+public enum ArenaGround
+{
+    /// <summary>A body stops where it meets another and slides along it (<see cref="SlideArenaSpace"/>).</summary>
+    Slide,
+
+    /// <summary>
+    /// A man walks his whole step and is pushed out of whoever he walked into (<see cref="KinematicArenaSpace"/>):
+    /// the rule before 2026-10-02.
+    /// </summary>
+    Kinematic,
 }
