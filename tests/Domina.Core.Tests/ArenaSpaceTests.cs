@@ -84,6 +84,89 @@ public class ArenaSpaceTests
         }
     }
 
+    /// <summary>A man walking straight at another stops at his edge rather than passing into him.</summary>
+    [Fact]
+    public void AStepIntoAManStopsAtHisEdge()
+    {
+        var space = Ground(out double size);
+        space.Enter(0, new ArenaPoint(100, 100));
+        space.Enter(1, new ArenaPoint(200, 100));
+
+        ArenaPoint at = space.Settle(0, new ArenaPoint(180, 100), passing: false);
+
+        Assert.Equal(200 - size, at.X, precision: 9);
+        Assert.Equal(100, at.Y, precision: 9);
+    }
+
+    /// <summary>
+    /// A step that meets a man at a slant keeps its sideways part: he slides along the other's edge and
+    /// gets further than a stop, but never into him.
+    /// </summary>
+    [Fact]
+    public void AStepAtASlantSlidesAlongTheManItMeets()
+    {
+        var space = Ground(out double size);
+        var other = new ArenaPoint(200, 100);
+        space.Enter(0, new ArenaPoint(100, 90));
+        space.Enter(1, other);
+
+        ArenaPoint at = space.Settle(0, new ArenaPoint(160, 70), passing: false);
+
+        Assert.True(at.DistanceTo(other) >= size - 1e-9);
+        Assert.True(at.X > 200 - size - 30, "the step stopped dead instead of sliding");
+        Assert.True(at.Y < 90, "the slide did not keep the step's sideways part");
+    }
+
+    /// <summary>A man already overlapping another is put out of him first, and walking away is not blocked.</summary>
+    [Fact]
+    public void AnOverlappingManIsPutOutAndWalksAwayFreely()
+    {
+        var space = Ground(out double size);
+        space.Enter(0, new ArenaPoint(100, 100));
+        space.Enter(1, new ArenaPoint(110, 100));
+
+        ArenaPoint at = space.Settle(0, new ArenaPoint(80, 100), passing: false);
+
+        Assert.Equal(110 - size - 20, at.X, precision: 9);
+    }
+
+    /// <summary>A fleer passes through anyone and past the edge; everyone else is held by it.</summary>
+    [Fact]
+    public void AFleerPassesAndTheEdgeHoldsTheRest()
+    {
+        var space = Ground(out _);
+        space.Enter(0, new ArenaPoint(100, 100));
+        space.Enter(1, new ArenaPoint(130, 100));
+        space.Enter(2, new ArenaPoint(5, 400));
+
+        Assert.Equal(new ArenaPoint(160, 100), space.Settle(0, new ArenaPoint(160, 100), passing: true));
+        Assert.Equal(new ArenaPoint(-30, 400), space.Settle(2, new ArenaPoint(-30, 400), passing: true));
+
+        space.Leave(2);
+        space.Enter(2, new ArenaPoint(5, 400));
+        Assert.Equal(new ArenaPoint(0, 400), space.Settle(2, new ArenaPoint(-30, 400), passing: false));
+    }
+
+    /// <summary>A man who has left the field stands in nobody's way.</summary>
+    [Fact]
+    public void AManWhoLeftStopsNobody()
+    {
+        var space = Ground(out _);
+        space.Enter(0, new ArenaPoint(100, 100));
+        space.Enter(1, new ArenaPoint(200, 100));
+        space.Leave(1);
+
+        Assert.Equal(new ArenaPoint(200, 100), space.Settle(0, new ArenaPoint(200, 100), passing: false));
+    }
+
+    private static SlideArenaSpace Ground(out double size)
+    {
+        size = CombatTuning.Default.PersonalSpace;
+        var space = new SlideArenaSpace(CombatTuning.Default);
+        space.Begin(3);
+        return space;
+    }
+
     /// <summary>Lets nobody move: every step ends where it began.</summary>
     private sealed class FrozenSpace : IArenaSpace
     {
