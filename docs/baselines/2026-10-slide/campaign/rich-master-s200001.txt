@@ -1,0 +1,52 @@
+Scenario        : 3v3 - dojo team vs enemy team (3v3)
+Expedition run  : 1600 dojos x 180 days, party of 3, roster of 4
+Starting purse  : 600 gold
+Wall clock      : 43.01 s
+
+Prices
+  Victory reward         0.45 gold / enemy health
+  Armour piece           1.50 gold / durability
+  Repair                 0.90 gold / wear
+  Daily stock            food 2 / water 1 / medicine 12
+  Warrior purchase       150
+
+Treasury (per fight)
+  Income                 145.7
+  Kit spending           38.2
+  Replacements           11.0
+  Net                    37.5
+  Daily consumption      4.9 gold/day
+  Ending purse           1187 gold
+  Kept their capital     35.1%
+
+Calendar
+  Fights (per dojo)      98.1  victory 98.6%
+  Idle days              40.0% (the roster was not enough for an expedition)
+  Declined offers        37.2%
+  Mishaps                15.0% of days, 1.1 gold/day
+  Hungry days            13.7%
+  Infirmary days / fight 1.32
+  Enemy health / fight   172
+  Deaths / warrior-fight 3.7%
+  Weeks with no fight    4.3 per dojo  paid for 2.3  longest run 2.6  ending honour 52.6
+  Seppuku threshold      16.2% of dojos  first crossed on day 77
+  Heads / last night     27.16 heads  gate open 76.8%
+  The province           6.55 settlements held  raids 1.58  met 1.40 (won 89.6%)  sacked 0.16
+
+The last night
+  Played it              76.8% of dojos  won all five 26.8%
+  Bouts won              2.35 of 5  men sent 10.7  dead 1.24
+  Survived the bout      1: 59%  2: 92%  3: 93%  4: 69%  5: 99%
+
+Roster
+  Deaths (per dojo)      10.03
+  Warriors hired         9.76
+  Bounty hunts           32.01  heads taken 99.2%
+  Armour pieces broken   0.03
+  Weapon mastery         34.4% on the best man  ú  retired 1.30  ú  classed 3.56
+  Training days          269.9  best warrior 408 score (+21)
+  School facilities      16.5  4176 gold, chose a path 7.18, charms 746 gold, throwing stall 656 gold, the rack 0 gold
+  Posts filled           5.8  767 post-days
+  Beds at the end        8.8
+  Dojos closed           21.9%
+  Days survived          average 164, median 180

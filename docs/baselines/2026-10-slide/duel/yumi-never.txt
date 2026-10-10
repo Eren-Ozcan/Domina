@@ -1,0 +1,39 @@
+Scenario        : yumi - the range class with the bow - the class's own implement
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 3.09 s (6475 fights/s)
+Fight duration  : 23.2 s on average (in game)
+Longest fight   : 64.2 s (seed 704)
+
+Outcome
+  Victory                    16405  82.03%
+  Withdrawal                  2279  11.39%
+  Rout                        1316  6.58%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1316  6.58%
+  Escapes                     2279  11.39%
+  Limb losses                   40  0.20%
+    ú arm                       18  0.09%
+    ú leg                       16  0.08%
+    ú eye                        6  0.03%
+  Hit rate                  63.8%
+  Damage dealt/taken        3056695 / 1670720
+  Stuns (per warrior)       taken 0.00 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.44 blows met
+  Armour wear               32.7 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.08% (picked up 0.0%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.00  arrival 0.0%  free hits/charge 0.00
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.00 s, latest 0.00 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     16405  82.03%
+  Weapon dropped              1796  8.98%

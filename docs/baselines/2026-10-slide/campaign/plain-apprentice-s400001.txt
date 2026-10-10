@@ -1,0 +1,52 @@
+Scenario        : 3v3 - dojo team vs enemy team (3v3)
+Expedition run  : 1600 dojos x 180 days, party of 3, roster of 4
+Starting purse  : 600 gold
+Wall clock      : 62.67 s
+
+Prices
+  Victory reward         0.48 gold / enemy health
+  Armour piece           1.50 gold / durability
+  Repair                 0.90 gold / wear
+  Daily stock            food 2 / water 1 / medicine 12
+  Warrior purchase       150
+
+Treasury (per fight)
+  Income                 154.7
+  Kit spending           44.0
+  Replacements           7.1
+  Net                    56.8
+  Daily consumption      4.6 gold/day
+  Ending purse           2569 gold
+  Kept their capital     51.7%
+
+Calendar
+  Fights (per dojo)      114.0  victory 98.9%
+  Idle days              32.7% (the roster was not enough for an expedition)
+  Declined offers        30.3%
+  Mishaps                15.1% of days, 1.8 gold/day
+  Hungry days            9.2%
+  Infirmary days / fight 1.27
+  Enemy health / fight   165
+  Deaths / warrior-fight 2.7%
+  Weeks with no fight    3.2 per dojo  paid for 1.8  longest run 2.0  ending honour 61.9
+  Seppuku threshold      16.4% of dojos  first crossed on day 66
+  Heads / last night     32.26 heads  gate open 83.7%
+  The province           7.01 settlements held  raids 1.71  met 1.56 (won 93.8%)  sacked 0.13
+
+The last night
+  Played it              83.7% of dojos  won all five 35.5%
+  Bouts won              2.88 of 5  men sent 12.6  dead 1.27
+  Survived the bout      1: 72%  2: 94%  3: 91%  4: 70%  5: 98%
+
+Roster
+  Deaths (per dojo)      8.40
+  Warriors hired         7.30
+  Bounty hunts           35.52  heads taken 99.3%
+  Armour pieces broken   0.03
+  Weapon mastery         48.4% on the best man  ú  retired 0.00  ú  classed 0.00
+  Training days          337.2  best warrior 472 score (+85)
+  School facilities      18.9  5004 gold, chose a path 6.36, charms 0 gold, throwing stall 0 gold, the rack 0 gold
+  Posts filled           7.0  985 post-days
+  Beds at the end        9.2
+  Dojos closed           15.3%
+  Days survived          average 169, median 180

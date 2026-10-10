@@ -1,0 +1,39 @@
+Scenario        : katana-heavy - the control for jitte-heavy: the same enemy, with a katana
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 2.17 s (9229 fights/s)
+Fight duration  : 18.1 s on average (in game)
+Longest fight   : 62.6 s (seed 12464)
+
+Outcome
+  Victory                     4860  24.30%
+  Withdrawal                  1507  7.54%
+  Rout                       13633  68.16%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                     13633  68.16%
+  Escapes                     1507  7.54%
+  Limb losses                 2027  10.13%
+    ú arm                      672  3.36%
+    ú leg                      901  4.50%
+    ú eye                      538  2.69%
+  Hit rate                  67.0%
+  Damage dealt/taken        2251928 / 2579505
+  Stuns (per warrior)       taken 0.21 / inflicted 0.02
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               25.3 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 3.31% (picked up 3.2%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 97.0%  free hits/charge 1.23
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.76 s, latest 22.20 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                      4860  24.30%
+  Weapon dropped              1397  6.98%

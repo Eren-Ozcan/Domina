@@ -1,0 +1,39 @@
+Scenario        : thrown-kyudo - the same fight, the master of the range class - the throwing hand
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 3.16 s (6327 fights/s)
+Fight duration  : 24.2 s on average (in game)
+Longest fight   : 66.2 s (seed 1928)
+
+Outcome
+  Victory                    15157  75.78%
+  Withdrawal                  2982  14.91%
+  Rout                        1861  9.30%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1861  9.30%
+  Escapes                     2982  14.91%
+  Limb losses                   43  0.21%
+    ú arm                       13  0.07%
+    ú leg                       22  0.11%
+    ú eye                        8  0.04%
+  Hit rate                  62.2%
+  Damage dealt/taken        2993318 / 1807197
+  Stuns (per warrior)       taken 0.01 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               34.2 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.18% (picked up 8.6%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.00  arrival 0.0%  free hits/charge 0.00
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.00 s, latest 0.00 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     15157  75.78%
+  Weapon dropped              1868  9.34%

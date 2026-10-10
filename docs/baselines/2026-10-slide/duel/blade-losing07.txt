@@ -1,0 +1,39 @@
+Scenario        : blade - blade master vs oni (1v1) - the cutting end of the blunt/cutting trade
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 2.46 s (8146 fights/s)
+Fight duration  : 16.1 s on average (in game)
+Longest fight   : 63.0 s (seed 766)
+
+Outcome
+  Victory                    18599  93.00%
+  Withdrawal                   939  4.70%
+  Rout                         462  2.31%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                       462  2.31%
+  Escapes                      939  4.70%
+  Limb losses                   76  0.38%
+    ú arm                       22  0.11%
+    ú leg                       31  0.15%
+    ú eye                       23  0.11%
+  Hit rate                  71.5%
+  Damage dealt/taken        3234188 / 1324350
+  Stuns (per warrior)       taken 0.01 / inflicted 0.24
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.15 blows met
+  Armour wear               22.8 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.17% (picked up 5.9%) / inflicted (per warrior) 0.04
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 0.12
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.75 s, latest 6.00 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     18599  93.00%
+  Weapon dropped              1938  9.69%

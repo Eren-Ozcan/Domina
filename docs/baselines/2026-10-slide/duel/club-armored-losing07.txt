@@ -1,0 +1,39 @@
+Scenario        : club-armored - the same fight with a blunt weapon - steel striking plate
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 3.78 s (5294 fights/s)
+Fight duration  : 29.6 s on average (in game)
+Longest fight   : 102.8 s (seed 2818)
+
+Outcome
+  Victory                    15621  78.11%
+  Withdrawal                  2791  13.96%
+  Rout                        1588  7.94%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1588  7.94%
+  Escapes                     2791  13.96%
+  Limb losses                   94  0.47%
+    ú arm                       31  0.15%
+    ú leg                       38  0.19%
+    ú eye                       25  0.12%
+  Hit rate                  64.7%
+  Damage dealt/taken        3012179 / 1626481
+  Stuns (per warrior)       taken 0.01 / inflicted 0.61
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.20 blows met
+  Armour wear               30.7 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 3.47% (picked up 15.7%) / inflicted (per warrior) 0.09
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 99.9%  free hits/charge 0.38
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.87 s, latest 53.95 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     15621  78.11%
+  Weapon dropped              3335  16.68%

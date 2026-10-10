@@ -1,0 +1,39 @@
+Scenario        : torite-katana - a catching warrior holding a katana - the product's soft end
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 3.12 s (6407 fights/s)
+Fight duration  : 24.6 s on average (in game)
+Longest fight   : 68.7 s (seed 6880)
+
+Outcome
+  Victory                    14722  73.61%
+  Withdrawal                  3060  15.30%
+  Rout                        2218  11.09%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      2218  11.09%
+  Escapes                     3060  15.30%
+  Limb losses                   87  0.43%
+    ú arm                       32  0.16%
+    ú leg                       37  0.18%
+    ú eye                       18  0.09%
+  Hit rate                  63.6%
+  Damage dealt/taken        2997753 / 1818060
+  Stuns (per warrior)       taken 0.01 / inflicted 0.02
+  Catches (per warrior)     made 0.15 / suffered 0.00
+  Blocks (per warrior)      0.46 blows met
+  Armour wear               36.2 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.13% (picked up 19.2%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 1.02
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.75 s, latest 25.15 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     14722  73.61%
+  Weapon dropped              2114  10.57%

@@ -1,0 +1,39 @@
+Scenario        : poison-unclassed - the same poisoned knife with no class - the reduced dose
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 3.10 s (6450 fights/s)
+Fight duration  : 24.0 s on average (in game)
+Longest fight   : 61.7 s (seed 8025)
+
+Outcome
+  Victory                    15956  79.78%
+  Withdrawal                  2401  12.01%
+  Rout                        1643  8.21%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1643  8.21%
+  Escapes                     2401  12.01%
+  Limb losses                   97  0.48%
+    ú arm                       30  0.15%
+    ú leg                       42  0.21%
+    ú eye                       25  0.12%
+  Hit rate                  63.1%
+  Damage dealt/taken        2885186 / 1737360
+  Stuns (per warrior)       taken 0.01 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.22 blows met
+  Armour wear               32.3 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.19% (picked up 12.8%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 6.56
+  Poison damage             dealt 1895426 (65.7%) / taken 172
+  Poison deaths             4 (0.2% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 0.95
+    ú scattered in windup  0.0%
+    ú launch moment        average 0.76 s, latest 38.45 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     15956  79.78%
+  Weapon dropped              1741  8.71%
