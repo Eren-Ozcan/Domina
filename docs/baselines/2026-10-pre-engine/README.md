@@ -29,6 +29,10 @@ docs/baselines/2026-10-pre-engine/run-baseline.sh <dir>/Domina.Sim.exe <out-fold
 python docs/baselines/2026-10-pre-engine/summarise.py <out-folder>
 ```
 
+Since Open Decision #25 closed (2026-10-02) the default ground is the slide; this folder reads back with
+`EXTRA='--ground kinematic'` before the script (104 of 104 reports, checked that day), and the slide's own
+reading is `../2026-10-slide/`.
+
 The resolver is deterministic, so on this build every report reproduces line for line except its
 wall clock. The whole set took 166 s with twelve runs in parallel on a 16-thread machine.
 
