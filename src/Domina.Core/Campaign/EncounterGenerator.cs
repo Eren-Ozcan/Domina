@@ -47,8 +47,17 @@ public sealed record EncounterTuning
     /// close 26.4 / 31.0 / 31.5 / 34.6%, the last night is won 19.3 / 16.0 / 13.6 / 11.0% and the net
     /// per fight 43.7 / 41.0 / 39.5 / 35.9. <b>0.011 is the rung that lands on the locked 4.7%</b>, and
     /// it lands on the tenth round's re-locked closure figure (30.4%) with it — the two anchors agree.
+    ///
+    /// <b>0.0092 since 2026-10-02</b>, when real collision became the fight's ground (Open Decision #25):
+    /// a body that stops where it meets another costs the larger side part of its numbers, and in the
+    /// campaign that cost fell on the dojo: the season the user kept after #24 lost 8.9 points of last night and
+    /// rose to 4.53% deaths per warrior-fight on the rich bed. Swept there (six seeds × 1600 dojos × 180
+    /// days, night power 1.0): at 0.0092 / 0.0094 / 0.0096 deaths run <b>3.65</b> / 3.75 / 3.85% and the last
+    /// night is won 28.0 / 27.1 / 26.0%, against the 3.60% and 29.1% #24 left. <b>0.0092 is the rung that
+    /// gives both back</b>; the user's call, over adding a ×0.97 on the night's power. What it does not give
+    /// back is the rich bed's net per fight (38.6 against 41.9: a weaker enemy pays less).
     /// </remarks>
-    public double PowerPerDay { get; init; } = 0.011;
+    public double PowerPerDay { get; init; } = 0.0092;
 
     /// <summary>The curve's ceiling — it does not harden forever.</summary>
     /// <remarks>

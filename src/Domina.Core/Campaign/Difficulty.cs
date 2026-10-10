@@ -71,6 +71,13 @@ public sealed record Difficulty(
     /// night, against 1.66x on the previous curve) but every column still separates cleanly, so the
     /// multipliers were not touched.
     /// </para>
+    /// <para>
+    /// <b>Read a fourth time (2026-10-02, six seeds x 1600 dojos on the rich bed) after real collision
+    /// became the ground (Open Decision #25) and the curve went to 0.0092:</b> 37.1% of last nights won
+    /// against Master's 28.0%, 14.8% of dojos closed against 22.1%, net +46.1 against +38.6, deaths 2.8%
+    /// against 3.7%. The gap narrowed again (1.33x Master's night) and every column still separates.
+    /// Unchanged.
+    /// </para>
     /// </remarks>
     public static Difficulty Apprentice { get; } = new(DifficultyTier.Apprentice, 0.93, 1.07, 0.42);
 
@@ -96,6 +103,12 @@ public sealed record Difficulty(
     /// <b>+22.4</b> a fight, deaths 5.2% per warrior-fight and a best man at 15.0% mastery. The floor
     /// rose again with the season's new income, and the tier still sits at less than half Master's
     /// night on nearly a third more closures. Unchanged.
+    /// </para>
+    /// <para>
+    /// <b>The fourth reading (2026-10-02):</b> 16.6% of last nights won, 29.3% of dojos closed, net
+    /// <b>+27.7</b> a fight, deaths 4.8% per warrior-fight and a best man at 23.1% mastery. The floor rose a
+    /// third time; the tier still wins under two thirds of Master's night on a third more closures.
+    /// Unchanged.
     /// </para>
     /// </remarks>
     public static Difficulty Legend { get; } = new(DifficultyTier.Legend, 1.07, 0.93, 0.58);
