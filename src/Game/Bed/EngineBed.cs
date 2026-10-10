@@ -5,6 +5,7 @@ using System.Text;
 using Domina.Core.Combat;
 using Domina.Game.Combat;
 using Domina.Presentation;
+using Domina.Sim;
 using Godot;
 
 namespace Domina.Game.Bed;
@@ -34,6 +35,10 @@ namespace Domina.Game.Bed;
 /// <c>--fighter engine</c> is the same resolver carrying out its steps on Godot's physics server
 /// (<see cref="GodotArenaSpace"/>) — Phase B's first slice. The two resolver fighters fight the arena's
 /// demo roster.
+/// </para>
+/// <para>
+/// <b>The sim's measurement.</b> <c>--sim</c> hands the rest of the command line to <c>Domina.Sim</c>, and
+/// the sim's duel bed or campaign asks the bed's resolver fighter for its fights (<see cref="RunSim"/>).
 /// </para>
 /// </remarks>
 public sealed partial class EngineBed : Node
@@ -67,12 +72,21 @@ public sealed partial class EngineBed : Node
         }
 
         Engine.PhysicsTicksPerSecond = (int)Math.Round(1.0 / TrivialFight.TickSeconds);
-        _records = new FightRecord[_options.Fights];
 
         GD.Print($"engine bed - {_options.Describe()}");
         GD.Print($"build: Godot {Engine.GetVersionInfo()["string"]}, .NET {System.Environment.Version}; optimised: "
             + $"Domina.Game {Optimised(typeof(EngineBed))}, Domina.Core {Optimised(typeof(Battle))}, "
-            + $"GodotSharp {Optimised(typeof(Node))} ({typeof(Node).Assembly.Location})");
+            + $"Domina.Sim {Optimised(typeof(SimCli))}, GodotSharp {Optimised(typeof(Node))} ({typeof(Node).Assembly.Location})");
+
+        if (_options.Sim is not null)
+        {
+            // The sim's measurement runs in the first frame, as the manual lane does.
+            SetProcess(true);
+            SetPhysicsProcess(false);
+            return;
+        }
+
+        _records = new FightRecord[_options.Fights];
 
         _kit = _options.Fighter == BedFighter.Trivial ? new TrivialKit() : null;
         _costs = _options.Profile ? new FightCosts() : null;
@@ -112,6 +126,12 @@ public sealed partial class EngineBed : Node
 
         _manualRan = true;
         _started = Stopwatch.GetTimestamp();
+
+        if (_options.Sim is not null)
+        {
+            RunSim(_options.Sim);
+            return;
+        }
 
         Slot slot = _slots[0];
         for (int i = 0; i < _options.Fights; i++)
@@ -277,6 +297,49 @@ public sealed partial class EngineBed : Node
     }
 
     private ulong SeedOf(int fightIndex) => _options.FirstSeed + (ulong)fightIndex;
+
+    /// <summary>
+    /// The sim's own measurement — a duel bed or a campaign — with its fights fought by the bed's fighter.
+    /// </summary>
+    /// <remarks>
+    /// This is the parity bed of docs/PLAN-ENGINE-RESOLUTION.md: the same command line that wrote the
+    /// pre-engine baseline, run once over the resolver's own kinematics inside this runtime (which has to
+    /// give the baseline back line for line) and once over the engine's ground.
+    /// </remarks>
+    private void RunSim(IReadOnlyList<string> arguments)
+    {
+        using GodotFightRunner? engine = _options.Fighter == BedFighter.Engine ? new GodotFightRunner(_options.Motion) : null;
+        IFightRunner fighter = engine is null ? CoreFightRunner.Instance : engine;
+        var error = new StringWriter();
+        int exit;
+
+        if (_options.ReportPath is { } path)
+        {
+            using var report = new StreamWriter(path) { NewLine = "\n" };
+            exit = SimCli.Run(arguments, report, error, fighter);
+        }
+        else
+        {
+            using var report = new StringWriter { NewLine = "\n" };
+            exit = SimCli.Run(arguments, report, error, fighter);
+            GD.Print(report.ToString().TrimEnd());
+        }
+
+        if (error.GetStringBuilder().Length > 0)
+        {
+            GD.PrintErr(error.ToString().TrimEnd());
+        }
+
+        double seconds = Stopwatch.GetElapsedTime(_started).TotalSeconds;
+        if (engine is { Fights: > 0 })
+        {
+            GD.Print($"fights {engine.Fights}; motion tests {engine.MotionTests} ({(double)engine.MotionTests / engine.Fights:F1} a fight), "
+                + $"places handed to the server {engine.Handovers} ({(double)engine.Handovers / engine.Fights:F1} a fight)");
+        }
+
+        GD.Print($"RESULT {_options.Describe()} exit={exit} seconds={seconds:F3}");
+        Stop(exit);
+    }
 
     private void Report()
     {

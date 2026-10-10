@@ -57,6 +57,11 @@ internal enum BedBlade
 }
 
 /// <summary>The engine bed's command line (the arguments after Godot's <c>--</c>).</summary>
+/// <param name="Sim">
+/// The sim's own arguments, everything after <c>--sim</c>: the bed runs that measurement over its
+/// fighter instead of a sweep of its own. Null for the bed's own sweep.
+/// </param>
+/// <param name="ReportPath">Where the sim's report is written; the console if left out.</param>
 internal sealed record BedOptions(
     BedFighter Fighter,
     BedLane Lane,
@@ -69,15 +74,19 @@ internal sealed record BedOptions(
     int Slots,
     bool Rebuild,
     bool Profile,
-    string? DigestPath)
+    string? DigestPath,
+    IReadOnlyList<string>? Sim,
+    string? ReportPath)
 {
     public const string Usage =
         "engine bed: -- [--fighter trivial|core|engine] [--lane manual|frame] [--body static|character] "
         + "[--clip mixer|keys] [--blade query|shape] [--motion every|contact] [--fights N] [--seed S] [--slots K] [--rebuild] [--profile] [--digest <file>]\n"
-        + "  the frame lane needs Godot's own --fixed-fps 20 before the --, or it runs in real time";
+        + "  the frame lane needs Godot's own --fixed-fps 20 before the --, or it runs in real time\n"
+        + "engine bed, the sim's measurement: -- --fighter core|engine [--motion every|contact] [--report <file>] --sim <the sim's arguments>";
 
     public static BedOptions Default { get; } = new(
-        BedFighter.Trivial, BedLane.Manual, BedBody.Static, BedClip.Keys, BedBlade.Shape, ArenaMotion.Contact, 10_000, 1, 256, false, false, null);
+        BedFighter.Trivial, BedLane.Manual, BedBody.Static, BedClip.Keys, BedBlade.Shape, ArenaMotion.Contact, 10_000, 1, 256, false, false, null,
+        null, null);
 
     /// <summary>Reads the arguments; an unknown or malformed one is an error, never a silent default.</summary>
     public static BedOptions Parse(IReadOnlyList<string> arguments, out string? error)
@@ -123,6 +132,12 @@ internal sealed record BedOptions(
                 case "--digest" when !string.IsNullOrEmpty(value):
                     options = options with { DigestPath = value };
                     break;
+                case "--report" when !string.IsNullOrEmpty(value):
+                    options = options with { ReportPath = value };
+                    break;
+                case "--sim":
+                    // Everything after it is the sim's: its switches are its own and are read by it.
+                    return Checked(options with { Sim = [.. arguments.Skip(i + 1)] }, out error);
                 case "--rebuild":
                     options = options with { Rebuild = true };
                     takesValue = false;
@@ -142,15 +157,46 @@ internal sealed record BedOptions(
             }
         }
 
-        if (options.Rebuild && options.Fighter != BedFighter.Trivial)
+        return Checked(options, out error);
+    }
+
+    /// <summary>The combinations that cannot be run, refused.</summary>
+    private static BedOptions Checked(BedOptions options, out string? error)
+    {
+        error = null;
+
+        if (options.Sim is null)
         {
-            error = "--rebuild is the stand-in fight's: the resolver's space is pooled";
+            if (options.Rebuild && options.Fighter != BedFighter.Trivial)
+            {
+                error = "--rebuild is the stand-in fight's: the resolver's space is pooled";
+            }
+            else if (options.ReportPath is not null)
+            {
+                error = "--report is the sim's report: it needs --sim";
+            }
+
+            return options;
+        }
+
+        if (options.Fighter == BedFighter.Trivial)
+        {
+            error = "--sim needs a resolver to fight its fights: --fighter core or --fighter engine";
+        }
+        else if (options with { Fighter = Default.Fighter, Motion = Default.Motion, Sim = null, ReportPath = null } != Default)
+        {
+            // The sim's run has its own fight count, seeds and lane; a sweep switch of the bed's would be
+            // silently ignored.
+            error = "with --sim the bed reads only --fighter, --motion and --report; the rest is the sim's";
         }
 
         return options;
     }
 
-    public string Describe() => (Fighter == BedFighter.Trivial
+    public string Describe() => Sim is not null
+        ? $"fighter={Fighter}{(Fighter == BedFighter.Engine ? $" motion={Motion}" : string.Empty)} sim".ToLowerInvariant()
+            + $" \"{string.Join(' ', Sim)}\""
+        : (Fighter == BedFighter.Trivial
         ? $"fighter=trivial lane={Lane} body={Body} clip={Clip} blade={Blade} slots={(Lane == BedLane.Frame ? Slots : 1)} "
             + $"rebuild={(Rebuild ? "yes" : "no")}"
         : $"fighter={Fighter} lane={Lane}{(Fighter == BedFighter.Engine ? $" motion={Motion}" : string.Empty)} "

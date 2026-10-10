@@ -74,7 +74,18 @@ tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64_console.exe --he
 `--fighter core` runs the engine-free resolver inside Godot, `--fighter engine` runs the same resolver
 with its movement on Godot's physics server, `--lane frame` lets the engine's physics loop step the
 fights (it needs Godot's `--fixed-fps 20` before the `--`), `--profile` splits the time. Two runs are the
-same only if their `--digest` files are. The readings and their scripts are in `docs/engine-bed/`.
+same only if their `--digest` files are. `--sim` hands the rest of the line to `Domina.Sim` and fights
+its measurement with the chosen resolver — the parity bed, which reads the engine against the baseline:
+
+```bash
+tools/Godot_v4.7-stable_mono_win64/Godot_v4.7-stable_mono_win64_console.exe --headless \
+  --path src/Game res://Bed/engine_bed.tscn -- --fighter engine --report "$PWD/out.txt" \
+  --sim --scenario ambush --battles 20000
+```
+
+`--report` wants an absolute path: Godot's `--path` moves the working directory into the project.
+
+The readings and their scripts are in `docs/engine-bed/`.
 
 ### Running the game
 
