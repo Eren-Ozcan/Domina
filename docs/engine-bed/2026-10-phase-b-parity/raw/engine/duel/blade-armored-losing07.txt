@@ -1,0 +1,39 @@
+Scenario        : blade-armored — blade master vs armoured oni — disarming's cutting end
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 11.82 s (1692 fights/s)
+Fight duration  : 25.5 s on average (in game)
+Longest fight   : 112.0 s (seed 16014)
+
+Outcome
+  Victory                    16162  80.81%
+  Withdrawal                  2338  11.69%
+  Rout                        1500  7.50%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      1500  7.50%
+  Escapes                     2338  11.69%
+  Limb losses                  101  0.51%
+    · arm                       32  0.16%
+    · leg                       41  0.21%
+    · eye                       29  0.14%
+  Hit rate                  65.3%
+  Damage dealt/taken        3041147 / 1541451
+  Stuns (per warrior)       taken 0.01 / inflicted 0.14
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.22 blows met
+  Armour wear               27.4 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 13.35% (picked up 10.8%) / inflicted (per warrior) 0.02
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 99.9%  free hits/charge 0.33
+    · scattered in windup  0.0%
+    · launch moment        average 1.06 s, latest 62.50 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                     16162  80.81%
+  Weapon dropped              1944  9.72%

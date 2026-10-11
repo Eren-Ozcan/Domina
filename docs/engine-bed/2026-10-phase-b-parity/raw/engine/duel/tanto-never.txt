@@ -1,0 +1,39 @@
+Scenario        : tanto — short-knife master vs oni (1v1) — the control for poison
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 8.15 s (2453 fights/s)
+Fight duration  : 32.5 s on average (in game)
+Longest fight   : 98.3 s (seed 8168)
+
+Outcome
+  Victory                     5262  26.31%
+  Withdrawal                  7024  35.12%
+  Rout                        7714  38.57%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                      7714  38.57%
+  Escapes                     7024  35.12%
+  Limb losses                   97  0.48%
+    · arm                       30  0.15%
+    · leg                       42  0.21%
+    · eye                       25  0.12%
+  Hit rate                  60.2%
+  Damage dealt/taken        2347673 / 2343880
+  Stuns (per warrior)       taken 0.01 / inflicted 0.00
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.20 blows met
+  Armour wear               49.2 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.19% (picked up 12.8%) / inflicted (per warrior) 0.00
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.44  arrival 100.0%  free hits/charge 1.62
+    · scattered in windup  0.0%
+    · launch moment        average 0.76 s, latest 38.45 s
+
+Enemy side (20000 warrior-fights)
+  Deaths                      5262  26.31%
+  Weapon dropped              2496  12.48%

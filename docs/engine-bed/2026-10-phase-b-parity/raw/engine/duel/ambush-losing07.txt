@@ -1,0 +1,39 @@
+Scenario        : ambush — a veteran is ambushed (1v3)
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : pull out when outnumbered and health falls below 70%
+Kit             : from the scenario
+Wall clock      : 54.90 s (364 fights/s)
+Fight duration  : 11.0 s on average (in game)
+Longest fight   : 57.9 s (seed 307)
+
+Outcome
+  Victory                      165  0.83%
+  Withdrawal                 18918  94.59%
+  Rout                         917  4.58%
+  Stalled (anomaly)              0  0.00%
+
+Player side (20000 warrior-fights)
+  Deaths                       917  4.58%
+  Escapes                    18918  94.59%
+  Limb losses                   50  0.25%
+    · arm                       15  0.07%
+    · leg                       35  0.18%
+    · eye                        0  0.00%
+  Hit rate                  69.9%
+  Damage dealt/taken        1389579 / 1656951
+  Stuns (per warrior)       taken 0.00 / inflicted 0.10
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.14 blows met
+  Armour wear               78.8 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 0.06% (picked up 0.0%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       0.42  arrival 91.9%  free hits/charge 5.43
+    · scattered in windup  0.0%
+    · launch moment        average 0.75 s, latest 0.75 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                      6682  11.14%
+  Weapon dropped              3848  6.41%

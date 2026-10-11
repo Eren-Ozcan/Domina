@@ -1,0 +1,208 @@
+campaign-plain-apprentice-s1.txt:fights 170051; motion tests 29327677 (172.5 a fight), places handed to the server 20386260 (119.9 a fight)
+campaign-plain-apprentice-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 1" exit=0 seconds=268.477
+campaign-plain-apprentice-s100001.txt:fights 166378; motion tests 28619349 (172.0 a fight), places handed to the server 19887180 (119.5 a fight)
+campaign-plain-apprentice-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 100001" exit=0 seconds=262.677
+campaign-plain-apprentice-s200001.txt:fights 168998; motion tests 28801138 (170.4 a fight), places handed to the server 20052743 (118.7 a fight)
+campaign-plain-apprentice-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 200001" exit=0 seconds=264.929
+campaign-plain-apprentice-s300001.txt:fights 170117; motion tests 29594076 (174.0 a fight), places handed to the server 20523072 (120.6 a fight)
+campaign-plain-apprentice-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 300001" exit=0 seconds=274.637
+campaign-plain-apprentice-s400001.txt:fights 168885; motion tests 29323558 (173.6 a fight), places handed to the server 20316931 (120.3 a fight)
+campaign-plain-apprentice-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 400001" exit=0 seconds=271.297
+campaign-plain-apprentice-s500001.txt:fights 168012; motion tests 28718698 (170.9 a fight), places handed to the server 19988575 (119.0 a fight)
+campaign-plain-apprentice-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty apprentice --seed 500001" exit=0 seconds=261.854
+campaign-plain-legend-s1.txt:fights 104235; motion tests 18472073 (177.2 a fight), places handed to the server 12701995 (121.9 a fight)
+campaign-plain-legend-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 1" exit=0 seconds=200.751
+campaign-plain-legend-s100001.txt:fights 101131; motion tests 17686347 (174.9 a fight), places handed to the server 12212970 (120.8 a fight)
+campaign-plain-legend-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 100001" exit=0 seconds=196.465
+campaign-plain-legend-s200001.txt:fights 102164; motion tests 17805081 (174.3 a fight), places handed to the server 12287204 (120.3 a fight)
+campaign-plain-legend-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 200001" exit=0 seconds=191.096
+campaign-plain-legend-s300001.txt:fights 104455; motion tests 18352477 (175.7 a fight), places handed to the server 12653737 (121.1 a fight)
+campaign-plain-legend-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 300001" exit=0 seconds=196.370
+campaign-plain-legend-s400001.txt:fights 103039; motion tests 18100156 (175.7 a fight), places handed to the server 12467941 (121.0 a fight)
+campaign-plain-legend-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 400001" exit=0 seconds=194.848
+campaign-plain-legend-s500001.txt:fights 105437; motion tests 18808808 (178.4 a fight), places handed to the server 12922897 (122.6 a fight)
+campaign-plain-legend-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty legend --seed 500001" exit=0 seconds=200.011
+campaign-plain-master-s1.txt:fights 139973; motion tests 25112200 (179.4 a fight), places handed to the server 17242882 (123.2 a fight)
+campaign-plain-master-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 1" exit=0 seconds=250.619
+campaign-plain-master-s100001.txt:fights 134546; motion tests 24029836 (178.6 a fight), places handed to the server 16515512 (122.7 a fight)
+campaign-plain-master-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 100001" exit=0 seconds=241.830
+campaign-plain-master-s200001.txt:fights 137741; motion tests 24743207 (179.6 a fight), places handed to the server 16981629 (123.3 a fight)
+campaign-plain-master-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 200001" exit=0 seconds=248.919
+campaign-plain-master-s300001.txt:fights 136391; motion tests 24216873 (177.6 a fight), places handed to the server 16680880 (122.3 a fight)
+campaign-plain-master-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 300001" exit=0 seconds=249.362
+campaign-plain-master-s400001.txt:fights 135144; motion tests 23732558 (175.6 a fight), places handed to the server 16384751 (121.2 a fight)
+campaign-plain-master-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 400001" exit=0 seconds=242.626
+campaign-plain-master-s500001.txt:fights 136097; motion tests 24491573 (180.0 a fight), places handed to the server 16802924 (123.5 a fight)
+campaign-plain-master-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --difficulty master --seed 500001" exit=0 seconds=251.010
+campaign-rich-apprentice-s1.txt:fights 167432; motion tests 23202608 (138.6 a fight), places handed to the server 17290007 (103.3 a fight)
+campaign-rich-apprentice-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 1" exit=0 seconds=213.460
+campaign-rich-apprentice-s100001.txt:fights 166357; motion tests 23150458 (139.2 a fight), places handed to the server 17215630 (103.5 a fight)
+campaign-rich-apprentice-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 100001" exit=0 seconds=211.818
+campaign-rich-apprentice-s200001.txt:fights 166138; motion tests 22921128 (138.0 a fight), places handed to the server 17087158 (102.8 a fight)
+campaign-rich-apprentice-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 200001" exit=0 seconds=210.577
+campaign-rich-apprentice-s300001.txt:fights 167653; motion tests 23318728 (139.1 a fight), places handed to the server 17316580 (103.3 a fight)
+campaign-rich-apprentice-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 300001" exit=0 seconds=215.788
+campaign-rich-apprentice-s400001.txt:fights 165323; motion tests 22413316 (135.6 a fight), places handed to the server 16800709 (101.6 a fight)
+campaign-rich-apprentice-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 400001" exit=0 seconds=206.411
+campaign-rich-apprentice-s500001.txt:fights 166110; motion tests 22915615 (138.0 a fight), places handed to the server 17079971 (102.8 a fight)
+campaign-rich-apprentice-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty apprentice --seed 500001" exit=0 seconds=211.961
+campaign-rich-legend-s1.txt:fights 105553; motion tests 14624713 (138.6 a fight), places handed to the server 10839355 (102.7 a fight)
+campaign-rich-legend-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 1" exit=0 seconds=165.065
+campaign-rich-legend-s100001.txt:fights 103774; motion tests 14273131 (137.5 a fight), places handed to the server 10596997 (102.1 a fight)
+campaign-rich-legend-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 100001" exit=0 seconds=159.338
+campaign-rich-legend-s200001.txt:fights 103194; motion tests 14093040 (136.6 a fight), places handed to the server 10480492 (101.6 a fight)
+campaign-rich-legend-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 200001" exit=0 seconds=158.306
+campaign-rich-legend-s300001.txt:fights 105421; motion tests 14599266 (138.5 a fight), places handed to the server 10823282 (102.7 a fight)
+campaign-rich-legend-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 300001" exit=0 seconds=164.471
+campaign-rich-legend-s400001.txt:fights 102122; motion tests 13929187 (136.4 a fight), places handed to the server 10352051 (101.4 a fight)
+campaign-rich-legend-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 400001" exit=0 seconds=153.888
+campaign-rich-legend-s500001.txt:fights 105514; motion tests 14520465 (137.6 a fight), places handed to the server 10777689 (102.1 a fight)
+campaign-rich-legend-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty legend --seed 500001" exit=0 seconds=156.962
+campaign-rich-master-s1.txt:fights 136431; motion tests 19043578 (139.6 a fight), places handed to the server 14131717 (103.6 a fight)
+campaign-rich-master-s1.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 1" exit=0 seconds=190.820
+campaign-rich-master-s100001.txt:fights 137372; motion tests 19461368 (141.7 a fight), places handed to the server 14392838 (104.8 a fight)
+campaign-rich-master-s100001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 100001" exit=0 seconds=196.031
+campaign-rich-master-s200001.txt:fights 136487; motion tests 19424859 (142.3 a fight), places handed to the server 14320694 (104.9 a fight)
+campaign-rich-master-s200001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 200001" exit=0 seconds=196.708
+campaign-rich-master-s300001.txt:fights 138540; motion tests 19451967 (140.4 a fight), places handed to the server 14422282 (104.1 a fight)
+campaign-rich-master-s300001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 300001" exit=0 seconds=202.834
+campaign-rich-master-s400001.txt:fights 134656; motion tests 18675383 (138.7 a fight), places handed to the server 13878042 (103.1 a fight)
+campaign-rich-master-s400001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 400001" exit=0 seconds=195.104
+campaign-rich-master-s500001.txt:fights 136513; motion tests 19250241 (141.0 a fight), places handed to the server 14238086 (104.3 a fight)
+campaign-rich-master-s500001.txt:RESULT fighter=engine motion=contact sim "--mode campaign --days 180 --campaigns 1600 --accept-ratio 2.0 --offers on --market on --school on --paths on --staff on --bounty on --province on --smith-upgrades on --standing on --charms on --thrown-fit everyone --retire maimed --class-fit torite --train-classes on --difficulty master --seed 500001" exit=0 seconds=201.950
+duel-3v3-armored-losing07.txt:fights 20000; motion tests 2084473 (104.2 a fight), places handed to the server 2229961 (111.5 a fight)
+duel-3v3-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=26.110
+duel-3v3-armored-never.txt:fights 20000; motion tests 2081890 (104.1 a fight), places handed to the server 2002810 (100.1 a fight)
+duel-3v3-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=26.447
+duel-3v3-jitte-losing07.txt:fights 20000; motion tests 1247233 (62.4 a fight), places handed to the server 1363713 (68.2 a fight)
+duel-3v3-jitte-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-jitte --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=15.374
+duel-3v3-jitte-never.txt:fights 20000; motion tests 1200431 (60.0 a fight), places handed to the server 1165369 (58.3 a fight)
+duel-3v3-jitte-never.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-jitte --battles 20000 --seed 1 --policy never" exit=0 seconds=14.796
+duel-3v3-losing07.txt:fights 20000; motion tests 1295431 (64.8 a fight), places handed to the server 1453732 (72.7 a fight)
+duel-3v3-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3 --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=16.831
+duel-3v3-never.txt:fights 20000; motion tests 1254403 (62.7 a fight), places handed to the server 1227884 (61.4 a fight)
+duel-3v3-never.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3 --battles 20000 --seed 1 --policy never" exit=0 seconds=16.596
+duel-3v3-poison-losing07.txt:fights 20000; motion tests 1314291 (65.7 a fight), places handed to the server 1505829 (75.3 a fight)
+duel-3v3-poison-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-poison --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=20.037
+duel-3v3-poison-never.txt:fights 20000; motion tests 1203093 (60.2 a fight), places handed to the server 1188287 (59.4 a fight)
+duel-3v3-poison-never.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-poison --battles 20000 --seed 1 --policy never" exit=0 seconds=17.507
+duel-3v3-torite-katana-losing07.txt:fights 20000; motion tests 1302410 (65.1 a fight), places handed to the server 1458168 (72.9 a fight)
+duel-3v3-torite-katana-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-torite-katana --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=16.221
+duel-3v3-torite-katana-never.txt:fights 20000; motion tests 1254008 (62.7 a fight), places handed to the server 1234861 (61.7 a fight)
+duel-3v3-torite-katana-never.txt:RESULT fighter=engine motion=contact sim "--scenario 3v3-torite-katana --battles 20000 --seed 1 --policy never" exit=0 seconds=15.268
+duel-ambush-losing07.txt:fights 20000; motion tests 7191876 (359.6 a fight), places handed to the server 6885432 (344.3 a fight)
+duel-ambush-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario ambush --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=54.955
+duel-ambush-never.txt:fights 20000; motion tests 6140394 (307.0 a fight), places handed to the server 5369264 (268.5 a fight)
+duel-ambush-never.txt:RESULT fighter=engine motion=contact sim "--scenario ambush --battles 20000 --seed 1 --policy never" exit=0 seconds=50.487
+duel-blade-armored-losing07.txt:fights 20000; motion tests 644826 (32.2 a fight), places handed to the server 648584 (32.4 a fight)
+duel-blade-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario blade-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=11.870
+duel-blade-armored-never.txt:fights 20000; motion tests 644826 (32.2 a fight), places handed to the server 648584 (32.4 a fight)
+duel-blade-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario blade-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=11.560
+duel-blade-losing07.txt:fights 20000; motion tests 161994 (8.1 a fight), places handed to the server 163919 (8.2 a fight)
+duel-blade-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario blade --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.283
+duel-blade-never.txt:fights 20000; motion tests 161994 (8.1 a fight), places handed to the server 163919 (8.2 a fight)
+duel-blade-never.txt:RESULT fighter=engine motion=contact sim "--scenario blade --battles 20000 --seed 1 --policy never" exit=0 seconds=4.306
+duel-club-armored-losing07.txt:fights 20000; motion tests 514315 (25.7 a fight), places handed to the server 518035 (25.9 a fight)
+duel-club-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario club-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=9.863
+duel-club-armored-never.txt:fights 20000; motion tests 514315 (25.7 a fight), places handed to the server 518035 (25.9 a fight)
+duel-club-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario club-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=9.578
+duel-club-losing07.txt:fights 20000; motion tests 392281 (19.6 a fight), places handed to the server 396372 (19.8 a fight)
+duel-club-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario club --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=6.874
+duel-club-never.txt:fights 20000; motion tests 392281 (19.6 a fight), places handed to the server 396372 (19.8 a fight)
+duel-club-never.txt:RESULT fighter=engine motion=contact sim "--scenario club --battles 20000 --seed 1 --policy never" exit=0 seconds=6.604
+duel-duel-losing07.txt:fights 20000; motion tests 102381 (5.1 a fight), places handed to the server 103906 (5.2 a fight)
+duel-duel-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario duel --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=2.989
+duel-duel-never.txt:fights 20000; motion tests 102381 (5.1 a fight), places handed to the server 103906 (5.2 a fight)
+duel-duel-never.txt:RESULT fighter=engine motion=contact sim "--scenario duel --battles 20000 --seed 1 --policy never" exit=0 seconds=2.919
+duel-jitte-armored-losing07.txt:fights 20000; motion tests 1125054 (56.3 a fight), places handed to the server 1129475 (56.5 a fight)
+duel-jitte-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=16.215
+duel-jitte-armored-never.txt:fights 20000; motion tests 1125054 (56.3 a fight), places handed to the server 1129475 (56.5 a fight)
+duel-jitte-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=16.068
+duel-jitte-heavy-losing07.txt:fights 20000; motion tests 378030 (18.9 a fight), places handed to the server 380323 (19.0 a fight)
+duel-jitte-heavy-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-heavy --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=6.528
+duel-jitte-heavy-never.txt:fights 20000; motion tests 378030 (18.9 a fight), places handed to the server 380323 (19.0 a fight)
+duel-jitte-heavy-never.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-heavy --battles 20000 --seed 1 --policy never" exit=0 seconds=6.499
+duel-jitte-losing07.txt:fights 20000; motion tests 497179 (24.9 a fight), places handed to the server 500233 (25.0 a fight)
+duel-jitte-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario jitte --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=8.073
+duel-jitte-never.txt:fights 20000; motion tests 497179 (24.9 a fight), places handed to the server 500233 (25.0 a fight)
+duel-jitte-never.txt:RESULT fighter=engine motion=contact sim "--scenario jitte --battles 20000 --seed 1 --policy never" exit=0 seconds=8.343
+duel-jitte-unclassed-losing07.txt:fights 20000; motion tests 293796 (14.7 a fight), places handed to the server 295867 (14.8 a fight)
+duel-jitte-unclassed-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-unclassed --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=5.977
+duel-jitte-unclassed-never.txt:fights 20000; motion tests 293796 (14.7 a fight), places handed to the server 295867 (14.8 a fight)
+duel-jitte-unclassed-never.txt:RESULT fighter=engine motion=contact sim "--scenario jitte-unclassed --battles 20000 --seed 1 --policy never" exit=0 seconds=5.973
+duel-katana-armored-losing07.txt:fights 20000; motion tests 1283002 (64.2 a fight), places handed to the server 1289286 (64.5 a fight)
+duel-katana-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario katana-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=19.952
+duel-katana-armored-never.txt:fights 20000; motion tests 1283002 (64.2 a fight), places handed to the server 1289286 (64.5 a fight)
+duel-katana-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario katana-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=19.180
+duel-katana-heavy-losing07.txt:fights 20000; motion tests 206685 (10.3 a fight), places handed to the server 208459 (10.4 a fight)
+duel-katana-heavy-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario katana-heavy --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.657
+duel-katana-heavy-never.txt:fights 20000; motion tests 206685 (10.3 a fight), places handed to the server 208459 (10.4 a fight)
+duel-katana-heavy-never.txt:RESULT fighter=engine motion=contact sim "--scenario katana-heavy --battles 20000 --seed 1 --policy never" exit=0 seconds=4.608
+duel-katana-losing07.txt:fights 20000; motion tests 273902 (13.7 a fight), places handed to the server 275863 (13.8 a fight)
+duel-katana-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario katana --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=6.588
+duel-katana-never.txt:fights 20000; motion tests 273902 (13.7 a fight), places handed to the server 275863 (13.8 a fight)
+duel-katana-never.txt:RESULT fighter=engine motion=contact sim "--scenario katana --battles 20000 --seed 1 --policy never" exit=0 seconds=6.519
+duel-patrol-losing07.txt:fights 20000; motion tests 1274931 (63.7 a fight), places handed to the server 1206344 (60.3 a fight)
+duel-patrol-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario patrol --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=15.240
+duel-patrol-never.txt:fights 20000; motion tests 1196995 (59.8 a fight), places handed to the server 1057577 (52.9 a fight)
+duel-patrol-never.txt:RESULT fighter=engine motion=contact sim "--scenario patrol --battles 20000 --seed 1 --policy never" exit=0 seconds=14.589
+duel-poison-armored-losing07.txt:fights 20000; motion tests 918648 (45.9 a fight), places handed to the server 987574 (49.4 a fight)
+duel-poison-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario poison-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=15.893
+duel-poison-armored-never.txt:fights 20000; motion tests 918648 (45.9 a fight), places handed to the server 987574 (49.4 a fight)
+duel-poison-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario poison-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=14.056
+duel-poison-losing07.txt:fights 20000; motion tests 183472 (9.2 a fight), places handed to the server 279237 (14.0 a fight)
+duel-poison-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario poison --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.613
+duel-poison-never.txt:fights 20000; motion tests 183472 (9.2 a fight), places handed to the server 279237 (14.0 a fight)
+duel-poison-never.txt:RESULT fighter=engine motion=contact sim "--scenario poison --battles 20000 --seed 1 --policy never" exit=0 seconds=4.446
+duel-poison-unclassed-losing07.txt:fights 20000; motion tests 219112 (11.0 a fight), places handed to the server 274960 (13.7 a fight)
+duel-poison-unclassed-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario poison-unclassed --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.944
+duel-poison-unclassed-never.txt:fights 20000; motion tests 219112 (11.0 a fight), places handed to the server 274960 (13.7 a fight)
+duel-poison-unclassed-never.txt:RESULT fighter=engine motion=contact sim "--scenario poison-unclassed --battles 20000 --seed 1 --policy never" exit=0 seconds=5.011
+duel-sai-losing07.txt:fights 20000; motion tests 597592 (29.9 a fight), places handed to the server 601060 (30.1 a fight)
+duel-sai-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario sai --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=8.881
+duel-sai-never.txt:fights 20000; motion tests 597592 (29.9 a fight), places handed to the server 601060 (30.1 a fight)
+duel-sai-never.txt:RESULT fighter=engine motion=contact sim "--scenario sai --battles 20000 --seed 1 --policy never" exit=0 seconds=8.936
+duel-spear-armored-losing07.txt:fights 20000; motion tests 845177 (42.3 a fight), places handed to the server 849516 (42.5 a fight)
+duel-spear-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario spear-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=13.739
+duel-spear-armored-never.txt:fights 20000; motion tests 845177 (42.3 a fight), places handed to the server 849516 (42.5 a fight)
+duel-spear-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario spear-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=13.301
+duel-tanto-armored-losing07.txt:fights 20000; motion tests 1815323 (90.8 a fight), places handed to the server 1822842 (91.1 a fight)
+duel-tanto-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario tanto-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=25.515
+duel-tanto-armored-never.txt:fights 20000; motion tests 1815323 (90.8 a fight), places handed to the server 1822842 (91.1 a fight)
+duel-tanto-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario tanto-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=22.457
+duel-tanto-losing07.txt:fights 20000; motion tests 545052 (27.3 a fight), places handed to the server 547347 (27.4 a fight)
+duel-tanto-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario tanto --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=8.177
+duel-tanto-never.txt:fights 20000; motion tests 545052 (27.3 a fight), places handed to the server 547347 (27.4 a fight)
+duel-tanto-never.txt:RESULT fighter=engine motion=contact sim "--scenario tanto --battles 20000 --seed 1 --policy never" exit=0 seconds=8.200
+duel-thrown-kyudo-losing07.txt:fights 20000; motion tests 231126 (11.6 a fight), places handed to the server 232929 (11.6 a fight)
+duel-thrown-kyudo-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario thrown-kyudo --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=6.168
+duel-thrown-kyudo-never.txt:fights 20000; motion tests 231126 (11.6 a fight), places handed to the server 232929 (11.6 a fight)
+duel-thrown-kyudo-never.txt:RESULT fighter=engine motion=contact sim "--scenario thrown-kyudo --battles 20000 --seed 1 --policy never" exit=0 seconds=6.006
+duel-thrown-losing07.txt:fights 20000; motion tests 242411 (12.1 a fight), places handed to the server 244251 (12.2 a fight)
+duel-thrown-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario thrown --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=6.823
+duel-thrown-never.txt:fights 20000; motion tests 242411 (12.1 a fight), places handed to the server 244251 (12.2 a fight)
+duel-thrown-never.txt:RESULT fighter=engine motion=contact sim "--scenario thrown --battles 20000 --seed 1 --policy never" exit=0 seconds=7.051
+duel-torite-katana-armored-losing07.txt:fights 20000; motion tests 1366228 (68.3 a fight), places handed to the server 1372852 (68.6 a fight)
+duel-torite-katana-armored-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana-armored --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=16.206
+duel-torite-katana-armored-never.txt:fights 20000; motion tests 1366228 (68.3 a fight), places handed to the server 1372852 (68.6 a fight)
+duel-torite-katana-armored-never.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana-armored --battles 20000 --seed 1 --policy never" exit=0 seconds=16.004
+duel-torite-katana-heavy-losing07.txt:fights 20000; motion tests 219709 (11.0 a fight), places handed to the server 221479 (11.1 a fight)
+duel-torite-katana-heavy-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana-heavy --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.424
+duel-torite-katana-heavy-never.txt:fights 20000; motion tests 219709 (11.0 a fight), places handed to the server 221479 (11.1 a fight)
+duel-torite-katana-heavy-never.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana-heavy --battles 20000 --seed 1 --policy never" exit=0 seconds=4.349
+duel-torite-katana-losing07.txt:fights 20000; motion tests 284795 (14.2 a fight), places handed to the server 286825 (14.3 a fight)
+duel-torite-katana-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=5.519
+duel-torite-katana-never.txt:fights 20000; motion tests 284795 (14.2 a fight), places handed to the server 286825 (14.3 a fight)
+duel-torite-katana-never.txt:RESULT fighter=engine motion=contact sim "--scenario torite-katana --battles 20000 --seed 1 --policy never" exit=0 seconds=5.445
+duel-veteran-losing07.txt:fights 20000; motion tests 176909 (8.8 a fight), places handed to the server 178436 (8.9 a fight)
+duel-veteran-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario veteran --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=4.927
+duel-veteran-never.txt:fights 20000; motion tests 176909 (8.8 a fight), places handed to the server 178436 (8.9 a fight)
+duel-veteran-never.txt:RESULT fighter=engine motion=contact sim "--scenario veteran --battles 20000 --seed 1 --policy never" exit=0 seconds=4.511
+duel-yumi-losing07.txt:fights 20000; motion tests 215382 (10.8 a fight), places handed to the server 217122 (10.9 a fight)
+duel-yumi-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario yumi --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=5.116
+duel-yumi-never.txt:fights 20000; motion tests 215382 (10.8 a fight), places handed to the server 217122 (10.9 a fight)
+duel-yumi-never.txt:RESULT fighter=engine motion=contact sim "--scenario yumi --battles 20000 --seed 1 --policy never" exit=0 seconds=5.336
+duel-yumi-unclassed-losing07.txt:fights 20000; motion tests 246875 (12.3 a fight), places handed to the server 248739 (12.4 a fight)
+duel-yumi-unclassed-losing07.txt:RESULT fighter=engine motion=contact sim "--scenario yumi-unclassed --battles 20000 --seed 1 --policy losing:0.7" exit=0 seconds=5.213
+duel-yumi-unclassed-never.txt:fights 20000; motion tests 246875 (12.3 a fight), places handed to the server 248739 (12.4 a fight)
+duel-yumi-unclassed-never.txt:RESULT fighter=engine motion=contact sim "--scenario yumi-unclassed --battles 20000 --seed 1 --policy never" exit=0 seconds=5.510

@@ -1,0 +1,116 @@
+## 1. Calibration: the resolver's own kinematics inside the bed against the baseline
+
+identical 104 of 104; differ: none; missing: none
+
+## 2. Determinism: the engine's ground run twice
+
+identical 0 of 0; differ: none
+
+## 3. Duel parity: the engine's ground against the resolver's own kinematics
+
+Each share line of each report (outcome per fight, deaths/escapes/limbs per warrior-fight). z is the difference over the standard error of two independent samples of the report's size; warrior-fights of one fight are not independent, so for the side lines this errs strict.
+
+| Report | Victory | z | Deaths | z | Escapes | z | Fight s | Hit rate | Charges | Max abs z (line) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 3v3-armored-losing07 | 39.34 > 39.43 | +0.2 | 56.77 > 56.72 | -0.2 | 19.85 > 19.83 | -0.1 | 29.2 > 29.2 | 59.0 > 59.0 | 1.25 > 1.25 | 0.2 (outcome Rout) |
+| 3v3-armored-never | 41.02 > 41.09 | +0.1 | 68.09 > 68.04 | -0.2 | 7.77 > 7.75 | -0.1 | 32.5 > 32.5 | 58.3 > 58.4 | 1.25 > 1.25 | 0.2 (player Deaths) |
+| 3v3-jitte-losing07 | 66.44 > 66.44 | -0.0 | 41.26 > 41.25 | -0.0 | 11.27 > 11.28 | +0.0 | 19.0 > 19.0 | 62.3 > 62.3 | 1.25 > 1.25 | 0.0 (outcome Withdrawal) |
+| 3v3-jitte-never | 70.33 > 70.34 | +0.0 | 46.31 > 46.31 | -0.0 | 4.31 > 4.30 | -0.0 | 20.6 > 20.6 | 61.9 > 61.9 | 1.25 > 1.25 | 0.0 (player eye) |
+| 3v3-losing07 | 61.92 > 61.91 | -0.0 | 44.20 > 44.19 | -0.0 | 12.80 > 12.81 | +0.0 | 18.8 > 18.8 | 62.4 > 62.5 | 1.24 > 1.24 | 0.1 (outcome Withdrawal) |
+| 3v3-never | 66.67 > 66.65 | -0.0 | 50.19 > 50.18 | -0.1 | 4.45 > 4.46 | +0.1 | 20.7 > 20.7 | 62.0 > 62.0 | 1.25 > 1.25 | 0.1 (outcome Withdrawal) |
+| 3v3-poison-losing07 | 58.10 > 58.10 | +0.0 | 47.98 > 47.96 | -0.0 | 12.52 > 12.52 | +0.0 | 18.5 > 18.5 | 62.8 > 62.8 | 1.24 > 1.24 | 0.0 (player Deaths) |
+| 3v3-poison-never | 62.83 > 62.82 | -0.0 | 53.65 > 53.63 | -0.1 | 4.60 > 4.61 | +0.1 | 20.5 > 20.5 | 62.3 > 62.3 | 1.25 > 1.25 | 0.1 (player Escapes) |
+| 3v3-torite-katana-losing07 | 62.81 > 62.83 | +0.0 | 43.96 > 43.95 | -0.0 | 12.40 > 12.39 | -0.0 | 18.9 > 18.9 | 62.4 > 62.4 | 1.24 > 1.24 | 0.0 (player Deaths) |
+| 3v3-torite-katana-never | 67.19 > 67.22 | +0.1 | 49.66 > 49.65 | -0.0 | 4.52 > 4.52 | -0.0 | 20.7 > 20.7 | 61.9 > 61.9 | 1.25 > 1.25 | 0.1 (outcome Victory) |
+| ambush-losing07 | 0.81 > 0.83 | +0.2 | 4.66 > 4.58 | -0.4 | 94.53 > 94.59 | +0.3 | 11.0 > 11.0 | 69.7 > 69.9 | 0.42 > 0.42 | 0.4 (outcome Rout) |
+| ambush-never | 8.49 > 8.09 | -1.5 | 27.82 > 28.12 | +0.7 | 63.69 > 63.79 | +0.2 | 17.1 > 17.0 | 64.6 > 64.7 | 0.42 > 0.42 | 1.5 (outcome Victory) |
+| blade-armored-losing07 | 80.81 > 80.81 | +0.0 | 7.50 > 7.50 | +0.0 | 11.69 > 11.69 | +0.0 | 25.5 > 25.5 | 65.3 > 65.3 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| blade-armored-never | 80.81 > 80.81 | +0.0 | 7.50 > 7.50 | +0.0 | 11.69 > 11.69 | +0.0 | 25.5 > 25.5 | 65.3 > 65.3 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| blade-losing07 | 93.00 > 93.00 | +0.0 | 2.31 > 2.31 | +0.0 | 4.70 > 4.70 | +0.0 | 16.1 > 16.1 | 71.5 > 71.5 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| blade-never | 93.00 > 93.00 | +0.0 | 2.31 > 2.31 | +0.0 | 4.70 > 4.70 | +0.0 | 16.1 > 16.1 | 71.5 > 71.5 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| club-armored-losing07 | 78.11 > 78.11 | +0.0 | 7.94 > 7.94 | +0.0 | 13.96 > 13.96 | +0.0 | 29.6 > 29.6 | 64.7 > 64.7 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| club-armored-never | 78.11 > 78.11 | +0.0 | 7.94 > 7.94 | +0.0 | 13.96 > 13.96 | +0.0 | 29.6 > 29.6 | 64.7 > 64.7 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| club-losing07 | 92.01 > 92.01 | +0.0 | 2.93 > 2.93 | +0.0 | 5.07 > 5.07 | +0.0 | 18.3 > 18.3 | 69.9 > 69.9 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| club-never | 92.01 > 92.01 | +0.0 | 2.93 > 2.93 | +0.0 | 5.07 > 5.07 | +0.0 | 18.3 > 18.3 | 69.9 > 69.9 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| duel-losing07 | 61.19 > 61.19 | +0.0 | 36.96 > 36.96 | +0.0 | 1.85 > 1.85 | +0.0 | 12.5 > 12.5 | 62.6 > 62.6 | 0.41 > 0.41 | 0.0 (outcome Victory) |
+| duel-never | 61.19 > 61.19 | +0.0 | 36.96 > 36.96 | +0.0 | 1.85 > 1.85 | +0.0 | 12.5 > 12.5 | 62.6 > 62.6 | 0.41 > 0.41 | 0.0 (outcome Victory) |
+| jitte-armored-losing07 | 43.25 > 43.25 | +0.0 | 20.98 > 20.98 | +0.0 | 35.77 > 35.77 | +0.0 | 50.7 > 50.7 | 57.4 > 57.4 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-armored-never | 43.25 > 43.25 | +0.0 | 20.98 > 20.98 | +0.0 | 35.77 > 35.77 | +0.0 | 50.7 > 50.7 | 57.4 > 57.4 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-heavy-losing07 | 40.37 > 40.37 | +0.0 | 51.17 > 51.17 | +0.0 | 8.46 > 8.46 | +0.0 | 22.1 > 22.1 | 62.8 > 62.8 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-heavy-never | 40.37 > 40.37 | +0.0 | 51.17 > 51.17 | +0.0 | 8.46 > 8.46 | +0.0 | 22.1 > 22.1 | 62.8 > 62.8 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-losing07 | 82.92 > 82.92 | +0.0 | 6.18 > 6.18 | +0.0 | 10.90 > 10.90 | +0.0 | 27.1 > 27.1 | 60.7 > 60.7 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-never | 82.92 > 82.92 | +0.0 | 6.18 > 6.18 | +0.0 | 10.90 > 10.90 | +0.0 | 27.1 > 27.1 | 60.7 > 60.7 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-unclassed-losing07 | 72.95 > 72.95 | +0.0 | 11.18 > 11.18 | +0.0 | 15.87 > 15.87 | +0.0 | 24.4 > 24.4 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| jitte-unclassed-never | 72.95 > 72.95 | +0.0 | 11.18 > 11.18 | +0.0 | 15.87 > 15.87 | +0.0 | 24.4 > 24.4 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| katana-armored-losing07 | 25.06 > 25.06 | +0.0 | 31.50 > 31.50 | +0.0 | 43.44 > 43.44 | +0.0 | 44.3 > 44.3 | 58.7 > 58.7 | 0.45 > 0.45 | 0.0 (outcome Victory) |
+| katana-armored-never | 25.06 > 25.06 | +0.0 | 31.50 > 31.50 | +0.0 | 43.44 > 43.44 | +0.0 | 44.3 > 44.3 | 58.7 > 58.7 | 0.45 > 0.45 | 0.0 (outcome Victory) |
+| katana-heavy-losing07 | 24.30 > 24.30 | +0.0 | 68.16 > 68.16 | +0.0 | 7.54 > 7.54 | +0.0 | 18.1 > 18.1 | 67.0 > 67.0 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| katana-heavy-never | 24.30 > 24.30 | +0.0 | 68.16 > 68.16 | +0.0 | 7.54 > 7.54 | +0.0 | 18.1 > 18.1 | 67.0 > 67.0 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| katana-losing07 | 72.48 > 72.48 | +0.0 | 11.45 > 11.45 | +0.0 | 16.07 > 16.07 | +0.0 | 24.4 > 24.4 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| katana-never | 72.48 > 72.48 | +0.0 | 11.45 > 11.45 | +0.0 | 16.07 > 16.07 | +0.0 | 24.4 > 24.4 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| patrol-losing07 | 96.12 > 96.12 | +0.0 | 5.96 > 5.95 | -0.1 | 2.99 > 2.99 | +0.0 | 13.3 > 13.3 | 64.2 > 64.2 | 1.26 > 1.26 | 0.2 (outcome Rout) |
+| patrol-never | 98.39 > 98.39 | -0.0 | 6.29 > 6.28 | -0.1 | 1.35 > 1.35 | +0.1 | 13.5 > 13.5 | 64.0 > 64.0 | 1.26 > 1.26 | 0.1 (outcome Withdrawal) |
+| poison-armored-losing07 | 82.24 > 82.24 | +0.0 | 7.32 > 7.32 | +0.0 | 10.44 > 10.44 | +0.0 | 31.1 > 31.1 | 60.8 > 60.8 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| poison-armored-never | 82.24 > 82.24 | +0.0 | 7.32 > 7.32 | +0.0 | 10.44 > 10.44 | +0.0 | 31.1 > 31.1 | 60.8 > 60.8 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| poison-losing07 | 89.89 > 89.89 | +0.0 | 3.37 > 3.37 | +0.0 | 6.74 > 6.74 | +0.0 | 21.7 > 21.7 | 64.9 > 64.9 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| poison-never | 89.89 > 89.89 | +0.0 | 3.37 > 3.37 | +0.0 | 6.74 > 6.74 | +0.0 | 21.7 > 21.7 | 64.9 > 64.9 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| poison-unclassed-losing07 | 79.78 > 79.78 | +0.0 | 8.21 > 8.21 | +0.0 | 12.01 > 12.01 | +0.0 | 24.0 > 24.0 | 63.1 > 63.1 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| poison-unclassed-never | 79.78 > 79.78 | +0.0 | 8.21 > 8.21 | +0.0 | 12.01 > 12.01 | +0.0 | 24.0 > 24.0 | 63.1 > 63.1 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| sai-losing07 | 84.13 > 84.13 | +0.0 | 6.04 > 6.04 | +0.0 | 9.83 > 9.83 | +0.0 | 28.5 > 28.5 | 60.3 > 60.3 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| sai-never | 84.13 > 84.13 | +0.0 | 6.04 > 6.04 | +0.0 | 9.83 > 9.83 | +0.0 | 28.5 > 28.5 | 60.3 > 60.3 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| spear-armored-losing07 | 45.05 > 45.05 | +0.0 | 21.09 > 21.09 | +0.0 | 33.86 > 33.86 | +0.0 | 41.1 > 41.1 | 60.2 > 60.2 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| spear-armored-never | 45.05 > 45.05 | +0.0 | 21.09 > 21.09 | +0.0 | 33.86 > 33.86 | +0.0 | 41.1 > 41.1 | 60.2 > 60.2 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| tanto-armored-losing07 | 2.46 > 2.46 | +0.0 | 41.28 > 41.28 | +0.0 | 56.27 > 56.27 | +0.0 | 50.8 > 50.8 | 57.6 > 57.6 | 0.46 > 0.46 | 0.0 (outcome Victory) |
+| tanto-armored-never | 2.46 > 2.46 | +0.0 | 41.28 > 41.28 | +0.0 | 56.27 > 56.27 | +0.0 | 50.8 > 50.8 | 57.6 > 57.6 | 0.46 > 0.46 | 0.0 (outcome Victory) |
+| tanto-losing07 | 26.31 > 26.31 | +0.0 | 38.57 > 38.57 | +0.0 | 35.12 > 35.12 | +0.0 | 32.5 > 32.5 | 60.2 > 60.2 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| tanto-never | 26.31 > 26.31 | +0.0 | 38.57 > 38.57 | +0.0 | 35.12 > 35.12 | +0.0 | 32.5 > 32.5 | 60.2 > 60.2 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| thrown-kyudo-losing07 | 75.78 > 75.78 | +0.0 | 9.30 > 9.30 | +0.0 | 14.91 > 14.91 | +0.0 | 24.2 > 24.2 | 62.2 > 62.2 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| thrown-kyudo-never | 75.78 > 75.78 | +0.0 | 9.30 > 9.30 | +0.0 | 14.91 > 14.91 | +0.0 | 24.2 > 24.2 | 62.2 > 62.2 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| thrown-losing07 | 74.72 > 74.72 | +0.0 | 9.85 > 9.85 | +0.0 | 15.43 > 15.43 | +0.0 | 24.6 > 24.6 | 60.7 > 60.7 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| thrown-never | 74.72 > 74.72 | +0.0 | 9.85 > 9.85 | +0.0 | 15.43 > 15.43 | +0.0 | 24.6 > 24.6 | 60.7 > 60.7 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| torite-katana-armored-losing07 | 25.96 > 25.96 | +0.0 | 30.88 > 30.88 | +0.0 | 43.16 > 43.16 | +0.0 | 45.2 > 45.2 | 58.6 > 58.6 | 0.45 > 0.45 | 0.0 (outcome Victory) |
+| torite-katana-armored-never | 25.96 > 25.96 | +0.0 | 30.88 > 30.88 | +0.0 | 43.16 > 43.16 | +0.0 | 45.2 > 45.2 | 58.6 > 58.6 | 0.45 > 0.45 | 0.0 (outcome Victory) |
+| torite-katana-heavy-losing07 | 25.49 > 25.49 | +0.0 | 66.73 > 66.73 | +0.0 | 7.78 > 7.78 | +0.0 | 18.6 > 18.6 | 66.1 > 66.1 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| torite-katana-heavy-never | 25.49 > 25.49 | +0.0 | 66.73 > 66.73 | +0.0 | 7.78 > 7.78 | +0.0 | 18.6 > 18.6 | 66.1 > 66.1 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| torite-katana-losing07 | 73.61 > 73.61 | +0.0 | 11.09 > 11.09 | +0.0 | 15.30 > 15.30 | +0.0 | 24.6 > 24.6 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| torite-katana-never | 73.61 > 73.61 | +0.0 | 11.09 > 11.09 | +0.0 | 15.30 > 15.30 | +0.0 | 24.6 > 24.6 | 63.6 > 63.6 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| veteran-losing07 | 80.55 > 80.55 | +0.0 | 10.92 > 10.92 | +0.0 | 8.53 > 8.53 | +0.0 | 19.7 > 19.7 | 73.4 > 73.4 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| veteran-never | 80.55 > 80.55 | +0.0 | 10.92 > 10.92 | +0.0 | 8.53 > 8.53 | +0.0 | 19.7 > 19.7 | 73.4 > 73.4 | 0.44 > 0.44 | 0.0 (outcome Victory) |
+| yumi-losing07 | 82.03 > 82.03 | +0.0 | 6.58 > 6.58 | +0.0 | 11.39 > 11.39 | +0.0 | 23.2 > 23.2 | 63.8 > 63.8 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| yumi-never | 82.03 > 82.03 | +0.0 | 6.58 > 6.58 | +0.0 | 11.39 > 11.39 | +0.0 | 23.2 > 23.2 | 63.8 > 63.8 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| yumi-unclassed-losing07 | 77.02 > 77.02 | +0.0 | 8.74 > 8.74 | +0.0 | 14.24 > 14.24 | +0.0 | 24.9 > 24.9 | 60.1 > 60.1 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+| yumi-unclassed-never | 77.02 > 77.02 | +0.0 | 8.74 > 8.74 | +0.0 | 14.24 > 14.24 | +0.0 | 24.9 > 24.9 | 60.1 > 60.1 | 0.00 > 0.00 | 0.0 (outcome Victory) |
+
+816 share lines: |z| > 2 on 0 (0.0%, chance alone ~4.6%), |z| > 3 on 0 (chance alone ~2.2); mean z -0.00, sd 0.08
+
+Largest ten:
+
+- ambush-never: outcome Victory 8.49% > 8.09% (z 1.5)
+- ambush-never: enemy Deaths 27.51% > 27.27% (z 0.9)
+- ambush-never: player Deaths 27.82% > 28.12% (z 0.7)
+- ambush-never: outcome Rout 27.82% > 28.12% (z 0.7)
+- ambush-losing07: player Deaths 4.66% > 4.58% (z 0.4)
+- ambush-losing07: outcome Rout 4.66% > 4.58% (z 0.4)
+- ambush-losing07: player Escapes 94.53% > 94.59% (z 0.3)
+- ambush-losing07: outcome Withdrawal 94.53% > 94.59% (z 0.3)
+- patrol-losing07: outcome Rout 0.04% > 0.04% (z 0.2)
+- ambush-never: enemy Weapon dropped 9.10% > 9.14% (z 0.2)
+
+## 4. Campaign parity: paired means over six seeds (the protocol locked 2026-09-13)
+
+Each cell: the recorded value (core) > the engine's, then the paired difference against the recorded value's own noise, two standard errors of its six-seed mean. Inside means the difference is smaller than that band; t is the paired difference over its own standard error (5 degrees of freedom: |t| > 2.57 is 5%, > 4.03 is 1%).
+
+| Bed | Tier | last night won | played the night | dojos closed | deaths / warrior-fight | net / fight | bouts won |
+|---|---|---|---|---|---|---|---|
+| plain | apprentice | 31.87 > 32.27: +0.40 of +/-0.99 inside (t +2.1) | 78.78 > 79.32: +0.53 of +/-0.44 **OUTSIDE** (t +2.7) | 20.23 > 19.77: -0.47 of +/-0.28 **OUTSIDE** (t -2.1) | 3.17 > 3.18: +0.02 of +/-0.04 inside (t +1.0) | 56.83 > 57.13: +0.30 of +/-0.28 **OUTSIDE** (t +5.2) | 2.68 > 2.68: +0.00 of +/-0.04 inside (t +0.2) |
+| plain | master | 20.45 > 20.53: +0.08 of +/-0.71 inside (t +0.1) | 70.97 > 70.35: -0.62 of +/-0.78 inside (t -1.7) | 27.57 > 28.18: +0.62 of +/-0.80 inside (t +1.9) | 4.35 > 4.33: -0.02 of +/-0.07 inside (t -0.5) | 44.38 > 44.53: +0.15 of +/-0.51 inside (t +0.4) | 1.98 > 1.99: +0.01 of +/-0.04 inside (t +0.3) |
+| plain | legend | 8.93 > 9.02: +0.08 of +/-0.48 inside (t +0.4) | 63.23 > 63.58: +0.35 of +/-1.15 inside (t +1.8) | 35.02 > 34.72: -0.30 of +/-1.20 inside (t -1.6) | 5.93 > 5.92: -0.02 of +/-0.10 inside (t -1.0) | 29.23 > 29.37: +0.13 of +/-0.61 inside (t +1.1) | 1.06 > 1.07: +0.01 of +/-0.04 inside (t +0.4) |
+| rich | apprentice | 31.68 > 31.82: +0.13 of +/-0.91 inside (t +1.1) | 77.97 > 77.75: -0.22 of +/-0.59 inside (t -0.9) | 20.93 > 21.13: +0.20 of +/-0.46 inside (t +0.8) | 3.45 > 3.47: +0.02 of +/-0.04 inside (t +1.0) | 45.65 > 45.62: -0.03 of +/-0.51 inside (t -0.6) | 2.63 > 2.63: +0.01 of +/-0.03 inside (t +1.6) |
+| rich | master | 20.20 > 20.33: +0.13 of +/-0.99 inside (t +1.5) | 71.05 > 71.28: +0.23 of +/-0.80 inside (t +0.9) | 27.87 > 27.63: -0.23 of +/-0.75 inside (t -0.9) | 4.53 > 4.53: +0.00 of +/-0.07 inside (t +0.0) | 34.65 > 34.73: +0.08 of +/-0.58 inside (t +0.8) | 1.90 > 1.90: +0.00 of +/-0.08 inside (t +0.2) |
+| rich | legend | 9.48 > 9.57: +0.08 of +/-0.71 inside (t +0.7) | 62.98 > 62.60: -0.38 of +/-0.30 **OUTSIDE** (t -1.1) | 35.30 > 35.73: +0.43 of +/-0.38 **OUTSIDE** (t +1.2) | 5.95 > 5.93: -0.02 of +/-0.11 inside (t -1.0) | 21.10 > 21.25: +0.15 of +/-0.75 inside (t +2.4) | 1.07 > 1.07: +0.00 of +/-0.05 inside (t +0.0) |
+
+36 campaign figures: 31 inside the recorded value's noise, 5 outside
+
+## 5. Throughput (the bed's wall clock per report, summed over runs made side by side)
+
+- engine: duel bed 793 s, campaign beds 7679 s; 6257384 fights, 132.2 motion tests a fight

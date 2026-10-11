@@ -1,0 +1,52 @@
+Scenario        : 3v3 — dojo team vs enemy team (3v3)
+Expedition run  : 1600 dojos × 180 days, party of 3, roster of 4
+Starting purse  : 600 gold
+Wall clock      : 159.26 s
+
+Prices
+  Victory reward         0.42 gold / enemy health
+  Armour piece           1.50 gold / durability
+  Repair                 0.90 gold / wear
+  Daily stock            food 2 / water 1 / medicine 12
+  Warrior purchase       150
+
+Treasury (per fight)
+  Income                 129.0
+  Kit spending           32.8
+  Replacements           15.2
+  Net                    21.0
+  Daily consumption      4.7 gold/day
+  Ending purse           383 gold
+  Kept their capital     11.2%
+
+Calendar
+  Fights (per dojo)      63.7  victory 97.6%
+  Idle days              57.1% (the roster was not enough for an expedition)
+  Declined offers        52.9%
+  Mishaps                15.0% of days, 0.6 gold/day
+  Hungry days            29.7%
+  Infirmary days / fight 1.54
+  Enemy health / fight   176
+  Deaths / warrior-fight 5.9%
+  Weeks with no fight    7.6 per dojo  paid for 3.7  longest run 4.1  ending honour 33.4
+  Seppuku threshold      22.7% of dojos  first crossed on day 113
+  Heads / last night     15.09 heads  gate open 61.3%
+  The province           4.81 settlements held  raids 1.32  met 0.89 (won 70.8%)  sacked 0.37
+
+The last night
+  Played it              61.3% of dojos  won all five 9.7%
+  Bouts won              1.10 of 5  men sent 5.8  dead 1.22
+  Survived the bout      1: 30%  2: 85%  3: 93%  4: 67%  5: 100%
+
+Roster
+  Deaths (per dojo)      10.18
+  Warriors hired         8.74
+  Bounty hunts           21.70  heads taken 98.4%
+  Armour pieces broken   0.04
+  Weapon mastery         15.1% on the best man  ·  retired 1.00  ·  classed 1.85
+  Training days          129.8  best warrior 280 score (+-107)
+  School facilities      11.8  2558 gold, chose a path 5.66, charms 540 gold, throwing stall 533 gold, the rack 0 gold
+  Posts filled           2.7  438 post-days
+  Beds at the end        7.6
+  Dojos closed           36.9%
+  Days survived          average 149, median 180

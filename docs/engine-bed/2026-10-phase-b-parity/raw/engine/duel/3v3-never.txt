@@ -1,0 +1,39 @@
+Scenario        : 3v3 — dojo team vs enemy team (3v3)
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 16.54 s (1209 fights/s)
+Fight duration  : 20.7 s on average (in game)
+Longest fight   : 62.2 s (seed 2618)
+
+Outcome
+  Victory                    13330  66.65%
+  Withdrawal                  2032  10.16%
+  Rout                        4638  23.19%
+  Stalled (anomaly)              0  0.00%
+
+Player side (60000 warrior-fights)
+  Deaths                     30105  50.18%
+  Escapes                     2674  4.46%
+  Limb losses                 2663  4.44%
+    · arm                      956  1.59%
+    · leg                     1156  1.93%
+    · eye                      644  1.07%
+  Hit rate                  62.0%
+  Damage dealt/taken        6571194 / 4932444
+  Stuns (per warrior)       taken 0.41 / inflicted 0.10
+  Catches (per warrior)     made 0.00 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               11.4 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 5.43% (picked up 15.6%) / inflicted (per warrior) 0.01
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       1.25  arrival 84.3%  free hits/charge 0.64
+    · scattered in windup  10.9%
+    · launch moment        average 1.03 s, latest 36.00 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                     48818  81.36%
+  Weapon dropped              1895  3.16%

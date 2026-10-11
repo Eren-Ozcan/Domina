@@ -1,0 +1,39 @@
+Scenario        : 3v3-jitte — 3v3, the recruit carries a jitte instead of a katana — the bind's team value
+Fights          : 20000 (seed 1..20000)
+Retreat policy  : never pull out
+Kit             : from the scenario
+Wall clock      : 14.75 s (1356 fights/s)
+Fight duration  : 20.6 s on average (in game)
+Longest fight   : 60.5 s (seed 13950)
+
+Outcome
+  Victory                    14067  70.34%
+  Withdrawal                  1863  9.31%
+  Rout                        4070  20.35%
+  Stalled (anomaly)              0  0.00%
+
+Player side (60000 warrior-fights)
+  Deaths                     27784  46.31%
+  Escapes                     2583  4.30%
+  Limb losses                 2623  4.37%
+    · arm                      876  1.46%
+    · leg                     1154  1.92%
+    · eye                      687  1.15%
+  Hit rate                  61.9%
+  Damage dealt/taken        6682111 / 4758077
+  Stuns (per warrior)       taken 0.39 / inflicted 0.14
+  Catches (per warrior)     made 0.06 / suffered 0.00
+  Blocks (per warrior)      0.21 blows met
+  Armour wear               11.1 damage (per warrior-fight)
+  Armour loss               warrior 0.00% / pieces (per warrior) 0.00
+  Weapon drops              own 2.64% (picked up 26.7%) / inflicted (per warrior) 0.02
+  Poisonings (per warrior)  taken 0.00 / inflicted 0.00
+  Poison damage             dealt 0 (0.0%) / taken 0
+  Poison deaths             0 (0.0% of deaths)
+  Charges (per fight)       1.25  arrival 84.6%  free hits/charge 0.62
+    · scattered in windup  10.9%
+    · launch moment        average 1.04 s, latest 43.60 s
+
+Enemy side (60000 warrior-fights)
+  Deaths                     50031  83.38%
+  Weapon dropped              1992  3.32%
