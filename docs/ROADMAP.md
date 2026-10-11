@@ -17,6 +17,12 @@
 > (`docs/engine-bed/2026-10-phase-a/`); Phase B starts on an engine-call budget.
 > **2026-10-02:** Phase B's first slice — the real fight's movement on Godot's physics server runs
 > 10,000 fights in 3.8-3.9 s, deterministic per seed (`docs/engine-bed/2026-10-phase-b-space/`).
+> **2026-10-02:** Phase B's parity bed — the sim runs inside the bed; the move itself changes nothing,
+> but the engine's collision rule moves every campaign figure (the season harder, last nights −3 to −9
+> points). Phase B waits on Open Decision #25 (`docs/engine-bed/2026-10-phase-b-parity/`).
+> **2026-10-02:** #25 closed on (a) — real collision stays, written engine-free as the core's default ground;
+> the baseline re-read on it (`docs/baselines/2026-10-slide/`) and Phase B's movement passes against it. The
+> season was re-tuned on it the same day (`PowerPerDay` 0.011 → 0.0092).
 
 ## New work from the decision pass (2026-09-07)
 

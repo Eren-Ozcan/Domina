@@ -83,6 +83,28 @@ fight. The first parity reading, one scenario at 20,000 fights, sits inside the 
 68.62%). Phase B's acceptance — every scenario, every locked number — needs the sim's scenarios on the
 bed next.
 
+**Phase B's parity reading, 2026-10-02: the move costs nothing, the rule it brings costs the season.** The
+record is `docs/engine-bed/2026-10-phase-b-parity/`. The sim now runs inside the bed (`--sim`) and asks the
+engine's fighter for its fights; the whole pre-engine baseline was re-read on it. The resolver's own
+kinematics inside Godot give the baseline back line for line (104 of 104 reports) and the engine's ground is
+the same twice (69 of 69). Every one-on-one scenario is identical fight for fight and every 3v3 sits inside
+noise, but the ambush (1v3) and **all 36 campaign figures** fall outside it, the same way — last nights won
+−3 to −9 points, deaths per warrior-fight +0.4 to +0.9. The cause is the collision rule, not the engine: a
+body stops where it meets another and slides, where the old kinematics pushed a man back out after his whole
+step, and the rule written engine-free reproduces the engine's numbers within 0.13 points. The side with more
+men loses part of its numbers, and in the campaign that is the dojo. A campaign seed costs five times the
+core's on the engine. **Phase B does not pass as it stands; whether the season keeps real collision and is
+re-tuned on it, or the bodies keep the old rule, is Open Decision #25.**
+
+**#25 closed the same day on (a): real collision stays.** The rule is written engine-free as the core's
+default ground (`SlideArenaSpace`; the push-out stays behind `CombatTuning.Ground` as a measuring switch), so
+the core bed measures what the engine plays at the core's speed. The whole baseline was re-read on it —
+`docs/baselines/2026-10-slide/`, the reference for the rest of the move — and the engine's reports, read
+again against that folder, sit inside its noise: no duel line beyond |z| 1.5, 31 of 36 campaign figures
+inside their band and the other five at 1.1-1.7 times it, none a last night. **Phase B's movement passes.**
+The campaign's numbers, which the rule moved, were re-tuned the same day: `PowerPerDay` 0.011 → 0.0092
+gives the rich master bed its death rate and its night back.
+
 ---
 
 ## 1. What option (c) actually means
@@ -167,9 +189,13 @@ little room** (section 0; `docs/engine-bed/2026-10-phase-a/`).
 **Phase B — space moves.** Positions, distance, reach, projectile flight and the weapon on the
 ground become nodes and queries. The decision logic still runs on the core's own tick, driven by
 the engine's fixed step. `ArenaPoint`, `Projectile`, `GroundWeapon` are deleted last, not first.
-*Acceptance: the parity bed's 24 scenarios re-read, every locked number inside noise.* **First slice
+*Acceptance: the parity bed's scenarios re-read — every one in the pre-engine baseline, 34 duel scenarios
+and the campaign beds — every locked number inside noise.* **First slice
 read 2026-10-02 — movement through `IArenaSpace`, 3.8-3.9 s for 10,000 fights, one scenario inside
-noise** (section 0; `docs/engine-bed/2026-10-phase-b-space/`).
+noise** (section 0; `docs/engine-bed/2026-10-phase-b-space/`). **The parity bed read 2026-10-02 — the duel bed holds
+but for the ambush, the campaign does not: the collision rule moves every campaign figure** (section 0;
+`docs/engine-bed/2026-10-phase-b-parity/`, Open Decision #25). **#25 closed on real collision the same day;
+read against the slide baseline (`docs/baselines/2026-10-slide/`) the movement passes.**
 
 **Phase C — the decision moves.** Target selection, charging, striking, catching, blocking,
 evading, panic, disarming, poison, armour wear. This is where `Battle.cs` is actually rewritten and

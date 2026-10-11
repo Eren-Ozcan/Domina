@@ -1,6 +1,6 @@
 # Status Log
 
-Last updated: 2026-10-02 (**Phase B's first slice: the real fight's movement runs on Godot's physics server** — `IArenaSpace` in the core, the old kinematics behind it unchanged on the whole baseline, `GodotArenaSpace` in the game; 10,000 real 3v3 fights in 3.8-3.9 s, the same per seed in a sweep, alone or in the engine's loop, and the first parity reading inside noise; before it: **Phase A of the engine move read: the gate passes on the stand-in fight, with little room** — 10,000 headless Godot fights in 7.7-9.3 s against 10 s, two runs identical 10,000 of 10,000, and the engine's own physics loop gives the same fights as the bed's loop; the real fight is forecast at about 9 s, so Phase B starts on an engine-call budget; before it: **Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
+Last updated: 2026-10-02 (**Open Decision #25 closed on real collision** — a body stops where it meets another, written engine-free as the core's default ground (`SlideArenaSpace`, the push-out kept behind `--ground kinematic`); the baseline re-read on it (`docs/baselines/2026-10-slide/`), Phase B's movement passes against it, and the season is re-tuned on it — `PowerPerDay` 0.011 → 0.0092, the rich master bed back on its death rate and inside a point of its night; before it: **Phase B's parity bed: the move into the engine costs nothing, the collision rule it brings costs the season** — the sim runs inside the engine bed and the whole pre-engine baseline was re-read on Godot's physics server: every 1v1 identical, every 3v3 inside noise, but the ambush and all 36 campaign figures outside it, the season harder (last nights −3 to −9 points); an engine-free copy of the rule reproduces it, so it is the rule, and Open Decision #25 asks whether the season keeps real collision; before it: **Phase B's first slice: the real fight's movement runs on Godot's physics server** — `IArenaSpace` in the core, the old kinematics behind it unchanged on the whole baseline, `GodotArenaSpace` in the game; 10,000 real 3v3 fights in 3.8-3.9 s, the same per seed in a sweep, alone or in the engine's loop, and the first parity reading inside noise; before it: **Phase A of the engine move read: the gate passes on the stand-in fight, with little room** — 10,000 headless Godot fights in 7.7-9.3 s against 10 s, two runs identical 10,000 of 10,000, and the engine's own physics loop gives the same fights as the bed's loop; the real fight is forecast at about 9 s, so Phase B starts on an engine-call budget; before it: **Open Decision #24 closed** — the charge's ceiling `ChargeChanceAtMaxAggression` 1.00 → 0.50 at the user's call, +9.6 points of last night on the rich bed over six seeds, the season easier and kept that way at the user's call; **Open Decision #13 closed on (c)** — the fight moves into the engine under `docs/PLAN-ENGINE-RESOLUTION.md`, and the door it moves through, `IFightRunner`, is written and changes nothing measurable; the pre-engine baseline is in `docs/baselines/2026-10-pre-engine/` and Phase A, the gate, is next; before it: **Open Decision #24 opened, and it is the biggest number yet** — the charge costs the dojo 28 points of last night over a season and the duel bed it was locked on cannot see it; before it, **Open Decision #23 closed** — the dokushi's gap answered with a move and a quarter of a medicine: hit and run, the poisoner steps out of reach once the dose is in (`PoisonBackstepSeconds` 1.5), plus `PoisonAccuracyPenaltyAtMaxDose` 0.25; the knife now sits in the armed torite's band with the widest class gap measured. The charge appetite was measured first and came out at zero for the trade, leaving a round of its own: for the dojo's own men the charge wins duels and loses seasons; before it: the rack was rebuying what the forge had renamed — a thousand gold a season and a mastery that never settled; with it fixed the armed class is no longer a collapse, and the dokushi's remaining 1.4 points now have three measured answers, none locked; before it: Open Decision #19 measured and closed — the catching implements take the katana's steel)
 
 This file is the answer to "where did we leave off". The plan lives in `ROADMAP.md`, the design
 decisions in `GDD.md`; here there is only a snapshot of **what has been done and what is next**.
@@ -1827,6 +1827,97 @@ measuring instrument is not the place to settle it.
 **Two Turkish strings found and fixed** while reading the catalogue: `Weapon.PoisonedTanto()` was
 named `"Zehirli tantō"` and `Weapon.Fists()` `"Yumruk"`, both of them reaching the screen. The repo's
 language rule has no exceptions — they are now `"Poisoned tantō"` and `"Fists"`.
+
+---
+
+## 2026-10-02 — #25 closed: real collision stays, and the season is re-tuned on it
+
+**The call.** Open Decision #25, (a): the bodies collide for real — a step stops at the man it meets and keeps
+only its sideways part — on the engine and off it, and the campaign is re-measured and re-decided on that.
+
+**The rule in the core.** `Combat/SlideArenaSpace.cs` is the engine's rule written engine-free: out of anyone
+the man already overlaps, a swept circle to the first body met, the rest slid along it once, the edge
+holding all but a fleer. It is the default ground (`CombatTuning.Ground`, `ArenaGround.Slide`); the push-out
+stays as `ArenaGround.Kinematic`, a measuring switch (`--ground kinematic`) like the target profiles'. With
+it the pre-engine baseline reads back 104 of 104 (`run-baseline.sh` takes `EXTRA` now); without it the core
+gives the reports the parity record's throwaway copy of the rule gave, line for line. The slide costs
+nothing: 3v3 at 20,000 fights 3.4-3.5 s against 3.7, a rich master seed 18.4 s against 21.6. Tests: six for
+the rule and the switch in `ArenaSpaceTests` (a step into a man stops at his edge, a slanted one slides, an
+overlapping man walks away free, a fleer passes and the edge holds the rest, a man who left stops nobody,
+the tuning names the ground), one in `SimCliTests`.
+
+**The new baseline,** `docs/baselines/2026-10-slide/` — the same beds and protocol as the pre-engine one.
+Every campaign figure lower, as the parity bed found (rich master last nights 29.08% → 20.20%, deaths per
+warrior-fight 3.60% → 4.53%). **Phase B's movement passes against it:** the engine's reports read inside its
+noise (`docs/engine-bed/2026-10-phase-b-parity/compare-slide.txt`).
+
+**The re-tune — `PowerPerDay` 0.011 → 0.0092, locked (the user's call, A).** The precedent is the stamina round of 2026-09-13: when a rule moved
+the season, `PowerPerDay` brought deaths per warrior-fight back and the last night's power brought the night
+back. The same two knobs, swept on the rich master bed (`--power-per-day` 0.0085-0.011 × `--night-power`
+0.85-1.0, three seeds, then 0.0092-0.0096 × 0.94-1.0 on six), against the season #24 left (29.08% / 3.60%):
+deaths come back at **`PowerPerDay` ≈ 0.0092**, and with it the night at a night power of 0.97-1.0. Two
+candidates, both beds and all three tiers, six seeds (last night won / dojos closed / deaths per warrior-fight
+/ net per fight):
+
+| | Before #25 | Slide, untuned | A: `PowerPerDay` 0.0092 | B: A + night ×0.97 |
+|---|---|---|---|---|
+| rich apprentice | 40.5 / 16.8 / 2.70 / 52.1 | 31.7 / 20.9 / 3.45 / 45.7 | 37.1 / 14.8 / 2.82 / 46.1 | 39.8 / 14.8 / 2.82 / 46.1 |
+| rich master | 29.1 / 24.0 / 3.60 / 41.9 | 20.2 / 27.9 / 4.53 / 34.7 | 28.0 / 22.1 / 3.65 / 38.6 | 30.0 / 22.1 / 3.65 / 38.6 |
+| rich legend | 15.0 / 31.6 / 5.02 / 27.5 | 9.5 / 35.3 / 5.95 / 21.1 | 16.6 / 29.3 / 4.83 / 27.7 | 17.5 / 29.3 / 4.83 / 27.7 |
+| plain master | 24.0 / 25.9 / 3.97 / 48.1 | 20.5 / 27.6 / 4.35 / 44.4 | 27.5 / 21.4 / 3.47 / 48.1 | 29.7 / 21.4 / 3.47 / 48.1 |
+
+What neither knob gives back: **net per fight on the rich bed** (38.6 against 41.9 — a weaker enemy pays
+less, the reward being per enemy health) and **the tiers' spread** (apprentice 1.33× master's night against
+1.39×, legend's floor higher). The plain bed, which the collision cost less (−3.5 points against −8.9),
+comes out easier than before under either. **A was locked**: one number, the death rate and the night
+back on the bed #24 was measured on. `docs/baselines/2026-10-slide/campaign/` is the season on it (the
+untuned reading moved to `campaign-untuned/`), the tiers' multipliers stand (GDD §10, read a fourth time),
+and `EncounterGenerator.PowerPerDay` carries the sweep.
+
+---
+
+## 2026-10-02 — Phase B's parity bed: the move costs nothing, the rule it brings costs the season
+
+**What was built.** The sim runs inside the engine bed: `SimCli.Run` takes an `IFightRunner` and hands it to
+the duel bed and the campaign (the replay and the played season refuse anything but the core's), the game
+project references `Domina.Sim`, and the bed's `--sim` passes the rest of its command line to the sim with
+`--fighter core|engine` as the fighter and `--report` as the report. `GodotFightRunner` (`src/Game/Combat/`)
+is `Battle` over `GodotArenaSpace` behind the door; `GodotArenaSpace.Fit` takes each fight's tuning. Four
+tests in `SimCliTests`.
+
+**The reading** (`docs/engine-bed/2026-10-phase-b-parity/`), the pre-engine baseline's own command lines run
+twice inside Godot:
+
+- **Calibration:** the resolver over its own kinematics, inside Godot's runtime, gives the baseline back line
+  for line — 104 of 104 reports.
+- **Determinism:** the engine's ground run twice — 69 of 69 reports identical.
+- **Duel bed:** the 27 one-on-one scenarios identical fight for fight; the six 3v3 scenarios inside noise (no
+  line beyond |z| 1.0). **The ambush (1v3) is not:** the lone veteran dies in 28.12% instead of 33.23%,
+  escapes in 63.79% instead of 60.01%.
+- **Campaign:** **all 36 figures outside noise, the same way** — last nights won −3 to −9 points (rich master
+  29.08% → 20.33%, plain master 23.98% → 20.53%), dojos closed +1.6 to +4.3, deaths per warrior-fight +0.4
+  to +0.9, net per fight −3 to −7.
+
+**The cause is the rule, not the engine.** On the ambush the physics server agrees with an exact
+double-precision solver of the same rule on 99.93% of 1.39 million steps, and the rule written engine-free
+(`slide/` in the record) reproduces the engine's numbers: ambush deaths 27.82% against the engine's 28.12%,
+rich master last nights 20.20% against 20.33% (paired difference +0.13, sd 0.22). The old kinematics let a man
+walk his whole step and pushed him back out of whoever he had walked into, so men flowed round each other; a
+body stops where it meets another and keeps only the sideways part of what is left, so men queue. Equal sides
+do not notice; the larger side loses part of its numbers — the ambushers in the ambush, the dojo in the
+campaign (the last night's first bout, the party against two seniors, survived 46% of the time instead of 59%
+on rich master seed 1).
+
+**Throughput, alone on the machine:** 3v3 at 20,000 fights 6.8-6.9 s on the engine against 3.0-3.1 s on the
+core; a rich master campaign seed 76.5 s against 15.4 s — its fights make 140 motion tests each, the duel's
+3v3 63.
+
+**Phase B does not pass as it stands.** Keeping real collision means re-measuring and re-deciding the
+campaign's numbers on it (which the engine-free copy of the rule can do at the core's speed); keeping the old
+rule means the bodies' collision stays off the physics server. That is the user's call: **Open Decision #25**
+in `docs/GDD.md`. Nothing is changed — the fight's default ground is still the kinematics.
+
+888 tests green under Release (588 core + 221 presentation + 79 sim).
 
 ---
 
